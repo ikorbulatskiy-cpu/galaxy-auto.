@@ -1,0 +1,59 @@
+
+class ChertAI {
+  constructor() {
+    this.personality = "devil";
+    this.styles = {
+      devil: "Дерзкий, саркастичный, уверенный",
+      funny: "Весёлый, шутливый, общительный",
+      calm: "Спокойный, дружелюбный"
+    };
+  }
+
+  setPersonality(style) {
+    if (!this.styles[style]) {
+      throw new Error("Неизвестный характер");
+    }
+
+    this.personality = style;
+  }
+
+  getPersonality() {
+    return this.styles[this.personality];
+  }
+
+  generateReply(message) {
+    const text = String(message || "").trim();
+
+    if (!text) return "";
+
+    const replies = {
+      devil: [
+        "О, вот это уже интересно. Продолжай.",
+        "Смело сказано. А аргументы будут?",
+        "Ну давай, удиви меня.",
+        "Я внимательно слушаю. Пока что.",
+        "Вот это поворот. Что дальше?"
+      ],
+      funny: [
+        "Ах вот оно что! 😄",
+        "Кажется, сейчас будет интересно!",
+        "Ну ты выдал!",
+        "Ладно, это было неожиданно."
+      ],
+      calm: [
+        "Понял тебя.",
+        "Интересная мысль.",
+        "Расскажи немного подробнее.",
+        "Согласен, есть над чем подумать."
+      ]
+    };
+
+    const options = replies[this.personality];
+
+    return options[
+      Math.floor(Math.random() * options.length)
+    ];
+  }
+}
+
+module.exports = ChertAI;
