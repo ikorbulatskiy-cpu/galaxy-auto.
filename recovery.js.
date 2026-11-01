@@ -1,0 +1,47 @@
+
+class RecoveryManager {
+  constructor(galaxyClient) {
+    this.galaxy = galaxyClient;
+    this.authenticated = false;
+    this.character = null;
+  }
+
+  async login(recoveryCode) {
+    if (
+      typeof recoveryCode !== "string" ||
+      recoveryCode.trim().length === 0
+    ) {
+      throw new Error("Введите код восстановления");
+    }
+
+    if (!this.galaxy.connected) {
+      throw new Error("Сначала установите соединение");
+    }
+
+    // Здесь будет официальный обработчик RECOVER
+    // после получения спецификации протокола 152.
+
+    throw new Error(
+      "Формат RECOVER ещё не реализован"
+    );
+  }
+
+  setCharacter(character) {
+    this.character = character;
+    this.authenticated = true;
+  }
+
+  logout() {
+    this.character = null;
+    this.authenticated = false;
+  }
+
+  getStatus() {
+    return {
+      authenticated: this.authenticated,
+      character: this.character
+    };
+  }
+}
+
+module.exports = RecoveryManager;
