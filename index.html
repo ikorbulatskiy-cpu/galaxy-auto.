@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#090d1c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Galaxy Auto">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Galaxy Auto</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#090d1c;color:#f4f4ff;font-family:-apple-system,Arial,sans-serif}
+header{padding:25px 20px 15px;background:linear-gradient(130deg,#28205c,#11182d)}
+header h1{margin:0;color:#c4a7ff;font-size:27px}
+header p{color:#c4c2dc;margin-bottom:0}
+main{max-width:600px;margin:auto;padding:15px}
+.panel{background:#151d32;border:1px solid #293451;border-radius:17px;padding:17px;margin:13px 0}
+h2{font-size:17px;margin:0 0 14px}
+input{width:100%;padding:14px;border:1px solid #394665;border-radius:10px;background:#0d1426;color:white;font-size:16px}
+button{border:0;border-radius:10px;padding:13px;background:#8059ed;color:white;font-weight:700;font-size:15px}
+button:active{opacity:.75}
+.primary{width:100%;margin-top:10px}
+.secondary{background:#293653}
+.danger{background:#69334a;padding:8px 11px}
+.planet{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#202b45;padding:10px;border-radius:10px;margin-top:9px}
+.planet span{overflow-wrap:anywhere}
+#timer{font-size:48px;text-align:center;font-weight:700;color:#c4a7ff;padding:12px}
+.actions{display:flex;gap:8px}
+.actions button{flex:1}
+small,.muted{color:#9eabc7;line-height:1.5}
+#log{font-size:13px;line-height:1.8;max-height:150px;overflow:auto}
+a{color:#c4a7ff}
+.status{color:#a8e5c0;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+<h1>✦ GALAXY AUTO</h1>
+<p>Панель управления планетами</p>
+</header>
+<main>
+<section class="panel">
+<h2>🌍 Мои планеты</h2>
+<input id="planetInput" maxlength="60" placeholder="Введите название планеты">
+<button class="primary" id="addBtn">＋ Добавить планету</button>
+<div id="planetList"></div>
+<p class="muted" id="count">Планет: 0</p>
+</section>
+
+<section class="panel">
+<h2>⏱ Таймер интервала</h2>
+<div id="timer">05:00</div>
+<div class="actions">
+<button id="startBtn">Запустить</button>
+<button class="secondary" id="resetBtn">Сбросить</button>
+</div>
+<p class="muted">Таймер служит напоминанием. Он не выполняет игровые действия.</p>
+</section>
+
+<section class="panel">
+<h2>🚀 Официальная игра</h2>
+<p class="muted">Открытие официальной платформы Mobstudio.</p>
+<button class="primary" id="gameBtn">Открыть Галактику</button>
+<p class="status" id="siteStatus">Ссылка на официальную игру</p>
+</section>
+
+<section class="panel">
+<h2>📋 Журнал событий</h2>
+<div id="log">Приложение готово к работе.</div>
+<button class="secondary primary" id="clearLog">Очистить журнал</button>
+</section>
+
+<p class="muted" style="text-align:center">Galaxy Auto 1.0 · Данные планет хранятся на этом устройстве.</p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let planets=[];
+try{planets=JSON.parse(localStorage.getItem('ga_planets')||'[]')}
+catch(e){planets=[]}
+let endTime=Number(localStorage.getItem('ga_timer_end')||0);
+let tick=null;
+
+function save(){
+ localStorage.setItem('ga_planets',JSON.stringify(planets));
+}
+function log(message){
+ const old=localStorage.getItem('ga_log')||'';
+ const entry=new Date().toLocaleTimeString()+' — '+message;
+ const lines=[entry,...old.split('\n').filter(Boolean)].slice(0,30);
+ localStorage.setItem('ga_log',lines.join('\n'));
+ renderLog();
+}
+function renderLog(){
+ $('log').textContent=localStorage.getItem('ga_log')||'Событий пока нет.';
+}
+function renderPlanets(){
+ $('planetList').replaceChildren();
+ planets.forEach((name,index)=>{
+  const row=document.createElement('div');
+  row.className='planet';
+  const label=document.createElement('span');
+  label.textContent='🌐 '+name;
+  const del=document.createElement('button');
+  del.className='danger';
+  del.textContent='Удалить';
+  del.addEventListener('click',()=>{
+   const removed=planets.splice(index,1)[0];
+   save();renderPlanets();log('Удалена планета: '+removed);
+  });
+  row.append(label,del);
+  $('planetList').append(row);
+ });
+ $('count').textContent='Планет: '+planets.length;
+}
+function addPlanet(){
+ const name=$('planetInput').value.trim();
+ if(!name){$('planetInput').focus();return}
+ if(planets.some(p=>p.toLowerCase()===name.toLowerCase())){
+  alert('Такая планета уже добавлена');return;
+ }
+ planets.push(name);
+ save();renderPlanets();
+ $('planetInput').value='';
+ log('Добавлена планета: '+name);
+}
+function showTimer(){
+ let left=endTime?Math.max(0,Math.ceil((endTime-Date.now())/1000)):300;
+ const m=String(Math.floor(left/60)).padStart(2,'0');
+ const s=String(left%60).padStart(2,'0');
+ $('timer').textContent=m+':'+s;
+ if(endTime&&left===0){
+  clearInterval(tick);tick=null;endTime=0;
+  localStorage.removeItem('ga_timer_end');
+  log('Таймер завершён. Проверь игру вручную.');
+  alert('Пять минут прошло. Проверь игру вручную.');
+ }
+}
+function startTimer(){
+ if(endTime>Date.now())return;
+ endTime=Date.now()+300000;
+ localStorage.setItem('ga_timer_end',String(endTime));
+ log('Запущен таймер на 5 минут');
+ clearInterval(tick);
+ tick=setInterval(showTimer,500);
+ showTimer();
+}
+function resetTimer(){
+ clearInterval(tick);tick=null;endTime=0;
+ localStorage.removeItem('ga_timer_end');
+ $('timer').textContent='05:00';
+ log('Таймер сброшен');
+}
+$('addBtn').addEventListener('click',addPlanet);
+$('planetInput').addEventListener('keydown',e=>{if(e.key==='Enter')addPlanet()});
+$('startBtn').addEventListener('click',startTimer);
+$('resetBtn').addEventListener('click',resetTimer);
+$('gameBtn').addEventListener('click',()=>{
+ window.open('https://galaxy.mobstudio.ru/web/?lang=ru','_blank');
+ log('Открыта официальная игра Mobstudio');
+});
+$('clearLog').addEventListener('click',()=>{
+ localStorage.removeItem('ga_log');renderLog();
+});
+renderPlanets();renderLog();
+if(endTime>Date.now()){tick=setInterval(showTimer,500);showTimer()}
+else if(endTime){resetTimer()}
+if('serviceWorker' in navigator){
+ window.addEventListener('load',()=>{
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+ });
+}
+</script>
+</body>
+</html>
