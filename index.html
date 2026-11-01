@@ -3,174 +3,177 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#090d1c">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Galaxy Auto">
-<link rel="manifest" href="manifest.webmanifest">
-<title>Galaxy Auto</title>
+<title>Galaxy Auto 2.0</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#090d1c;color:#f4f4ff;font-family:-apple-system,Arial,sans-serif}
-header{padding:25px 20px 15px;background:linear-gradient(130deg,#28205c,#11182d)}
-header h1{margin:0;color:#c4a7ff;font-size:27px}
-header p{color:#c4c2dc;margin-bottom:0}
-main{max-width:600px;margin:auto;padding:15px}
-.panel{background:#151d32;border:1px solid #293451;border-radius:17px;padding:17px;margin:13px 0}
+body{margin:0;background:#090d1c;color:#fff;font-family:Arial,sans-serif}
+header{padding:24px;background:linear-gradient(130deg,#30205d,#111a32)}
+header h1{margin:0;color:#c8aaff}
+main{max-width:600px;margin:auto;padding:14px}
+.panel{background:#151e34;border:1px solid #2b3958;border-radius:16px;padding:17px;margin:13px 0}
 h2{font-size:17px;margin:0 0 14px}
-input{width:100%;padding:14px;border:1px solid #394665;border-radius:10px;background:#0d1426;color:white;font-size:16px}
-button{border:0;border-radius:10px;padding:13px;background:#8059ed;color:white;font-weight:700;font-size:15px}
-button:active{opacity:.75}
-.primary{width:100%;margin-top:10px}
-.secondary{background:#293653}
-.danger{background:#69334a;padding:8px 11px}
-.planet{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#202b45;padding:10px;border-radius:10px;margin-top:9px}
-.planet span{overflow-wrap:anywhere}
-#timer{font-size:48px;text-align:center;font-weight:700;color:#c4a7ff;padding:12px}
-.actions{display:flex;gap:8px}
-.actions button{flex:1}
-small,.muted{color:#9eabc7;line-height:1.5}
-#log{font-size:13px;line-height:1.8;max-height:150px;overflow:auto}
-a{color:#c4a7ff}
-.status{color:#a8e5c0;font-size:13px}
+input,select{width:100%;padding:13px;margin:5px 0 10px;background:#0c1427;color:white;border:1px solid #394665;border-radius:9px;font-size:15px}
+button{padding:12px;border:0;border-radius:9px;background:#8059ed;color:white;font-weight:bold}
+.full{width:100%;margin-top:7px}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.card{background:#222e49;padding:12px;border-radius:10px;margin-top:9px}
+small,.muted{color:#aab6d0;line-height:1.5}
+.danger{background:#713b50}
+#timer{text-align:center;font-size:43px;color:#c8aaff;padding:10px}
+#history{font-size:13px;line-height:1.9}
 </style>
 </head>
 <body>
 <header>
 <h1>✦ GALAXY AUTO</h1>
-<p>Панель управления планетами</p>
+<p>Управление планетами · Версия 2.0</p>
 </header>
 <main>
+
 <section class="panel">
-<h2>🌍 Мои планеты</h2>
-<input id="planetInput" maxlength="60" placeholder="Введите название планеты">
-<button class="primary" id="addBtn">＋ Добавить планету</button>
-<div id="planetList"></div>
-<p class="muted" id="count">Планет: 0</p>
+<h2>👤 Персонаж</h2>
+<input id="character" placeholder="Имя персонажа">
+<button class="full" onclick="saveCharacter()">Сохранить персонажа</button>
+<p class="muted" id="characterView">Персонаж не указан</p>
 </section>
 
 <section class="panel">
-<h2>⏱ Таймер интервала</h2>
+<h2>🌍 Планеты</h2>
+<input id="planetName" placeholder="Название планеты">
+<button class="full" onclick="addPlanet()">＋ Добавить планету</button>
+<div id="planetList"></div>
+</section>
+
+<section class="panel">
+<h2>🏆 Мониторинг рейтинга</h2>
+<select id="activePlanet"></select>
+<input id="rank" type="number" min="1" placeholder="Текущая позиция в рейтинге">
+<button class="full" onclick="saveRank()">Сохранить позицию</button>
+<p id="rankView" class="muted">Позиция пока не указана</p>
+</section>
+
+<section class="panel">
+<h2>⏱ Таймер</h2>
 <div id="timer">05:00</div>
-<div class="actions">
-<button id="startBtn">Запустить</button>
-<button class="secondary" id="resetBtn">Сбросить</button>
+<div class="row">
+<button onclick="startTimer()">Запустить</button>
+<button onclick="resetTimer()">Сбросить</button>
 </div>
-<p class="muted">Таймер служит напоминанием. Он не выполняет игровые действия.</p>
+<p class="muted">Напоминание о следующем действии. Игровое поднятие выполняется вручную.</p>
+</section>
+
+<section class="panel">
+<h2>📈 История поднятий</h2>
+<button class="full" onclick="addHistory()">＋ Записать поднятие</button>
+<div id="history"></div>
 </section>
 
 <section class="panel">
 <h2>🚀 Официальная игра</h2>
-<p class="muted">Открытие официальной платформы Mobstudio.</p>
-<button class="primary" id="gameBtn">Открыть Галактику</button>
-<p class="status" id="siteStatus">Ссылка на официальную игру</p>
+<button class="full" onclick="openGame()">Открыть Галактику</button>
 </section>
 
-<section class="panel">
-<h2>📋 Журнал событий</h2>
-<div id="log">Приложение готово к работе.</div>
-<button class="secondary primary" id="clearLog">Очистить журнал</button>
-</section>
-
-<p class="muted" style="text-align:center">Galaxy Auto 1.0 · Данные планет хранятся на этом устройстве.</p>
 </main>
 <script>
 const $=id=>document.getElementById(id);
-let planets=[];
-try{planets=JSON.parse(localStorage.getItem('ga_planets')||'[]')}
-catch(e){planets=[]}
-let endTime=Number(localStorage.getItem('ga_timer_end')||0);
+const get=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
+let planets=get('ga2_planets',[]);
+let history=get('ga2_history',[]);
+let character=localStorage.getItem('ga2_character')||'';
+let ranks=get('ga2_ranks',{});
+let endTime=Number(localStorage.getItem('ga2_end')||0);
 let tick=null;
 
-function save(){
- localStorage.setItem('ga_planets',JSON.stringify(planets));
+function persist(){
+localStorage.setItem('ga2_planets',JSON.stringify(planets));
+localStorage.setItem('ga2_history',JSON.stringify(history));
+localStorage.setItem('ga2_ranks',JSON.stringify(ranks));
 }
-function log(message){
- const old=localStorage.getItem('ga_log')||'';
- const entry=new Date().toLocaleTimeString()+' — '+message;
- const lines=[entry,...old.split('\n').filter(Boolean)].slice(0,30);
- localStorage.setItem('ga_log',lines.join('\n'));
- renderLog();
+function saveCharacter(){
+character=$('character').value.trim();
+localStorage.setItem('ga2_character',character);
+renderCharacter();
 }
-function renderLog(){
- $('log').textContent=localStorage.getItem('ga_log')||'Событий пока нет.';
-}
-function renderPlanets(){
- $('planetList').replaceChildren();
- planets.forEach((name,index)=>{
-  const row=document.createElement('div');
-  row.className='planet';
-  const label=document.createElement('span');
-  label.textContent='🌐 '+name;
-  const del=document.createElement('button');
-  del.className='danger';
-  del.textContent='Удалить';
-  del.addEventListener('click',()=>{
-   const removed=planets.splice(index,1)[0];
-   save();renderPlanets();log('Удалена планета: '+removed);
-  });
-  row.append(label,del);
-  $('planetList').append(row);
- });
- $('count').textContent='Планет: '+planets.length;
+function renderCharacter(){
+$('character').value=character;
+$('characterView').textContent=character?'Персонаж: '+character:'Персонаж не указан';
 }
 function addPlanet(){
- const name=$('planetInput').value.trim();
- if(!name){$('planetInput').focus();return}
- if(planets.some(p=>p.toLowerCase()===name.toLowerCase())){
-  alert('Такая планета уже добавлена');return;
- }
- planets.push(name);
- save();renderPlanets();
- $('planetInput').value='';
- log('Добавлена планета: '+name);
+let n=$('planetName').value.trim();
+if(!n)return;
+if(planets.some(p=>p.toLowerCase()===n.toLowerCase()))return alert('Такая планета уже есть');
+planets.push(n);$('planetName').value='';
+persist();renderPlanets();
+}
+function removePlanet(i){
+planets.splice(i,1);persist();renderPlanets();
+}
+function renderPlanets(){
+$('planetList').replaceChildren();
+planets.forEach((p,i)=>{
+let div=document.createElement('div');div.className='card row';
+let name=document.createElement('span');name.textContent=p;
+let btn=document.createElement('button');btn.className='danger';btn.textContent='Удалить';
+btn.onclick=()=>removePlanet(i);
+div.append(name,btn);$('planetList').append(div);
+});
+let select=$('activePlanet'),old=select.value;
+select.replaceChildren();
+planets.forEach(p=>{let o=document.createElement('option');o.value=p;o.textContent=p;select.append(o)});
+if(planets.includes(old))select.value=old;
+renderRank();
+}
+function saveRank(){
+let p=$('activePlanet').value,r=Number($('rank').value);
+if(!p||!Number.isInteger(r)||r<1)return alert('Выбери планету и введи позицию');
+ranks[p]=r;persist();renderRank();
+}
+function renderRank(){
+let p=$('activePlanet').value;
+$('rankView').textContent=p&&ranks[p]?'Планета '+p+': место №'+ranks[p]:'Позиция не указана';
+}
+$('activePlanet').addEventListener('change',renderRank);
+function addHistory(){
+let p=$('activePlanet').value;
+if(!p)return alert('Сначала добавь планету');
+history.unshift({p,date:new Date().toLocaleString(),rank:ranks[p]||null});
+history=history.slice(0,50);persist();renderHistory();
+}
+function renderHistory(){
+$('history').replaceChildren();
+history.forEach(h=>{
+let div=document.createElement('div');div.className='card';
+div.textContent=h.date+' — '+h.p+(h.rank?' · место №'+h.rank:'');
+$('history').append(div);
+});
 }
 function showTimer(){
- let left=endTime?Math.max(0,Math.ceil((endTime-Date.now())/1000)):300;
- const m=String(Math.floor(left/60)).padStart(2,'0');
- const s=String(left%60).padStart(2,'0');
- $('timer').textContent=m+':'+s;
- if(endTime&&left===0){
-  clearInterval(tick);tick=null;endTime=0;
-  localStorage.removeItem('ga_timer_end');
-  log('Таймер завершён. Проверь игру вручную.');
-  alert('Пять минут прошло. Проверь игру вручную.');
- }
+let left=Math.max(0,Math.ceil((endTime-Date.now())/1000));
+$('timer').textContent=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');
+if(left===0&&endTime){
+clearInterval(tick);tick=null;endTime=0;
+localStorage.removeItem('ga2_end');
+alert('Пять минут прошло. Проверь игру вручную.');
+}
 }
 function startTimer(){
- if(endTime>Date.now())return;
- endTime=Date.now()+300000;
- localStorage.setItem('ga_timer_end',String(endTime));
- log('Запущен таймер на 5 минут');
- clearInterval(tick);
- tick=setInterval(showTimer,500);
- showTimer();
+if(endTime>Date.now())return;
+endTime=Date.now()+300000;
+localStorage.setItem('ga2_end',String(endTime));
+clearInterval(tick);tick=setInterval(showTimer,500);showTimer();
 }
 function resetTimer(){
- clearInterval(tick);tick=null;endTime=0;
- localStorage.removeItem('ga_timer_end');
- $('timer').textContent='05:00';
- log('Таймер сброшен');
+clearInterval(tick);tick=null;endTime=0;
+localStorage.removeItem('ga2_end');$('timer').textContent='05:00';
 }
-$('addBtn').addEventListener('click',addPlanet);
-$('planetInput').addEventListener('keydown',e=>{if(e.key==='Enter')addPlanet()});
-$('startBtn').addEventListener('click',startTimer);
-$('resetBtn').addEventListener('click',resetTimer);
-$('gameBtn').addEventListener('click',()=>{
- window.open('https://galaxy.mobstudio.ru/web/?lang=ru','_blank');
- log('Открыта официальная игра Mobstudio');
-});
-$('clearLog').addEventListener('click',()=>{
- localStorage.removeItem('ga_log');renderLog();
-});
-renderPlanets();renderLog();
+function openGame(){
+window.open('https://galaxy.mobstudio.ru/web/?lang=ru','_blank');
+}
+renderCharacter();renderPlanets();renderHistory();
 if(endTime>Date.now()){tick=setInterval(showTimer,500);showTimer()}
 else if(endTime){resetTimer()}
-if('serviceWorker' in navigator){
- window.addEventListener('load',()=>{
-  navigator.serviceWorker.register('./sw.js').catch(()=>{});
- });
-}
 </script>
 </body>
 </html>
