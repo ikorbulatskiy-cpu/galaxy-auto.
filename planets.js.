@@ -1,0 +1,46 @@
+
+const EventEmitter = require("events");
+
+class PlanetManager extends EventEmitter {
+  constructor() {
+    super();
+    this.currentPlanet = null;
+    this.connected = false;
+  }
+
+  selectPlanet(name) {
+    if (!name || typeof name !== "string") {
+      throw new Error("Не указана планета");
+    }
+
+    this.currentPlanet = name.trim();
+
+    this.emit("selected", this.currentPlanet);
+
+    return this.currentPlanet;
+  }
+
+  setConnected(value) {
+    this.connected = Boolean(value);
+
+    this.emit("connection", {
+      connected: this.connected,
+      planet: this.currentPlanet
+    });
+  }
+
+  getStatus() {
+    return {
+      planet: this.currentPlanet,
+      connected: this.connected
+    };
+  }
+
+  reset() {
+    this.currentPlanet = null;
+    this.connected = false;
+    this.emit("reset");
+  }
+}
+
+module.exports = PlanetManager;
