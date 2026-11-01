@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galaxy Auto</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 20px;
+  background: #080d19;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
+.app { max-width: 480px; margin: auto; }
+header {
+  padding: 22px;
+  background: #131f38;
+  border: 1px solid #263b60;
+  border-radius: 20px;
+}
+h1 { margin: 0; color: #a8c4ff; }
+.sub { color: #94a6c5; font-size: 13px; }
+.card {
+  margin-top: 16px;
+  padding: 18px;
+  background: #131f38;
+  border: 1px solid #263b60;
+  border-radius: 17px;
+}
+h3 { margin-top: 0; color: #b5caff; }
+input {
+  width: 100%;
+  padding: 14px;
+  margin: 8px 0;
+  background: #091326;
+  color: white;
+  border: 1px solid #34496c;
+  border-radius: 10px;
+  font-size: 16px;
+}
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 11px;
+  background: #315baf;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
+.secondary { background: #293954; }
+.status { color: #8dd9ae; }
+.timer {
+  font-size: 40px;
+  text-align: center;
+  padding: 12px;
+  font-weight: bold;
+}
+.item {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid #293954;
+}
+#log {
+  color: #aab9d2;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #7585a2;
+  font-size: 12px;
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <h1>🌌 GALAXY AUTO</h1>
+  <p class="sub">Панель управления • Версия 2.0</p>
+  <div class="status" id="status">● Тестовый режим</div>
+</header>
+
+<section class="card">
+  <h3>🔐 Вход персонажа</h3>
+  <p class="sub">Демонстрационное поле. Код никуда не отправляется.</p>
+  <input type="text" placeholder="Ник персонажа">
+  <input type="password" placeholder="Код восстановления" disabled>
+  <button onclick="logEvent('Вход не подключён. Это макет.')">
+    Проверить подключение
+  </button>
+</section>
+
+<section class="card">
+  <h3>🌍 Информация о планете</h3>
+  <div class="item"><span>Персонаж</span><b>Не подключён</b></div>
+  <div class="item"><span>Планета</span><b>Не выбрана</b></div>
+  <div class="item"><span>Стоимость</span><b>2.95 у.е.</b></div>
+  <div class="item"><span>Интервал игры</span><b>5 минут</b></div>
+</section>
+
+<section class="card">
+  <h3>⏱ Тестовый таймер</h3>
+  <div class="timer" id="timer">05:00</div>
+  <button onclick="startTimer()">ЗАПУСТИТЬ</button>
+  <button class="secondary" onclick="stopTimer()">ОСТАНОВИТЬ</button>
+  <p class="sub" id="timerStatus">Таймер остановлен</p>
+</section>
+
+<section class="card">
+  <h3>📊 Мониторинг</h3>
+  <div class="item"><span>Тестовые циклы</span><b id="cycles">0</b></div>
+  <div class="item"><span>Сервер</span><b>Не подключён</b></div>
+  <div class="item"><span>Автоматизация игры</span><b>Не активна</b></div>
+</section>
+
+<section class="card">
+  <h3>📋 Журнал событий</h3>
+  <div id="log">Программа готова к тестированию.</div>
+  <button class="secondary" onclick="clearLog()">ОЧИСТИТЬ ЖУРНАЛ</button>
+</section>
+
+<footer>
+Galaxy Auto • Demo build<br>
+Не подключено к игровому аккаунту
+</footer>
+</div>
+
+<script>
+let interval = null;
+let remaining = 300;
+let cycles = 0;
+
+function logEvent(message) {
+  const log = document.getElementById('log');
+  const time = new Date().toLocaleTimeString('ru-RU');
+  log.innerHTML = `${time} — ${message}<br>` + log.innerHTML;
+}
+
+function updateTimer() {
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  document.getElementById('timer').textContent =
+    String(m).padStart(2,'0') + ':' +
+    String(s).padStart(2,'0');
+}
+
+function startTimer() {
+  if (interval) return;
+  document.getElementById('timerStatus').textContent =
+    'Тестовый отсчёт запущен';
+  document.getElementById('status').textContent =
+    '● Таймер работает';
+  logEvent('Запущен тестовый таймер');
+
+  interval = setInterval(() => {
+    remaining--;
+    updateTimer();
+
+    if (remaining <= 0) {
+      clearInterval(interval);
+      interval = null;
+      cycles++;
+      document.getElementById('cycles').textContent = cycles;
+      remaining = 300;
+      updateTimer();
+      document.getElementById('timerStatus').textContent =
+        'Тестовый цикл завершён';
+      logEvent('Завершён тестовый цикл');
+      document.getElementById('status').textContent =
+        '● Тестовый режим';
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(interval);
+  interval = null;
+  document.getElementById('timerStatus').textContent =
+    'Таймер остановлен';
+  document.getElementById('status').textContent =
+    '● Тестовый режим';
+  logEvent('Таймер остановлен');
+}
+
+function clearLog() {
+  document.getElementById('log').textContent =
+    'Журнал очищен.';
+}
+</script>
+</body>
+</html>
