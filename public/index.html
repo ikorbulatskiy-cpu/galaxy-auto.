@@ -1,97 +1,202 @@
 
 <!DOCTYPE html>
+
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101014">
 <title>ЧЕРТ AI</title>
 <style>
 * { box-sizing: border-box; }
-body {
-  margin: 0;
-  padding: 20px;
-  background: #101014;
-  color: white;
-  font-family: Arial, sans-serif;
-}
-h1 { color: #ff4242; }
-.card {
-  background: #202027;
-  border: 1px solid #393942;
-  border-radius: 16px;
-  padding: 17px;
-  margin-bottom: 16px;
-}
-input, button, select {
-  width: 100%;
-  padding: 14px;
-  margin-top: 10px;
-  border-radius: 10px;
-  border: 0;
-  font-size: 16px;
-}
-button {
-  background: #b92735;
-  color: white;
-  font-weight: bold;
-}
-.status { color: #ffbd45; }
+
+body \{
+margin: 0;
+padding: 20px;
+background: \#101014;
+color: \#f5f5f7;
+font\-family: \-apple\-system, Arial, sans\-serif;
+\}
+
+h1 \{ color: \#ff4242; margin\-bottom: 4px; \}
+\.subtitle \{ color: \#999; margin\-top: 0; \}
+
+\.card \{
+background: \#202027;
+border: 1px solid \#393942;
+border\-radius: 16px;
+padding: 17px;
+margin: 16px 0;
+\}
+
+input, select, button, textarea \{
+width: 100%;
+padding: 13px;
+margin\-top: 10px;
+border\-radius: 10px;
+border: 1px solid \#444;
+font\-size: 16px;
+\}
+
+input, select, textarea \{
+background: \#15151a;
+color: white;
+\}
+
+button \{
+background: \#b92735;
+color: white;
+font\-weight: 700;
+border: 0;
+\}
+
+button\.secondary \{ background: \#383840; \}
+\.status \{ color: \#ffbd45; \}
+\#reply \{ white\-space: pre\-wrap; overflow\-wrap: anywhere; \}
+\.small \{ font\-size: 13px; color: \#aaa; \}
 </style>
+
 </head>
 <body>
 
 <h1>ЧЕРТ AI</h1>
-<p class="status" id="status">Ожидание подключения</p>
+<p class="subtitle">Помощник для Galaxy</p>
 
 <div class="card">
-  <h3>Вход в персонажа</h3>
-  <input id="recovery"
-    type="password"
-    placeholder="Код восстановления">
-  <button onclick="login()">
-    Войти в Galaxy
+  <h3>Статус</h3>
+  <p id="status" class="status">Проверяем сервер…</p>
+  <button class="secondary" onclick="refreshStatus()">
+    Обновить статус
   </button>
-  <p id="character"></p>
+</div>
+
+<div class="card">
+  <h3>Персонаж</h3>
+  <p id="character">Игровой аккаунт не подключён</p>
+  <p class="small">
+    Вход через RECOVER пока не реализован.
+  </p>
 </div>
 
 <div class="card">
   <h3>Планета</h3>
   <input id="planet" placeholder="Название планеты">
-  <button onclick="joinPlanet()">
-    Выбрать планету
-  </button>
+  <button onclick="selectPlanet()">Выбрать планету</button>
+  <p id="planetStatus"></p>
 </div>
 
 <div class="card">
-  <h3>Сообщения</h3>
-  <div id="messages">Пока сообщений нет</div>
+  <h3>Характер Чёрта</h3>
+  <select id="personality">
+    <option value="devil">Дерзкий и саркастичный</option>
+    <option value="funny">Юморист</option>
+    <option value="calm">Спокойный</option>
+  </select>
+  <button onclick="savePersonality()">Сохранить характер</button>
+</div>
+
+<div class="card">
+  <h3>Подготовить ответ</h3>
+  <textarea id="message" rows="3"
+    placeholder="Вставь сообщение, на которое нужно ответить"></textarea>
+  <button onclick="prepareReply()">Создать ответ</button>
+  <div id="reply"></div>
+  <button class="secondary" onclick="copyReply()">Копировать ответ</button>
 </div>
 
 <script>
-async function login() {
-  document.getElementById("status").textContent =
-    "Механизм авторизации ещё не подключён";
-}
-
-async function joinPlanet() {
-  const planet =
-    document.getElementById("planet").value;
-
-  const response = await fetch("/api/planet", {
-    method: "POST",
+async function api(path, options = {}) {
+  const response = await fetch(path, {
+    ...options,
     headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ planet })
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
   });
 
-  const result = await response.json();
+  const data = await response.json();
 
-  document.getElementById("status").textContent =
-    result.success
-      ? "Планета выбрана: " + result.planet
-      : "Ошибка выбора планеты";
+  if (!response.ok) {
+    throw new Error(data.error || "Ошибка сервера");
+  }
+
+  return data;
 }
+
+async function refreshStatus() {
+  try {
+    const data = await api("/api/status");
+    document.getElementById("status").textContent =
+      data.connected
+        ? "Соединение установлено"
+        : "Веб-сервер работает; Galaxy не подключён";
+  } catch {
+    document.getElementById("status").textContent =
+      "Сервер недоступен";
+  }
+}
+
+async function selectPlanet() {
+  const planet = document.getElementById("planet").value.trim();
+  if (!planet) return alert("Введи название планеты");
+
+  try {
+    const data = await api("/api/planet", {
+      method: "POST",
+      body: JSON.stringify({ planet })
+    });
+
+    document.getElementById("planetStatus").textContent =
+      "Выбрана планета: " + data.planet +
+      ". Это локальный выбор, не вход в игру.";
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function savePersonality() {
+  const personality =
+    document.getElementById("personality").value;
+
+  try {
+    await api("/api/personality", {
+      method: "POST",
+      body: JSON.stringify({ personality })
+    });
+    alert("Характер сохранён");
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function prepareReply() {
+  const message = document.getElementById("message").value.trim();
+  if (!message) return alert("Сначала вставь сообщение");
+
+  try {
+    const data = await api("/api/reply", {
+      method: "POST",
+      body: JSON.stringify({ message })
+    });
+    document.getElementById("reply").textContent = data.reply;
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function copyReply() {
+  const text = document.getElementById("reply").textContent;
+  if (!text) return alert("Сначала создай ответ");
+
+  try {
+    await navigator.clipboard.writeText(text);
+    alert("Ответ скопирован");
+  } catch {
+    alert("Не удалось скопировать. Выдели ответ и скопируй вручную.");
+  }
+}
+
+refreshStatus();
 </script>
 
 </body>
