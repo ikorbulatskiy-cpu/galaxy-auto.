@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ЧЕРТ AI</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 20px;
+  background: #101014;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+h1 { color: #ff4242; }
+.card {
+  background: #202027;
+  border: 1px solid #393942;
+  border-radius: 16px;
+  padding: 17px;
+  margin-bottom: 16px;
+}
+input, button, select {
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 0;
+  font-size: 16px;
+}
+button {
+  background: #b92735;
+  color: white;
+  font-weight: bold;
+}
+.status { color: #ffbd45; }
+</style>
+</head>
+<body>
+
+<h1>ЧЕРТ AI</h1>
+<p class="status" id="status">Ожидание подключения</p>
+
+<div class="card">
+  <h3>Вход в персонажа</h3>
+  <input id="recovery"
+    type="password"
+    placeholder="Код восстановления">
+  <button onclick="login()">
+    Войти в Galaxy
+  </button>
+  <p id="character"></p>
+</div>
+
+<div class="card">
+  <h3>Планета</h3>
+  <input id="planet" placeholder="Название планеты">
+  <button onclick="joinPlanet()">
+    Выбрать планету
+  </button>
+</div>
+
+<div class="card">
+  <h3>Сообщения</h3>
+  <div id="messages">Пока сообщений нет</div>
+</div>
+
+<script>
+async function login() {
+  document.getElementById("status").textContent =
+    "Механизм авторизации ещё не подключён";
+}
+
+async function joinPlanet() {
+  const planet =
+    document.getElementById("planet").value;
+
+  const response = await fetch("/api/planet", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ planet })
+  });
+
+  const result = await response.json();
+
+  document.getElementById("status").textContent =
+    result.success
+      ? "Планета выбрана: " + result.planet
+      : "Ошибка выбора планеты";
+}
+</script>
+
+</body>
+</html>
