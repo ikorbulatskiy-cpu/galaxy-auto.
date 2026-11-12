@@ -230,6 +230,30 @@ VALUES
  ('nexora-wedding-bloom','Свадебный букет','Символ виртуальной церемонии.','wedding','uncommon',100)
 ON CONFLICT (slug) DO NOTHING;
 
+INSERT INTO avatar_items (slug,name,description,category,rarity,price_coins)
+VALUES
+ ('nexora-aurora-hoodie','Худи «Аврора»','Мягкое худи с переливчатым узором.','outfit','uncommon',150),
+ ('nexora-midnight-boots','Ботинки «Полночь»','Высокие ботинки для ночного города.','shoes','common',75),
+ ('nexora-crystal-crown','Кристальная корона','Редкий сияющий головной убор.','head','epic',450),
+ ('nexora-silver-wings','Серебряные крылья','Декоративный аксессуар за спиной.','accessory','legendary',900),
+ ('nexora-pink-hair','Розовые волосы','Яркий цвет волос для образа.','hair','rare',220),
+ ('nexora-blue-hair','Синие волосы','Холодный синий оттенок.','hair','rare',220),
+ ('nexora-star-shirt','Футболка «Звезда»','Футболка с символом NEXORA.','outfit','common',55),
+ ('nexora-galaxy-sneakers','Кроссовки «Галактика»','Кроссовки с космическим принтом.','shoes','uncommon',130),
+ ('nexora-heart-pendant','Кулон «Сердце»','Небольшой романтичный аксессуар.','accessory','uncommon',95),
+ ('nexora-gold-halo','Золотой нимб','Редкий светящийся аксессуар.','head','epic',500),
+ ('nexora-fox-companion','Лисёнок-компаньон','Косметический предмет для коллекции.','pet_item','rare',250),
+ ('nexora-dragon-egg','Яйцо дракона','Декоративный предмет коллекции.','pet_item','epic',400),
+ ('nexora-wedding-ring','Обручальное кольцо','Символ виртуального союза.','wedding','rare',180),
+ ('nexora-wedding-veil','Свадебная фата','Белая фата для церемонии.','wedding','uncommon',140),
+ ('nexora-rainbow-scarf','Радужный шарф','Яркий аксессуар на каждый день.','accessory','common',65),
+ ('nexora-sunset-coat','Пальто «Закат»','Пальто в тёплых оттенках.','outfit','rare',280),
+ ('nexora-neon-sunglasses','Неоновые очки','Светящиеся очки для вечеринки.','accessory','uncommon',110),
+ ('nexora-moon-boots','Лунные сапоги','Сапоги с серебристым декором.','shoes','rare',210),
+ ('nexora-emerald-hair','Изумрудные волосы','Необычный зелёный оттенок.','hair','epic',350),
+ ('nexora-starry-backpack','Рюкзак «Звёзды»','Рюкзак с космическим рисунком.','accessory','common',80)
+ON CONFLICT (slug) DO NOTHING;
+
 INSERT INTO achievements (slug,name,description,reward_coins)
 VALUES
  ('first-steps','Первые шаги','Создай первого персонажа.',25),
@@ -237,3 +261,77 @@ VALUES
  ('new-friend','Новый друг','Добавь первого друга.',30),
  ('first-purchase','Первая покупка','Купи первый предмет.',15)
 ON CONFLICT (slug) DO NOTHING;
+
+
+-- Award one-time achievements from trusted server-side database events.
+CREATE OR REPLACE FUNCTION nexora_award_achievement(p_user_id UUID, p_slug TEXT)
+RETURNS VOID LANGUAGE plpgsql AS $$
+DECLARE
+  achievement RECORD;
+BEGIN
+  SELECT id,reward_coins INTO achievement FROM achievements WHERE slug=p_slug;
+  IF NOT FOUND THEN RETURN; END IF;
+  INSERT INTO user_achievements(user_id,achievement_id)
+  VALUES(p_user_id,achievement.id)
+  ON CONFLICT(user_id,achievement_id) DO NOTHING;
+  IF FOUND AND achievement.reward_coins > 0 THEN
+    INSERT INTO wallet_balances(user_id,coins)
+    VALUES(p_user_id,achievement.reward_coins)
+    ON CONFLICT(user_id) DO UPDATE
+      SET coins=wallet_balances.coins+EXCLUDED.coins,updated_at=NOW();
+    INSERT INTO wallet_ledger(user_id,currency,amount,reason)
+    VALUES(p_user_id,'coins',achievement.reward_coins,'Награда: ' || p_slug);
+  END IF;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION nexora_character_achievement_trigger()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM nexora_award_achievement(NEW.user_id,'first-steps');
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS nexora_first_character_achievement ON characters;
+CREATE TRIGGER nexora_first_character_achievement
+AFTER INSERT ON characters FOR EACH ROW
+EXECUTE FUNCTION nexora_character_achievement_trigger();
+
+CREATE OR REPLACE FUNCTION nexora_message_achievement_trigger()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM nexora_award_achievement(NEW.sender_id,'social-butterfly');
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS nexora_first_message_achievement ON messages;
+CREATE TRIGGER nexora_first_message_achievement
+AFTER INSERT ON messages FOR EACH ROW
+EXECUTE FUNCTION nexora_message_achievement_trigger();
+
+CREATE OR REPLACE FUNCTION nexora_friend_achievement_trigger()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.status='accepted' AND OLD.status IS DISTINCT FROM 'accepted' THEN
+    PERFORM nexora_award_achievement(NEW.requester_id,'new-friend');
+    PERFORM nexora_award_achievement(NEW.addressee_id,'new-friend');
+  END IF;
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS nexora_first_friend_achievement ON friendships;
+CREATE TRIGGER nexora_first_friend_achievement
+AFTER UPDATE OF status ON friendships FOR EACH ROW
+EXECUTE FUNCTION nexora_friend_achievement_trigger();
+
+CREATE OR REPLACE FUNCTION nexora_purchase_achievement_trigger()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM nexora_award_achievement(NEW.user_id,'first-purchase');
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS nexora_first_purchase_achievement ON purchases;
+CREATE TRIGGER nexora_first_purchase_achievement
+AFTER INSERT ON purchases FOR EACH ROW
+EXECUTE FUNCTION nexora_purchase_achievement_trigger();
