@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS purchases (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   item_id UUID NOT NULL REFERENCES avatar_items(id) ON DELETE RESTRICT,
+  character_id UUID NOT NULL REFERENCES characters(id) ON DELETE RESTRICT,
   currency VARCHAR(12) NOT NULL CHECK (currency IN ('coins','diamonds')),
   amount BIGINT NOT NULL CHECK (amount >= 0),
   idempotency_key UUID NOT NULL UNIQUE,
