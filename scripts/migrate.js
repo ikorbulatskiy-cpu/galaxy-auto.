@@ -44,6 +44,16 @@ async function main() {
         throw error;
       }
     }
+
+    const bootstrapEmail = process.env.NEXORA_BOOTSTRAP_ADMIN_EMAIL;
+    if (bootstrapEmail) {
+      const promoted = await client.query(
+        "UPDATE users SET role='developer',updated_at=NOW() WHERE LOWER(email)=LOWER($1) AND email_verified_at IS NOT NULL AND role='user' RETURNING id,username",
+        [bootstrapEmail.trim()]
+      );
+      if (promoted.rowCount) console.log("Granted developer role to verified account:", promoted.rows[0].username);
+      else console.log("No eligible account found for NEXORA_BOOTSTRAP_ADMIN_EMAIL.");
+    }
   } finally {
     client.release();
     await pool.end();
