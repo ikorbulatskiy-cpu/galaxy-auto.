@@ -27,7 +27,7 @@ router.get("/discover", requireSession, async (req, res, next) => {
        FROM users u
        JOIN profiles p ON p.user_id=u.id
        LEFT JOIN reputation r ON r.user_id=u.id
-       WHERE u.status='active' AND u.email_verified_at IS NOT NULL AND u.id<>$1
+       WHERE u.status='active' AND u.id<>$1
          AND p.visibility='public'
          AND ($2='' OR u.username ILIKE '%' || $2 || '%' OR COALESCE(p.display_name,'') ILIKE '%' || $2 || '%' OR COALESCE(p.city,'') ILIKE '%' || $2 || '%')
          AND NOT EXISTS(SELECT 1 FROM blocks b
@@ -81,7 +81,7 @@ router.post("/friends/:userId", requireSession, async (req, res, next) => {
     return res.status(400).json({ error: "Некорректный пользователь." });
   }
   try {
-    const target = await pool.query("SELECT id FROM users WHERE id=$1 AND status='active' AND email_verified_at IS NOT NULL", [targetId]);
+    const target = await pool.query("SELECT id FROM users WHERE id=$1 AND status='active'", [targetId]);
     if (!target.rowCount) return res.status(404).json({ error: "Пользователь не найден." });
     if (await isBlocked(pool, req.user.id, targetId)) return res.status(403).json({ error: "Нельзя отправить запрос этому пользователю." });
     const existing = await pool.query(
@@ -156,7 +156,7 @@ router.post("/conversations/:userId", requireSession, async (req, res, next) => 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const target = await client.query("SELECT id FROM users WHERE id=$1 AND status='active' AND email_verified_at IS NOT NULL", [targetId]);
+    const target = await client.query("SELECT id FROM users WHERE id=$1 AND status='active'", [targetId]);
     if (!target.rowCount) {
       await client.query("ROLLBACK");
       return res.status(404).json({ error: "Пользователь не найден." });

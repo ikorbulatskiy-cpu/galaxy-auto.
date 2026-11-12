@@ -142,7 +142,7 @@ router.post("/travel", requireSession, async (req, res, next) => {
     }
     const current = await client.query("SELECT planet_id FROM user_locations WHERE user_id=$1 FOR UPDATE", [req.user.id]);
     const fromPlanetId = current.rows[0]?.planet_id || null;
-    await client.query("DELETE FROM room_presence WHERE user_id=$1", [req.user.id]);
+    const removedPresence = await client.query("DELETE FROM room_presence WHERE user_id=$1 RETURNING room_id", [req.user.id]);
     if (fromPlanetId === planet.id) {
       await client.query("ROLLBACK");
       return res.json({ message: "Вы уже на этой планете.", planet: { slug: planet.slug, name: planet.name } });
@@ -168,6 +168,12 @@ router.post("/travel", requireSession, async (req, res, next) => {
       "INSERT INTO flights (user_id,from_planet_id,to_planet_id,status,fare_paid,arrived_at) VALUES ($1,$2,$3,'completed',$4,NOW())",
       [req.user.id, fromPlanetId, planet.id, planet.access_type === "ticket" ? planet.ticket_price : 0]
     );
+    const departedRooms = [...new Set(removedPresence.rows.map(row => row.room_id))];
+    for (const roomId of departedRooms) {
+      await client.query("SELECT pg_notify('nexora_room_events',$1)", [
+        JSON.stringify({ type: "presence", action: "left", roomId, userId: req.user.id })
+      ]);
+    }
     await client.query("COMMIT");
     res.json({ message: "Перелёт завершён.", planet: { slug: planet.slug, name: planet.name }, farePaid: planet.access_type === "ticket" ? planet.ticket_price : 0 });
   } catch (error) {
