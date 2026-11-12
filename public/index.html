@@ -15,6 +15,7 @@
 .avatar-equipment .pill{font-size:13px;background:rgba(255,255,255,.12)}
 .avatar-details{font-size:13px;color:var(--muted);text-align:center;line-height:1.6}
 </style>
+<link rel="stylesheet" href="/avatar-motion.css?v=1">
 </head>
 <body>
 <header class="wrap top"><a class="brand" href="#"><span class="mark">✦</span>NEXORA</a><div class="nav" id="top-actions"><button class="btn" data-open="login">Войти</button><button class="btn primary" data-open="register">Создать персонажа</button></div></header>
@@ -290,4 +291,5 @@ $("#load-admin-logs").onclick=async()=>{try{const d=await api("/api/features/adm
 
 loadApp();
 </script>
+<script src="/avatar-motion.js?v=1" defer></script>
 </body></html>
