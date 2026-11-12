@@ -39,7 +39,7 @@
   document.getElementById("nx-menu-planets").onclick=()=>{closeMenu();const input=document.getElementById("nx-planet-search");input.focus();input.scrollIntoView({block:"nearest",behavior:"smooth"})};
   document.getElementById("nx-menu-help").onclick=()=>{closeMenu();document.getElementById("nx-help-panel").hidden=false};
   document.getElementById("nx-menu-exit").onclick=()=>{closeMenu();const out=document.getElementById("logout");if(out)out.click()};
-  const menuButton=root.querySelector('[data-nx="menu"]');menuButton.onclick=()=>{const open=menu.hidden;closePanels();menu.hidden=!open};
+  const menuButton=root.querySelector('[data-nx="menu"]');root.querySelectorAll('[data-nx="menu"]').forEach(button=>button.onclick=()=>{const open=menu.hidden;closePanels();menu.hidden=!open});
   root.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>{if(typeof window.switchTab==="function"){window.switchTab(b.dataset.tab);closePanels()}}));
   root.querySelectorAll("[data-open-tab]").forEach(b=>b.addEventListener("click",()=>{if(typeof window.switchTab==="function")window.switchTab(b.dataset.openTab)}));
   const greeting=document.getElementById("nx-greeting"),welcome=document.getElementById("welcome");if(greeting&&welcome)greeting.textContent=welcome.textContent;
@@ -47,12 +47,12 @@
   document.getElementById("nx-refresh").onclick=()=>refreshWorld();
   const roomSelect=document.getElementById("nx-room-select");roomSelect.onchange=()=>{const selected=rooms.find(x=>x.id===roomSelect.value);if(selected)join(selected)};
   const eventsPanel=document.getElementById("nx-events-panel");document.getElementById("nx-events-toggle").onclick=()=>{eventsPanel.hidden=!eventsPanel.hidden};document.getElementById("nx-events-close").onclick=()=>{eventsPanel.hidden=true};
-  document.getElementById("nx-planet-go").onclick=()=>{const input=document.getElementById("nx-planet-search");if(input.value.trim())findPlanet();else input.focus()};
+  const planetGo=document.getElementById("nx-planet-go");if(planetGo)planetGo.onclick=()=>{const input=document.getElementById("nx-planet-search");if(input.value.trim())findPlanet();else input.focus()};
   document.getElementById("nx-planet-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();findPlanet()}});
   document.getElementById("nx-chat-form").onsubmit=e=>{e.preventDefault();const input=e.currentTarget.elements.body,body=input.value.trim();if(!body)return;if(!socket||socket.readyState!==WebSocket.OPEN)return status("Нет подключения к чату");socket.send(JSON.stringify({type:"room_message",body}));input.value=""};
-  document.getElementById("nx-favorites-toggle").onclick=()=>{const panel=document.getElementById("nx-favorites-panel");const open=panel.hidden;closePanels();panel.hidden=!open;renderFavorites()};
+  const favoritesToggle=document.getElementById("nx-favorites-toggle");if(favoritesToggle)favoritesToggle.onclick=()=>{const panel=document.getElementById("nx-favorites-panel");const open=panel.hidden;closePanels();panel.hidden=!open;renderFavorites()};
   document.getElementById("nx-favorites-close").onclick=()=>document.getElementById("nx-favorites-panel").hidden=true;
-  document.getElementById("nx-help-toggle").onclick=()=>{const panel=document.getElementById("nx-help-panel");const open=panel.hidden;closePanels();panel.hidden=!open};
+  const helpToggle=document.getElementById("nx-help-toggle");if(helpToggle)helpToggle.onclick=()=>{const panel=document.getElementById("nx-help-panel");const open=panel.hidden;closePanels();panel.hidden=!open};
   document.getElementById("nx-help-close").onclick=()=>document.getElementById("nx-help-panel").hidden=true;
   const updateClock=()=>{const now=new Date(),time=now.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});document.getElementById("nx-clock").textContent=time;document.getElementById("nx-statusbar-time").textContent=now.toLocaleDateString("ru-RU")};
   updateClock();setInterval(updateClock,30000);
