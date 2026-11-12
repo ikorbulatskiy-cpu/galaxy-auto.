@@ -22,10 +22,53 @@ function attachRealtime(server) {
       }
     }
   };
-  const listener = process.env.DATABASE_URL ? new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: true } : undefined
-  }) : null;
+  let listener = null;
+  let listenerStopping = false;
+  let reconnectTimer = null;
+  const handleNotification = notification => {
+    let event;
+    try { event = JSON.parse(notification.payload); } catch { return; }
+    if (!event || typeof event.roomId !== "string" || event.source === instanceId) return;
+    broadcastLocal(event);
+  };
+  const scheduleReconnect = () => {
+    if (listenerStopping || reconnectTimer || !process.env.DATABASE_URL) return;
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = null;
+      connectListener();
+    }, 5000);
+    if (typeof reconnectTimer.unref === "function") reconnectTimer.unref();
+  };
+  const connectListener = async () => {
+    if (listenerStopping || listener || !process.env.DATABASE_URL) return;
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: true } : undefined
+    });
+    listener = client;
+    client.on("notification", handleNotification);
+    client.on("error", error => {
+      console.error("Realtime listener error:", error.message);
+      if (listener === client) listener = null;
+      scheduleReconnect();
+    });
+    client.on("end", () => {
+      if (listener === client) {
+        listener = null;
+        scheduleReconnect();
+      }
+    });
+    try {
+      await client.connect();
+      await client.query("LISTEN nexora_room_events");
+      console.log("Realtime cross-instance listener connected.");
+    } catch (error) {
+      if (listener === client) listener = null;
+      await client.end().catch(() => {});
+      console.error("Realtime cross-instance listener unavailable:", error.message);
+      scheduleReconnect();
+    }
+  };
   const publish = payload => {
     const event = { ...payload, source: instanceId };
     broadcastLocal(event);
@@ -33,18 +76,7 @@ function attachRealtime(server) {
       console.error("Realtime event publish failed:", error.message);
     });
   };
-  if (listener) {
-    listener.connect().then(() => listener.query("LISTEN nexora_room_events")).catch(error => {
-      console.error("Realtime cross-instance listener unavailable:", error.message);
-    });
-    listener.on("notification", notification => {
-      let event;
-      try { event = JSON.parse(notification.payload); } catch { return; }
-      if (!event || typeof event.roomId !== "string" || event.source === instanceId) return;
-      broadcastLocal(event);
-    });
-    listener.on("error", error => console.error("Realtime listener error:", error.message));
-  }
+  connectListener();
   const cleanup = setInterval(async () => {
     try {
       const stale = await pool.query("DELETE FROM room_presence WHERE connected_at < NOW() - INTERVAL '2 minutes' RETURNING room_id,user_id");
@@ -56,7 +88,9 @@ function attachRealtime(server) {
   if (typeof cleanup.unref === "function") cleanup.unref();
   server.on("close", () => {
     clearInterval(cleanup);
-    if (listener) listener.end().catch(() => {});
+    listenerStopping = true;
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    if (listener) { const client = listener; listener = null; client.end().catch(() => {}); }
   });
 
   wss.on("connection", async (socket, request) => {
