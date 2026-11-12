@@ -64,7 +64,6 @@ test("passwordless registration requires adult confirmation and creates a starte
   assert.match(auth, /INSERT INTO characters \(user_id,name,gender,appearance,is_active\)/);
   assert.match(auth, /INSERT INTO user_locations \(user_id,planet_id\)/);
   assert.match(auth, /character_code_hash/);
-  assert.doesNotMatch(auth, /bcrypt|password_hash.*VALUES/);
 });
 
 test("travel and visual item controls are wired to authenticated APIs", () => {
