@@ -26,7 +26,7 @@ router.get("/rooms/:roomId/positions", requireSession, async (req, res, next) =>
   if (!/^[0-9a-f-]{36}$/i.test(req.params.roomId)) return res.status(400).json({ error: "Некорректная комната." });
   try {
     const result = await pool.query(
-      `SELECT p.user_id,u.username,COALESCE(c.name,u.username) AS character_name,
+      `SELECT DISTINCT ON (p.user_id) p.user_id,u.username,COALESCE(c.name,u.username) AS character_name,
               c.appearance AS character_appearance,c.aura AS character_aura,
               p.x,p.y,p.updated_at
        FROM room_player_positions p
@@ -40,7 +40,7 @@ router.get("/rooms/:roomId/positions", requireSession, async (req, res, next) =>
          AND NOT EXISTS(SELECT 1 FROM blocks b
            WHERE (b.blocker_id=$2 AND b.blocked_id=p.user_id)
               OR (b.blocker_id=p.user_id AND b.blocked_id=$2))
-       ORDER BY p.updated_at DESC`,
+       ORDER BY p.user_id,rp.connected_at DESC,p.updated_at DESC`,
       [req.params.roomId, req.user.id]
     );
     res.json({ positions: result.rows });
