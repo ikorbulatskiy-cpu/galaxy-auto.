@@ -13,6 +13,8 @@ test("PNG engine exposes gendered head/body layers and action presets",()=>{
  assert.equal(typeof engine.mount,"function");
  assert.equal(engine.catalog.parts.male.body,"bodies/body_male_01.png");
  assert.equal(engine.catalog.parts.female.head,"heads/head_female_classic.png");
+ assert.match(engineSource,/this\.look\.body===\"slim\"/);
+ assert.match(engineSource,/this\.look\.head===\"soft\"/);
  for(const action of ["idle","walk","dance","happy","wave","heart"]) assert.ok(engine.catalog.animations[action]);
 });
 test("all referenced sprite assets are real transparent PNG files",()=>{
