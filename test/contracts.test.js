@@ -138,7 +138,13 @@ test("realtime events are distributed through PostgreSQL notifications", () => {
   const html = read("public/index.html");
   assert.match(html, /roomReconnectAttempts/);
   assert.match(html, /roomReconnectTimer=setTimeout/);
+  assert.match(html, /room-online-list/);
+  assert.match(realtime, /action: "joined"/);
+  assert.match(html, /room-online-list/);
+  assert.match(realtime, /action: "joined"/);
   assert.match(realtime, /scheduleReconnect/);
+  const game = read("src/game.js");
+  assert.match(game, /router\.get\("\/rooms\/:roomId\/presence"/);
   assert.match(realtime, /LISTEN nexora_room_events/);
   assert.match(realtime, /pg_notify\('nexora_room_events'/);
   assert.match(realtime, /on\("notification", handleNotification\)/);
