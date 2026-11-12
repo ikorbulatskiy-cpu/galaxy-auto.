@@ -90,7 +90,7 @@ test("registration persists the selected 2D body", () => {
 
 test("inline application script parses after the entry-screen changes", () => {
   const html = read("public/index.html");
-  const scripts = [...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)];
+  const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
   assert.equal(scripts.length, 1, "expected one inline application script");
   assert.doesNotThrow(() => new vm.Script(scripts[0][1]));
 });
