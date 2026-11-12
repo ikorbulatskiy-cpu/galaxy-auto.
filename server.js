@@ -19,8 +19,27 @@ const server = http.createServer(app);
 const PORT = Number(process.env.PORT || 3000);
 
 app.disable("x-powered-by");
-app.set("trust proxy", 1);
-app.use(helmet({ contentSecurityPolicy: false }));
+const proxyHops = process.env.TRUST_PROXY_HOPS;
+if (proxyHops !== undefined && !/^\\d+$/.test(proxyHops)) {
+  throw new Error("TRUST_PROXY_HOPS must be a non-negative integer.");
+}
+app.set("trust proxy", proxyHops === undefined ? false : Number(proxyHops));
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      baseUri: ["'self'"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      formAction: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "ws:", "wss:"],
+      upgradeInsecureRequests: process.env.NODE_ENV === "production" ? [] : null
+    }
+  }
+}));
 app.use(express.json({ limit: "32kb" }));
 app.use(cookieParser());
 
@@ -29,12 +48,15 @@ app.use((req, res, next) => {
     const origin = req.get("origin");
     if (origin) {
       try {
-        if (new URL(origin).host !== req.get("host")) {
+        const parsedOrigin = new URL(origin);
+        if (!["http:", "https:"].includes(parsedOrigin.protocol) || parsedOrigin.host !== req.get("host")) {
           return res.status(403).json({ error: "Cross-origin request rejected." });
         }
       } catch {
         return res.status(403).json({ error: "Invalid request origin." });
       }
+    } else if (req.get("sec-fetch-site") === "cross-site") {
+      return res.status(403).json({ error: "Cross-site request rejected." });
     }
   }
   next();
