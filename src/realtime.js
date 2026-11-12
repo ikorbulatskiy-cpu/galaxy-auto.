@@ -89,8 +89,8 @@ function attachRealtime(server) {
           const member = await pool.query("SELECT 1 FROM room_presence WHERE connection_id=$1 AND user_id=$2 AND room_id=$3",[connectionId,user.id,joinedRoom]);
           if (!member.rowCount) return;
           const inserted = await pool.query(
-            "INSERT INTO room_messages (room_id,user_id,character_id,body) SELECT $1,$2,id,$4 FROM characters WHERE user_id=$2 AND is_active=TRUE RETURNING id,room_id,body,created_at,character_id",
-            [joinedRoom,user.id,user.id,body]
+            "INSERT INTO room_messages (room_id,user_id,character_id,body) SELECT $1,$2,id,$3 FROM characters WHERE user_id=$2 AND is_active=TRUE RETURNING id,room_id,body,created_at,character_id",
+            [joinedRoom,user.id,body]
           );
           if (!inserted.rowCount) {
             const fallback = await pool.query(
