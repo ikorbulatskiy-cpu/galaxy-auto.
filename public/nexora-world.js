@@ -71,5 +71,6 @@
   }catch(e){status(e.message)}
  }
  async function loadPresence(id){try{const p=await api("/api/game/rooms/"+id+"/presence");if(activeRoom===id)renderPlayers(p.users||[])}catch{}}
- window.nexoraWorldRefresh=refreshWorld;\n layout();refreshWorld();
+ window.nexoraWorldRefresh=refreshWorld;
+ layout();refreshWorld();
 })();
