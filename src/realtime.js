@@ -193,7 +193,6 @@ function attachRealtime(server) {
             publish({ type: "presence", action: "left", roomId: previousRoom, userId: user.id, connectionId });
           }
           socket.joinedRoom = packet.roomId;
-          socket.socket.joinedRoom = socket.joinedRoom;
           if (!rooms.has(socket.joinedRoom)) rooms.set(socket.joinedRoom,new Set());
           rooms.get(socket.joinedRoom).add(socket);
           publish({ type: "presence", action: "joined", roomId: socket.joinedRoom, userId: user.id, username: user.username });
