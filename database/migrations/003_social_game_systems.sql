@@ -405,3 +405,102 @@ DROP TRIGGER IF EXISTS nexora_wedding_achievement ON wedding_ceremonies;
 CREATE TRIGGER nexora_wedding_achievement
 AFTER INSERT ON wedding_ceremonies FOR EACH ROW
 EXECUTE FUNCTION nexora_wedding_achievement_trigger();
+
+
+-- Trusted game events feed the account-level leaderboards.
+CREATE OR REPLACE FUNCTION nexora_add_reputation(
+  p_user_id UUID,
+  p_actor_user_id UUID,
+  p_event_type TEXT,
+  p_authority_delta INTEGER,
+  p_popularity_delta INTEGER,
+  p_experience_delta INTEGER,
+  p_daily_cap INTEGER DEFAULT NULL
+)
+RETURNS VOID LANGUAGE plpgsql AS $$
+DECLARE
+  used_today INTEGER;
+BEGIN
+  IF p_daily_cap IS NOT NULL THEN
+    SELECT COUNT(*)::int INTO used_today
+    FROM reputation_events
+    WHERE user_id=p_user_id AND event_type=p_event_type
+      AND created_at > NOW()-INTERVAL '1 day';
+    IF used_today >= p_daily_cap THEN RETURN; END IF;
+  END IF;
+
+  UPDATE reputation SET
+    authority=GREATEST(0,authority+p_authority_delta),
+    popularity=GREATEST(0,popularity+p_popularity_delta),
+    experience=experience+p_experience_delta,
+    level=GREATEST(level,1+((experience+p_experience_delta)/100)::int),
+    updated_at=NOW()
+  WHERE user_id=p_user_id;
+
+  INSERT INTO reputation_events(user_id,actor_user_id,event_type,authority_delta,popularity_delta,metadata)
+  VALUES(p_user_id,p_actor_user_id,p_event_type,p_authority_delta,p_popularity_delta,
+    jsonb_build_object('experience_delta',p_experience_delta));
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION nexora_message_achievement_trigger()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM nexora_add_reputation(NEW.sender_id,NULL,'message',0,1,1,100);
+  PERFORM nexora_award_achievement(NEW.sender_id,'social-butterfly');
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION nexora_friend_achievement_trigger()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.status='accepted' AND OLD.status IS DISTINCT FROM 'accepted' THEN
+    PERFORM nexora_add_reputation(NEW.requester_id,NEW.addressee_id,'friend_accepted',1,2,5,NULL);
+    PERFORM nexora_add_reputation(NEW.addressee_id,NEW.requester_id,'friend_accepted',1,2,5,NULL);
+    PERFORM nexora_award_achievement(NEW.requester_id,'new-friend');
+    PERFORM nexora_award_achievement(NEW.addressee_id,'new-friend');
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION nexora_wedding_achievement_trigger()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+  couple RECORD;
+BEGIN
+  SELECT requester_id,addressee_id INTO couple FROM relationships WHERE id=NEW.relationship_id;
+  IF FOUND THEN
+    PERFORM nexora_add_reputation(couple.requester_id,couple.addressee_id,'wedding',2,3,10,NULL);
+    PERFORM nexora_add_reputation(couple.addressee_id,couple.requester_id,'wedding',2,3,10,NULL);
+    PERFORM nexora_award_achievement(couple.requester_id,'wedding-day');
+    PERFORM nexora_award_achievement(couple.addressee_id,'wedding-day');
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION nexora_blog_progress_trigger()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM nexora_add_reputation(NEW.user_id,NULL,'blog_post',0,1,2,5);
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS nexora_blog_progress ON blog_posts;
+CREATE TRIGGER nexora_blog_progress
+AFTER INSERT ON blog_posts FOR EACH ROW
+EXECUTE FUNCTION nexora_blog_progress_trigger();
+
+CREATE OR REPLACE FUNCTION nexora_clan_progress_trigger()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM nexora_add_reputation(NEW.owner_user_id,NULL,'clan_created',5,3,10,1);
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS nexora_clan_progress ON clans;
+CREATE TRIGGER nexora_clan_progress
+AFTER INSERT ON clans FOR EACH ROW
+EXECUTE FUNCTION nexora_clan_progress_trigger();
