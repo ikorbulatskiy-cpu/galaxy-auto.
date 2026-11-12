@@ -15,6 +15,9 @@
   if (!header || !menu || !online || !nav || !scene || !chatLog) return;
 
   // Move existing controls; their original IDs and listeners remain intact.
+  const menuTrigger = header.querySelector(".nx-menu-trigger");
+  if (menuTrigger) header.insertBefore(menuTrigger, header.firstChild);
+
   const onlineWrap = document.createElement("div");
   onlineWrap.className = "nx-online-wrap";
   onlineWrap.append(online);
@@ -33,11 +36,11 @@
   const menuHeading = menu.querySelector(".nx-menu-heading");
   if (planetTools && menuHeading) menuHeading.after(planetTools);
   const planetButton = menu.querySelector("#nx-menu-planets");
-  planetButton?.addEventListener("click", () => {
+  if (planetButton) planetButton.onclick = () => {
     menu.hidden = false;
     planetTools?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     world.querySelector("#nx-planet-search")?.focus();
-  }, true);
+  };
 
   // Keep the live count from the existing presence endpoint, without a fake constant.
   const normalizeOnline = () => {
