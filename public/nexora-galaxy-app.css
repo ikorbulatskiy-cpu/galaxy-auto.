@@ -134,3 +134,20 @@ body:has(#dashboard:not(.hidden)){background:#171c24;color:#f4f6f8}
  #dashboard>#tab-world .nx-avatar-name{width:53px!important}
 }
 @media(prefers-reduced-motion:reduce){#dashboard *,#dashboard *:before,#dashboard *:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+
+/* iPhone layout regression fixes: one bottom bar in the world, one connection badge, one floor baseline. */
+#dashboard:has(>#tab-world:not(.hidden)) .nx-social-bottom{display:none!important}
+#dashboard>#tab-world .nx-avatars{bottom:38px!important}
+#dashboard>#tab-world .nx-scene:after{z-index:1}
+#dashboard>#tab-world .nx-avatar-card{z-index:2}
+#dashboard>#tab-world .nx-connection-status{flex:0 1 auto;max-width:88px}
+@media(max-width:430px){
+ #dashboard>#tab-world .nx-topbar{gap:5px;padding-left:7px!important;padding-right:7px!important}
+ #dashboard>#tab-world .nx-logo{font-size:11px!important;letter-spacing:0!important}
+ #dashboard>#tab-world .nx-current-planet{padding:0 5px}
+ #dashboard>#tab-world .nx-current-planet b{max-width:76px;font-size:11px}
+ #dashboard>#tab-world .nx-online{min-width:23px;height:22px;padding:0 5px;font-size:9px}
+ #dashboard>#tab-world .nx-connection-status{max-width:76px;height:26px;padding:0 6px;font-size:9px}
+ #dashboard>#tab-world .nx-menu-trigger{width:32px!important;height:32px!important;min-width:32px;flex-basis:32px}
+}
