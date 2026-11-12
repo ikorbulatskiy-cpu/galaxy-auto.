@@ -91,7 +91,7 @@ router.post("/register", async (req, res, next) => {
       "INSERT INTO characters (user_id,name,gender,appearance,is_active) VALUES ($1,$2,$3,$4::jsonb,TRUE)",
       [user.id, username, gender, JSON.stringify({ body:"regular", head:"classic", skinTone:"medium", hair:"short", hairColor:"brown", eyes:"brown", outfit:gender === "female" ? "pink" : "blue", shoes:"sneakers" })]
     );
-    await client.query("INSERT INTO user_locations (user_id,planet_id) SELECT $1,id FROM planets WHERE slug='nexora-prime' ON CONFLICT (user_id) DO NOTHING", [user.id]);
+    await client.query("INSERT INTO user_locations (user_id,planet_id) SELECT $1,id FROM planets WHERE slug='newbies-1' ON CONFLICT (user_id) DO NOTHING", [user.id]);
     const sessionToken = randomToken();
     await client.query("INSERT INTO sessions (user_id,token_hash,expires_at) VALUES ($1,$2,NOW() + INTERVAL '14 days')", [user.id, hashToken(sessionToken)]);
     await client.query("COMMIT");
