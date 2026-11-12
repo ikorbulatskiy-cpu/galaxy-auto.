@@ -12,7 +12,7 @@
     try {
       const response = await fetch(url,{credentials:"same-origin",...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "Ошибка " + response.status);
+      if (!response.ok) { const error = new Error(data.error || "Ошибка " + response.status); error.status = response.status; throw error; }
       return data;
     } catch (error) {
       if (method !== "GET" || !mockEnabled()) throw error;
