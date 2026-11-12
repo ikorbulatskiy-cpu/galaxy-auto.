@@ -8,7 +8,7 @@ const router = express.Router();
 router.get("/characters", requireSession, async (req, res, next) => {
   try {
     const result = await pool.query(
-      "SELECT id,name,gender,character_age,bio,appearance,level,experience,authority,is_active,created_at,updated_at FROM characters WHERE user_id=$1 ORDER BY created_at",
+      "SELECT id,name,gender,character_age,bio,appearance,aura,level,experience,authority,is_active,created_at,updated_at FROM characters WHERE user_id=$1 ORDER BY created_at",
       [req.user.id]
     );
     res.json({ characters: result.rows, limit: 3 });
@@ -135,7 +135,65 @@ router.delete("/characters/:characterId", requireSession, async (req, res, next)
   } finally { client.release(); }
 });
 
-router.get("/planets", requireSession, async (req,res,next)=>{try{const r=await pool.query("SELECT p.id,p.slug,p.name,p.description,p.access_type,p.ticket_price,EXISTS(SELECT 1 FROM user_locations ul WHERE ul.user_id=$1 AND ul.planet_id=p.id) AS is_current,(SELECT COUNT(*)::int FROM rooms rm WHERE rm.planet_id=p.id AND rm.is_active=TRUE) AS rooms,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp JOIN rooms rm ON rm.id=rp.room_id WHERE rm.planet_id=p.id AND rp.connected_at>NOW()-INTERVAL '2 minutes') AS online FROM planets p WHERE p.is_active=TRUE ORDER BY p.name",[req.user.id]);res.json({planets:r.rows})}catch(e){next(e)}});
+
+router.get("/planets", requireSession, async (req,res,next)=>{
+ try{
+  const r=await pool.query("SELECT p.id,p.slug,p.name,p.description,p.access_type,p.ticket_price,p.settings,p.owner_user_id,COALESCE(u.username,'') AS owner_name,(p.owner_user_id=$1) AS is_owner,EXISTS(SELECT 1 FROM user_locations ul WHERE ul.user_id=$1 AND ul.planet_id=p.id) AS is_current,(SELECT COUNT(*)::int FROM rooms rm WHERE rm.planet_id=p.id AND rm.is_active=TRUE) AS rooms,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp JOIN rooms rm ON rm.id=rp.room_id WHERE rm.planet_id=p.id AND rp.connected_at>NOW()-INTERVAL '2 minutes') AS online FROM planets p LEFT JOIN users u ON u.id=p.owner_user_id WHERE p.is_active=TRUE ORDER BY (p.slug='newbies-1') DESC,p.name",[req.user.id]);
+  res.json({planets:r.rows});
+ }catch(e){next(e)}
+});
+
+router.post("/planets", requireSession, async (req,res,next)=>{
+ const parsed=z.object({name:z.string().trim().min(3).max(48).regex(/^[\\p{L}\\p{N} _*.-]+$/u),description:z.string().trim().max(300).default(""),weather:z.string().trim().max(40).default("Ясно"),interior:z.string().trim().max(60).default("Космический зал")}).strict().safeParse(req.body);
+ if(!parsed.success)return res.status(400).json({error:"Проверьте название, описание и оформление планеты."});
+ const client=await pool.connect();
+ try{
+  await client.query("BEGIN");
+  const wallet=await client.query("SELECT coins FROM wallet_balances WHERE user_id=$1 FOR UPDATE",[req.user.id]);
+  if(!wallet.rowCount||Number(wallet.rows[0].coins)<3){await client.query("ROLLBACK");return res.status(402).json({error:"Создание планеты стоит 3 Nexora Coins."});}
+  const slug="player-"+require("crypto").randomBytes(6).toString("hex");
+  const settings={theme:"custom",weather:parsed.data.weather,interior:parsed.data.interior,king_label:"Король планеты"};
+  const created=await client.query("INSERT INTO planets(slug,name,description,access_type,ticket_price,settings,owner_user_id) VALUES($1,$2,$3,'public',0,$4::jsonb,$5) RETURNING id,slug,name,description,settings,owner_user_id",[slug,parsed.data.name,parsed.data.description,JSON.stringify(settings),req.user.id]);
+  await client.query("UPDATE wallet_balances SET coins=coins-3,updated_at=NOW() WHERE user_id=$1",[req.user.id]);
+  await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id) VALUES($1,'coins',-3,'Создание планеты',$2)",[req.user.id,created.rows[0].id]);
+  await client.query("INSERT INTO rooms(planet_id,slug,name,description,capacity) VALUES($1,'central-hall','Центральный зал','Главная комната вашей планеты.',100)",[created.rows[0].id]);
+  await client.query("COMMIT");
+  res.status(201).json({planet:created.rows[0],message:"Планета создана. Вы её король.",cost:3});
+ }catch(e){await client.query("ROLLBACK");if(e.code==="23505")return res.status(409).json({error:"Не удалось создать уникальную планету. Повторите попытку."});next(e)}
+ finally{client.release()}
+});
+
+const AURA_CATALOG={
+ angel:{price:50,color:"green",title:"Ангел"},
+ god:{price:null,color:"purple",title:"Бог / Богиня"},
+ almighty:{price:100,color:"gold",title:"Всемогущий"},
+ universe:{price:200,color:"red",title:"Мистер Вселенный / Мисс Вселенная"},
+ legend:{price:300,color:"blue",title:"Легенда"}
+};
+router.get("/auras",requireSession,async(req,res,next)=>{
+ try{const r=await pool.query("SELECT id,name,gender,aura FROM characters WHERE user_id=$1 ORDER BY is_active DESC,created_at",[req.user.id]);res.json({auras:AURA_CATALOG,characters:r.rows})}catch(e){next(e)}
+});
+router.post("/characters/:characterId/aura",requireSession,async(req,res,next)=>{
+ const parsed=z.object({aura:z.enum(["none","angel","god","almighty","universe","legend"])}).strict().safeParse(req.body);
+ if(!parsed.success||!/^[0-9a-f-]{36}$/i.test(req.params.characterId))return res.status(400).json({error:"Некорректная аура."});
+ const aura=parsed.data.aura,price=AURA_CATALOG[aura]?.price??0;
+ if(aura==="god")return res.status(400).json({error:"Цена ауры Бога / Богини ещё не установлена."});
+ const client=await pool.connect();
+ try{
+  await client.query("BEGIN");
+  const ch=await client.query("SELECT id FROM characters WHERE id=$1 AND user_id=$2 FOR UPDATE",[req.params.characterId,req.user.id]);
+  if(!ch.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Персонаж не найден."});}
+  if(price>0){
+   const w=await client.query("SELECT coins FROM wallet_balances WHERE user_id=$1 FOR UPDATE",[req.user.id]);
+   if(!w.rowCount||Number(w.rows[0].coins)<price){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно Nexora Coins."});}
+   await client.query("UPDATE wallet_balances SET coins=coins-$2,updated_at=NOW() WHERE user_id=$1",[req.user.id,price]);
+   await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id) VALUES($1,'coins',$2,$3,$4)",[req.user.id,-price,"Покупка ауры: "+AURA_CATALOG[aura].title,req.params.characterId]);
+  }
+  const updated=await client.query("UPDATE characters SET aura=$3,updated_at=NOW() WHERE id=$1 AND user_id=$2 RETURNING id,name,aura",[req.params.characterId,req.user.id,aura]);
+  await client.query("COMMIT");res.json({character:updated.rows[0],price});
+ }catch(e){await client.query("ROLLBACK");next(e)}finally{client.release()}
+});
+
 
 router.get("/rooms", requireSession, async (req, res, next) => {
   const planetSlug = typeof req.query.planet === "string" ? req.query.planet : "";
@@ -151,13 +209,13 @@ router.get("/rooms/:roomId/presence", requireSession, async (req,res,next)=>{
   if (!/^[0-9a-f-]{36}$/i.test(req.params.roomId)) return res.status(400).json({error:"Некорректная комната."});
   try {
     const result=await pool.query(
-      "SELECT rp.user_id,u.username,COALESCE(c.name,u.username) AS character_name,c.appearance AS character_appearance,MAX(rp.connected_at) AS connected_at " +
+      "SELECT rp.user_id,u.username,COALESCE(c.name,u.username) AS character_name,c.appearance AS character_appearance,c.aura AS character_aura,MAX(rp.connected_at) AS connected_at " +
       "FROM room_presence rp JOIN users u ON u.id=rp.user_id " +
       "JOIN rooms r ON r.id=rp.room_id AND r.is_active=TRUE JOIN planets p ON p.id=r.planet_id AND p.is_active=TRUE JOIN user_locations l ON l.planet_id=r.planet_id AND l.user_id=$2 " +
       "LEFT JOIN characters c ON c.user_id=u.id AND c.is_active=TRUE " +
       "WHERE rp.room_id=$1 AND rp.connected_at>NOW()-INTERVAL '2 minutes' AND u.status='active' " +
       "AND NOT EXISTS(SELECT 1 FROM blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=rp.user_id) OR (b.blocker_id=rp.user_id AND b.blocked_id=$2)) " +
-      "GROUP BY rp.user_id,u.username,c.name,c.appearance ORDER BY character_name",
+      "GROUP BY rp.user_id,u.username,c.name,c.appearance,c.aura ORDER BY character_name",
       [req.params.roomId,req.user.id]
     );
     res.json({users:result.rows});
