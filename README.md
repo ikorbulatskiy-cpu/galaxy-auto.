@@ -46,6 +46,9 @@ NEXORA — социальная платформа знакомств и вир�
 - `GET /api/social/conversations` — список диалогов.
 - `GET /api/social/conversations/:conversationId/messages` — последние сообщения (параметр `limit`, максимум 100).
 - `POST /api/social/conversations/:conversationId/messages` — отправить сообщение. JSON: `{"body":"Текст сообщения"}`.
+- `GET /api/social/blocks` — список заблокированных пользователей.
+- `POST /api/social/blocks/:userId` и `DELETE /api/social/blocks/:userId` — добавить или убрать блокировку.
+- `POST /api/social/reports/:userId` — отправить жалобу. JSON: `{"category":"harassment","details":"Описание ситуации"}`. Повторная жалоба на того же пользователя ограничена по времени.
 
 ## Запуск
 
