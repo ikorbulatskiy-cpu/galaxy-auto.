@@ -7,9 +7,25 @@ const { pool } = require("../src/db");
 async function main() {
   const client = await pool.connect();
   try {
-    const schema = fs.readFileSync(path.join(__dirname, "../database/schema.sql"), "utf8");
-    await client.query(schema);
     await client.query("CREATE TABLE IF NOT EXISTS schema_migrations (version VARCHAR(120) PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
+    const baseVersion = "001_base_schema";
+    const baseApplied = await client.query("SELECT 1 FROM schema_migrations WHERE version=$1", [baseVersion]);
+    if (!baseApplied.rowCount) {
+      const schema = fs.readFileSync(path.join(__dirname, "../database/schema.sql"), "utf8");
+      await client.query("BEGIN");
+      try {
+        await client.query(schema);
+        await client.query("INSERT INTO schema_migrations(version) VALUES($1)", [baseVersion]);
+        await client.query("COMMIT");
+        console.log("Applied:", baseVersion);
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      }
+    } else {
+      console.log("Already applied:", baseVersion);
+    }
+
     for (const version of ["002_game_world.sql", "003_social_game_systems.sql"]) {
       const exists = await client.query("SELECT 1 FROM schema_migrations WHERE version=$1", [version]);
       if (exists.rowCount) {
