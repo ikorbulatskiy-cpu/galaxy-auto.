@@ -139,3 +139,18 @@ test("realtime events are distributed through PostgreSQL notifications", () => {
   assert.match(realtime, /action: "joined"/);
   assert.match(realtime, /action: "left"/);
 });
+
+
+test("media uploads use authenticated presigned object-storage operations", () => {
+  const server = read("server.js");
+  const media = read("src/media.js");
+  const migration = read("database/migrations/004_media_assets.sql");
+  assert.match(server, /app\.use\("\/api\/media", mediaRouter\)/);
+  assert.match(media, /router\.use\(requireSession\)/);
+  assert.match(media, /getSignedUrl/);
+  assert.match(media, /HeadObjectCommand/);
+  assert.match(media, /ContentLength !== parsed\.data\.size/);
+  assert.match(media, /expectedPrefix/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS media_assets/);
+  assert.match(migration, /byte_size BIGINT NOT NULL CHECK/);
+});
