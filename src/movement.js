@@ -127,8 +127,8 @@ function attachMovement(server) {
         [user.id]
       );
       socket.blockedUserIds = new Set(blocks.rows.map(row => row.user_id));
-      socket.send(JSON.stringify({ type: "ready" }));
-    } catch {
+    } catch (error) {
+      console.warn("Movement socket authentication rejected:", error.message);
       socket.close(1008, "Authentication required");
       return;
     }
@@ -259,6 +259,7 @@ function attachMovement(server) {
         if (!peers.get(joinedRoom).size) peers.delete(joinedRoom);
       }
     });
+    socket.send(JSON.stringify({ type: "ready" }));
   });
 
   server.on("close", () => {
