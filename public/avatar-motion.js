@@ -7,7 +7,12 @@
     wave: {label:"Привет", icon:"👋", note:"Персонаж приветствует других."},
     dance: {label:"Танец", icon:"💃", note:"Танцевальная анимация."},
     heart: {label:"Сердце", icon:"💖", note:"Романтическая эмоция."},
-    clap: {label:"Аплодисменты", icon:"👏", note:"Персонаж аплодирует."}
+    clap: {label:"Аплодисменты", icon:"👏", note:"Персонаж аплодирует."},
+    walk: {label:"Шаги", icon:"🚶", note:"Небольшая анимация движения."},
+    laugh: {label:"Смех", icon:"😂", note:"Персонаж смеётся."},
+    sleep: {label:"Сон", icon:"😴", note:"Персонаж засыпает."},
+    jump: {label:"Прыжок", icon:"🦘", note:"Персонаж подпрыгивает."},
+    angry: {label:"Злость", icon:"😠", note:"Эмоция недовольства."}
   };
   function install() {
     if (!stage.querySelector(".avatar-svg") || stage.querySelector(".avatar-motion-controls")) return;
@@ -33,14 +38,14 @@
       const button = event.target.closest("button[data-motion]");
       if (!button) return;
       const key = button.dataset.motion;
-      stage.classList.remove("nx-motion-wave","nx-motion-dance","nx-motion-heart","nx-motion-clap");
+      stage.classList.remove("nx-motion-wave","nx-motion-dance","nx-motion-heart","nx-motion-clap","nx-motion-walk","nx-motion-laugh","nx-motion-sleep","nx-motion-jump","nx-motion-angry");
       if (key !== "idle") {
         void stage.offsetWidth;
         stage.classList.add("nx-motion-" + key);
       }
       controls.querySelectorAll("button").forEach(item => item.setAttribute("aria-pressed", String(item === button)));
       note.textContent = motions[key].note;
-      fx.textContent = key === "heart" ? "💖" : key === "wave" ? "✨" : key === "dance" ? "⭐" : key === "clap" ? "👏" : "";
+      fx.textContent = key === "heart" ? "💖" : key === "wave" ? "✨" : key === "dance" ? "⭐" : key === "clap" ? "👏" : key === "laugh" ? "😂" : key === "sleep" ? "💤" : key === "jump" ? "⭐" : key === "angry" ? "💢" : "";
     });
   }
   const observer = new MutationObserver(install);
