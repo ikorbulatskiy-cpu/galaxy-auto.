@@ -90,7 +90,7 @@ router.post("/register", async (req, res, next) => {
     await client.query("INSERT INTO wallet_ledger (user_id,currency,amount,reason) VALUES ($1,'coins',500,'Стартовый бонус NEXORA')", [user.id]);
     await client.query(
       "INSERT INTO characters (user_id,name,gender,appearance,is_active) VALUES ($1,$2,$3,$4::jsonb,TRUE)",
-      [user.id, username, gender || "male", JSON.stringify({ body:parsed.data.body || "regular", head:"classic", skinTone:"medium", hair:"short", hairColor:"brown", eyes:"brown", outfit:(gender || "male") === "female" ? "pink" : "blue", shoes:"sneakers" })]
+      [user.id, username, gender || "male", JSON.stringify({ spriteGender:gender || "male", body:parsed.data.body || "regular", head:"classic", skinTone:"medium", hair:"short", hairColor:"brown", eyes:"brown", outfit:(gender || "male") === "female" ? "pink" : "blue", shoes:"sneakers", adultConfirmed:true, privacyConsentAt:new Date().toISOString() })]
     );
     await client.query("INSERT INTO user_locations (user_id,planet_id) SELECT $1,id FROM planets WHERE slug='newbies-1' ON CONFLICT (user_id) DO NOTHING", [user.id]);
     const sessionToken = randomToken();
