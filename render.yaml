@@ -21,10 +21,7 @@ services:
         value: "false"
       - key: TRUST_PROXY_HOPS
         value: "1"
-      - key: APP_BASE_URL
         value: https://nexora-web.onrender.com
-      - key: NEXORA_BOOTSTRAP_ADMIN_EMAIL
-        sync: false
 
 databases:
   - name: nexora-postgres
@@ -33,3 +30,4 @@ databases:
     databaseName: nexora
     postgresMajorVersion: "17"
     ipAllowList: []
+
