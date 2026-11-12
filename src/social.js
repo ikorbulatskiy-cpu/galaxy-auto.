@@ -27,7 +27,7 @@ router.get("/discover", requireSession, async (req, res, next) => {
        FROM users u
        JOIN profiles p ON p.user_id=u.id
        LEFT JOIN reputation r ON r.user_id=u.id
-       WHERE u.status='active' AND u.email_verified_at IS NOT NULL AND u.id<>$1
+       WHERE u.status='active' AND u.id<>$1
          AND p.visibility='public'
          AND ($2='' OR u.username ILIKE '%' || $2 || '%' OR COALESCE(p.display_name,'') ILIKE '%' || $2 || '%' OR COALESCE(p.city,'') ILIKE '%' || $2 || '%')
          AND NOT EXISTS(SELECT 1 FROM blocks b
