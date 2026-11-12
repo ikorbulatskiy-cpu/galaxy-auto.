@@ -1,12 +1,13 @@
 {
   "name": "nexora",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "NEXORA — Meet. Connect. Discover.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "db:migrate": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f database/schema.sql"
+    "db:migrate": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f database/schema.sql -f database/migrations/002_game_world.sql",
+    "check": "node --check server.js && for file in src/*.js; do node --check \"$file\"; done"
   },
   "engines": {
     "node": ">=20"
@@ -20,6 +21,7 @@
     "helmet": "^8.0.0",
     "nodemailer": "^6.10.0",
     "pg": "^8.13.1",
+    "ws": "^8.18.0",
     "zod": "^3.24.1"
   }
 }
