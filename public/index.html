@@ -25,6 +25,7 @@
 <link rel="stylesheet" href="/nexora-classic.css?v=1">
 <link rel="stylesheet" href="/nexora-galaxy73.css?v=1">
 <link rel="stylesheet" href="/nexora-avatar.css?v=1">
+<link rel="stylesheet" href="/nexora-sprite-avatar.css?v=1">
 </head>
 <body>
 <header class="wrap top"><a class="brand" href="#"><span class="mark">✦</span>NEXORA</a><div class="nav" id="top-actions"><button class="btn primary" data-open="register">Создать персонажа</button><button class="btn" data-open="restore">Код восстановления</button></div></header>
@@ -54,6 +55,7 @@
 <footer class="wrap footer"><span>© 2026 NEXORA · Meet. Connect. Discover.</span><span>18+ · Ранняя версия · Не все функции Galaxy-подобного мира реализованы</span></footer>
 <div class="modal" id="auth-modal" role="dialog" aria-modal="true"><div class="dialog"><button class="close" id="close-modal" aria-label="Закрыть">×</button><h2 id="auth-title">Войти</h2><p id="auth-copy" class="muted">Войди в свой аккаунт NEXORA.</p><form id="auth-form"><div id="register-fields" class="hidden"><input class="field" name="username" placeholder="Ник персонажа" minlength="3" maxlength="24" autocomplete="nickname"><div class="nx-body-picker" role="group" aria-label="Выбор 2D-тела"><b>Выбери 2D-тело</b><input type="hidden" name="body" value="regular"><div class="nx-body-options"><button type="button" class="nx-body-option" data-body-choice="slim"><span class="nx-body-preview slim">♙</span><small>Стройное</small></button><button type="button" class="nx-body-option active" data-body-choice="regular"><span class="nx-body-preview regular">♟</span><small>Классическое</small></button><button type="button" class="nx-body-option" data-body-choice="athletic"><span class="nx-body-preview athletic">♟</span><small>Спортивное</small></button></div></div><label class="muted nx-adult-check"><input type="checkbox" name="adultConfirmed" value="yes" required> Мне исполнилось 18 лет</label></div><div id="login-fields"><input class="field" name="characterCode" placeholder="Код персонажа" autocomplete="one-time-code" minlength="9" maxlength="24" autocapitalize="none" spellcheck="false"></div><button class="btn primary" id="auth-submit">Войти</button></form><p class="muted" id="auth-footnote" style="margin-top:12px">Код персонажа создаётся автоматически. Сохрани его: он понадобится для следующих входов.</p></div></div>
 <div id="toast" class="toast" role="status"></div>
+<script src="/nexora-sprite-avatar.js?v=1"></script>
 <script src="/nexora-avatar.js?v=1"></script>
 <script src="/nexora-world.js?v=10"></script>
 <script src="/nexora-movement.js?v=3"></script>
