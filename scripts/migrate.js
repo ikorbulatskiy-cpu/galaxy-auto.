@@ -26,7 +26,7 @@ async function main() {
       console.log("Already applied:", baseVersion);
     }
 
-    for (const version of ["002_game_world.sql", "003_social_game_systems.sql", "004_media_assets.sql", "005_character_code_auth.sql"]) {
+    for (const version of ["002_game_world.sql", "003_social_game_systems.sql", "004_media_assets.sql", "005_character_code_auth.sql", "006_custom_planets_auras.sql"]) {
       const exists = await client.query("SELECT 1 FROM schema_migrations WHERE version=$1", [version]);
       if (exists.rowCount) {
         console.log("Already applied:", version);
