@@ -9,6 +9,14 @@ const COOKIE_NAME = "nexora_session";
 const router = express.Router();
 const hash = value => crypto.createHash("sha256").update(value).digest("hex");
 
+function isValidPosition(x, y) {
+  return Number.isFinite(x) && Number.isFinite(y) && x >= 2 && x <= 98 && y >= 8 && y <= 92;
+}
+
+function isWithinMovementSpeed(fromX, fromY, x, y, elapsedMs) {
+  return Math.hypot(x - fromX, y - fromY) <= 2 + Math.max(60, elapsedMs) * 0.035;
+}
+
 function cookieValue(header, name) {
   const item = String(header || "").split(";").map(value => value.trim()).find(value => value.startsWith(name + "="));
   return item ? decodeURIComponent(item.slice(name.length + 1)) : null;
@@ -148,6 +156,10 @@ function attachMovement(server) {
             socket.send(JSON.stringify({ type: "error", message: "Комната недоступна на текущей планете." }));
             return;
           }
+          if (joinedRoom && peers.has(joinedRoom)) {
+            peers.get(joinedRoom).delete(socket);
+            if (!peers.get(joinedRoom).size) peers.delete(joinedRoom);
+          }
           joinedRoom = packet.roomId;
           const position = await pool.query(
             `INSERT INTO room_player_positions(room_id,user_id,x,y)
@@ -162,7 +174,7 @@ function attachMovement(server) {
           if (!peers.has(joinedRoom)) peers.set(joinedRoom, new Set());
           peers.get(joinedRoom).add(socket);
           const current = await pool.query(
-            "SELECT user_id,x,y FROM room_player_positions WHERE room_id=$1",
+            "SELECT p.user_id,u.username,p.x,p.y FROM room_player_positions p JOIN users u ON u.id=p.user_id WHERE p.room_id=$1",
             [joinedRoom]
           );
           socket.send(JSON.stringify({ type: "joined_room", roomId: joinedRoom, x: lastX, y: lastY }));
@@ -179,10 +191,8 @@ function attachMovement(server) {
       if (moveTimes.length >= 12 || now - lastMoveAt < 60) return;
       const x = Number(packet.x);
       const y = Number(packet.y);
-      if (!Number.isFinite(x) || !Number.isFinite(y) || x < 2 || x > 98 || y < 8 || y > 92) return;
-      const elapsed = Math.max(60, now - lastMoveAt);
-      const distance = Math.hypot(x - lastX, y - lastY);
-      if (distance > 2 + elapsed * 0.035) return;
+      const elapsed = now - lastMoveAt;
+      if (!isValidPosition(x, y) || !isWithinMovementSpeed(lastX, lastY, x, y, elapsed)) return;
       moveTimes.push(now);
       lastMoveAt = now;
       lastX = x;
@@ -236,4 +246,4 @@ function attachMovement(server) {
   return wss;
 }
 
-module.exports = { router, attachMovement };
+module.exports = { router, attachMovement, isValidPosition, isWithinMovementSpeed };
