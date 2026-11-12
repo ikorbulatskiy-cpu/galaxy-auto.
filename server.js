@@ -18,6 +18,10 @@ const mediaRouter = require("./src/media");
 const app = express();
 const server = http.createServer(app);
 const PORT = Number(process.env.PORT || 3000);
+const appBaseUrl = process.env.APP_BASE_URL ? new URL(process.env.APP_BASE_URL) : null;
+if (process.env.NODE_ENV === "production" && (!appBaseUrl || appBaseUrl.protocol !== "https:")) {
+  throw new Error("APP_BASE_URL must be an HTTPS URL in production.");
+}
 const mediaUploadOrigin = process.env.S3_ENDPOINT ? new URL(process.env.S3_ENDPOINT).origin : null;
 
 app.disable("x-powered-by");
