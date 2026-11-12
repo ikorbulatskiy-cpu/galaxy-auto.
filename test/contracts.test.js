@@ -61,3 +61,26 @@ test("registration enforces adulthood and creates a starter wallet", () => {
   assert.match(auth, /INSERT INTO user_locations \(user_id,planet_id\)/);
   assert.match(auth, /email_verified_at/);
 });
+
+
+test("travel and visual item controls are wired to authenticated APIs", () => {
+  const html = read("public/index.html");
+  const world = read("src/world.js");
+  const features = read("src/features.js");
+  assert.match(html, /id="travel-planet"/);
+  assert.match(html, /api\("\/api\/world\/travel"/);
+  assert.match(world, /router\.post\("\/travel", requireSession/);
+  assert.match(features, /router\.post\("\/shop\/buy"/);
+  assert.match(features, /router\.post\("\/characters\/:characterId\/equip"/);
+  assert.match(html, /id="gift-item-select"/);
+  assert.match(html, /data-equip-item/);
+});
+
+test("moderation actions cannot be applied to the current admin account", () => {
+  const features = read("src/features.js");
+  const html = read("public/index.html");
+  assert.match(features, /req\.user\.id===req\.params\.userId/);
+  assert.match(features, /target\.rows\[0\]\.role==="developer"/);
+  assert.match(html, /const searchForm=e\.currentTarget/);
+  assert.doesNotMatch(html, /e\.currentTarget\.requestSubmit\(\)/);
+});
