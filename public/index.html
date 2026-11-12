@@ -50,6 +50,7 @@
 <footer class="wrap footer"><span>© 2026 NEXORA · Meet. Connect. Discover.</span><span>18+ · Ранняя версия · Не все функции Galaxy-подобного мира реализованы</span></footer>
 <div class="modal" id="auth-modal" role="dialog" aria-modal="true"><div class="dialog"><button class="close" id="close-modal" aria-label="Закрыть">×</button><h2 id="auth-title">Войти</h2><p id="auth-copy" class="muted">Войди в свой аккаунт NEXORA.</p><form id="auth-form"><div id="register-fields" class="hidden"><input class="field" name="username" placeholder="Ник персонажа" minlength="3" maxlength="24" autocomplete="nickname"><label class="muted">Пол персонажа</label><select class="field" name="gender"><option value="male">Мужской</option><option value="female">Женский</option></select><label class="muted"><input type="checkbox" name="adultConfirmed" value="yes"> Мне исполнилось 18 лет</label></div><div id="login-fields"><input class="field" name="characterCode" placeholder="Например: ywqg164qq" autocomplete="one-time-code" minlength="9" maxlength="24" autocapitalize="none" spellcheck="false"></div><button class="btn primary" id="auth-submit">Войти</button></form><p class="muted" style="margin-top:12px">Код персонажа создаётся автоматически. Сохрани его: он понадобится для следующих входов.</p></div></div>
 <div id="toast" class="toast" role="status"></div>
+<script src="/nexora-world.js?v=4"></script>
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let currentUser=null, activeConversation=null, activeChatUser=null, activeClanId=null, poller=null, authMode="login";
@@ -99,7 +100,7 @@ function switchTab(tab){
  if(tab==="characters")loadCharacters();
  if(tab==="world"){
   if(window.nexoraWorldRefresh)window.nexoraWorldRefresh();
-  else loadRooms();
+  else toast("Игровой мир ещё загружается. Обнови страницу через несколько секунд.");
  }
  if(tab==="notifications")loadNotifications();
  if(["clans","economy","pets","blogs","relationships","rankings","admin"].includes(tab))loadFeatureTab(tab);
@@ -341,5 +342,5 @@ $("#load-admin-logs").onclick=async()=>{try{const d=await api("/api/features/adm
 loadApp();
 </script>
 <script src="/avatar-motion.js?v=1" defer></script>
-<script src="/nexora-world.js?v=3" defer></script>
+
 </body></html>
