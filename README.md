@@ -93,14 +93,14 @@ NEXORA — социальная платформа знакомств и вир�
 - `POST /api/features/transfer` — перевод валюты с обязательным UUID `idempotencyKey`.
 - `POST /api/features/shop/buy` — покупка предмета с обязательным UUID `idempotencyKey` и `characterId`.
 - `POST /api/features/shop/gift`, `GET /api/features/gifts`, `POST /api/features/gifts/:giftId/claim` — отправка и получение подарков.
-- `GET /api/features/clans`, `POST /api/features/clans`, `POST /api/features/clans/:clanId/apply` — кланы и заявки.
+- `GET /api/features/clans`, `POST /api/features/clans`, `POST /api/features/clans/:clanId/apply` — кланы и заявки; интерфейс также поддерживает клановый чат, просмотр состава и управление ролями.
 - `GET /api/features/clans/:clanId/members`, `GET /api/features/clans/:clanId/applications`, `POST /api/features/clans/:clanId/decide`, `PATCH /api/features/clans/:clanId/members/:userId/role`, `DELETE /api/features/clans/:clanId/members/:userId` — управление составом и ролями.
 - `GET /api/features/clans/:clanId/messages`, `POST /api/features/clans/:clanId/messages` — история и отправка сообщений клана (пока без WebSocket-доставки).
 - `POST /api/features/clans/:clanId/bank`, `GET /api/features/clans/:clanId/ledger` — операции кланового банка и журнал.
-- `GET /api/features/pets`, `POST /api/features/pets`, `POST /api/features/pets/:petId/care` — питомцы и уход.
+- `GET /api/features/pets`, `POST /api/features/pets`, `POST /api/features/pets/:petId/care` — питомцы, почасовое снижение сытости/настроения, рост уровня и пятиминутный cooldown ухода.
 - `GET /api/features/blogs`, `POST /api/features/blogs`, `PATCH /api/features/blogs/:postId`, `DELETE /api/features/blogs/:postId`, `POST /api/features/blogs/:postId/like`, `POST /api/features/blogs/:postId/comments` — публикации и взаимодействия. Фотографии пока передаются HTTPS-ссылками; загрузка в собственное файловое хранилище ещё не подключена.
 - `GET /api/features/relationships`, `POST /api/features/relationships/propose`, `POST /api/features/relationships/:id/respond`, `POST /api/features/relationships/:id/ceremony`, `POST /api/features/relationships/:id/divorce` — предложение, помолвка, виртуальная свадебная церемония, обручальные кольца и развод.
-- `GET /api/features/leaderboards/:kind` — рейтинги `authority`, `experience`, `popularity`, `clans`.
+- `GET /api/features/leaderboards/:kind` — рейтинги `authority`, `experience`, `popularity`, `clans`. Репутация и опыт персонажа растут от подтверждённых игровых событий с дневными лимитами.
 - `GET /api/features/achievements` — каталог достижений.
 - `POST /api/features/mini-games/:slug/score` — запись непроверенного результата; он не участвует в наградах и достоверных рейтингах.
 - `GET /api/features/admin/users?q=...`, `GET /api/features/admin/reports`, `POST /api/features/admin/reports/:id/resolve`, `POST /api/features/admin/users/:userId/punish`, `POST /api/features/admin/users/:userId/unsuspend`, `GET /api/features/admin/logs` — API модерации и управления аккаунтами. Доступ ограничен ролями.
