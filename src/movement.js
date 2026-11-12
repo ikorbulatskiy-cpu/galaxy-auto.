@@ -72,7 +72,7 @@ function attachMovement(server) {
     client.on("notification", message => {
       try {
         const event = JSON.parse(message.payload);
-        if (event.source !== instanceId && (event.type === "player_moved" || event.type === "player_joined")) broadcast(event);
+        if (event.source !== instanceId && (event.type === "player_moved" || event.type === "player_joined" || event.type === "player_action")) broadcast(event);
       } catch {}
     });
     client.on("error", () => {
@@ -222,6 +222,16 @@ function attachMovement(server) {
         } catch {
           socket.send(JSON.stringify({ type: "error", message: "Не удалось загрузить позиции игроков." }));
         }
+        return;
+      }
+
+      if (packet.type === "action" && joinedRoom) {
+        const action = ["idle","walk","dance","happy","wave","heart"].includes(packet.action) ? packet.action : null;
+        const direction = ["front","back","left","right"].includes(packet.direction) ? packet.direction : "front";
+        if (!action) return;
+        const event = { type: "player_action", roomId: joinedRoom, userId: user.id, username: user.username, action, direction, source: instanceId };
+        broadcast(event);
+        await pool.query("SELECT pg_notify('nexora_movement_events',$1)", [JSON.stringify(event)]).catch(error => console.error("Movement action relay failed:", error.message));
         return;
       }
 

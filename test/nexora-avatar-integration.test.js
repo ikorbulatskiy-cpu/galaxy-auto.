@@ -15,8 +15,8 @@ test("character editor loads the layered renderer before game clients", () => {
 test("multiplayer player avatars use the shared renderer", () => {
   const html = fs.readFileSync(path.join(root, "public/index.html"), "utf8");
   const world = fs.readFileSync(path.join(root, "public/nexora-world.js"), "utf8");
-  assert.match(html, /function roomAvatarSvg\(look=\{\}\) \{return window\.NexoraAvatar/);
-  assert.match(world, /function avatar\(look=\{\},mini=false\)\{return window\.NexoraAvatar/);
+  assert.match(html, /function roomAvatarSvg\(look=\{\}\) \{return .*nx-sprite-canvas/);
+  assert.match(world, /function avatar\(look=\{\},mini=false\)\{const payload=esc\(JSON\.stringify/);
 });
 
 test("layered avatar stylesheet is loaded", () => {
@@ -33,6 +33,6 @@ test("PNG sprite engine is loaded before shared avatar and multiplayer clients",
   assert.ok(html.indexOf("/nexora-sprite-avatar.css") > 0);
   const engine = fs.readFileSync(path.join(root, "public/nexora-sprite-avatar.js"), "utf8");
   assert.match(engine, /window.NexoraSpriteAvatar/);
-  assert.match(engine, /heads\/head-01.png/);
-  assert.match(engine, /bodies\/body-classic.png/);
+  assert.match(engine, /heads\/head_male_classic.png/);
+  assert.match(engine, /bodies\/body_male_01.png/);
 });
