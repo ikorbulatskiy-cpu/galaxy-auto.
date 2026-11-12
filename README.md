@@ -88,6 +88,7 @@ NEXORA — социальная платформа знакомств и вир�
 - `GET /api/game/rooms?planet=<slug>` — комнаты выбранной планеты.
 - `POST /api/world/travel` — перемещение между планетами. JSON: `{"planetSlug":"love-planet"}`.
 - `PATCH /api/game/characters/:id` — внешность персонажа в JSON-поле `appearance`.
+- `GET /api/features/recipients?q=...` — список доступных подтверждённых пользователей для переводов, подарков и предложений отношений.
 - `GET /api/features/catalog`, `GET /api/features/inventory` — каталог и инвентарь.
 - `POST /api/features/characters/:characterId/equip` — надеть или снять предмет. JSON: `{"itemId":"UUID","equipped":true}`.
 - `POST /api/features/transfer` — перевод валюты с обязательным UUID `idempotencyKey`.
