@@ -131,7 +131,8 @@
     status("Соединение: отличное");
     addEvent("Соединение с комнатой установлено.","success");
    }
-   if(packet.type==="room_message"&&packet.message){appendMessage(packet.message);addEvent((packet.message.character_name||packet.message.username||"Игрок")+": "+packet.message.body,"chat")}\n   if(packet.type==="planet_modules"){window.dispatchEvent(new CustomEvent("nexora:planet-modules",{detail:{modules:packet.modules||[],planetName:packet.planetName||""}}))}
+   if(packet.type==="room_message"&&packet.message){appendMessage(packet.message);addEvent((packet.message.character_name||packet.message.username||"Игрок")+": "+packet.message.body,"chat")}
+   if(packet.type==="planet_modules"){window.dispatchEvent(new CustomEvent("nexora:planet-modules",{detail:{modules:packet.modules||[],planetName:packet.planetName||""}}))}
    if(packet.type==="presence"&&packet.roomId===room.id){
     if(packet.action==="joined")addEvent((packet.username||"Игрок")+" вошёл в комнату.","join");
     if(packet.action==="left")addEvent("Игрок покинул комнату.","leave");
