@@ -74,7 +74,7 @@ NEXORA — социальная платформа знакомств и вир�
 1. Скопируйте `.env.example` в `.env` и заполните `DATABASE_URL`.
 2. Создайте базу PostgreSQL.
 3. Установите зависимости: `npm install`.
-4. Примените базовую схему и отслеживаемые миграции: `npm run db:migrate`. Команда записывает `001_base_schema`, `002_game_world.sql` и `003_social_game_systems.sql` и `004_media_assets.sql` в `schema_migrations` и пропускает уже применённые версии.
+4. Примените базовую схему и отслеживаемые миграции: `npm run db:migrate`. Команда записывает `001_base_schema`, `002_game_world.sql`, `003_social_game_systems.sql` и `004_media_assets.sql` в `schema_migrations` и пропускает уже применённые версии.
 5. Запустите: `npm start`.
 
 Для production настройте `NODE_ENV=production`, `APP_BASE_URL`, SMTP-переменные и HTTPS.
@@ -99,7 +99,7 @@ NEXORA — социальная платформа знакомств и вир�
 - `GET /api/features/clans/:clanId/messages`, `POST /api/features/clans/:clanId/messages` — история и отправка сообщений клана (пока без WebSocket-доставки).
 - `POST /api/features/clans/:clanId/bank`, `GET /api/features/clans/:clanId/ledger` — операции кланового банка и журнал; банковские операции принимают UUID `idempotencyKey`.
 - `GET /api/features/pets`, `POST /api/features/pets`, `POST /api/features/pets/:petId/care` — питомцы, почасовое снижение сытости/настроения, рост уровня и пятиминутный cooldown ухода.
-- `GET /api/features/blogs`, `POST /api/features/blogs`, `PATCH /api/features/blogs/:postId`, `DELETE /api/features/blogs/:postId`, `POST /api/features/blogs/:postId/like`, `POST /api/features/blogs/:postId/comments` — публикации и взаимодействия. Фотографии пока передаются HTTPS-ссылками; загрузка в собственное файловое хранилище ещё не подключена.
+- `GET /api/features/blogs`, `POST /api/features/blogs`, `PATCH /api/features/blogs/:postId`, `DELETE /api/features/blogs/:postId`, `POST /api/features/blogs/:postId/like`, `POST /api/features/blogs/:postId/comments` — публикации и взаимодействия. Фотографии можно передавать HTTPS-ссылками или загружать напрямую в S3-совместимое хранилище через подписанные URL; для загрузки требуется настроить переменные S3.
 - `GET /api/features/relationships`, `POST /api/features/relationships/propose`, `POST /api/features/relationships/:id/respond`, `POST /api/features/relationships/:id/ceremony`, `POST /api/features/relationships/:id/divorce` — предложение, помолвка, виртуальная свадебная церемония, обручальные кольца и развод.
 - `GET /api/features/leaderboards/:kind` — рейтинги `authority`, `experience`, `popularity`, `clans`. Репутация и опыт персонажа растут от подтверждённых игровых событий с дневными лимитами.
 - `GET /api/features/achievements` — каталог достижений.
@@ -119,7 +119,7 @@ NEXORA — социальная платформа знакомств и вир�
 - HTTP/WebSocket end-to-end сценарии и финансовые операции требуют расширенных интеграционных тестов и проверки на развёрнутом сервере. Workflow CI настроен на PostgreSQL 16: он применяет миграции, повторно запускает их для проверки идемпотентности и проверяет схемы, стартовые комнаты, награды и ограничения отношений. Успешный запуск конкретного workflow нужно подтверждать по GitHub Actions.
 - Индикаторы присутствия в интерфейсе, восстановление присутствия после перезапуска и масштабирование realtime на несколько экземпляров сервера.
 - Восстановление пароля и повторная отправка письма.
-- Расширенный редактор 2D/3D-персонажа, уникальные графические ассеты и файловое хранилище фотографий. Сейчас есть SVG-предпросмотр и фотографии по HTTPS-ссылкам.
+- Расширенный редактор 2D/3D-персонажа и уникальные графические ассеты. Сейчас есть SVG-предпросмотр; загрузка фотографий в S3-compatible storage реализована, но требует настройки bucket и ключей.
 - Расширенные фильтры и массовые инструменты модерации, а также более детальная панель управления кланом.
 - Проверяемая сервером логика мини-игр и полноценный графический сценарий свадебного события. Базовая виртуальная церемония и автоматическое начисление достижений за первые шаги, сообщения, дружбу, покупки и свадьбу уже добавлены.
 - Полная проверка безопасности и end-to-end тесты реальных HTTP/WebSocket сценариев. Миграции добавлены и проверяются на временной PostgreSQL в CI, но ещё не применялись к развёрнутой базе проекта.
