@@ -7,7 +7,7 @@ const root=path.join(__dirname,"..");
 const engineSource=fs.readFileSync(path.join(root,"public/nexora-sprite-avatar.js"),"utf8");
 test("PNG engine exposes gendered head/body layers and action presets",()=>{
  const window={devicePixelRatio:1};
- const context={window,Image:class{},Map,Promise,Object,Number,Math,TypeError,Error,CustomEvent:class{},requestAnimationFrame:()=>1,cancelAnimationFrame:()=>{}};
+ const context={window,document:{addEventListener(){}},Image:class{},Map,Promise,Object,Number,Math,TypeError,Error,CustomEvent:class{},requestAnimationFrame:()=>1,cancelAnimationFrame:()=>{}};
  vm.runInNewContext(engineSource,context);
  const engine=window.NexoraSpriteAvatar;
  assert.equal(typeof engine.mount,"function");
