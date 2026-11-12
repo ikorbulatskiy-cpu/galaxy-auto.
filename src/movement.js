@@ -122,6 +122,7 @@ function attachMovement(server) {
       if (!auth.rowCount) throw new Error("auth");
       user = auth.rows[0];
       socket.userId = user.id;
+      console.info("Movement socket authenticated:", { userId: user.id });
       const blocks = await pool.query(
         "SELECT blocked_id AS user_id FROM blocks WHERE blocker_id=$1 UNION SELECT blocker_id AS user_id FROM blocks WHERE blocked_id=$1",
         [user.id]
@@ -138,6 +139,20 @@ function attachMovement(server) {
     let lastX = 50;
     let lastY = 78;
     let moveTimes = [];
+    socket.isAlive = true;
+    const heartbeat = setInterval(() => {
+      if (socket.readyState !== 1) return;
+      if (socket.isAlive === false) {
+        console.warn("Movement socket heartbeat timeout:", user.id);
+        socket.terminate();
+        return;
+      }
+      socket.isAlive = false;
+      try { socket.ping(); } catch { socket.terminate(); }
+    }, 25000);
+    if (heartbeat.unref) heartbeat.unref();
+    socket.on("pong", () => { socket.isAlive = true; });
+    socket.on("error", error => console.error("Movement socket error:", error.message));
     socket.on("message", async raw => {
       let packet;
       try { packet = JSON.parse(raw.toString()); } catch { return; }
@@ -254,6 +269,8 @@ function attachMovement(server) {
     });
 
     socket.on("close", () => {
+      clearInterval(heartbeat);
+      console.info("Movement socket closed:", { userId: user.id, code: socket._closeCode || null });
       if (joinedRoom && peers.has(joinedRoom)) {
         peers.get(joinedRoom).delete(socket);
         if (!peers.get(joinedRoom).size) peers.delete(joinedRoom);
