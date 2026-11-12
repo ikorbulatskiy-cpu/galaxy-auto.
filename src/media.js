@@ -148,7 +148,7 @@ router.post("/complete", uploadLimiter, async (req, res, next) => {
 router.get("/", async (req, res, next) => {
   try {
     const result = await pool.query(
-      "SELECT id,public_url,mime_type,byte_size,created_at FROM media_assets WHERE owner_user_id=$1 ORDER BY created_at DESC LIMIT 100",
+      "SELECT id,public_url,mime_type,byte_size,created_at,EXISTS(SELECT 1 FROM blog_photos bp WHERE bp.image_url=media_assets.public_url) AS in_use FROM media_assets WHERE owner_user_id=$1 ORDER BY created_at DESC LIMIT 100",
       [req.user.id]
     );
     res.json({ assets: result.rows });
