@@ -55,7 +55,7 @@ test("registration enforces adulthood and creates a starter wallet", () => {
   const auth = read("src/auth.js");
   assert.match(auth, /ageAtLeast18\(birthDate\)/);
   assert.match(auth, /INSERT INTO wallet_balances \(user_id,coins\) VALUES \(\$1,500\)/);
-  assert.match(auth, /INSERT INTO characters \\(user_id,name,is_active\\)/);
-  assert.match(auth, /INSERT INTO user_locations \\(user_id,planet_id\\)/);
+  assert.match(auth, /INSERT INTO characters \(user_id,name,is_active\)/);
+  assert.match(auth, /INSERT INTO user_locations \(user_id,planet_id\)/);
   assert.match(auth, /email_verified_at/);
 });
