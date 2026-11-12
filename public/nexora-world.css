@@ -186,3 +186,14 @@
  .nx-classic .nx-menu-panel,.nx-classic .nx-favorites-panel,.nx-classic .nx-help-panel{top:96px;right:5px}
 }
 @media(max-width:380px){.nx-classic .nx-account{max-width:40%}.nx-current-planet{min-width:68px}.nx-classic .nx-icon-btn small{font-size:7px}.nx-classic .nx-player-list{width:86px}.nx-classic .nx-avatars{right:94px}}
+
+/* Keep the existing stage strictly flat 2D: no perspective or faux depth */
+.nx-classic .nx-planet{border-radius:50%;background:#827da8;border:2px solid #c3b8d2;box-shadow:none;filter:none}
+.nx-classic .nx-floor{transform:none;background:repeating-linear-gradient(90deg,#9b91a5 0 1px,transparent 1px 72px),linear-gradient(#8b8293,#625b6c);border-top:2px solid #c4b7c9;box-shadow:none}
+.nx-classic .nx-scene-arch{box-shadow:none;border-color:#a9a3b4;border-width:7px}
+.nx-classic .nx-avatar-card svg{filter:none}
+.nx-classic .nx-avatar-card.aura-angel svg{filter:drop-shadow(0 0 3px #4bff9c)}
+.nx-classic .nx-avatar-card.aura-god svg{filter:drop-shadow(0 0 3px #bd72ff)}
+.nx-classic .nx-avatar-card.aura-almighty svg{filter:drop-shadow(0 0 3px #ffd66b)}
+.nx-classic .nx-avatar-card.aura-universe svg{filter:drop-shadow(0 0 3px #ff5b73)}
+.nx-classic .nx-avatar-card.aura-legend svg{filter:drop-shadow(0 0 3px #66caff)}
