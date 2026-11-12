@@ -17,6 +17,17 @@ test("movement speed is bounded by elapsed server time", () => {
 });
 
 
+test("avatar movement stays on a single horizontal lane", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const client = fs.readFileSync(path.join(__dirname, "..", "public/nexora-movement.js"), "utf8");
+  const server = fs.readFileSync(path.join(__dirname, "..", "src/movement.js"), "utf8");
+  assert.match(client, /target = \{ x: Math\.max\(2, Math\.min\(98, x\)\), y: 78 \}/);
+  assert.match(client, /const distance = Math\.abs\(dx\)/);
+  assert.match(server, /const y = 78;/);
+  assert.match(server, /lastY = 78;/);
+});
+
 test("movement WebSocket waits for readiness and has a server heartbeat", () => {
   const fs = require("node:fs");
   const path = require("node:path");

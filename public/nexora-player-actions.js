@@ -16,7 +16,7 @@
     const name = card.querySelector(".nx-avatar-name")?.textContent?.trim() || "Персонаж";
     const pop = document.createElement("div");
     pop.className = "nx-action-popover";
-    pop.innerHTML = '<b class="nx-action-title"></b><button type="button" data-player-move>↗ Переместиться</button><button type="button" data-player-actions>✦ Действия</button>';
+    pop.innerHTML = '<b class="nx-action-title"></b><button type="button" data-player-move>↗ Переместиться</button><button type="button" data-player-info class="nx-info-button">ⓘ Инфо</button><button type="button" data-player-actions>✦ Действия</button>';
     pop.querySelector(".nx-action-title").textContent = name;
     const stageRect = stage.getBoundingClientRect();
     const cardRect = card.getBoundingClientRect();
@@ -24,6 +24,10 @@
     pop.style.top = Math.max(8, cardRect.top - stageRect.top - 84) + "px";
     stage.append(pop);
     activePopover = pop;
+    pop.querySelector("[data-player-info]").addEventListener("click", () => {
+      window.NexoraExtras?.showCharacterInfo(name);
+      closePopover();
+    });
     pop.querySelector("[data-player-move]").addEventListener("click", () => {
       closePopover();
       window.NexoraMovement?.beginPlacement();

@@ -205,6 +205,7 @@ router.get("/conversations", requireSession, async (req, res, next) => {
       `SELECT c.id, c.created_at,
               other.id AS user_id, other.username,
               p.display_name, p.avatar_url,
+              (SELECT COUNT(*)::int FROM messages unread WHERE unread.conversation_id=c.id AND unread.sender_id=other.id AND unread.read_at IS NULL) AS unread_count,
               last.body AS last_message, last.created_at AS last_message_at
        FROM conversation_members mine
        JOIN conversations c ON c.id=mine.conversation_id
@@ -234,6 +235,7 @@ router.get("/conversations/:conversationId/messages", requireSession, async (req
       [conversationId, req.user.id]
     );
     if (!member.rowCount) return res.status(404).json({ error: "Диалог не найден." });
+    await pool.query("UPDATE messages SET read_at=NOW() WHERE conversation_id=$1 AND sender_id<>$2 AND read_at IS NULL",[conversationId,req.user.id]);
     const result = await pool.query(
       `SELECT m.id,m.body,m.created_at,m.read_at,u.id AS sender_id,u.username
        FROM messages m JOIN users u ON u.id=m.sender_id

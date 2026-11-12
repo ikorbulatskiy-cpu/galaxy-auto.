@@ -145,7 +145,7 @@ router.get("/planets", requireSession, async (req,res,next)=>{
 });
 
 router.post("/planets", requireSession, async (req,res,next)=>{
- const parsed=z.object({name:z.string().trim().min(3).max(48).regex(/^[\p{L}\p{N} _*.-]+$/u),description:z.string().trim().max(300).default(""),weather:z.string().trim().max(40).default("Ясно"),interior:z.string().trim().max(60).default("Космический зал")}).strict().safeParse(req.body);
+ const parsed=z.object({name:z.string().trim().min(3).max(48).regex(/^[\p{L}\p{N} _*.-]+$/u),description:z.string().trim().max(300).default(""),weather:z.string().trim().max(40).default("Ясно"),interior:z.string().trim().max(60).default("Космический зал"),theme:z.enum(["sunset","space","forest","city","underwater"]).default("sunset"),modules:z.array(z.enum(["magic","defender","games","horoscope","love"])).max(5).default(["magic","games"])}).strict().safeParse(req.body);
  if(!parsed.success)return res.status(400).json({error:"Проверьте название, описание и оформление планеты."});
  const client=await pool.connect();
  try{
@@ -153,7 +153,7 @@ router.post("/planets", requireSession, async (req,res,next)=>{
   const wallet=await client.query("SELECT coins FROM wallet_balances WHERE user_id=$1 FOR UPDATE",[req.user.id]);
   if(!wallet.rowCount||Number(wallet.rows[0].coins)<3){await client.query("ROLLBACK");return res.status(402).json({error:"Создание планеты стоит 3 Nexora Coins."});}
   const slug="player-"+require("crypto").randomBytes(6).toString("hex");
-  const settings={theme:"custom",weather:parsed.data.weather,interior:parsed.data.interior,king_label:"Король планеты"};
+  const settings={theme:parsed.data.theme,weather:parsed.data.weather,interior:parsed.data.interior,modules:parsed.data.modules,king_label:"Король планеты"};
   const created=await client.query("INSERT INTO planets(slug,name,description,access_type,ticket_price,settings,owner_user_id) VALUES($1,$2,$3,'public',0,$4::jsonb,$5) RETURNING id,slug,name,description,settings,owner_user_id",[slug,parsed.data.name,parsed.data.description,JSON.stringify(settings),req.user.id]);
   await client.query("UPDATE wallet_balances SET coins=coins-3,updated_at=NOW() WHERE user_id=$1",[req.user.id]);
   await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id) VALUES($1,'coins',-3,'Создание планеты',$2)",[req.user.id,created.rows[0].id]);

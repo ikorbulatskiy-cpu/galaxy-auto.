@@ -217,6 +217,12 @@ function attachRealtime(server) {
           rooms.get(socket.joinedRoom).add(socket);
           publish({ type: "presence", action: "joined", roomId: socket.joinedRoom, userId: user.id, username: user.username });
           socket.send(JSON.stringify({type:"joined_room",roomId:socket.joinedRoom}));
+          pool.query("SELECT p.name,p.settings FROM rooms r JOIN planets p ON p.id=r.planet_id WHERE r.id=$1",[socket.joinedRoom]).then(result=>{
+            if(!result.rowCount||socket.readyState!==1)return;
+            const settings=result.rows[0].settings||{};
+            const modules=Array.isArray(settings.modules)?settings.modules:["magic","games","defender","love"];
+            socket.send(JSON.stringify({type:"planet_modules",planetName:result.rows[0].name,modules}));
+          }).catch(error=>console.error("Planet module lookup failed:",error.message));
         } catch { socket.send(JSON.stringify({type:"error",message:"Не удалось войти в комнату."})); }
       }
       if (packet.type === "room_message" && socket.joinedRoom && typeof packet.body === "string") {
@@ -231,6 +237,26 @@ function attachRealtime(server) {
           if (muted.rowCount) { socket.send(JSON.stringify({type:"error",message:"Отправка сообщений ограничена."})); return; }
           const member = await pool.query("SELECT 1 FROM room_presence WHERE connection_id=$1 AND user_id=$2 AND room_id=$3",[connectionId,user.id,socket.joinedRoom]);
           if (!member.rowCount) return;
+          const command=body.split(/\s+/,1)[0].toLocaleLowerCase("ru-RU");
+          const botCommands={
+            "/гороскоп":{module:"magic",name:"Магия",reply:"Сегодня звёзды советуют не торопиться с выводами. Случайная встреча может стать началом хорошего дня."},
+            "/сон":{module:"magic",name:"Магия",reply:"Твой сон: впереди перемены. Запомни детали и не принимай сон за предсказание."},
+            "/любовь":{module:"love",name:"Магия",reply:"Любовь начинается с уважения, честности и взаимного интереса."},
+            "/ответ":{module:"magic",name:"Магия",reply:["Да, но не спеши.","Скорее да. Дай ситуации время.","Пока нет. Попробуй позже.","Ответ уже ближе, чем кажется."][Math.floor(Math.random()*4)]},
+            "/5букв":{module:"games",name:"Игры планеты",reply:"Игра «5 букв»: загадай слово из пяти букв и предложи друзьям угадать его."},
+            "/викторина":{module:"games",name:"Игры планеты",reply:"Викторина: какая планета Солнечной системы известна своими кольцами? Ответь одним словом."},
+            "/анаграмма":{module:"games",name:"Игры планеты",reply:"Анаграмма: переставь буквы и угадай слово «РОЗА»."},
+            "/рейтинг":{module:"defender",name:"Смотритель",reply:"Рейтинг активности формируется по участию в жизни планеты. Будь активен и соблюдай правила комнаты."}
+          };
+          const bot=botCommands[command];
+          if(bot){
+            const config=await pool.query("SELECT p.settings FROM rooms r JOIN planets p ON p.id=r.planet_id WHERE r.id=$1",[socket.joinedRoom]);
+            const modules=Array.isArray(config.rows[0]?.settings?.modules)?config.rows[0].settings.modules:["magic","games","defender","love"];
+            if(!modules.includes(bot.module)){socket.send(JSON.stringify({type:"error",message:"На этой планете не установлен нужный модуль бота."}));return;}
+            const reply={id:"bot-"+crypto.randomUUID(),body:bot.reply,created_at:new Date().toISOString(),character_name:bot.name,username:"nexora-system",system:true};
+            publish({type:"room_message",roomId:socket.joinedRoom,message:reply});
+            return;
+          }
           const inserted = await pool.query(
             "INSERT INTO room_messages (room_id,user_id,character_id,body) SELECT $1,$2,id,$3 FROM characters WHERE user_id=$2 AND is_active=TRUE RETURNING id,room_id,body,created_at,character_id",
             [socket.joinedRoom,user.id,body]

@@ -1,6 +1,6 @@
 /* NEXORA Stage 2: authenticated 2D room movement. */
 (() => {
-  const api = async url => {
+  const api = window.NexoraAPI ? window.NexoraAPI.request : async url => {
     const response = await fetch(url, { credentials: "same-origin" });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Не удалось загрузить позиции.");
@@ -32,6 +32,8 @@
       ".nx-classic .nx-avatars{inset:0!important;left:0!important;right:0!important;top:0!important;bottom:0!important;display:block!important;pointer-events:none}",
       ".nx-classic .nx-avatars .nx-avatar-card{position:absolute!important;left:50%;top:78%;transform:translate(-50%,-100%);pointer-events:auto;transition:left .12s linear,top .12s linear}",
       ".nx-classic .nx-scene{cursor:crosshair}",
+      ".nx-classic .nx-avatar-card.nx-moving .nx-sprite-canvas{animation:nx-side-hop .38s ease-in-out infinite alternate;transform-origin:50% 100%}",
+      "@keyframes nx-side-hop{from{translate:0 0}to{translate:0 -9px}}",
       ".nx-movement-hint{position:absolute;z-index:5;left:10px;bottom:10px;padding:5px 8px;background:#10151bdc;border:1px solid #818890;color:#f0dfad;font:10px Tahoma,Arial,sans-serif;pointer-events:none}",
       "@media(max-width:700px){.nx-classic .nx-avatars{overflow:visible!important}.nx-classic .nx-avatars .nx-avatar-card{min-width:48px!important}}"
     ].join("");
@@ -44,9 +46,11 @@
     const canvas = card?.querySelector("canvas[data-nexora-sprite]");
     const avatar = canvas && window.NexoraSpriteAvatar?.get(canvas);
     if (avatar) { avatar.setAnimation(action); avatar.setDirection(direction); }
+    if (card) card.classList.toggle("nx-moving", action === "walk");
   }
 
   function sendAction(action, direction = "front") {
+    if (window.NexoraAPI?.mockEnabled() && roomId) { applyAvatarAction(ownName,action,direction); return; }
     if (!socket || socket.readyState !== WebSocket.OPEN || !roomId) return;
     socket.send(JSON.stringify({ type: "action", action, direction }));
   }
@@ -55,9 +59,9 @@
     const card = cards().find(node => node.dataset.playerUsername === username);
     if (!card) return;
     card.style.left = Math.max(2, Math.min(98, Number(x))) + "%";
-    card.style.top = Math.max(8, Math.min(92, Number(y))) + "%";
+    card.style.top = "78%";
     card.style.bottom = "auto";
-    if (card.classList.contains("me")) current = { x: Number(x), y: Number(y) };
+    if (card.classList.contains("me")) current = { x: Number(x), y: 78 };
   }
 
   async function loadPositions(id, force = false) {
@@ -106,11 +110,11 @@
 
   function connectRoom(id) {
     if (!id || id === roomId || connecting) return;
+    if (window.NexoraAPI?.mockEnabled()) { closeSocket(); roomId=id; connecting=false; ownName=placementCard()?.dataset.playerUsername||"you"; current={x:50,y:78}; loadPositions(id,true); return; }
     closeSocket();
     connecting = true;
     roomId = id;
-    const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-    const ws = new WebSocket(protocol + "//" + location.host + "/ws-movement");
+    const ws = new WebSocket(window.NexoraAPI ? window.NexoraAPI.websocketUrl("/ws-movement") : (location.protocol === "https:" ? "wss:" : "ws:") + "//" + location.host + "/ws-movement");
     socket = ws;
     ws.onopen = () => {
       if (socket !== ws) return;
@@ -136,7 +140,8 @@
         current = { x: Number(packet.x), y: Number(packet.y) };
         const ownCard = cards().find(card => card.classList.contains("me"));
         if (ownCard) ownName = ownCard.dataset.playerUsername;
-        if (ownName) applyPosition(ownName, current.x, current.y);
+        if (ownName) applyPosition(ownName, current.x, 78);
+      const movingCard=placementCard();if(movingCard)movingCard.classList.add("nx-moving");
         loadPositions(id, true);
       }
       if (packet.type === "position_list") {
@@ -182,9 +187,10 @@
   }
 
   function moveTo(x, y) {
+    if (window.NexoraAPI?.mockEnabled() && roomId) { const destination=Math.max(2,Math.min(98,x));const direction=destination<current.x?"left":"right";current={x:destination,y:78};if(ownName)applyPosition(ownName,current.x,78);applyAvatarAction(ownName,"walk",direction);setTimeout(()=>applyAvatarAction(ownName,"idle",direction),420);return; }
     if (!socket || socket.readyState !== WebSocket.OPEN || !roomId) return;
-    target = { x: Math.max(2, Math.min(98, x)), y: Math.max(8, Math.min(92, y)) };
-    const direction = target.x < current.x ? "left" : target.x > current.x ? "right" : target.y < current.y ? "back" : "front";
+    target = { x: Math.max(2, Math.min(98, x)), y: 78 };
+    const direction = target.x < current.x ? "left" : "right";
     sendAction("walk", direction);
     if (moveTimer) return;
     moveTimer = setInterval(() => {
@@ -194,20 +200,21 @@
         return;
       }
       const dx = target.x - current.x;
-      const dy = target.y - current.y;
-      const distance = Math.hypot(dx, dy);
+      const distance = Math.abs(dx);
       if (distance < 1.2) {
         current = target;
         target = null;
         sendAction("idle");
+        const ownCard=placementCard();if(ownCard)ownCard.classList.remove("nx-moving");
         clearInterval(moveTimer);
         moveTimer = null;
         return;
       }
       const step = Math.min(2.5, distance);
-      current = { x: current.x + dx / distance * step, y: current.y + dy / distance * step };
+      current = { x: current.x + Math.sign(dx) * step, y: 78 };
       socket.send(JSON.stringify({ type: "move", x: Number(current.x.toFixed(2)), y: Number(current.y.toFixed(2)) }));
       if (ownName) applyPosition(ownName, current.x, current.y);
+      const ownCard=placementCard();if(ownCard)ownCard.classList.add("nx-moving");
     }, 110);
   }
 
@@ -222,16 +229,16 @@
   }
   function previewPlacement(x, y) {
     if (!placementMode) return;
-    placementTarget = { x: Math.max(2, Math.min(98, x)), y: Math.max(8, Math.min(92, y)) };
+    placementTarget = { x: Math.max(2, Math.min(98, x)), y: 78 };
     const card = placementCard();
     if (card) {
       card.style.left = placementTarget.x + "%";
-      card.style.top = placementTarget.y + "%";
+      card.style.top = "78%";
       card.style.bottom = "auto";
     }
     if (placementMarker) {
       placementMarker.style.left = placementTarget.x + "%";
-      placementMarker.style.top = placementTarget.y + "%";
+      placementMarker.style.top = "78%";
     }
     if (placementControls) {
       const confirm = placementControls.querySelector("[data-placement-confirm]");
@@ -255,13 +262,13 @@
     scene()?.classList.remove("nx-placement-active");
   }
   function beginPlacement() {
-    if (!roomId || !socket || socket.readyState !== WebSocket.OPEN) {
+    if (!roomId || (!socket || socket.readyState !== WebSocket.OPEN) && !window.NexoraAPI?.mockEnabled()) {
       addMovementEvent("Сначала дождись подключения к комнате.");
       return false;
     }
     endPlacement(true);
     placementMode = true;
-    placementOriginal = { x: current.x, y: current.y };
+    placementOriginal = { x: current.x, y: 78 };
     const stage = scene();
     if (!stage) return false;
     stage.classList.add("nx-placement-active");
@@ -296,7 +303,7 @@
     if (!hint) {
       hint = document.createElement("div");
       hint.className = "nx-movement-hint";
-      hint.textContent = "Нажми на площадку, чтобы пройти туда";
+      hint.textContent = "Нажми слева или справа, чтобы персонаж подпрыгнул туда";
       stage.append(hint);
     }
     if (!stage.dataset.movementBound) {
