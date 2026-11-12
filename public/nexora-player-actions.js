@@ -24,7 +24,11 @@
     pop.style.top = Math.max(8, cardRect.top - stageRect.top - 84) + "px";
     stage.append(pop);
     activePopover = pop;
-    pop.querySelector("[data-player-info]").addEventListener("click", () => {\n      window.NexoraExtras?.showCharacterInfo(name);\n      closePopover();\n    });\n    pop.querySelector("[data-player-move]").addEventListener("click", () => {
+    pop.querySelector("[data-player-info]").addEventListener("click", () => {
+      window.NexoraExtras?.showCharacterInfo(name);
+      closePopover();
+    });
+    pop.querySelector("[data-player-move]").addEventListener("click", () => {
       closePopover();
       window.NexoraMovement?.beginPlacement();
     });
