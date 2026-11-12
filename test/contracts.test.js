@@ -11,6 +11,7 @@ test("all primary dashboard tabs have matching content panes", () => {
   const tabs = [...html.matchAll(/data-tab="([^"]+)"/g)].map(match => match[1]);
   const panes = [...html.matchAll(/id="tab-([^"]+)"/g)].map(match => match[1]);
   assert.deepEqual([...new Set(tabs)].sort(), [...new Set(panes)].sort());
+  assert.doesNotMatch(html, /(?<!\\$)\\$\\("\\[data-/);
   for (const tab of ["characters", "world", "clans", "economy", "pets", "blogs", "relationships", "rankings", "admin"]) {
     assert.ok(tabs.includes(tab), "missing dashboard tab: " + tab);
   }
