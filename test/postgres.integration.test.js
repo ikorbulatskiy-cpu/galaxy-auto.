@@ -24,6 +24,11 @@ test("PostgreSQL migrations, reward triggers and relationship exclusivity", { sk
       "INSERT INTO purchases(user_id,item_id,character_id,currency,amount,idempotency_key) VALUES($1,$2,$3,'coins',10,$4)",
       [a,item.rows[0].id,character.rows[0].id,crypto.randomUUID()]
     );
+    const conversation = await client.query("INSERT INTO conversations DEFAULT VALUES RETURNING id");
+    await client.query("INSERT INTO conversation_members(conversation_id,user_id) VALUES($1,$2),($1,$3)",[conversation.rows[0].id,a,b]);
+    await client.query("INSERT INTO messages(conversation_id,sender_id,body) VALUES($1,$2,'Integration test message')",[conversation.rows[0].id,a]);
+    const friendship = await client.query("INSERT INTO friendships(requester_id,addressee_id) VALUES($1,$2) RETURNING id",[a,c]);
+    await client.query("UPDATE friendships SET status='accepted' WHERE id=$1",[friendship.rows[0].id]);
     const relationship = await client.query(
       "INSERT INTO relationships(requester_id,addressee_id,status) VALUES($1,$2,'engaged') RETURNING id",
       [a,b]
@@ -39,11 +44,15 @@ test("PostgreSQL migrations, reward triggers and relationship exclusivity", { sk
     const awardSet = new Set(awards.rows.map(row => row.id + ":" + row.slug));
     assert.ok(awardSet.has(a + ":first-steps"));
     assert.ok(awardSet.has(a + ":first-purchase"));
+    assert.ok(awardSet.has(a + ":social-butterfly"));
+    assert.ok(awardSet.has(a + ":new-friend"));
+    assert.ok(awardSet.has(c + ":new-friend"));
     assert.ok(awardSet.has(a + ":wedding-day"));
     assert.ok(awardSet.has(b + ":wedding-day"));
     const balances = await client.query("SELECT user_id,coins FROM wallet_balances WHERE user_id=ANY($1::uuid[])",[[a,b]]);
-    assert.equal(Number(balances.rows.find(row => row.user_id===a).coins),190);
+    assert.equal(Number(balances.rows.find(row => row.user_id===a).coins),230);
     assert.equal(Number(balances.rows.find(row => row.user_id===b).coins),150);
+    assert.equal(Number(balances.rows.find(row => row.user_id===c).coins),130);
     await client.query("SAVEPOINT relationship_conflict");
     await assert.rejects(
       client.query("INSERT INTO relationships(requester_id,addressee_id,status) VALUES($1,$2,'pending')",[a,c]),
