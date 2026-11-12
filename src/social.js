@@ -55,6 +55,29 @@ async function areFriends(client, firstId, secondId) {
   return result.rowCount > 0;
 }
 
+router.get("/users/:userId", requireSession, async (req, res, next) => {
+  const targetId=req.params.userId;
+  if(!validId(targetId))return res.status(400).json({error:"Некорректный пользователь."});
+  try{
+    const result=await pool.query(
+      `SELECT u.id AS user_id,u.username,p.display_name,p.city,p.bio,p.interests,p.avatar_url,
+              r.level,r.authority,c.name AS character_name,c.appearance,c.aura
+       FROM users u
+       JOIN profiles p ON p.user_id=u.id
+       LEFT JOIN reputation r ON r.user_id=u.id
+       LEFT JOIN characters c ON c.user_id=u.id AND c.is_active=TRUE
+       WHERE u.id=$2 AND u.status='active'
+         AND (u.id=$1 OR p.visibility='public')
+         AND NOT EXISTS(SELECT 1 FROM blocks b
+           WHERE (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$1))
+       LIMIT 1`,
+      [req.user.id,targetId]
+    );
+    if(!result.rowCount)return res.status(404).json({error:"Профиль недоступен."});
+    res.json({profile:result.rows[0]});
+  }catch(error){next(error);}
+});
+
 router.get("/friends", requireSession, async (req, res, next) => {
   try {
     const result = await pool.query(
