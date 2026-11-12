@@ -7,7 +7,7 @@
   let modal=null,selectedIndex=0;
   const safe=v=>String(v||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   function showModal(title,body){
-    if(!modal){modal=document.createElement("div");modal.className="nx-world-modal";modal.hidden=true;modal.innerHTML='<section class="nx-world-dialog" role="dialog" aria-modal="true"><button type="button" data-close style="float:right">×</button><div data-content></div></section>';root.append(modal);modal.addEventListener("click",e=>{if(e.target===modal||e.target.closest("[data-close]"))modal.hidden=true});document.addEventListener("keydown",e=>{if(e.key==="Escape"&&modal)modal.hidden=true})}
+    if(!modal){modal=document.createElement("div");modal.className="nx-world-modal";modal.hidden=true;modal.innerHTML='<section class="nx-world-dialog" role="dialog" aria-modal="true"><button type="button" data-close style="float:right">×</button><div data-content></div></section>';document.body.append(modal);modal.addEventListener("click",e=>{if(e.target===modal||e.target.closest("[data-close]"))modal.hidden=true});document.addEventListener("keydown",e=>{if(e.key==="Escape"&&modal)modal.hidden=true})}
     modal.querySelector("[data-content]").innerHTML="<h2>"+safe(title)+"</h2>"+body;modal.hidden=false;return modal;
   }
   function openPlanetModal(create){
