@@ -136,12 +136,26 @@ function attachRealtime(server) {
     }
 
     let messageTimes = [];
+    socket.isAlive = true;
     const heartbeat = setInterval(() => {
-      if (socket.joinedRoom && socket.readyState === 1) {
-        pool.query("UPDATE room_presence SET connected_at=NOW() WHERE connection_id=$1", [connectionId]).catch(() => {});
+      if (socket.readyState !== 1) return;
+      if (socket.isAlive === false) {
+        console.warn("Realtime socket heartbeat timeout:", connectionId);
+        socket.terminate();
+        return;
       }
-    }, 30000);
+      socket.isAlive = false;
+      try { socket.ping(); } catch { socket.terminate(); }
+    }, 25000);
     if (typeof heartbeat.unref === "function") heartbeat.unref();
+    socket.on("pong", () => {
+      socket.isAlive = true;
+      if (socket.joinedRoom) {
+        pool.query("UPDATE room_presence SET connected_at=NOW() WHERE connection_id=$1", [connectionId]).catch(error => {
+          console.error("Realtime presence heartbeat failed:", error.message);
+        });
+      }
+    });
     socket.on("message", async raw => {
       const now = Date.now();
       messageTimes = messageTimes.filter(time => now - time < 5000);
@@ -232,8 +246,9 @@ function attachRealtime(server) {
       }
     });
 
-    socket.on("close", async () => {
+    socket.on("close", async (code, reason) => {
       clearInterval(heartbeat);
+      console.info("Realtime socket closed:", { connectionId, code, reason: reason.toString().slice(0, 120) });
       if (socket.joinedRoom && rooms.has(socket.joinedRoom)) {
         rooms.get(socket.joinedRoom).delete(socket);
         if (!rooms.get(socket.joinedRoom).size) rooms.delete(socket.joinedRoom);
