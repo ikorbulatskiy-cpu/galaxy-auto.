@@ -76,10 +76,17 @@
       this.direction=["front","back","left","right"].includes(direction)?direction:"front";
       this.draw();
     }
-    async drawPart(key,src,timestamp=0){
+    drawPart(key,src){
       if(!src) return;
       let image=this.images.get(src);
-      if(!image){try{image=await loadImage(src);this.images.set(src,image)}catch(error){this.canvas.dispatchEvent(new CustomEvent("spriteerror",{detail:{part:key,src,error}}));return}}
+      if(!image){
+        loadImage(src).then(loaded=>{
+          if(this.destroyed||this.look[key]!==src)return;
+          this.images.set(src,loaded);
+          this.draw();
+        }).catch(error=>this.canvas.dispatchEvent(new CustomEvent("spriteerror",{detail:{part:key,src,error}})));
+        return;
+      }
       const anchor=this.options.anchors[key]||{x:0,y:0,w:this.options.width,h:this.options.height};
       const meta=this.look.frames?.[key]||{};
       const frames=Math.max(1,Number(meta.count)||1);
@@ -92,11 +99,8 @@
     draw(timestamp=0){
       if(this.destroyed)return;
       const ctx=this.ctx;ctx.clearRect(0,0,this.options.width,this.options.height);
-      // Draw in stable depth order. Each layer is an independent transparent PNG.
-      for(const key of this.options.order){
-        const src=this.look[key];
-        if(src) this.drawPart(key,src,timestamp);
-      }
+      // Stable synchronous compositing after each requested image has loaded.
+      for(const key of this.options.order)this.drawPart(key,this.look[key],timestamp);
     }
     start(){
       if(this.raf||this.destroyed)return;
