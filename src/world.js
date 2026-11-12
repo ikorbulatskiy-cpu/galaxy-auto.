@@ -142,6 +142,7 @@ router.post("/travel", requireSession, async (req, res, next) => {
     }
     const current = await client.query("SELECT planet_id FROM user_locations WHERE user_id=$1 FOR UPDATE", [req.user.id]);
     const fromPlanetId = current.rows[0]?.planet_id || null;
+    await client.query("DELETE FROM room_presence WHERE user_id=$1", [req.user.id]);
     if (fromPlanetId === planet.id) {
       await client.query("ROLLBACK");
       return res.json({ message: "Вы уже на этой планете.", planet: { slug: planet.slug, name: planet.name } });
