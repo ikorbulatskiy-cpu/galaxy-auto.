@@ -16,7 +16,8 @@ const registerSchema = z.object({
   birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
   gender: z.enum(["female","male"]),
   body: z.enum(["slim","regular","athletic"]),
-  head: z.enum(["classic","soft","angular"])
+  head: z.enum(["classic","soft","angular"]),
+  adultConfirmed: z.literal(true)
 });
 const loginSchema = z.object({
   email: z.string().trim().email().max(254).transform(v => v.toLowerCase()),
