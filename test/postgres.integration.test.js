@@ -21,6 +21,7 @@ test("PostgreSQL migrations, reward triggers and relationship exclusivity", { sk
     );
     const [a,b,c] = inserted.rows.map(row => row.id);
     await client.query("INSERT INTO wallet_balances(user_id,coins) VALUES($1,100),($2,100),($3,100)",[a,b,c]);
+    await client.query("INSERT INTO reputation(user_id) VALUES($1),($2),($3)",[a,b,c]);
     const character = await client.query("INSERT INTO characters(user_id,name,is_active) VALUES($1,'Test avatar',TRUE) RETURNING id",[a]);
     const item = await client.query("SELECT id FROM avatar_items WHERE slug='nexora-basic-cap'");
     assert.equal(item.rowCount,1);
@@ -57,6 +58,13 @@ test("PostgreSQL migrations, reward triggers and relationship exclusivity", { sk
     assert.equal(Number(balances.rows.find(row => row.user_id===a).coins),230);
     assert.equal(Number(balances.rows.find(row => row.user_id===b).coins),150);
     assert.equal(Number(balances.rows.find(row => row.user_id===c).coins),130);
+    const reputation = await client.query("SELECT user_id,authority,popularity,experience FROM reputation WHERE user_id=ANY($1::uuid[])",[[a,b,c]]);
+    const repA = reputation.rows.find(row=>row.user_id===a);
+    const repB = reputation.rows.find(row=>row.user_id===b);
+    const repC = reputation.rows.find(row=>row.user_id===c);
+    assert.deepEqual([repA.authority,repA.popularity,repA.experience],[3,6,16]);
+    assert.deepEqual([repB.authority,repB.popularity,repB.experience],[2,3,10]);
+    assert.deepEqual([repC.authority,repC.popularity,repC.experience],[1,2,5]);
     await client.query("SAVEPOINT relationship_conflict");
     await assert.rejects(
       client.query("INSERT INTO relationships(requester_id,addressee_id,status) VALUES($1,$2,'pending')",[a,c]),
