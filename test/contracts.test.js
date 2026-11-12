@@ -93,7 +93,7 @@ test("dynamic dashboard lists bind handlers through the multi-element selector",
   const html = read("public/index.html");
   assert.match(html, /\$\$=s=>\[\.\.\.document\.querySelectorAll\(s\)\]/);
   assert.doesNotMatch(html, /(?<!\$)\$\(\s*["\'][^)]*["\']\s*\)\.forEach/);
-  assert.match(html, /\$\$\("\.tabpane"\)\.forEach/);
+  assert.match(html, /\$\$\("#dashboard \.tabpane"\)\.forEach/);
   assert.match(html, /\$\$\(\s*"\[data-room\]"\s*\)\.forEach/);
 });
 
