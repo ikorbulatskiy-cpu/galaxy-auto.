@@ -10,7 +10,8 @@ test("travelling publishes committed room departures to every realtime instance"
   assert.match(world, /DELETE FROM room_presence WHERE user_id=\$1 RETURNING room_id/);
   assert.match(world, /pg_notify\('nexora_room_events'/);
   assert.match(world, /action: "left", roomId, userId: req\.user\.id/);
-  assert.ok(world.indexOf("pg_notify('nexora_room_events'") < world.indexOf('await client.query("COMMIT")'));
+  const travel = world.slice(world.indexOf('router.post("/travel"'));
+  assert.ok(travel.indexOf("pg_notify('nexora_room_events'") < travel.indexOf('await client.query("COMMIT")'));
 });
 
 test("realtime removes the correct local sockets when presence ends", () => {
@@ -20,6 +21,8 @@ test("realtime removes the correct local sockets when presence ends", () => {
   assert.match(realtime, /peer\.userId === event\.userId/);
   assert.match(realtime, /socket\.connectionId = connectionId/);
   assert.match(realtime, /removeLocalPresence\(event\)/);
+  assert.doesNotMatch(realtime, /let joinedRoom\s*=/);
+  assert.match(realtime, /packet\.type === "room_message" && socket\.joinedRoom/);
 });
 
 test("disconnect and stale cleanup events identify individual connections", () => {
