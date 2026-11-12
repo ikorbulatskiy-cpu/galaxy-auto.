@@ -112,8 +112,7 @@
     closeSocket();
     connecting = true;
     roomId = id;
-    const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-    const ws = new WebSocket(protocol + "//" + location.host + "/ws-movement");
+    const ws = new WebSocket(window.NexoraAPI ? window.NexoraAPI.websocketUrl("/ws-movement") : (location.protocol === "https:" ? "wss:" : "ws:") + "//" + location.host + "/ws-movement");
     socket = ws;
     ws.onopen = () => {
       if (socket !== ws) return;
