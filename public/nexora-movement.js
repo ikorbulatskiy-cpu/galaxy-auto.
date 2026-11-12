@@ -13,6 +13,8 @@
   let target = null;
   let current = { x: 50, y: 78 };
   let connecting = false;
+  let positionsLoading = false;
+  let lastPositionRefresh = 0;
   const scene = () => document.querySelector("#tab-world .nx-scene");
   const avatars = () => document.getElementById("nx-avatars");
   const cards = () => [...document.querySelectorAll("#nx-avatars .nx-avatar-card")];
@@ -40,13 +42,18 @@
     if (card.classList.contains("me")) current = { x: Number(x), y: Number(y) };
   }
 
-  async function loadPositions(id) {
+  async function loadPositions(id, force = false) {
+    if (positionsLoading || (!force && Date.now() - lastPositionRefresh < 12000)) return;
+    positionsLoading = true;
+    lastPositionRefresh = Date.now();
     try {
       const data = await api("/api/movement/rooms/" + encodeURIComponent(id) + "/positions");
       (data.positions || []).forEach(item => applyPosition(item.username, item.x, item.y));
     } catch (error) {
       const status = document.getElementById("nx-status");
       if (status) status.textContent = error.message;
+    } finally {
+      positionsLoading = false;
     }
   }
 
@@ -81,7 +88,7 @@
         const ownCard = cards().find(card => card.classList.contains("me"));
         if (ownCard) ownName = ownCard.dataset.playerKey;
         if (ownName) applyPosition(ownName, current.x, current.y);
-        loadPositions(id);
+        loadPositions(id, true);
       }
       if (packet.type === "position_list") {
         (packet.positions || []).forEach(item => applyPosition(item.username || item.user_id, item.x, item.y));
@@ -135,6 +142,7 @@
     const stage = scene();
     if (!world || !selector || !stage) return;
     installStyles();
+    if (roomId) loadPositions(roomId);
     let hint = stage.querySelector(".nx-movement-hint");
     if (!hint) {
       hint = document.createElement("div");
