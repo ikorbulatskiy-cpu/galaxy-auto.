@@ -33,13 +33,21 @@ function attachRealtime(server) {
       if (!auth.rowCount) throw new Error("auth");
       user = auth.rows[0];
       socket.userId = user.id;
+      connectionId = crypto.randomUUID();
       socket.send(JSON.stringify({ type: "ready", userId: user.id }));
     } catch {
       socket.close(1008, "Authentication required");
       return;
     }
 
+    let messageTimes = [];
     socket.on("message", async raw => {
+      const now = Date.now();
+      messageTimes = messageTimes.filter(time => now - time < 5000);
+      if (messageTimes.length >= 5) {
+        socket.send(JSON.stringify({type:"error",message:"Слишком часто. Подожди несколько секунд."}));
+        return;
+      }
       let packet;
       try { packet = JSON.parse(raw.toString()); } catch { return; }
       if (!packet || typeof packet.type !== "string") return;
@@ -49,6 +57,7 @@ function attachRealtime(server) {
           const client = await pool.connect();
           try {
             await client.query("BEGIN");
+            await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", ["nexora-room:" + packet.roomId]);
             const room = await client.query(
               "SELECT r.id,r.capacity FROM rooms r WHERE r.id=$1 AND r.is_active=TRUE",
               [packet.roomId]
@@ -58,12 +67,12 @@ function attachRealtime(server) {
               "SELECT id FROM characters WHERE user_id=$1 AND is_active=TRUE LIMIT 1",
               [user.id]
             );
+            await client.query("DELETE FROM room_presence WHERE connection_id=$1", [connectionId]);
             const count = await client.query(
               "SELECT COUNT(DISTINCT user_id)::int AS count FROM room_presence WHERE room_id=$1",
               [packet.roomId]
             );
             if (count.rows[0].count >= room.rows[0].capacity) { await client.query("ROLLBACK"); socket.send(JSON.stringify({type:"error",message:"Комната заполнена."})); return; }
-            connectionId = crypto.randomUUID();
             await client.query(
               "INSERT INTO room_presence (connection_id,room_id,user_id,character_id) VALUES ($1,$2,$3,$4)",
               [connectionId,packet.roomId,user.id,character.rows[0]?.id || null]
@@ -80,6 +89,7 @@ function attachRealtime(server) {
       if (packet.type === "room_message" && joinedRoom && typeof packet.body === "string") {
         const body = packet.body.trim();
         if (!body || body.length > 1000) return;
+        messageTimes.push(now);
         try {
           const muted = await pool.query(
             "SELECT 1 FROM punishments WHERE user_id=$1 AND kind='mute' AND lifted_at IS NULL AND (ends_at IS NULL OR ends_at>NOW()) LIMIT 1",
