@@ -86,6 +86,7 @@ NEXORA — социальная платформа знакомств и вир�
 
 - `GET /api/game/planets` — планеты, число комнат и онлайн.
 - `GET /api/game/rooms?planet=<slug>` — комнаты выбранной планеты.
+- `GET /api/game/rooms/:roomId/presence` — список активных игроков текущей планеты в выбранной комнате.
 - `POST /api/world/travel` — перемещение между планетами. JSON: `{"planetSlug":"love-planet"}`.
 - `PATCH /api/game/characters/:id` — внешность персонажа в JSON-поле `appearance`.
 - `GET /api/features/recipients?q=...` — список доступных подтверждённых пользователей для переводов, подарков и предложений отношений.
