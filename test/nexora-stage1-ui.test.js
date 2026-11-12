@@ -99,5 +99,5 @@ test("inline application script parses after the entry-screen changes", () => {
 test("body picker initialization iterates a NodeList array, not a single element", () => {
   const html = read("public/index.html");
   assert.match(html, /\$\$\("\[data-body-choice\]"\)\.forEach/);
-  assert.doesNotMatch(html, /\$\("\[data-body-choice\]"\)\.forEach/);
+  assert.doesNotMatch(html, /(^|[^$])\$\("\[data-body-choice\]"\)\.forEach/);
 });
