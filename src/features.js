@@ -94,7 +94,7 @@ router.post("/shop/buy", async (req,res,next) => {
     if(!owned.rowCount||!item.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Персонаж или предмет не найден."})}
     const alreadyOwned=await client.query("SELECT 1 FROM character_inventory WHERE character_id=$1 AND item_id=$2",[p.data.characterId,p.data.itemId]);
     if(alreadyOwned.rowCount){await client.query("ROLLBACK");return res.status(409).json({error:"Этот предмет уже есть у персонажа."})}
-    const amount=BigInt(item.rows[0][p.data.currency==="coins"?"price_coins":"price_diamonds"]);
+    const amount=BigInt(item.rows[0][p.data.currency==="coins"?"price_coins":"price_diamonds"]);const otherCurrency=BigInt(item.rows[0][p.data.currency==="coins"?"price_diamonds":"price_coins"]);if(amount===0n&&otherCurrency>0n){await client.query("ROLLBACK");return res.status(400).json({error:"Этот предмет нельзя купить за выбранную валюту."})}
     const wallet=await client.query("SELECT coins,diamonds FROM wallet_balances WHERE user_id=$1 FOR UPDATE",[req.user.id]);
     if(!wallet.rowCount||BigInt(wallet.rows[0][p.data.currency])<amount){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно средств."})}
     const col=p.data.currency;
@@ -115,11 +115,11 @@ router.post("/shop/gift", async (req,res,next) => {
     await client.query("BEGIN");
     const duplicate=await client.query("SELECT id,sender_user_id,receiver_user_id,item_id FROM gifts WHERE idempotency_key=$1",[p.data.idempotencyKey]);
     if(duplicate.rowCount){await client.query("COMMIT");if(duplicate.rows[0].sender_user_id!==req.user.id||duplicate.rows[0].receiver_user_id!==p.data.toUserId||duplicate.rows[0].item_id!==p.data.itemId)return res.status(409).json({error:"Ключ операции уже использован для другого подарка."});return res.json({giftId:duplicate.rows[0].id,replayed:true})}
-    const item=await client.query("SELECT id,price_coins FROM avatar_items WHERE id=$1 AND is_active=TRUE FOR UPDATE",[p.data.itemId]);
+    const item=await client.query("SELECT id,price_coins,price_diamonds FROM avatar_items WHERE id=$1 AND is_active=TRUE FOR UPDATE",[p.data.itemId]);
     const receiver=await client.query("SELECT id FROM users WHERE id=$1 AND status='active'",[p.data.toUserId]);
     if(!item.rowCount||!receiver.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Предмет или получатель не найден."})}
     const wallet=await client.query("SELECT coins FROM wallet_balances WHERE user_id=$1 FOR UPDATE",[req.user.id]);
-    const amount=BigInt(item.rows[0].price_coins);
+    const amount=BigInt(item.rows[0].price_coins);if(amount===0n&&BigInt(item.rows[0].price_diamonds)>0n){await client.query("ROLLBACK");return res.status(400).json({error:"Этот предмет можно подарить только после покупки за Diamonds."})}
     if(!wallet.rowCount||BigInt(wallet.rows[0].coins)<amount){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно Coins."})}
     await client.query("UPDATE wallet_balances SET coins=coins-$2,updated_at=NOW() WHERE user_id=$1",[req.user.id,amount.toString()]);
     const gift=await client.query("INSERT INTO gifts(sender_user_id,receiver_user_id,item_id,message,idempotency_key) VALUES($1,$2,$3,$4,$5) RETURNING id",[req.user.id,p.data.toUserId,p.data.itemId,p.data.message,p.data.idempotencyKey]);
