@@ -38,3 +38,30 @@
 @keyframes nxBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes nxEmote{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-16px) rotate(-8deg)}70%{transform:translateY(-5px) rotate(8deg)}}
 @media(max-width:700px){.nx-world{margin:0 calc((100vw - (100vw - 26px))/2 - 13px);width:100vw}.nx-topbar{gap:7px;padding:7px}.nx-online{font-size:11px;padding:8px}.nx-planet-select{font-size:11px;padding:8px}.nx-chat-layout{grid-template-columns:minmax(0,1fr) 112px}.nx-player-list{padding:7px}.nx-player{font-size:10px;gap:4px}.nx-player img{width:20px}.nx-chat-log{height:190px;font-size:12px;padding:8px}.nx-scene{min-height:310px}.nx-planet{width:170px;height:170px;top:-55px}.nx-scene-arch{height:160px;bottom:50px}.nx-avatar-card{min-width:57px}.nx-avatar-card svg{width:54px;height:108px}.nx-avatar-name{font-size:9px;max-width:68px}.nx-avatars{bottom:60px;justify-content:flex-start}.nx-bottom-nav{grid-template-columns:repeat(3,minmax(0,1fr))}.nx-bottom-nav button{padding:8px 3px;font-size:11px}.nx-bottom-nav button span{font-size:19px}}
+
+
+/* Integrated in-world navigation and module overlays */
+.nx-world{position:relative;min-height:calc(100vh - 24px)}
+.nx-topbar{position:relative;z-index:6;flex-wrap:wrap}
+.nx-account{display:flex;align-items:center;gap:8px;min-width:0;max-width:34%;font-size:12px;font-weight:800}
+.nx-account #welcome{font-size:13px;margin:0;color:#fff;white-space:nowrap}
+.nx-account #account-label{display:none}
+.nx-account #logout{padding:7px 10px;font-size:11px;white-space:nowrap}
+.nx-menu-panel{position:absolute;z-index:20;top:62px;right:12px;width:min(390px,calc(100% - 24px));padding:14px;background:linear-gradient(155deg,#292047,#11101d);border:1px solid #a987ff;border-radius:16px;box-shadow:0 18px 60px #000c}
+.nx-menu-panel[hidden]{display:none}
+.nx-menu-heading{display:flex;align-items:center;justify-content:space-between;font-weight:900;color:#e4d5ff;padding:0 2px 12px}
+.nx-menu-heading button{border:0;background:transparent;color:#fff;font-size:25px}
+.nx-menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.nx-menu-grid button{display:flex;align-items:center;gap:9px;text-align:left;padding:11px 10px;border-radius:11px;background:linear-gradient(145deg,#44316d,#251d3e);border:1px solid #69528e;color:#fff;font-weight:750;font-size:12px}
+.nx-menu-grid button span{font-size:19px;width:23px;text-align:center}
+.nx-menu-grid button:active,.nx-menu-grid button:hover{background:linear-gradient(145deg,#7652b7,#4b326e);border-color:#d2b6ff}
+#dashboard>.tabpane:not(#tab-world):not(.hidden){position:fixed;z-index:40;left:50%;top:50%;transform:translate(-50%,-50%);width:min(1050px,calc(100vw - 28px));max-height:min(82vh,850px);overflow:auto;padding:22px;background:linear-gradient(155deg,#1b1830,#0f101c);border:1px solid #9b78d8;border-radius:18px;box-shadow:0 25px 100px #000e}
+#dashboard>.tabpane:not(#tab-world):not(.hidden) .nx-pane-close{position:sticky;top:0;float:right;z-index:3;border:1px solid #a987ff;border-radius:10px;background:#37265c;color:white;padding:8px 13px;font-weight:800}
+#dashboard>.tabpane:not(#tab-world):not(.hidden) .head{padding-top:5px}
+@media(max-width:700px){
+ .nx-account{max-width:none;order:4;width:100%;justify-content:space-between;padding:4px 2px}
+ .nx-account #welcome{font-size:12px}
+ .nx-topbar{height:auto;min-height:62px}
+ .nx-menu-panel{top:112px;right:7px}
+ #dashboard>.tabpane:not(#tab-world):not(.hidden){width:calc(100vw - 16px);max-height:86vh;padding:13px}
+}
