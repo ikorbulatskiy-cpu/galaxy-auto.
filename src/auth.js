@@ -114,7 +114,8 @@ router.post("/register", async (req, res, next) => {
     const user = inserted.rows[0];
     await client.query("INSERT INTO profiles (user_id, display_name, birth_date) VALUES ($1,$2,$3)", [user.id, username, birthDate]);
     await client.query("INSERT INTO reputation (user_id) VALUES ($1)", [user.id]);
-    await client.query("INSERT INTO wallet_balances (user_id) VALUES ($1)", [user.id]);
+    await client.query("INSERT INTO wallet_balances (user_id,coins) VALUES ($1,500)", [user.id]);
+    await client.query("INSERT INTO wallet_ledger (user_id,currency,amount,reason) VALUES ($1,'coins',500,'Стартовый бонус NEXORA')", [user.id]);
     await client.query("INSERT INTO email_verification_tokens (user_id, token_hash, expires_at) VALUES ($1,$2,NOW() + INTERVAL '24 hours')", [user.id, hashToken(verificationToken)]);
     await client.query("COMMIT");
     let devVerificationUrl = null;
