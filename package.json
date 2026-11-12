@@ -6,8 +6,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "db:migrate": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f database/schema.sql -f database/migrations/002_game_world.sql -f database/migrations/003_social_game_systems.sql",
-    "check": "node --check server.js && for file in src/*.js; do node --check \"$file\"; done"
+    "db:migrate": "node scripts/migrate.js",
+    "check": "node --check server.js && for file in src/*.js scripts/*.js; do node --check \"$file\"; done",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=20"
