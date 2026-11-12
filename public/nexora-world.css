@@ -214,3 +214,9 @@
 .nx-avatar-accessories{position:relative;z-index:3;display:flex;gap:3px;justify-content:center;flex-wrap:wrap;max-width:100px;margin:-4px auto 0}
 .nx-avatar-accessories span{padding:1px 3px;background:#111923e8;border:1px solid #a4aab1;color:#ffe6a5;font:8px Tahoma,Arial,sans-serif;white-space:nowrap}
 @media(max-width:700px){.nx-room-select{flex:1;max-width:none;min-width:90px;font-size:10px;padding:6px 4px}.nx-events-panel{top:148px;right:5px}.nx-events-toggle{font-size:9px;padding:4px 5px}}
+
+/* Full-body avatars and clickable room movement */
+.nx-classic .nx-avatar-card svg{width:78px;height:140px;object-fit:contain}
+.nx-body-preview svg{display:block;width:46px;height:62px;filter:drop-shadow(0 3px 4px #0008)}
+.nx-classic .nx-avatars .nx-avatar-card{will-change:left,top}
+@media(max-width:700px){.nx-classic .nx-avatar-card svg{width:62px;height:116px}}

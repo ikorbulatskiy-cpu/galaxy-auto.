@@ -56,3 +56,41 @@ test("realtime WebSocket uses protocol ping/pong to keep presence alive", () => 
   assert.match(realtime, /Realtime socket closed:/);
   assert.match(realtime, /socket\.send\(JSON\.stringify\(\{ type: "ready"/);
 });
+
+
+test("entry screen offers 2D body selection and saved-code recovery", () => {
+  const html = read("public/index.html");
+  assert.match(html, /data-open="register">Создать персонажа/);
+  assert.match(html, /data-open="restore">Код восстановления/);
+  assert.match(html, /data-body-choice="slim"/);
+  assert.match(html, /data-body-choice="regular"/);
+  assert.match(html, /data-body-choice="athletic"/);
+  assert.match(html, /name="username"/);
+  assert.match(html, /name="adultConfirmed"/);
+  assert.doesNotMatch(html, /name="gender"/);
+});
+
+test("room movement client is loaded and its browser script parses", () => {
+  const html = read("public/index.html");
+  const movement = read("public/nexora-movement.js");
+  assert.match(html, /nexora-movement\.js\?v=3/);
+  assert.doesNotThrow(() => new vm.Script(movement));
+  assert.match(movement, /addEventListener\("nexora:room-joined"/);
+  assert.match(movement, /function moveTo\(x, y\)/);
+  assert.match(movement, /pointerdown/);
+  assert.match(movement, /player_moved/);
+});
+
+test("registration persists the selected 2D body", () => {
+  const auth = read("src/auth.js");
+  assert.match(auth, /body: z\.enum\(\["slim", "regular", "athletic"\]\)\.optional\(\)/);
+  assert.match(auth, /body:parsed\.data\.body \|\| "regular"/);
+});
+
+
+test("inline application script parses after the entry-screen changes", () => {
+  const html = read("public/index.html");
+  const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+  assert.equal(scripts.length, 1, "expected one inline application script");
+  assert.doesNotThrow(() => new vm.Script(scripts[0][1]));
+});
