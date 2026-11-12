@@ -56,7 +56,7 @@
   const eventsPanel=document.getElementById("nx-events-panel");document.getElementById("nx-events-toggle").onclick=()=>{eventsPanel.hidden=!eventsPanel.hidden};document.getElementById("nx-events-close").onclick=()=>{eventsPanel.hidden=true};
   const planetGo=document.getElementById("nx-planet-go");if(planetGo)planetGo.onclick=()=>{const input=document.getElementById("nx-planet-search");if(input.value.trim())findPlanet();else input.focus()};
   document.getElementById("nx-planet-search").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();findPlanet()}});
-  document.getElementById("nx-chat-form").onsubmit=e=>{e.preventDefault();const input=e.currentTarget.elements.body,body=input.value.trim();if(!body)return;if(!socket||socket.readyState!==WebSocket.OPEN)return status("Нет подключения к чату");socket.send(JSON.stringify({type:"room_message",body}));input.value=""};
+  document.getElementById("nx-chat-form").onsubmit=e=>{e.preventDefault();const input=e.currentTarget.elements.body,body=input.value.trim();if(!body)return;if(window.NexoraAPI?.mockEnabled()){appendMessage({body,character_name:meName,created_at:new Date().toISOString()});if(body.startsWith("/"))appendMessage({body:"Демо-ответ бота. В рабочей комнате ответ придёт от серверного модуля.",character_name:"Магия",created_at:new Date().toISOString(),system:true});input.value="";return}if(!socket||socket.readyState!==WebSocket.OPEN)return status("Нет подключения к чату");socket.send(JSON.stringify({type:"room_message",body}));input.value=""};
   const favoritesToggle=document.getElementById("nx-favorites-toggle");if(favoritesToggle)favoritesToggle.onclick=()=>{const panel=document.getElementById("nx-favorites-panel");const open=panel.hidden;closePanels();panel.hidden=!open;renderFavorites()};
   document.getElementById("nx-favorites-close").onclick=()=>document.getElementById("nx-favorites-panel").hidden=true;
   const helpToggle=document.getElementById("nx-help-toggle");if(helpToggle)helpToggle.onclick=()=>{const panel=document.getElementById("nx-help-panel");const open=panel.hidden;closePanels();panel.hidden=!open};
@@ -111,6 +111,7 @@
  }
  function connectRoomSocket(room,generation){
   if(generation!==joinGeneration||activeRoom!==room.id)return;
+  if(window.NexoraAPI?.mockEnabled()){status("Демо-режим: тестовые данные. Мультиплеер отключён.");window.dispatchEvent(new CustomEvent("nexora:room-joined",{detail:{roomId:room.id}}));return;}
   const ws=new WebSocket(window.NexoraAPI?window.NexoraAPI.websocketUrl("/ws"):(location.protocol==="https:"?"wss:":"ws:")+"//"+location.host+"/ws");socket=ws;
   ws.onopen=()=>{
    if(socket!==ws||generation!==joinGeneration)return;
