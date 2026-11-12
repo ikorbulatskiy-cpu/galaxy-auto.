@@ -151,7 +151,7 @@ router.get("/rooms/:roomId/presence", requireSession, async (req,res,next)=>{
     const result=await pool.query(
       "SELECT rp.user_id,u.username,COALESCE(c.name,u.username) AS character_name,MAX(rp.connected_at) AS connected_at " +
       "FROM room_presence rp JOIN users u ON u.id=rp.user_id " +
-      "JOIN rooms r ON r.id=rp.room_id JOIN user_locations l ON l.planet_id=r.planet_id AND l.user_id=$2 " +
+      "JOIN rooms r ON r.id=rp.room_id AND r.is_active=TRUE JOIN planets p ON p.id=r.planet_id AND p.is_active=TRUE JOIN user_locations l ON l.planet_id=r.planet_id AND l.user_id=$2 " +
       "LEFT JOIN characters c ON c.user_id=u.id AND c.is_active=TRUE " +
       "WHERE rp.room_id=$1 AND rp.connected_at>NOW()-INTERVAL '2 minutes' AND u.status='active' " +
       "AND NOT EXISTS(SELECT 1 FROM blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=rp.user_id) OR (b.blocker_id=rp.user_id AND b.blocked_id=$2)) " +
