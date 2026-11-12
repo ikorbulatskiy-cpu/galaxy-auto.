@@ -14,6 +14,31 @@ function validId(value) {
   return uuidSchema.safeParse(value).success;
 }
 
+
+router.get("/discover", requireSession, async (req, res, next) => {
+  const q = typeof req.query.q === "string" ? req.query.q.trim().slice(0, 40) : "";
+  try {
+    const result = await pool.query(
+      `SELECT u.id AS user_id,u.username,p.display_name,p.city,p.bio,p.interests,p.avatar_url,
+              r.level,r.authority,
+              EXISTS(SELECT 1 FROM friendships f
+                WHERE ((f.requester_id=$1 AND f.addressee_id=u.id) OR (f.requester_id=u.id AND f.addressee_id=$1))
+                  AND f.status IN ('pending','accepted')) AS has_relation
+       FROM users u
+       JOIN profiles p ON p.user_id=u.id
+       LEFT JOIN reputation r ON r.user_id=u.id
+       WHERE u.status='active' AND u.email_verified_at IS NOT NULL AND u.id<>$1
+         AND p.visibility='public'
+         AND ($2='' OR u.username ILIKE '%' || $2 || '%' OR COALESCE(p.display_name,'') ILIKE '%' || $2 || '%' OR COALESCE(p.city,'') ILIKE '%' || $2 || '%')
+         AND NOT EXISTS(SELECT 1 FROM blocks b
+           WHERE (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$1))
+       ORDER BY u.created_at DESC LIMIT 60`,
+      [req.user.id, q]
+    );
+    res.json({ users: result.rows });
+  } catch (error) { next(error); }
+});
+
 async function isBlocked(client, firstId, secondId) {
   const result = await client.query(
     "SELECT 1 FROM blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1) LIMIT 1",
