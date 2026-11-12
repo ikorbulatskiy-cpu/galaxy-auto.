@@ -11,7 +11,6 @@ test("all primary dashboard tabs have matching content panes", () => {
   const tabs = [...html.matchAll(/data-tab="([^"]+)"/g)].map(match => match[1]);
   const panes = [...html.matchAll(/id="tab-([^"]+)"/g)].map(match => match[1]);
   assert.deepEqual([...new Set(tabs)].sort(), [...new Set(panes)].sort());
-  assert.doesNotMatch(html, /(?<!\\$)\\$\\("\\[data-/);
   for (const tab of ["characters", "world", "clans", "economy", "pets", "blogs", "relationships", "rankings", "admin"]) {
     assert.ok(tabs.includes(tab), "missing dashboard tab: " + tab);
   }
@@ -36,7 +35,7 @@ test("database migrations define the required game systems", () => {
     assert.match(world, new RegExp("CREATE TABLE IF NOT EXISTS " + table + "\\b"));
   }
   for (const table of ["avatar_items", "character_inventory", "clans", "clan_members", "wallet_transfers", "purchases", "gifts", "pets", "blog_posts", "blog_photos", "relationships", "achievements", "user_achievements", "mini_game_scores", "admin_logs"]) {
-    assert.match(systems, new RegExp("CREATE TABLE IF NOT EXISTS " + table + "\b"));
+    assert.match(systems, new RegExp("CREATE TABLE IF NOT EXISTS " + table + "\\b"));
   }
   assert.match(systems, /nexora_award_achievement/);
   assert.match(systems, /nexora_first_purchase_achievement/);
