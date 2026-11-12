@@ -150,6 +150,8 @@ CREATE TABLE IF NOT EXISTS relationships (
 CREATE UNIQUE INDEX IF NOT EXISTS relationships_one_active_per_user_idx
 ON relationships(LEAST(requester_id,addressee_id),GREATEST(requester_id,addressee_id))
 WHERE status IN ('pending','married');
+CREATE UNIQUE INDEX IF NOT EXISTS relationships_requester_active_idx ON relationships(requester_id) WHERE status IN ('pending','married');
+CREATE UNIQUE INDEX IF NOT EXISTS relationships_addressee_active_idx ON relationships(addressee_id) WHERE status IN ('pending','married');
 
 CREATE TABLE IF NOT EXISTS achievements (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
