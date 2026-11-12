@@ -22,7 +22,7 @@
 .nx-scene:before{content:"";position:absolute;inset:0;background-image:radial-gradient(#fff 1px,transparent 1.6px),radial-gradient(#d8caff 1px,transparent 1.8px);background-size:49px 47px,83px 79px;background-position:0 0,23px 17px;opacity:.65}
 .nx-planet{position:absolute;width:250px;height:250px;border-radius:50%;right:7%;top:-90px;background:radial-gradient(circle at 35% 30%,#ffd7c4,#b68acb 48%,#594e92 75%);box-shadow:inset -22px -18px 35px #1b194a88,0 0 35px #e7a9ff55}
 .nx-scene-arch{position:absolute;left:8%;right:8%;bottom:60px;height:210px;border:12px solid #b6a9db;border-bottom:0;border-radius:180px 180px 0 0;box-shadow:0 0 18px #e5c7ff99,inset 0 0 20px #c7aaff55;opacity:.7}
-.nx-floor{position:absolute;left:-5%;right:-5%;bottom:-15px;height:115px;background:repeating-linear-gradient(90deg,#c8a9c5 0 2px,transparent 2px 100px),linear-gradient(180deg,#b38db4,#6d5c91);border-top:4px solid #e6caff;transform:perspective(260px) rotateX(12deg);box-shadow:0 -8px 25px #d5baff44}
+.nx-floor{position:absolute;left:0;right:0;bottom:0;height:100px;background:repeating-linear-gradient(90deg,#c8a9c5 0 2px,transparent 2px 100px),repeating-linear-gradient(0deg,#8c78a6 0 1px,transparent 1px 34px),linear-gradient(180deg,#b38db4,#6d5c91);border-top:4px solid #e6caff;box-shadow:0 -8px 25px #d5baff44}
 .nx-scene-label{position:absolute;top:14px;left:16px;background:#17102dc9;border:1px solid #ad8aff;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:800;z-index:2}
 .nx-avatars{position:absolute;z-index:2;left:2%;right:2%;bottom:74px;display:flex;align-items:flex-end;justify-content:space-around;gap:5px;overflow-x:auto}
 .nx-avatar-card{min-width:68px;text-align:center;position:relative;animation:nxBob 3s ease-in-out infinite}
