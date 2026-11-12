@@ -15,6 +15,20 @@ function attachRealtime(server) {
   const wss = new WebSocketServer({ server, path: "/ws", maxPayload: 4096 });
   const rooms = new Map();
   const instanceId = crypto.randomUUID();
+  const removeLocalPresence = event => {
+    const peers = rooms.get(event.roomId);
+    if (!peers || event.type !== "presence" || event.action !== "left") return;
+    for (const peer of peers) {
+      const matches = event.connectionId
+        ? peer.connectionId === event.connectionId
+        : peer.userId === event.userId;
+      if (matches) {
+        peers.delete(peer);
+        peer.joinedRoom = null;
+      }
+    }
+    if (!peers.size) rooms.delete(event.roomId);
+  };
   const broadcastLocal = event => {
     for (const peer of rooms.get(event.roomId) || []) {
       if (peer.readyState === 1) {
@@ -29,6 +43,7 @@ function attachRealtime(server) {
     let event;
     try { event = JSON.parse(notification.payload); } catch { return; }
     if (!event || typeof event.roomId !== "string" || event.source === instanceId) return;
+    removeLocalPresence(event);
     broadcastLocal(event);
   };
   const scheduleReconnect = () => {
@@ -71,6 +86,7 @@ function attachRealtime(server) {
   };
   const publish = payload => {
     const event = { ...payload, source: instanceId };
+    removeLocalPresence(event);
     broadcastLocal(event);
     return pool.query("SELECT pg_notify('nexora_room_events',$1)", [JSON.stringify(event)]).catch(error => {
       console.error("Realtime event publish failed:", error.message);
@@ -79,8 +95,8 @@ function attachRealtime(server) {
   connectListener();
   const cleanup = setInterval(async () => {
     try {
-      const stale = await pool.query("DELETE FROM room_presence WHERE connected_at < NOW() - INTERVAL '2 minutes' RETURNING room_id,user_id");
-      for (const row of stale.rows) publish({ type: "presence", action: "left", roomId: row.room_id, userId: row.user_id });
+      const stale = await pool.query("DELETE FROM room_presence WHERE connected_at < NOW() - INTERVAL '2 minutes' RETURNING room_id,user_id,connection_id");
+      for (const row of stale.rows) publish({ type: "presence", action: "left", roomId: row.room_id, userId: row.user_id, connectionId: row.connection_id });
     } catch (error) {
       console.error("Presence cleanup failed:", error.message);
     }
@@ -113,6 +129,7 @@ function attachRealtime(server) {
       user = auth.rows[0];
       socket.userId = user.id;
       connectionId = crypto.randomUUID();
+      socket.connectionId = connectionId;
       socket.send(JSON.stringify({ type: "ready", userId: user.id }));
     } catch {
       socket.close(1008, "Authentication required");
@@ -174,9 +191,10 @@ function attachRealtime(server) {
           if (previousRoom && rooms.has(previousRoom)) {
             rooms.get(previousRoom).delete(socket);
             if (!rooms.get(previousRoom).size) rooms.delete(previousRoom);
-            publish({ type: "presence", action: "left", roomId: previousRoom, userId: user.id });
+            publish({ type: "presence", action: "left", roomId: previousRoom, userId: user.id, connectionId });
           }
           joinedRoom = packet.roomId;
+          socket.joinedRoom = joinedRoom;
           if (!rooms.has(joinedRoom)) rooms.set(joinedRoom,new Set());
           rooms.get(joinedRoom).add(socket);
           publish({ type: "presence", action: "joined", roomId: joinedRoom, userId: user.id, username: user.username });
@@ -219,8 +237,8 @@ function attachRealtime(server) {
       }
       if (connectionId) {
         try {
-          const removed = await pool.query("DELETE FROM room_presence WHERE connection_id=$1 RETURNING room_id,user_id",[connectionId]);
-          if (removed.rowCount) publish({ type: "presence", action: "left", roomId: removed.rows[0].room_id, userId: removed.rows[0].user_id });
+          const removed = await pool.query("DELETE FROM room_presence WHERE connection_id=$1 RETURNING room_id,user_id,connection_id",[connectionId]);
+          if (removed.rowCount) publish({ type: "presence", action: "left", roomId: removed.rows[0].room_id, userId: removed.rows[0].user_id, connectionId: removed.rows[0].connection_id });
         } catch {}
       }
     });
