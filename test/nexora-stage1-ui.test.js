@@ -109,3 +109,12 @@ test("registration wizard updates gender and body preview without replacing the 
   assert.match(html, /nxShowRegisterStep\(2\)/);
   assert.match(html, /nxShowRegisterStep\(1\)/);
 });
+
+test("registration privacy link resolves to a published policy document", () => {
+  const html = read("public/index.html");
+  const policy = read("public/privacy-policy.html");
+  assert.match(html, /href="\/privacy-policy\.html"/);
+  assert.match(policy, /Политика конфиденциальности/);
+  assert.match(policy, /код восстановления/);
+  assert.match(policy, /14 дней/);
+});
