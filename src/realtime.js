@@ -51,6 +51,11 @@ function attachRealtime(server) {
       let packet;
       try { packet = JSON.parse(raw.toString()); } catch { return; }
       if (!packet || typeof packet.type !== "string") return;
+      const stillAuthenticated = await pool.query("SELECT 1 FROM sessions WHERE id=$1 AND expires_at>NOW()", [user.session_id]).catch(() => ({ rowCount: 0 }));
+      if (!stillAuthenticated.rowCount) {
+        socket.close(1008, "Session expired");
+        return;
+      }
       if (packet.type === "join_room") {
         if (typeof packet.roomId !== "string" || !/^[0-9a-f-]{36}$/i.test(packet.roomId)) return;
         try {
