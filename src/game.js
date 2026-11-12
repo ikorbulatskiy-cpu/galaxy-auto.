@@ -53,7 +53,17 @@ router.patch("/characters/:characterId", requireSession, async (req, res, next) 
     gender: z.enum(["unspecified","female","male","other"]).optional(),
     characterAge: z.number().int().min(18).max(120).nullable().optional(),
     bio: z.string().trim().max(500).optional(),
-    appearance: z.record(z.unknown()).optional()
+    appearance: z.object({
+      body: z.string().max(40).optional(),
+      skinTone: z.string().max(24).optional(),
+      head: z.string().max(40).optional(),
+      hair: z.string().max(40).optional(),
+      hairColor: z.string().max(24).optional(),
+      eyes: z.string().max(40).optional(),
+      outfit: z.string().max(60).optional(),
+      shoes: z.string().max(40).optional(),
+      accessories: z.array(z.string().max(40)).max(20).optional()
+    }).strict().optional()
   }).strict().safeParse(req.body);
   if (!parsed.success || !/^[0-9a-f-]{36}$/i.test(req.params.characterId)) {
     return res.status(400).json({ error: "Некорректные данные персонажа." });
