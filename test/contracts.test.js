@@ -154,3 +154,14 @@ test("media uploads use authenticated presigned object-storage operations", () =
   assert.match(migration, /CREATE TABLE IF NOT EXISTS media_assets/);
   assert.match(migration, /byte_size BIGINT NOT NULL CHECK/);
 });
+
+
+test("admin dashboard exposes operational metrics and catalog image assets", () => {
+  const features = read("src/features.js");
+  const html = read("public/index.html");
+  assert.match(features, /router\.get\("\/admin\/overview",adminOnly/);
+  assert.match(html, /id="load-admin-overview"/);
+  assert.match(html, /\/api\/features\/admin\/overview/);
+  assert.match(html, /i\.asset_url\?/);
+  assert.match(html, /x\.asset_url\?/);
+});
