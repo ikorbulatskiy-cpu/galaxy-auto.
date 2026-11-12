@@ -13,17 +13,24 @@
     badge.setAttribute("aria-live","polite");
     badge.textContent="Ожидание";
     header.append(badge);
+    let connectionState="pending";
     const update=()=>{
       const raw=(source.textContent||"").trim();
-      const value=raw.replace(/^Соединение:\s*/i,"").replace(/^Канал движения\s*/i,"").trim();
-      const text=value||"Ожидание";
-      const lower=text.toLocaleLowerCase("ru");
-      let state="pending",label=text;
-      if(/подключен|в комнате|соединение установлено|отличное|стабильное|активно|готово к обмену|connected/.test(lower)){state="connected";label="На связи"}
-      else if(/ошиб|потерян|закрыт|отключ|не удалось|отказ|timeout|failed/.test(lower)){state="error";label="Нет связи"}
-      else if(/подключ|ожидан|соединен|готово|загрузка/.test(lower)){state="pending";label="Подключение"}
-      badge.dataset.state=state;
-      badge.textContent=label.length>18?label.slice(0,17)+"…":label;
+      const lower=raw.toLocaleLowerCase("ru");
+      let label="Подключение";
+      if(/соединение:\s*(отличное|стабильное|активно)|соединение с комнатой установлено|подключен к комнате|connected/.test(lower)){
+        connectionState="connected";label="На связи";
+      }else if(/связь потеряна|проблема сети|закрыт|ошиб|недоступ|не удалось|timeout|failed/.test(lower)){
+        connectionState="error";label="Нет связи";
+      }else if(/подключ|восстанавливаем|ожидан|проверяет подключение/.test(lower)){
+        connectionState="pending";label="Подключение";
+      }else if(connectionState==="connected"){
+        label="На связи";
+      }else if(connectionState==="error"){
+        label="Нет связи";
+      }
+      badge.dataset.state=connectionState;
+      badge.textContent=label;
       badge.title=raw||"Состояние подключения";
     };
     update();
