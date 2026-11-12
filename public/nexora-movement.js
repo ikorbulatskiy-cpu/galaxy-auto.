@@ -109,6 +109,7 @@
       if (packet.type === "error") {
         const status = document.getElementById("nx-status");
         if (status) status.textContent = packet.message;
+        if (socket && socket.readyState === WebSocket.OPEN) socket.close(1011, "Room join failed");
       }
     };
     socket.onclose = () => {
@@ -163,7 +164,7 @@
     const world = document.getElementById("tab-world");
     const selector = document.getElementById("nx-room-select");
     const stage = scene();
-    if (!world || !selector || !stage) return;
+    if (!world || !stage) return;
     installStyles();
     if (roomId) loadPositions(roomId);
     let hint = stage.querySelector(".nx-movement-hint");
@@ -183,19 +184,18 @@
         moveTo(x, y);
       });
     }
-    if (selector.value) connectRoom(selector.value);
   }
+
+  window.NexoraMovement = { join: connectRoom, leave: closeSocket };
+  window.addEventListener("nexora:room-joined", event => connectRoom(event.detail?.roomId));
+  window.addEventListener("nexora:room-left", closeSocket);
 
   const observer = new MutationObserver(() => {
     installScene();
-    const selector = document.getElementById("nx-room-select");
-    if (selector && !selector.dataset.movementChangeBound) {
-      selector.dataset.movementChangeBound = "true";
-      selector.addEventListener("change", () => connectRoom(selector.value));
-    }
     const active = document.querySelector("#nx-avatars .nx-avatar-card.me");
     if (active && !ownName) ownName = active.dataset.playerUsername;
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
   installScene();
+  if (window.nexoraActiveRoom) connectRoom(window.nexoraActiveRoom);
 })();
