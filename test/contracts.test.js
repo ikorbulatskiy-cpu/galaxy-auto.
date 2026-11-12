@@ -90,7 +90,7 @@ test("moderation actions cannot be applied to the current admin account", () => 
 
 test("dynamic dashboard lists bind handlers through the multi-element selector", () => {
   const html = read("public/index.html");
-  assert.match(html, /const \$\$=s=>\[\.\.\.document\.querySelectorAll\(s\)\]/);
+  assert.match(html, /\\$\\$=s=>\\[\\.\\.\\.document\\.querySelectorAll\\(s\\)\\]/);
   assert.doesNotMatch(html, /(?<!\$)\$\(["'][^)]*["']\)\.forEach/);
   assert.match(html, /\$\$\("\.tabpane"\)\.forEach/);
   assert.match(html, /\$\$\("\[data-room\]"\)\.forEach/);
