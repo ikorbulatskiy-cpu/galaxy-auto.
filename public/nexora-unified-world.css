@@ -49,3 +49,15 @@
  #dashboard>#tab-world .nx-bottom-nav button span{font-size:16px}
 }
 @media(prefers-reduced-motion:reduce){#dashboard>#tab-world *{scroll-behavior:auto!important;transition:none!important}}
+
+
+/* Functional local world settings panel. */
+#dashboard>#tab-world .nx-settings-panel{position:fixed;z-index:10052;left:50%;top:50%;transform:translate(-50%,-50%);width:min(390px,calc(100vw - 24px));max-height:min(82dvh,620px);overflow:auto;padding:16px;background:#17202b;border:1px solid #b7a77b;border-radius:10px;box-shadow:0 18px 70px #000d;color:#fff}
+#dashboard>#tab-world .nx-setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 4px;border-bottom:1px solid #ffffff20;font:13px Tahoma,Arial,sans-serif}
+#dashboard>#tab-world .nx-setting-row:last-child{border-bottom:0}
+#dashboard>#tab-world .nx-setting-row span{display:grid;gap:4px}
+#dashboard>#tab-world .nx-setting-row small{color:#b8c0ca;font-size:11px}
+#dashboard>#tab-world .nx-setting-row input{width:19px;height:19px;accent-color:#b7a77b;flex:0 0 auto}
+#dashboard>#tab-world.nx-no-avatar-animations .nx-avatars *{animation:none!important;transition:none!important}
+#dashboard>#tab-world.nx-compact .nx-chat-panel{padding-top:3px;padding-bottom:3px}
+#dashboard>#tab-world.nx-compact .nx-eventbar{font-size:9px}
