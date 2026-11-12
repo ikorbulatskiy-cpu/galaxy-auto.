@@ -65,3 +65,5 @@
  .nx-menu-panel{top:112px;right:7px}
  #dashboard>.tabpane:not(#tab-world):not(.hidden){width:calc(100vw - 16px);max-height:86vh;padding:13px}
 }
+
+#top-actions{display:none!important}.nx-account #nx-account-actions{display:flex;align-items:center;gap:7px}.nx-account #welcome{font-size:13px;margin:0;color:#fff;white-space:nowrap}
