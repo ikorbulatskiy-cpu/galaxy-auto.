@@ -58,16 +58,21 @@ test("realtime WebSocket uses protocol ping/pong to keep presence alive", () => 
 });
 
 
-test("entry screen offers 2D body selection and saved-code recovery", () => {
+test("entry screen offers the two-step Galaxy-style registration and recovery-code login", () => {
   const html = read("public/index.html");
   assert.match(html, /data-open="register">Создать персонажа/);
-  assert.match(html, /data-open="restore">Код восстановления/);
-  assert.match(html, /data-body-choice="slim"/);
-  assert.match(html, /data-body-choice="regular"/);
-  assert.match(html, /data-body-choice="athletic"/);
+  assert.match(html, /data-open="restore">Уже есть персонаж/);
+  assert.match(html, /id="nx-step-caption">ШАГ 1 ИЗ 2/);
+  assert.match(html, /data-gender-choice="female"/);
+  assert.match(html, /data-gender-choice="male"/);
+  assert.match(html, /id="nx-body-prev"/);
+  assert.match(html, /id="nx-body-next"/);
+  assert.match(html, /id="nx-register-preview"/);
   assert.match(html, /name="username"/);
   assert.match(html, /name="adultConfirmed"/);
-  assert.doesNotMatch(html, /name="gender"/);
+  assert.match(html, /Политике конфиденциальности/);
+  assert.match(html, /ВОЙТИ БЕЗ НИКА/);
+  assert.match(html, /name="characterCode"/);
 });
 
 test("room movement client is loaded and its browser script parses", () => {
@@ -96,8 +101,20 @@ test("inline application script parses after the entry-screen changes", () => {
 });
 
 
-test("body picker initialization iterates a NodeList array, not a single element", () => {
+test("registration wizard updates gender and body preview without replacing the game client", () => {
   const html = read("public/index.html");
-  assert.match(html, /\$\$\("\[data-body-choice\]"\)\.forEach/);
-  assert.doesNotMatch(html, /(^|[^$])\$\("\[data-body-choice\]"\)\.forEach/);
+  assert.match(html, /nxRegistration\.gender=b\.dataset\.genderChoice/);
+  assert.match(html, /nxRegistration\.body=nxBodies/);
+  assert.match(html, /NexoraSpriteAvatar\.mountAll\(\$\("#register-wizard"\)\)/);
+  assert.match(html, /nxShowRegisterStep\(2\)/);
+  assert.match(html, /nxShowRegisterStep\(1\)/);
+});
+
+test("registration privacy link resolves to a published policy document", () => {
+  const html = read("public/index.html");
+  const policy = read("public/privacy-policy.html");
+  assert.match(html, /href="\/privacy-policy\.html"/);
+  assert.match(policy, /Политика конфиденциальности/);
+  assert.match(policy, /код восстановления/i);
+  assert.match(policy, /14 дней/);
 });
