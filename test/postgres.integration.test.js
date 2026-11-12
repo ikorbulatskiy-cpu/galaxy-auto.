@@ -23,6 +23,10 @@ test("PostgreSQL migrations, reward triggers and relationship exclusivity", { sk
     await client.query("INSERT INTO wallet_balances(user_id,coins) VALUES($1,100),($2,100),($3,100)",[a,b,c]);
     await client.query("INSERT INTO reputation(user_id) VALUES($1),($2),($3)",[a,b,c]);
     const character = await client.query("INSERT INTO characters(user_id,name,is_active) VALUES($1,'Test avatar',TRUE) RETURNING id",[a]);
+    const pet = await client.query("INSERT INTO pets(owner_user_id,name,species,last_decay_at) VALUES($1,'Test pet','cat',NOW()-INTERVAL '3 hours') RETURNING id",[a]);
+    await client.query("UPDATE pets SET hunger=GREATEST(0,hunger-(FLOOR(EXTRACT(EPOCH FROM (NOW()-last_decay_at))/3600)::int*5)),mood=GREATEST(0,mood-(FLOOR(EXTRACT(EPOCH FROM (NOW()-last_decay_at))/3600)::int*2)),last_decay_at=last_decay_at+(FLOOR(EXTRACT(EPOCH FROM (NOW()-last_decay_at))/3600)::int*INTERVAL '1 hour') WHERE id=$1",[pet.rows[0].id]);
+    const petNeeds = await client.query("SELECT hunger,mood FROM pets WHERE id=$1",[pet.rows[0].id]);
+    assert.deepEqual([petNeeds.rows[0].hunger,petNeeds.rows[0].mood],[65,74]);
     const item = await client.query("SELECT id FROM avatar_items WHERE slug='nexora-basic-cap'");
     assert.equal(item.rowCount,1);
     await client.query(
