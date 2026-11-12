@@ -14,7 +14,7 @@ dbTest("PostgreSQL migrations create all game and social subsystems", async () =
     const tables = new Set(result.rows.map(row => row.table_name));
     for (const table of [
       "users","sessions","characters","planets","user_locations","flights","rooms",
-      "room_presence","room_messages","notifications","avatar_items","character_inventory",
+      "room_presence","room_player_positions","room_messages","notifications","avatar_items","character_inventory",
       "clans","clan_members","clan_applications","clan_transactions","clan_messages",
       "wallet_balances","wallet_ledger","wallet_transfers","purchases","gifts","pets",
       "blog_posts","blog_photos","blog_comments","blog_likes","relationships",
@@ -24,8 +24,13 @@ dbTest("PostgreSQL migrations create all game and social subsystems", async () =
 
     const versions = await pool.query("SELECT version FROM schema_migrations ORDER BY version");
     assert.deepEqual(new Set(versions.rows.map(row => row.version)), new Set([
-      "001_base_schema","002_game_world.sql","003_social_game_systems.sql","004_media_assets.sql","005_character_code_auth.sql","006_custom_planets_auras.sql"
+      "001_base_schema","002_game_world.sql","003_social_game_systems.sql","004_media_assets.sql","005_character_code_auth.sql","006_custom_planets_auras.sql","007_room_player_movement.sql"
     ]));
+
+    const movementBounds = await pool.query(
+      "SELECT COUNT(*)::int AS count FROM information_schema.check_constraints WHERE constraint_schema='public' AND constraint_name IN ('room_player_positions_x_check','room_player_positions_y_check')"
+    );
+    assert.equal(movementBounds.rows[0].count, 2, "movement coordinates must be constrained to the room");
 
     const bankKey = await pool.query("SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='clan_transactions' AND column_name='idempotency_key'");
     assert.equal(bankKey.rowCount, 1, "clan bank operations must support idempotency");
@@ -56,7 +61,7 @@ dbTest("base and feature migrations are idempotently recorded", async () => {
   const pool = new Pool({ connectionString: databaseUrl });
   try {
     const before = await pool.query("SELECT version,applied_at FROM schema_migrations ORDER BY version");
-    assert.equal(before.rowCount, 6);
+    assert.equal(before.rowCount, 7);
     assert.ok(before.rows.every(row => row.applied_at instanceof Date));
   } finally {
     await pool.end();
