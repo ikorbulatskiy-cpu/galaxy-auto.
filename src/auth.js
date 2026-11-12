@@ -2,7 +2,6 @@ const crypto = require("crypto");
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const { z } = require("zod");
-const nodemailer = require("nodemailer");
 const { pool } = require("./db");
 
 const router = express.Router();
@@ -14,7 +13,10 @@ const registerSchema = z.object({
   email: z.string().trim().email().max(254).transform(v => v.toLowerCase()),
   username: z.string().trim().min(3).max(24).regex(/^[\p{L}\p{N}_-]+$/u),
   password: z.string().min(10).max(72),
-  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
+  gender: z.enum(["female","male"]),
+  body: z.enum(["slim","regular","athletic"]),
+  head: z.enum(["classic","soft","angular"])
 });
 const loginSchema = z.object({
   email: z.string().trim().email().max(254).transform(v => v.toLowerCase()),
@@ -39,42 +41,6 @@ function setSessionCookie(res, token) {
 function clearSessionCookie(res) {
   res.clearCookie(COOKIE_NAME, { httpOnly: true, secure: isProduction, sameSite: "lax", path: "/" });
 }
-function ageAtLeast18(dateString) {
-  const birth = new Date(dateString + "T00:00:00.000Z");
-  if (Number.isNaN(birth.getTime()) || birth.toISOString().slice(0, 10) !== dateString) return false;
-  const now = new Date();
-  let age = now.getUTCFullYear() - birth.getUTCFullYear();
-  const monthDiff = now.getUTCMonth() - birth.getUTCMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && now.getUTCDate() < birth.getUTCDate())) age--;
-  return age >= 18 && birth <= now;
-}
-async function sendVerificationEmail(email, token) {
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, APP_BASE_URL } = process.env;
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS || !SMTP_FROM || !APP_BASE_URL) {
-    if (process.env.NODE_ENV !== "production") {
-      const verificationUrl = APP_BASE_URL ? new URL("/api/auth/verify", APP_BASE_URL) : null;
-      if (verificationUrl) verificationUrl.searchParams.set("token", token);
-      console.info("NEXORA development verification link:", verificationUrl ? verificationUrl.toString() : "Set APP_BASE_URL to construct the link.");
-      return verificationUrl ? verificationUrl.toString() : null;
-    }
-    throw new Error("Email delivery is not configured.");
-  }
-  const transport = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: Number(SMTP_PORT || 587),
-    secure: Number(SMTP_PORT || 587) === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASS }
-  });
-  const url = new URL("/api/auth/verify", APP_BASE_URL);
-  url.searchParams.set("token", token);
-  await transport.sendMail({
-    from: SMTP_FROM,
-    to: email,
-    subject: "Подтверждение почты NEXORA",
-    text: "Подтвердите адрес электронной почты: " + url.toString()
-  });
-  return null;
-}
 async function requireSession(req, res, next) {
   try {
     const token = req.cookies && req.cookies[COOKIE_NAME];
@@ -89,7 +55,6 @@ async function requireSession(req, res, next) {
       clearSessionCookie(res);
       return res.status(401).json({ error: "Сессия истекла. Войдите снова." });
     }
-    if (!result.rows[0].email_verified_at) return res.status(403).json({ error: "Сначала подтвердите email." });
     req.user = result.rows[0];
     return next();
   } catch (error) {
@@ -99,45 +64,35 @@ async function requireSession(req, res, next) {
 
 router.post("/register", async (req, res, next) => {
   const parsed = registerSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Проверьте email, ник, пароль и дату рождения." });
-  const { email, username, password, birthDate } = parsed.data;
-  if (!ageAtLeast18(birthDate)) return res.status(400).json({ error: "NEXORA доступна только совершеннолетним пользователям (18+)." });
+  if (!parsed.success) return res.status(400).json({ error: "Проверьте email, ник, пароль и параметры персонажа." });
+  const { email, username, password, birthDate, gender, body, head } = parsed.data;
 
   let client;
   let transactionStarted = false;
   try {
     client = await pool.connect();
     const passwordHash = await bcrypt.hash(password, 12);
-    const verificationToken = randomToken();
 
     await client.query("BEGIN");
     transactionStarted = true;
     const inserted = await client.query(
-      "INSERT INTO users (email, username, password_hash) VALUES ($1,$2,$3) RETURNING id,email,username",
+      "INSERT INTO users (email, username, password_hash, email_verified_at) VALUES ($1,$2,$3,NOW()) RETURNING id,email,username",
       [email, username, passwordHash]
     );
     const user = inserted.rows[0];
-    await client.query("INSERT INTO profiles (user_id, display_name, birth_date) VALUES ($1,$2,$3)", [user.id, username, birthDate]);
+    await client.query("INSERT INTO profiles (user_id, display_name, birth_date) VALUES ($1,$2,$3)", [user.id, username, birthDate || null]);
     await client.query("INSERT INTO reputation (user_id) VALUES ($1)", [user.id]);
     await client.query("INSERT INTO wallet_balances (user_id,coins) VALUES ($1,500)", [user.id]);
     await client.query("INSERT INTO wallet_ledger (user_id,currency,amount,reason) VALUES ($1,'coins',500,'Стартовый бонус NEXORA')", [user.id]);
-    await client.query("INSERT INTO characters (user_id,name,is_active) VALUES ($1,$2,TRUE)", [user.id, username]);
+    await client.query("INSERT INTO characters (user_id,name,gender,appearance,is_active) VALUES ($1,$2,$3,$4::jsonb,TRUE)", [user.id, username, gender, JSON.stringify({body,head,skinTone:"medium",hair:"short",hairColor:"brown",eyes:"brown",outfit:gender === "female" ? "pink" : "blue",shoes:"sneakers"})]);
     await client.query("INSERT INTO user_locations (user_id,planet_id) SELECT $1,id FROM planets WHERE slug='nexora-prime' ON CONFLICT (user_id) DO NOTHING", [user.id]);
-    await client.query("INSERT INTO email_verification_tokens (user_id, token_hash, expires_at) VALUES ($1,$2,NOW() + INTERVAL '24 hours')", [user.id, hashToken(verificationToken)]);
+    const sessionToken = randomToken();
+    await client.query("INSERT INTO sessions (user_id,token_hash,expires_at) VALUES ($1,$2,NOW() + INTERVAL '14 days')", [user.id, hashToken(sessionToken)]);
     await client.query("COMMIT");
+    setSessionCookie(res, sessionToken);
     transactionStarted = false;
 
-    let devVerificationUrl = null;
-    try {
-      devVerificationUrl = await sendVerificationEmail(email, verificationToken);
-    } catch (mailError) {
-      console.error("Verification email delivery failed:", mailError.message);
-      return res.status(202).json({ message: "Аккаунт создан, но письмо не отправлено. Администратору нужно проверить почтовую конфигурацию." });
-    }
-    return res.status(201).json({
-      message: "Аккаунт создан. Подтвердите адрес электронной почты.",
-      ...(devVerificationUrl && process.env.NODE_ENV !== "production" ? { devVerificationUrl } : {})
-    });
+    return res.status(201).json({ message: "Аккаунт создан. Персонаж готов.", user: { id: user.id, email: user.email, username: user.username } });
   } catch (error) {
     if (transactionStarted && client) {
       try { await client.query("ROLLBACK"); }
@@ -180,7 +135,6 @@ router.post("/login", async (req, res, next) => {
     const user = result.rows[0];
     const valid = user && user.status === "active" && await bcrypt.compare(parsed.data.password, user.password_hash);
     if (!valid) return res.status(401).json({ error: "Неверный email или пароль." });
-    if (!user.email_verified_at) return res.status(403).json({ error: "Подтвердите email перед входом." });
 
     const token = randomToken();
     await client.query(
