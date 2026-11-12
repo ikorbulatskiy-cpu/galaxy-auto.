@@ -439,6 +439,12 @@ BEGIN
     updated_at=NOW()
   WHERE user_id=p_user_id;
 
+  UPDATE characters SET
+    experience=experience+p_experience_delta,
+    level=GREATEST(level,1+((experience+p_experience_delta)/100)::int),
+    updated_at=NOW()
+  WHERE user_id=p_user_id AND is_active=TRUE;
+
   INSERT INTO reputation_events(user_id,actor_user_id,event_type,authority_delta,popularity_delta,metadata)
   VALUES(p_user_id,p_actor_user_id,p_event_type,p_authority_delta,p_popularity_delta,
     jsonb_build_object('experience_delta',p_experience_delta));
