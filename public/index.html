@@ -20,7 +20,7 @@
 #dashboard>.head,#dashboard>.dashnav{display:none!important}
 </style>
 <link rel="stylesheet" href="/avatar-motion.css?v=1">
-<link rel="stylesheet" href="/nexora-world.css?v=1">
+<link rel="stylesheet" href="/nexora-world.css?v=2">
 </head>
 <body>
 <header class="wrap top"><a class="brand" href="#"><span class="mark">✦</span>NEXORA</a><div class="nav" id="top-actions"><button class="btn" data-open="login">Войти</button><button class="btn primary" data-open="register">Создать персонажа</button></div></header>
@@ -78,7 +78,7 @@ $("#auth-form").addEventListener("submit",async e=>{
   await loadApp();
  }catch(err){toast(err.message)}
 });
-async function loadApp(){try{const data=await api("/api/auth/me");currentUser=data.user;const adminNav=$('[data-tab="admin"]');if(adminNav)adminNav.hidden=!["admin","developer","moderator"].includes(currentUser.role);if(currentUser.role==="moderator")$("#load-admin-logs").hidden=true;$("#landing").classList.add("hidden");$("#dashboard").classList.remove("hidden");$("#top-actions").classList.add("hidden");$("#welcome").textContent="Привет, "+currentUser.username+"!";$("#account-label").textContent=data.characterCode?"Сохрани код персонажа: "+data.characterCode:"Вход по коду персонажа";if(data.characterCode)window.alert("Для следующих входов сохрани код персонажа:\n\n"+data.characterCode);await loadProfile();await loadFriends();await loadConversations();switchTab("world")}catch(err){if(err.status===401||err.status===403)return;toast(err.message)}}
+async function loadApp(){try{const data=await api("/api/auth/me");currentUser=data.user;const adminNav=$('[data-tab="admin"]');if(adminNav)adminNav.hidden=!["admin","developer","moderator"].includes(currentUser.role);if(currentUser.role==="moderator")$("#load-admin-logs").hidden=true;$("#landing").classList.add("hidden");$("#dashboard").classList.remove("hidden");$("#top-actions").classList.add("hidden");$("#welcome").textContent="Привет, "+currentUser.username+"!";if($("#nx-greeting"))$("#nx-greeting").textContent=$("#welcome").textContent;$("#account-label").textContent=data.characterCode?"Сохрани код персонажа: "+data.characterCode:"Вход по коду персонажа";if(data.characterCode)window.alert("Для следующих входов сохрани код персонажа:\n\n"+data.characterCode);await loadProfile();await loadFriends();await loadConversations();switchTab("world")}catch(err){if(err.status===401||err.status===403)return;toast(err.message)}}
 function switchTab(tab){$("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));$(".tabpane").forEach(p=>p.classList.toggle("hidden",p.id!=="tab-"+tab&&p.id!=="tab-world"));$(".nx-pane-close").forEach(b=>b.remove());if(tab!=="world"){const pane=$("#tab-"+tab);if(pane){const close=document.createElement("button");close.type="button";close.className="nx-pane-close";close.textContent="← Вернуться в игровой мир";close.addEventListener("click",()=>switchTab("world"));pane.prepend(close)}}if(tab==="discover")loadDiscover();if(tab==="friends")loadFriends();if(tab==="messages")loadConversations();if(tab==="characters")loadCharacters();if(tab==="world"){if(window.nexoraWorldRefresh)window.nexoraWorldRefresh();else loadRooms();}if(tab==="notifications")loadNotifications();if(["clans","economy","pets","blogs","relationships","rankings","admin"].includes(tab))loadFeatureTab(tab)}
 $$("[data-tab]").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
 async function loadProfile(){const d=await api("/api/world/me");const p=d.profile||{};$("#profile-summary").innerHTML="<p><b>"+escapeHtml(p.display_name||currentUser.username)+"</b></p><p>"+escapeHtml(p.city||"Город не указан")+"</p><p>"+escapeHtml(p.bio||"Добавь описание о себе.")+"</p><p>Авторитет: "+Number(p.authority||0)+" · Уровень: "+Number(p.level||1)+"</p><p>Баланс: "+Number(p.coins||0)+" Coins · "+Number(p.diamonds||0)+" Diamonds</p><p>Планета: "+escapeHtml(p.planet_name||"Пока не выбрана")+"</p>";const f=$("#profile-form");f.elements.displayName.value=p.display_name||"";f.elements.city.value=p.city||"";f.elements.bio.value=p.bio||"";f.elements.interests.value=(p.interests||[]).join(", ")}
@@ -317,5 +317,5 @@ $("#load-admin-logs").onclick=async()=>{try{const d=await api("/api/features/adm
 loadApp();
 </script>
 <script src="/avatar-motion.js?v=1" defer></script>
-<script src="/nexora-world.js?v=1" defer></script>
+<script src="/nexora-world.js?v=2" defer></script>
 </body></html>
