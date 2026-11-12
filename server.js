@@ -4,17 +4,20 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+app.disable("x-powered-by");
+app.use(express.json({ limit: "32kb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
-app.get("/api/status", (req, res) => {
+app.get("/api/status", (_req, res) => {
   res.json({
     online: true,
-    bot: "CHERT AI",
-    message: "Сервер работает"
+    app: "NEXORA",
+    version: "0.1.0",
+    stage: "prototype",
+    message: "NEXORA server is running"
   });
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log("CHERT AI запущен на порту " + PORT);
+  console.log(`NEXORA запущен на порту ${PORT}`);
 });
