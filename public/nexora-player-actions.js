@@ -33,10 +33,12 @@
       pop.querySelector(".nx-action-title").textContent = "Действия";
       pop.querySelectorAll("[data-emote]").forEach(button => button.addEventListener("click", () => {
         const action = button.dataset.emote;
-        window.NexoraMovement?.action(action);
-        const own = root.querySelector("#nx-avatars .nx-avatar-card.me canvas[data-nexora-sprite]");
-        const avatar = own && window.NexoraSpriteAvatar?.get(own);
+        const isOwn = card.classList.contains("me");
+        const canvas = card.querySelector("canvas[data-nexora-sprite]");
+        const avatar = canvas && window.NexoraSpriteAvatar?.get(canvas);
         avatar?.setAnimation(action);
+        // Only the authenticated player may broadcast their own emote.
+        if (isOwn) window.NexoraMovement?.action(action);
         closePopover();
       }));
     });
