@@ -91,7 +91,7 @@
    const ws=location.protocol==="https:"?"wss:":"ws:";socket=new WebSocket(ws+"//"+location.host+"/ws");
    socket.onopen=()=>socket.send(JSON.stringify({type:"join_room",roomId:room.id}));
    socket.onmessage=e=>{let packet;try{packet=JSON.parse(e.data)}catch{return}if(packet.type==="joined_room"){window.nexoraActiveRoom=room.id;window.dispatchEvent(new CustomEvent("nexora:room-joined",{detail:{roomId:room.id}}));status("Соединение: отличное");addEvent("Соединение с комнатой установлено.","success")}if(packet.type==="room_message"&&packet.message){appendMessage(packet.message);addEvent((packet.message.character_name||packet.message.username||"Игрок")+": "+packet.message.body,"chat")}if(packet.type==="presence"){if(packet.action==="joined")addEvent((packet.username||"Игрок")+" вошёл в комнату.","join");if(packet.action==="left")addEvent("Игрок покинул комнату.","leave");loadPresence(room.id)}if(packet.type==="error"){status(packet.message);addEvent(packet.message,"warning")}};
-   socket.onclose=()=>{if(activeRoom===room.id)status("Связь с комнатой потеряна")};
+   socket.onclose=()=>{if(activeRoom===room.id){window.nexoraActiveRoom="";window.dispatchEvent(new Event("nexora:room-left"));status("Связь с комнатой потеряна")}};
    poll=setInterval(()=>loadPresence(room.id),25000);
   }catch(e){status(e.message)}
  }
