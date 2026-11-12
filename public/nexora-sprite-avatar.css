@@ -1,4 +1,6 @@
-/* PNG sprite stage: crisp transparent art, responsive on mobile. */
-.nx-sprite-canvas{display:block;object-fit:contain;filter:drop-shadow(0 8px 12px #0008);max-width:100%;touch-action:pan-y}
-.nx-sprite-canvas[data-sprite-loading="true"]{opacity:.65}
-@media(max-width:600px){.nx-sprite-canvas{max-width:144px;height:auto!important}}
+.nx-sprite-canvas{display:block;width:84px;height:126px;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 5px 8px #0007);pointer-events:none}
+.nx-avatar-card .nx-sprite-canvas{width:84px;height:126px}
+.nx-player .nx-sprite-canvas,.room-player-art .nx-sprite-canvas{width:42px;height:63px}
+.avatar-stage .nx-sprite-canvas{width:128px;height:192px;margin:0 auto}
+.nx-sprite-canvas[data-animation="walk"]{filter:drop-shadow(0 5px 8px #0007)}
+@media(max-width:600px){.nx-avatar-card .nx-sprite-canvas{width:64px;height:96px}.avatar-stage .nx-sprite-canvas{width:112px;height:168px}}
