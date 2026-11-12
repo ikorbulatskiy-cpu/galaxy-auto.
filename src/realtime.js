@@ -41,6 +41,12 @@ function attachRealtime(server) {
     }
 
     let messageTimes = [];
+    const heartbeat = setInterval(() => {
+      if (joinedRoom && socket.readyState === 1) {
+        pool.query("UPDATE room_presence SET connected_at=NOW() WHERE connection_id=$1", [connectionId]).catch(() => {});
+      }
+    }, 30000);
+    if (typeof heartbeat.unref === "function") heartbeat.unref();
     socket.on("message", async raw => {
       const now = Date.now();
       messageTimes = messageTimes.filter(time => now - time < 5000);
@@ -51,7 +57,7 @@ function attachRealtime(server) {
       let packet;
       try { packet = JSON.parse(raw.toString()); } catch { return; }
       if (!packet || typeof packet.type !== "string") return;
-      const stillAuthenticated = await pool.query("SELECT 1 FROM sessions WHERE id=$1 AND expires_at>NOW()", [user.session_id]).catch(() => ({ rowCount: 0 }));
+      const stillAuthenticated = await pool.query("SELECT 1 FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.id=$1 AND s.expires_at>NOW() AND u.status='active' AND u.email_verified_at IS NOT NULL", [user.session_id]).catch(() => ({ rowCount: 0 }));
       if (!stillAuthenticated.rowCount) {
         socket.close(1008, "Session expired");
         return;
@@ -63,6 +69,7 @@ function attachRealtime(server) {
           try {
             await client.query("BEGIN");
             await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", ["nexora-room:" + packet.roomId]);
+            await client.query("DELETE FROM room_presence WHERE connected_at < NOW() - INTERVAL '2 minutes'");
             const room = await client.query(
               "SELECT r.id,r.capacity FROM rooms r WHERE r.id=$1 AND r.is_active=TRUE",
               [packet.roomId]
@@ -121,6 +128,7 @@ function attachRealtime(server) {
     });
 
     socket.on("close", async () => {
+      clearInterval(heartbeat);
       if (joinedRoom && rooms.has(joinedRoom)) {
         rooms.get(joinedRoom).delete(socket);
         if (!rooms.get(joinedRoom).size) rooms.delete(joinedRoom);
