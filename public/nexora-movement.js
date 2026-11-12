@@ -50,6 +50,7 @@
   }
 
   function sendAction(action, direction = "front") {
+    if (window.NexoraAPI?.mockEnabled() && roomId) { applyAvatarAction(ownName,action,direction); return; }
     if (!socket || socket.readyState !== WebSocket.OPEN || !roomId) return;
     socket.send(JSON.stringify({ type: "action", action, direction }));
   }
@@ -109,6 +110,7 @@
 
   function connectRoom(id) {
     if (!id || id === roomId || connecting) return;
+    if (window.NexoraAPI?.mockEnabled()) { closeSocket(); roomId=id; connecting=false; ownName=placementCard()?.dataset.playerUsername||"you"; current={x:50,y:78}; loadPositions(id,true); return; }
     closeSocket();
     connecting = true;
     roomId = id;
@@ -185,6 +187,7 @@
   }
 
   function moveTo(x, y) {
+    if (window.NexoraAPI?.mockEnabled() && roomId) { const destination=Math.max(2,Math.min(98,x));const direction=destination<current.x?"left":"right";current={x:destination,y:78};if(ownName)applyPosition(ownName,current.x,78);applyAvatarAction(ownName,"walk",direction);setTimeout(()=>applyAvatarAction(ownName,"idle",direction),420);return; }
     if (!socket || socket.readyState !== WebSocket.OPEN || !roomId) return;
     target = { x: Math.max(2, Math.min(98, x)), y: 78 };
     const direction = target.x < current.x ? "left" : "right";
@@ -259,7 +262,7 @@
     scene()?.classList.remove("nx-placement-active");
   }
   function beginPlacement() {
-    if (!roomId || !socket || socket.readyState !== WebSocket.OPEN) {
+    if (!roomId || (!socket || socket.readyState !== WebSocket.OPEN) && !window.NexoraAPI?.mockEnabled()) {
       addMovementEvent("Сначала дождись подключения к комнате.");
       return false;
     }
