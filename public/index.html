@@ -192,17 +192,17 @@ async function loadBlogs(){
   $$("[data-like-post]").forEach(b=>b.onclick=async()=>{
    try{await api("/api/features/blogs/"+b.dataset.likePost+"/like",{method:"POST",body:"{}"});await loadBlogs()}catch(e){toast(e.message)}
   });
-  $("[data-edit-post]").forEach(b=>b.onclick=async()=>{
+  $$("[data-edit-post]").forEach(b=>b.onclick=async()=>{
    const post=d.posts.find(x=>x.id===b.dataset.editPost);if(!post)return;
    const body=prompt("Текст публикации:",post.body);if(body===null)return;
    const visibility=prompt("Видимость: public, friends или private",post.visibility);if(visibility===null)return;
    try{await api("/api/features/blogs/"+post.id,{method:"PATCH",body:JSON.stringify({body,visibility})});await loadBlogs();toast("Публикация обновлена.")}catch(e){toast(e.message)}
   });
-  $("[data-delete-post]").forEach(b=>b.onclick=async()=>{
+  $$("[data-delete-post]").forEach(b=>b.onclick=async()=>{
    if(!confirm("Удалить публикацию вместе с комментариями?"))return;
    try{await api("/api/features/blogs/"+b.dataset.deletePost,{method:"DELETE"});await loadBlogs();toast("Публикация удалена.")}catch(e){toast(e.message)}
   });
-  $("[data-comment-form]").forEach(form=>form.addEventListener("submit",async e=>{
+  $$("[data-comment-form]").forEach(form=>form.addEventListener("submit",async e=>{
    e.preventDefault();const body=new FormData(form).get("body");
    try{await api("/api/features/blogs/"+form.dataset.commentForm+"/comments",{method:"POST",body:JSON.stringify({body})});await loadBlogs()}catch(err){toast(err.message)}
   }));
