@@ -24,7 +24,7 @@ dbTest("PostgreSQL migrations create all game and social subsystems", async () =
 
     const versions = await pool.query("SELECT version FROM schema_migrations ORDER BY version");
     assert.deepEqual(new Set(versions.rows.map(row => row.version)), new Set([
-      "001_base_schema","002_game_world.sql","003_social_game_systems.sql","004_media_assets.sql","005_character_code_auth.sql"
+      "001_base_schema","002_game_world.sql","003_social_game_systems.sql","004_media_assets.sql","005_character_code_auth.sql","006_custom_planets_auras.sql"
     ]));
 
     const bankKey = await pool.query("SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='clan_transactions' AND column_name='idempotency_key'");
@@ -56,7 +56,7 @@ dbTest("base and feature migrations are idempotently recorded", async () => {
   const pool = new Pool({ connectionString: databaseUrl });
   try {
     const before = await pool.query("SELECT version,applied_at FROM schema_migrations ORDER BY version");
-    assert.equal(before.rowCount, 5);
+    assert.equal(before.rowCount, 6);
     assert.ok(before.rows.every(row => row.applied_at instanceof Date));
   } finally {
     await pool.end();
