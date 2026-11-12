@@ -126,7 +126,7 @@
     if(packet.action==="left")addEvent("Игрок покинул комнату.","leave");
     loadPresence(room.id);
    }
-   if(packet.type==="error"){status(packet.message);addEvent(packet.message,"warning")}
+   if(packet.type==="error"){if(roomAckTimer)clearTimeout(roomAckTimer);roomAckTimer=null;status(packet.message);addEvent(packet.message,"warning")}
   };
   ws.onerror=()=>{if(socket===ws)status("Проблема сети. Восстанавливаем соединение…")};
   ws.onclose=event=>{
