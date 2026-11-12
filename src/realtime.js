@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const { WebSocketServer } = require("ws");
+const { Client } = require("pg");
 const { pool } = require("./db");
 
 const COOKIE_NAME = "nexora_session";
@@ -13,6 +14,42 @@ function cookieValue(header, name) {
 function attachRealtime(server) {
   const wss = new WebSocketServer({ server, path: "/ws", maxPayload: 4096 });
   const rooms = new Map();
+  const listener = process.env.DATABASE_URL ? new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: true } : undefined
+  }) : null;
+  const publish = payload => pool.query("SELECT pg_notify('nexora_room_events',$1)", [JSON.stringify(payload)]).catch(error => {
+    console.error("Realtime event publish failed:", error.message);
+  });
+  if (listener) {
+    listener.connect().then(() => listener.query("LISTEN nexora_room_events")).catch(error => {
+      console.error("Realtime cross-instance listener unavailable:", error.message);
+    });
+    listener.on("notification", notification => {
+      let event;
+      try { event = JSON.parse(notification.payload); } catch { return; }
+      if (!event || typeof event.roomId !== "string") return;
+      for (const peer of rooms.get(event.roomId) || []) {
+        if (peer.readyState === 1) {
+          try { peer.send(JSON.stringify(event)); } catch {}
+        }
+      }
+    });
+    listener.on("error", error => console.error("Realtime listener error:", error.message));
+  }
+  const cleanup = setInterval(async () => {
+    try {
+      const stale = await pool.query("DELETE FROM room_presence WHERE connected_at < NOW() - INTERVAL '2 minutes' RETURNING room_id,user_id");
+      for (const row of stale.rows) publish({ type: "presence", action: "left", roomId: row.room_id, userId: row.user_id });
+    } catch (error) {
+      console.error("Presence cleanup failed:", error.message);
+    }
+  }, 30000);
+  if (typeof cleanup.unref === "function") cleanup.unref();
+  server.on("close", () => {
+    clearInterval(cleanup);
+    if (listener) listener.end().catch(() => {});
+  });
 
   wss.on("connection", async (socket, request) => {
     let user;
@@ -91,10 +128,16 @@ function attachRealtime(server) {
             );
             await client.query("COMMIT");
           } finally { client.release(); }
-          if (joinedRoom && rooms.has(joinedRoom)) rooms.get(joinedRoom).delete(socket);
+          const previousRoom = joinedRoom;
+          if (previousRoom && rooms.has(previousRoom)) {
+            rooms.get(previousRoom).delete(socket);
+            if (!rooms.get(previousRoom).size) rooms.delete(previousRoom);
+            publish({ type: "presence", action: "left", roomId: previousRoom, userId: user.id });
+          }
           joinedRoom = packet.roomId;
           if (!rooms.has(joinedRoom)) rooms.set(joinedRoom,new Set());
           rooms.get(joinedRoom).add(socket);
+          publish({ type: "presence", action: "joined", roomId: joinedRoom, userId: user.id, username: user.username });
           socket.send(JSON.stringify({type:"joined_room",roomId:joinedRoom}));
         } catch { socket.send(JSON.stringify({type:"error",message:"Не удалось войти в комнату."})); }
       }
@@ -121,8 +164,7 @@ function attachRealtime(server) {
             );
             inserted.rows = fallback.rows;
           }
-          const event = JSON.stringify({type:"room_message",message:{...inserted.rows[0],username:user.username}});
-          for (const peer of rooms.get(joinedRoom) || []) if (peer.readyState === 1) peer.send(event);
+          publish({ type: "room_message", roomId: joinedRoom, message: { ...inserted.rows[0], username: user.username } });
         } catch { socket.send(JSON.stringify({type:"error",message:"Сообщение не сохранено."})); }
       }
     });
@@ -134,7 +176,10 @@ function attachRealtime(server) {
         if (!rooms.get(joinedRoom).size) rooms.delete(joinedRoom);
       }
       if (connectionId) {
-        try { await pool.query("DELETE FROM room_presence WHERE connection_id=$1",[connectionId]); } catch {}
+        try {
+          const removed = await pool.query("DELETE FROM room_presence WHERE connection_id=$1 RETURNING room_id,user_id",[connectionId]);
+          if (removed.rowCount) publish({ type: "presence", action: "left", roomId: removed.rows[0].room_id, userId: removed.rows[0].user_id });
+        } catch {}
       }
     });
   });
