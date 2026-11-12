@@ -458,8 +458,8 @@ CREATE OR REPLACE FUNCTION nexora_friend_achievement_trigger()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 BEGIN
   IF NEW.status='accepted' AND OLD.status IS DISTINCT FROM 'accepted' THEN
-    PERFORM nexora_add_reputation(NEW.requester_id,NEW.addressee_id,'friend_accepted',1,2,5,NULL);
-    PERFORM nexora_add_reputation(NEW.addressee_id,NEW.requester_id,'friend_accepted',1,2,5,NULL);
+    PERFORM nexora_add_reputation(NEW.requester_id,NEW.addressee_id,'friend_accepted',1,2,5,10);
+    PERFORM nexora_add_reputation(NEW.addressee_id,NEW.requester_id,'friend_accepted',1,2,5,10);
     PERFORM nexora_award_achievement(NEW.requester_id,'new-friend');
     PERFORM nexora_award_achievement(NEW.addressee_id,'new-friend');
   END IF;
@@ -474,8 +474,8 @@ DECLARE
 BEGIN
   SELECT requester_id,addressee_id INTO couple FROM relationships WHERE id=NEW.relationship_id;
   IF FOUND THEN
-    PERFORM nexora_add_reputation(couple.requester_id,couple.addressee_id,'wedding',2,3,10,NULL);
-    PERFORM nexora_add_reputation(couple.addressee_id,couple.requester_id,'wedding',2,3,10,NULL);
+    PERFORM nexora_add_reputation(couple.requester_id,couple.addressee_id,'wedding',2,3,10,1);
+    PERFORM nexora_add_reputation(couple.addressee_id,couple.requester_id,'wedding',2,3,10,1);
     PERFORM nexora_award_achievement(couple.requester_id,'wedding-day');
     PERFORM nexora_award_achievement(couple.addressee_id,'wedding-day');
   END IF;
