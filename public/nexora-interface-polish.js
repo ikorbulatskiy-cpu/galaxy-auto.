@@ -19,7 +19,7 @@
       const text=value||"Ожидание";
       const lower=text.toLocaleLowerCase("ru");
       let state="pending",label=text;
-      if(/подключен|в комнате|соединение установлено|соединение:\\s*(отличное|стабильное|активно)|готово к обмену|connected/.test(lower)){state="connected";label="На связи"}
+      if(/подключен|в комнате|соединение установлено|отличное|стабильное|активно|готово к обмену|connected/.test(lower)){state="connected";label="На связи"}
       else if(/ошиб|потерян|закрыт|отключ|не удалось|отказ|timeout|failed/.test(lower)){state="error";label="Нет связи"}
       else if(/подключ|ожидан|соединен|готово|загрузка/.test(lower)){state="pending";label="Подключение"}
       badge.dataset.state=state;
