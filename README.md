@@ -99,13 +99,13 @@ NEXORA — социальная платформа знакомств и вир�
 - `POST /api/features/clans/:clanId/bank`, `GET /api/features/clans/:clanId/ledger` — операции кланового банка и журнал.
 - `GET /api/features/pets`, `POST /api/features/pets`, `POST /api/features/pets/:petId/care` — питомцы и уход.
 - `GET /api/features/blogs`, `POST /api/features/blogs`, `PATCH /api/features/blogs/:postId`, `DELETE /api/features/blogs/:postId`, `POST /api/features/blogs/:postId/like`, `POST /api/features/blogs/:postId/comments` — публикации и взаимодействия. Фотографии пока передаются HTTPS-ссылками; загрузка в собственное файловое хранилище ещё не подключена.
-- `GET /api/features/relationships`, `POST /api/features/relationships/propose`, `POST /api/features/relationships/:id/respond`, `POST /api/features/relationships/:id/ceremony`, `POST /api/features/relationships/:id/divorce` — предложение, помолвка, виртуальная свадебная церемония и развод.
+- `GET /api/features/relationships`, `POST /api/features/relationships/propose`, `POST /api/features/relationships/:id/respond`, `POST /api/features/relationships/:id/ceremony`, `POST /api/features/relationships/:id/divorce` — предложение, помолвка, виртуальная свадебная церемония, обручальные кольца и развод.
 - `GET /api/features/leaderboards/:kind` — рейтинги `authority`, `experience`, `popularity`, `clans`.
 - `GET /api/features/achievements` — каталог достижений.
 - `POST /api/features/mini-games/:slug/score` — запись непроверенного результата; он не участвует в наградах и достоверных рейтингах.
 - `GET /api/features/admin/users?q=...`, `GET /api/features/admin/reports`, `POST /api/features/admin/reports/:id/resolve`, `POST /api/features/admin/users/:userId/punish`, `POST /api/features/admin/users/:userId/unsuspend`, `GET /api/features/admin/logs` — API модерации и управления аккаунтами. Доступ ограничен ролями.
 
-Виртуальная валюта не имеет денежной стоимости. Платежи за реальные деньги не реализованы. Визуальные предметы представлены каталогом с категориями, редкостью, ценой, превью-значками и слотами экипировки; полноценные графические ассеты и 2D/3D-редактор требуют отдельного этапа.
+Виртуальная валюта не имеет денежной стоимости. Платежи за реальные деньги не реализованы. Визуальные предметы представлены каталогом с категориями, редкостью, ценой, превью-значками, слотами экипировки и выдачей колец после виртуальной свадьбы; полноценные графические ассеты и 2D/3D-редактор требуют отдельного этапа.
 
 ## Клиентский интерфейс
 
@@ -120,7 +120,7 @@ NEXORA — социальная платформа знакомств и вир�
 - Восстановление пароля и повторная отправка письма.
 - Полноценный 2D/3D-редактор персонажа, графические ассеты и файловое хранилище фотографий.
 - Полный интерфейс управления ролями кланов и административными санкциями; часть этих действий пока доступна через API.
-- Проверяемая сервером логика мини-игр и полноценный графический сценарий свадебного события. Базовая виртуальная церемония и автоматическое начисление четырёх достижений уже добавлены.
+- Проверяемая сервером логика мини-игр и полноценный графический сценарий свадебного события. Базовая виртуальная церемония и автоматическое начисление достижений за первые шаги, сообщения, дружбу, покупки и свадьбу уже добавлены.
 - Автоматические интеграционные тесты и полноценная проверка безопасности. Миграции игрового мира и социальных систем добавлены, но в этом сеансе не применялись к реальной PostgreSQL.
 
 Текущая версия — развивающийся backend-прототип, а не готовый публичный сервис. Перед production необходимы тесты, CSRF-защита, восстановление аккаунта, политика хранения и удаления персональных данных, а также проверка всех миграций.
