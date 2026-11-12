@@ -5,7 +5,7 @@ services:
     plan: free
     region: frankfurt
     branch: love-galaxy-redesign
-    buildCommand: npm ci
+    buildCommand: npm install
     startCommand: npm run db:migrate && npm start
     healthCheckPath: /api/status
     autoDeployTrigger: checksPass
