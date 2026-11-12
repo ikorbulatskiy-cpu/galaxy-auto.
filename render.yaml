@@ -6,8 +6,7 @@ services:
     region: frankfurt
     branch: love-galaxy-redesign
     buildCommand: npm ci
-    preDeployCommand: npm run db:migrate
-    startCommand: npm start
+    startCommand: npm run db:migrate && npm start
     healthCheckPath: /api/status
     autoDeployTrigger: checksPass
     envVars:
