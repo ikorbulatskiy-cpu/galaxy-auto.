@@ -38,12 +38,23 @@
     stage.addEventListener("click",e=>{const card=e.target.closest(".nx-avatar-card");if(card)select([...stage.querySelectorAll(".nx-avatar-card")].indexOf(card))});
     new MutationObserver(()=>select(Math.min(selectedIndex,Math.max(0,stage.querySelectorAll(".nx-avatar-card").length-1)))).observe(stage,{childList:true});select(0);
   }
+  async function updateUnreadMail(){
+    try{
+      const data=await window.NexoraAPI.request("/api/social/conversations");
+      const count=(data.conversations||[]).reduce((sum,item)=>sum+Number(item.unread_count||0),0);
+      const mail=$("#nx-menu-panel [data-open-tab='messages']");
+      if(!mail)return;
+      let badge=mail.querySelector(".nx-mail-unread");
+      if(count>0){if(!badge){badge=document.createElement("span");badge.className="nx-mail-unread";mail.append(badge)}badge.textContent=String(count)}
+      else badge?.remove();
+    }catch{}
+  }
   function installDrawer(){
     const menu=$("#nx-menu-panel");if(!menu||menu.dataset.extrasReady)return;menu.dataset.extrasReady="1";
     const grid=menu.querySelector(".nx-menu-grid");if(grid){const b=document.createElement("button");b.type="button";b.innerHTML="<span>♛</span>Мои планеты";b.onclick=()=>{menu.hidden=true;openMyPlanets()};grid.append(b)}
   }
   window.addEventListener("nexora:planet-modules",e=>{const names={magic:"Магия",defender:"Защитник",games:"Игры",horoscope:"Гороскопы",love:"Любовный помощник"};const active=(e.detail?.modules||[]).map(k=>names[k]||k);const note=document.createElement("div");note.className="nx-planet-module-note";note.textContent=active.length?"! На планете установлены модули: "+active.join(", "):"! Дополнительные модули не установлены.";const log=$("#nx-chat-log");if(log){log.append(note);log.scrollTo({top:log.scrollHeight,behavior:"smooth"})}});
-  const scan=()=>{installChat();installCarousel();installDrawer()};new MutationObserver(scan).observe(root,{childList:true,subtree:true});scan();
+  const scan=()=>{installChat();installCarousel();installDrawer()};new MutationObserver(scan).observe(root,{childList:true,subtree:true});scan();updateUnreadMail();setInterval(updateUnreadMail,30000);
   function showCharacterInfo(name){showModal("Информация о персонаже",'<p>'+safe(name)+'</p><p class="muted">Персонаж находится в текущей комнате NEXORA.</p><div class="nx-dialog-actions"><button type="button" data-close>Закрыть</button></div>');}
   window.NexoraExtras=Object.freeze({openPlanetModal,openMyPlanets,showCharacterInfo});
 })();
