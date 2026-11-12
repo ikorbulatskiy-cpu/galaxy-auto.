@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const express = require("express");
 const { z } = require("zod");
-const { S3Client, PutObjectCommand, HeadObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, PutObjectCommand, HeadObjectCommand, GetObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { pool } = require("./db");
 const { requireSession } = require("./auth");
@@ -10,6 +10,26 @@ const router = express.Router();
 router.use(requireSession);
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxBytes = 8 * 1024 * 1024;
+
+async function readPrefix(body, limit = 16) {
+  const chunks = [];
+  let total = 0;
+  for await (const chunk of body) {
+    const buffer = Buffer.from(chunk);
+    const remaining = limit - total;
+    if (remaining <= 0) break;
+    chunks.push(buffer.subarray(0, remaining));
+    total += Math.min(buffer.length, remaining);
+    if (total >= limit) break;
+  }
+  return Buffer.concat(chunks, total);
+}
+function matchesImageSignature(type, bytes) {
+  if (type === "image/jpeg") return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (type === "image/png") return bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]));
+  if (type === "image/webp") return bytes.length >= 12 && bytes.toString("ascii", 0, 4) === "RIFF" && bytes.toString("ascii", 8, 12) === "WEBP";
+  return false;
+}
 
 function storageConfig() {
   const { S3_BUCKET, S3_ENDPOINT, S3_REGION, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, MEDIA_PUBLIC_BASE_URL } = process.env;
@@ -67,6 +87,14 @@ router.post("/complete", async (req, res, next) => {
     const head = await storage.client.send(new HeadObjectCommand({ Bucket: storage.bucket, Key: parsed.data.key }));
     if (head.ContentLength !== parsed.data.size || head.ContentType !== parsed.data.contentType || head.ContentLength > maxBytes) {
       return res.status(400).json({ error: "Параметры загруженного файла не совпадают с запросом." });
+    }
+    const object = await storage.client.send(new GetObjectCommand({
+      Bucket: storage.bucket, Key: parsed.data.key, Range: "bytes=0-15"
+    }));
+    const signature = await readPrefix(object.Body);
+    if (!matchesImageSignature(parsed.data.contentType, signature)) {
+      await storage.client.send(new DeleteObjectCommand({ Bucket: storage.bucket, Key: parsed.data.key }));
+      return res.status(415).json({ error: "Содержимое файла не соответствует формату изображения." });
     }
     const publicUrl = storage.publicBase + "/" + parsed.data.key.split("/").map(encodeURIComponent).join("/");
     const inserted = await pool.query(
