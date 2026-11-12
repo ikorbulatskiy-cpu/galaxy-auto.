@@ -144,8 +144,9 @@ router.get("/rooms/:roomId/messages", requireSession, async (req, res, next) => 
     const room = await pool.query("SELECT id FROM rooms WHERE id=$1 AND is_active=TRUE", [req.params.roomId]);
     if (!room.rowCount) return res.status(404).json({ error: "Комната не найдена." });
     const messages = await pool.query(
-      `SELECT m.id,m.body,m.created_at,c.id AS character_id,c.name AS character_name
-       FROM room_messages m LEFT JOIN characters c ON c.id=m.character_id
+      `SELECT m.id,m.body,m.created_at,c.id AS character_id,COALESCE(c.name,u.username) AS character_name
+       FROM room_messages m JOIN users u ON u.id=m.user_id
+       LEFT JOIN characters c ON c.id=m.character_id
        WHERE m.room_id=$1 ORDER BY m.created_at DESC LIMIT $2`,
       [req.params.roomId,limit]
     );
