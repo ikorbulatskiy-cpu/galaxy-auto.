@@ -103,10 +103,10 @@
   const ws=new WebSocket(wsProtocol+"//"+location.host+"/ws");socket=ws;
   let readyTimer=setTimeout(()=>{
    if(socket===ws&&generation===joinGeneration&&ws.readyState===WebSocket.OPEN){
-    addEvent("Сервер не подтвердил авторизацию WebSocket за 10 секунд.","warning");
+    addEvent("Сервер не подтвердил авторизацию WebSocket за 20 секунд. Проверяем состояние сервера.","warning");
     ws.close(4000,"Authentication handshake timeout");
    }
-  },10000);
+  },20000);
   ws.onopen=()=>{
    if(socket!==ws||generation!==joinGeneration)return;
    status("Проверка сессии и подключение к комнате…");
