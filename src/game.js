@@ -60,6 +60,8 @@ router.patch("/characters/:characterId", requireSession, async (req, res, next) 
       hair: z.string().max(40).optional(),
       hairColor: z.string().max(24).optional(),
       eyes: z.string().max(40).optional(),
+      eyeStyle: z.enum(["normal","wide","narrow"]).optional(),
+      expression: z.enum(["smile","neutral"]).optional(),
       outfit: z.string().max(60).optional(),
       shoes: z.string().max(40).optional(),
       accessories: z.array(z.string().max(40)).max(20).optional()
