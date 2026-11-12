@@ -23,7 +23,7 @@ jobs:
       - name: Check server and API syntax
         run: |
           node --check server.js
-          for file in src/*.js; do
+          for file in src/*.js scripts/*.js; do
             node --check "$file"
           done
       - name: Check browser client syntax
