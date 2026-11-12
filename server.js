@@ -13,6 +13,7 @@ const socialRouter = require("./src/social");
 const gameRouter = require("./src/game");
 const featuresRouter = require("./src/features");
 const { attachRealtime } = require("./src/realtime");
+const mediaRouter = require("./src/media");
 
 const app = express();
 const server = http.createServer(app);
@@ -75,6 +76,7 @@ app.use("/api/world", worldRouter);
 app.use("/api/social", socialRouter);
 app.use("/api/game", gameRouter);
 app.use("/api/features", featuresRouter);
+app.use("/api/media", mediaRouter);
 
 app.get("/api/status", async (_req, res) => {
   let database = "unavailable";
