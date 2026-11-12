@@ -29,3 +29,9 @@
 @media(max-width:700px){#tab-world .nx-world{height:100dvh;min-height:0;padding-bottom:env(safe-area-inset-bottom)}#tab-world .nx-menu-panel{top:54px;left:6px}#tab-world .nx-stage-carousel{bottom:48px}#tab-world .nx-chat-send input{font-size:16px}}
 @media(prefers-reduced-motion:no-preference){#tab-world .nx-avatar-card.nx-moving .nx-sprite-canvas{animation:nx-side-hop .38s ease-in-out infinite alternate;transform-origin:50% 100%}}
 @keyframes nx-side-hop{from{translate:0 0}to{translate:0 -9px}}
+
+#tab-world .nx-scene[data-theme="space"]{background:radial-gradient(ellipse at 50% 18%,#48548b,#15172c 58%,#090d1c)}
+#tab-world .nx-scene[data-theme="forest"]{background:linear-gradient(180deg,#527e72,#23483f 58%,#172b29)}
+#tab-world .nx-scene[data-theme="city"]{background:linear-gradient(180deg,#292d4f,#12192d 55%,#0a101c)}
+#tab-world .nx-scene[data-theme="underwater"]{background:linear-gradient(180deg,#3b8caa,#14516f 58%,#092c49)}
+#tab-world .nx-scene[data-theme="sunset"]{background:linear-gradient(180deg,#f39b78,#594a78 58%,#24283c)}
