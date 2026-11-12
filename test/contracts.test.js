@@ -117,9 +117,10 @@ test("recipient lookup, wedding rewards and clan bank retries are wired", () => 
 
 test("avatar editor renders a safe layered 2D preview and persists selectable appearance", () => {
   const html = read("public/index.html");
+  const avatar = read("public/nexora-avatar.js");
   const game = read("src/game.js");
   assert.match(html, /id="character-avatar-preview"/);
-  assert.match(html, /class="avatar-svg"/);
+  assert.match(avatar, /class="avatar-svg"/);
   assert.match(html, /name="skinTone"/);
   assert.match(html, /await loadAvatarPreview\(\)/);
   assert.match(game, /skinTone: z\.string\(\)\.max\(24\)\.optional\(\)/);
@@ -218,6 +219,7 @@ test("registration keeps the form reference and sends explicit 18+ confirmation"
 
 test("avatar editor supports live 2D customization and motion controls", () => {
   const html = read("public/index.html");
+  const avatar = read("public/nexora-avatar.js");
   const game = read("src/game.js");
   const motion = read("public/avatar-motion.js");
   const css = read("public/avatar-motion.css");
@@ -225,7 +227,7 @@ test("avatar editor supports live 2D customization and motion controls", () => {
     assert.match(html, new RegExp('name="' + field + '"'));
   }
   assert.match(html, /loadAvatarPreview\(draft\)/);
-  assert.match(html, /look\.eyeStyle==="wide"/);
+  assert.match(avatar, /look\.eyeStyle==="wide"/);
   assert.match(html, /nexora-star-glasses/);
   assert.match(html, /function renderCatalogItemArt/);
   assert.match(html, /function roomAvatarSvg/);
