@@ -43,7 +43,10 @@ test("PostgreSQL migrations, reward triggers and relationship exclusivity", { sk
       [relationship.rows[0].id]
     );
     await client.query("INSERT INTO blog_posts(user_id,body,visibility) VALUES($1,'Integration blog post','public')",[c]);
-    await client.query("INSERT INTO clans(name,slug,owner_user_id) VALUES($1,$2,$3)",["Test clan "+suffix,"test-clan-"+suffix,b]);
+    const testClan = await client.query("INSERT INTO clans(name,slug,owner_user_id) VALUES($1,$2,$3) RETURNING id",["Test clan "+suffix,"test-clan-"+suffix,b]);
+    await client.query("INSERT INTO clan_members(clan_id,user_id,role) VALUES($1,$2,'owner')",[testClan.rows[0].id,b]);
+    const clanProgress = await client.query("SELECT experience,level FROM clans WHERE id=$1",[testClan.rows[0].id]);
+    assert.equal(Number(clanProgress.rows[0].experience),15);
     const awards = await client.query(
       "SELECT u.id,a.slug FROM user_achievements u JOIN achievements a ON a.id=u.achievement_id WHERE u.user_id=ANY($1::uuid[])",
       [[a,b,c]]
