@@ -527,3 +527,9 @@ DROP TRIGGER IF EXISTS nexora_clan_member_progress ON clan_members;
 CREATE TRIGGER nexora_clan_member_progress
 AFTER INSERT ON clan_members FOR EACH ROW
 EXECUTE FUNCTION nexora_clan_member_progress_trigger();
+
+
+-- Bank transfers must be safe to retry after a lost HTTP response.
+ALTER TABLE clan_transactions ADD COLUMN IF NOT EXISTS idempotency_key UUID;
+CREATE UNIQUE INDEX IF NOT EXISTS clan_transactions_idempotency_idx
+ON clan_transactions(idempotency_key) WHERE idempotency_key IS NOT NULL;
