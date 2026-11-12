@@ -57,7 +57,7 @@
   const scan=()=>{installChat();installCarousel();installDrawer()};new MutationObserver(scan).observe(root,{childList:true,subtree:true});scan();updateUnreadMail();setInterval(updateUnreadMail,30000);
   async function showCharacterInfo(name,userId){
     const box=showModal("Информация о персонаже",'<p>'+safe(name)+'</p><p class="muted">Загружаем профиль…</p>');
-    if(!userId)return;
+    if(!userId){box.querySelector("[data-content]").innerHTML='<h2>Информация о персонаже</h2><p>'+safe(name)+'</p><p class="muted">Профиль пока недоступен.</p><div class="nx-dialog-actions"><button type="button" data-close>Закрыть</button></div>';return;}
     try{
       const data=await window.NexoraAPI.request("/api/social/users/"+encodeURIComponent(userId));
       const p=data.profile||{};
