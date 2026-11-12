@@ -19,12 +19,12 @@ dbTest("PostgreSQL migrations create all game and social subsystems", async () =
       "wallet_balances","wallet_ledger","wallet_transfers","purchases","gifts","pets",
       "blog_posts","blog_photos","blog_comments","blog_likes","relationships",
       "wedding_ceremonies","achievements","user_achievements","mini_game_scores",
-      "moderation_actions","admin_logs","reputation","reputation_events","schema_migrations"
+      "moderation_actions","admin_logs","media_assets","reputation","reputation_events","schema_migrations"
     ]) assert.ok(tables.has(table), "missing database table: " + table);
 
     const versions = await pool.query("SELECT version FROM schema_migrations ORDER BY version");
     assert.deepEqual(new Set(versions.rows.map(row => row.version)), new Set([
-      "001_base_schema","002_game_world.sql","003_social_game_systems.sql"
+      "001_base_schema","002_game_world.sql","003_social_game_systems.sql","004_media_assets.sql"
     ]));
 
     const bankKey = await pool.query("SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='clan_transactions' AND column_name='idempotency_key'");
