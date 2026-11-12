@@ -42,6 +42,8 @@ test("PostgreSQL migrations, reward triggers and relationship exclusivity", { sk
       "INSERT INTO wedding_ceremonies(relationship_id,venue,vows) VALUES($1,'Integration test hall','We test the ceremony.')",
       [relationship.rows[0].id]
     );
+    await client.query("INSERT INTO blog_posts(user_id,body,visibility) VALUES($1,'Integration blog post','public')",[c]);
+    await client.query("INSERT INTO clans(name,slug,owner_user_id) VALUES($1,$2,$3)",["Test clan "+suffix,"test-clan-"+suffix,b]);
     const awards = await client.query(
       "SELECT u.id,a.slug FROM user_achievements u JOIN achievements a ON a.id=u.achievement_id WHERE u.user_id=ANY($1::uuid[])",
       [[a,b]]
@@ -63,8 +65,8 @@ test("PostgreSQL migrations, reward triggers and relationship exclusivity", { sk
     const repB = reputation.rows.find(row=>row.user_id===b);
     const repC = reputation.rows.find(row=>row.user_id===c);
     assert.deepEqual([repA.authority,repA.popularity,repA.experience],[3,6,16]);
-    assert.deepEqual([repB.authority,repB.popularity,repB.experience],[2,3,10]);
-    assert.deepEqual([repC.authority,repC.popularity,repC.experience],[1,2,5]);
+    assert.deepEqual([repB.authority,repB.popularity,repB.experience],[7,6,20]);
+    assert.deepEqual([repC.authority,repC.popularity,repC.experience],[1,3,7]);
     const characterProgress = await client.query("SELECT experience,level FROM characters WHERE id=$1",[character.rows[0].id]);
     assert.equal(Number(characterProgress.rows[0].experience),16);
     await client.query("SAVEPOINT relationship_conflict");
