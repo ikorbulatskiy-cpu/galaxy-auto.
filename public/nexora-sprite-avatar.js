@@ -90,6 +90,10 @@
       const anchor=this.options.anchors[key]||{x:0,y:0,w:this.options.width,h:this.options.height};
       const meta=this.look.frames?.[key]||{};
       const frames=Math.max(1,Number(meta.count)||1);
+      if(frames===1&&!meta.sheet){
+        this.ctx.drawImage(image,anchor.x,anchor.y,anchor.w,anchor.h);
+        return;
+      }
       const fw=Number(meta.width)||image.width/frames;
       const fh=Number(meta.height)||image.height/4;
       const rows=meta.directions||{front:0,back:1,left:2,right:3};
