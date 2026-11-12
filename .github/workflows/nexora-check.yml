@@ -46,6 +46,7 @@ jobs:
           done
       - name: Check browser client syntax
         run: |
+          node --check public/avatar-motion.js
           python3 - <<'PY'
           import re
           from pathlib import Path
