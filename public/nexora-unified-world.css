@@ -1,0 +1,63 @@
+/* Unified NEXORA world shell. Scoped to the existing classic world. */
+#dashboard{width:100%;max-width:none;padding:0;margin:0}
+#dashboard>.head,#dashboard>.dashnav{display:none!important}
+#dashboard>#tab-world{width:100%;min-height:100dvh;margin:0;padding:0!important;border:0!important;background:#111820!important}
+#dashboard>#tab-world>.nx-world{width:100%;min-height:100dvh;height:100dvh;max-width:none;margin:0;border:0;display:grid;grid-template-rows:48px auto minmax(130px,24dvh) 28px minmax(220px,1fr) 54px 22px;overflow:hidden}
+#dashboard>#tab-world .nx-topbar{min-height:48px;display:flex;align-items:center;gap:12px;padding:4px 12px}
+#dashboard>#tab-world .nx-logo{font-size:16px;white-space:nowrap}
+#dashboard>#tab-world .nx-menu-trigger{margin-left:auto;border:1px solid #929aa2;background:linear-gradient(#68717b,#343b43);color:#fff;border-radius:3px;padding:7px 12px;font:700 12px Tahoma,Arial,sans-serif}
+#dashboard>#tab-world .nx-account{display:none}
+#dashboard>#tab-world .nx-planet-tools{display:flex;align-items:center;gap:7px;padding:6px 10px;min-height:42px}
+#dashboard>#tab-world .nx-planet-select{min-width:0;flex:1}
+#dashboard>#tab-world .nx-room-select{max-width:38%;min-width:100px}
+#dashboard>#tab-world .nx-chat-panel{min-height:0;display:flex;flex-direction:column;padding:7px 10px 5px;overflow:hidden;border-left:0;border-right:0;border-radius:0}
+#dashboard>#tab-world .nx-chat-title{flex:0 0 auto}
+#dashboard>#tab-world .nx-chat-log{min-height:0;flex:1;overflow:auto;padding:7px 4px}
+#dashboard>#tab-world .nx-chat-send{flex:0 0 42px;display:flex;gap:7px}
+#dashboard>#tab-world .nx-chat-send input{min-width:0;flex:1}
+#dashboard>#tab-world .nx-eventbar{min-width:0;overflow:hidden;padding:4px 9px;font-size:10px}
+#dashboard>#tab-world .nx-event-system{display:none}
+#dashboard>#tab-world .nx-scene{min-height:0;height:auto;max-height:none;position:relative;overflow:hidden}
+#dashboard>#tab-world .nx-avatars{inset:0!important}
+#dashboard>#tab-world .nx-action-bar{z-index:8}
+#dashboard>#tab-world .nx-player-list{max-height:42%;overflow:auto}
+#dashboard>#tab-world .nx-bottom-nav{height:54px;min-height:54px;display:flex;justify-content:space-around;align-items:center}
+#dashboard>#tab-world .nx-bottom-nav button{flex:1;min-width:0}
+#dashboard>#tab-world .nx-menu-panel{position:fixed;z-index:10050;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100vw - 24px));max-height:min(82dvh,720px);overflow:auto;box-shadow:0 18px 70px #000d}
+#dashboard>#tab-world .nx-primary-menu{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#dashboard>#tab-world .nx-primary-menu button{min-height:48px;display:flex;align-items:center;gap:10px;text-align:left}
+#dashboard>#tab-world .nx-primary-menu button span{font-size:19px;width:25px;text-align:center}
+#dashboard>#tab-world .nx-menu-subtitle{margin:14px 0 7px;padding-top:10px;border-top:1px solid #ffffff22;color:#b7bdc5;font-size:11px;text-transform:uppercase;letter-spacing:.8px}
+#dashboard>#tab-world .nx-favorites-panel,#dashboard>#tab-world .nx-help-panel,#dashboard>#tab-world .nx-events-panel{z-index:10051;max-width:calc(100vw - 24px)}
+#dashboard>#tab-world .nx-statusbar{font-size:9px;padding:3px 9px}
+@media(min-width:800px){
+ #dashboard>#tab-world>.nx-world{grid-template-columns:minmax(260px,34%) minmax(0,1fr);grid-template-rows:48px auto minmax(110px,19dvh) 28px minmax(250px,1fr) 54px 22px}
+ #dashboard>#tab-world .nx-topbar,#dashboard>#tab-world .nx-planet-tools,#dashboard>#tab-world .nx-chat-panel,#dashboard>#tab-world .nx-eventbar,#dashboard>#tab-world .nx-bottom-nav,#dashboard>#tab-world .nx-statusbar{grid-column:1/-1}
+ #dashboard>#tab-world .nx-scene{grid-column:1/-1}
+}
+@media(max-width:520px){
+ #dashboard>#tab-world>.nx-world{grid-template-rows:44px auto minmax(112px,22dvh) 26px minmax(190px,1fr) 52px 18px}
+ #dashboard>#tab-world .nx-topbar{padding:3px 8px;gap:7px}
+ #dashboard>#tab-world .nx-current-planet{min-width:0;max-width:38%;overflow:hidden}
+ #dashboard>#tab-world .nx-current-planet b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ #dashboard>#tab-world .nx-clock{display:none}
+ #dashboard>#tab-world .nx-planet-tools{gap:5px;padding:5px 7px}
+ #dashboard>#tab-world .nx-room-select{max-width:35%;min-width:85px}
+ #dashboard>#tab-world .nx-chat-panel{padding:5px 7px}
+ #dashboard>#tab-world .nx-chat-send button{padding:6px 9px}
+ #dashboard>#tab-world .nx-bottom-nav button{font-size:10px;padding:4px 2px}
+ #dashboard>#tab-world .nx-bottom-nav button span{font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){#dashboard>#tab-world *{scroll-behavior:auto!important;transition:none!important}}
+
+
+/* Functional local world settings panel. */
+#dashboard>#tab-world .nx-settings-panel{position:fixed;z-index:10052;left:50%;top:50%;transform:translate(-50%,-50%);width:min(390px,calc(100vw - 24px));max-height:min(82dvh,620px);overflow:auto;padding:16px;background:#17202b;border:1px solid #b7a77b;border-radius:10px;box-shadow:0 18px 70px #000d;color:#fff}
+#dashboard>#tab-world .nx-setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 4px;border-bottom:1px solid #ffffff20;font:13px Tahoma,Arial,sans-serif}
+#dashboard>#tab-world .nx-setting-row:last-child{border-bottom:0}
+#dashboard>#tab-world .nx-setting-row span{display:grid;gap:4px}
+#dashboard>#tab-world .nx-setting-row small{color:#b8c0ca;font-size:11px}
+#dashboard>#tab-world .nx-setting-row input{width:19px;height:19px;accent-color:#b7a77b;flex:0 0 auto}
+#dashboard>#tab-world.nx-no-avatar-animations .nx-avatars *{animation:none!important;transition:none!important}
+#dashboard>#tab-world.nx-compact .nx-chat-panel{padding-top:3px;padding-bottom:3px}
+#dashboard>#tab-world.nx-compact .nx-eventbar{font-size:9px}

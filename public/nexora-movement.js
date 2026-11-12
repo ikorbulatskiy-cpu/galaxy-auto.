@@ -211,6 +211,80 @@
     }, 110);
   }
 
+  let placementMode = false;
+  let placementTarget = null;
+  let placementOriginal = null;
+  let placementMarker = null;
+  let placementControls = null;
+
+  function placementCard() {
+    return cards().find(card => card.classList.contains("me"));
+  }
+  function previewPlacement(x, y) {
+    if (!placementMode) return;
+    placementTarget = { x: Math.max(2, Math.min(98, x)), y: Math.max(8, Math.min(92, y)) };
+    const card = placementCard();
+    if (card) {
+      card.style.left = placementTarget.x + "%";
+      card.style.top = placementTarget.y + "%";
+      card.style.bottom = "auto";
+    }
+    if (placementMarker) {
+      placementMarker.style.left = placementTarget.x + "%";
+      placementMarker.style.top = placementTarget.y + "%";
+    }
+    if (placementControls) {
+      const confirm = placementControls.querySelector("[data-placement-confirm]");
+      if (confirm) confirm.disabled = false;
+    }
+  }
+  function endPlacement(restore = true) {
+    placementMode = false;
+    const card = placementCard();
+    if (restore && card && placementOriginal) {
+      card.style.left = placementOriginal.x + "%";
+      card.style.top = placementOriginal.y + "%";
+      card.style.bottom = "auto";
+    }
+    placementMarker?.remove();
+    placementControls?.remove();
+    placementMarker = null;
+    placementControls = null;
+    placementTarget = null;
+    placementOriginal = null;
+    scene()?.classList.remove("nx-placement-active");
+  }
+  function beginPlacement() {
+    if (!roomId || !socket || socket.readyState !== WebSocket.OPEN) {
+      addMovementEvent("Сначала дождись подключения к комнате.");
+      return false;
+    }
+    endPlacement(true);
+    placementMode = true;
+    placementOriginal = { x: current.x, y: current.y };
+    const stage = scene();
+    if (!stage) return false;
+    stage.classList.add("nx-placement-active");
+    placementMarker = document.createElement("div");
+    placementMarker.className = "nx-placement-marker";
+    placementMarker.textContent = "|";
+    placementMarker.setAttribute("aria-hidden", "true");
+    stage.append(placementMarker);
+    placementControls = document.createElement("div");
+    placementControls.className = "nx-placement-controls";
+    placementControls.innerHTML = '<span>Выбери место в комнате</span><button type="button" data-placement-cancel aria-label="Отменить">−</button><button type="button" data-placement-confirm aria-label="Подтвердить" disabled>+</button>';
+    stage.append(placementControls);
+    placementControls.querySelector("[data-placement-cancel]").addEventListener("click", () => endPlacement(true));
+    placementControls.querySelector("[data-placement-confirm]").addEventListener("click", () => {
+      if (!placementTarget) return;
+      const destination = { ...placementTarget };
+      endPlacement(true);
+      moveTo(destination.x, destination.y);
+    });
+    addMovementEvent("Режим перемещения: выбери место и нажми +.");
+    return true;
+  }
+
   function installScene() {
     const world = document.getElementById("tab-world");
     const selector = document.getElementById("nx-room-select");
@@ -228,16 +302,22 @@
     if (!stage.dataset.movementBound) {
       stage.dataset.movementBound = "true";
       stage.addEventListener("pointerdown", event => {
-        if (event.target.closest("button, a, .nx-player-list, .nx-avatar-card, .nx-action-popover")) return;
+        if (event.target.closest("button, a, .nx-player-list, .nx-avatar-card, .nx-action-popover, .nx-placement-controls")) return;
         const bounds = stage.getBoundingClientRect();
         const x = (event.clientX - bounds.left) / bounds.width * 100;
         const y = (event.clientY - bounds.top) / bounds.height * 100;
+        if (placementMode) { previewPlacement(x, y); return; }
         moveTo(x, y);
+      });
+      stage.addEventListener("pointermove", event => {
+        if (!placementMode || !(event.buttons & 1 || event.pointerType === "touch")) return;
+        const bounds = stage.getBoundingClientRect();
+        previewPlacement((event.clientX - bounds.left) / bounds.width * 100, (event.clientY - bounds.top) / bounds.height * 100);
       });
     }
   }
 
-  window.NexoraMovement = { join: connectRoom, leave: closeSocket, action: sendAction };
+  window.NexoraMovement = { join: connectRoom, leave: closeSocket, action: sendAction, beginPlacement, cancelPlacement: () => endPlacement(true), previewPlacement };
   window.addEventListener("nexora:room-joined", event => connectRoom(event.detail?.roomId));
   window.addEventListener("nexora:room-left", closeSocket);
 
