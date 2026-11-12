@@ -146,6 +146,7 @@ API:
 - Загрузить файл методом `PUT` по выданному URL с заголовком `Content-Type`.
 - `POST /api/media/complete` — проверить объект и зарегистрировать файл (JSON: `assetId`, `key`, `contentType`, `size`).
 - `GET /api/media` — список своих фотографий.
-- `DELETE /api/media/:assetId` — удалить свою фотографию.
+- `GET /api/media/:assetId` — проверка доступа и короткоживущий signed GET для приватного объекта.
+- `DELETE /api/media/:assetId` — удалить свою фотографию, если она не используется в публикациях.
 
 Для работы нескольких экземпляров WebSocket-сервера используются PostgreSQL `LISTEN/NOTIFY` события. Настройте `TRUST_PROXY_HOPS` только если приложение действительно находится за известным reverse proxy; по умолчанию доверие к forwarded-заголовкам отключено.
