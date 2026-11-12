@@ -18,7 +18,7 @@ The change is on `nexora-stage2-movement`, stacked on the Stage 1 branch. It is 
 
 ## Verification still required
 
-- GitHub Actions on the final PR head.
+- GitHub Actions: run #380 passed on commit `b7281c66d0acfc35f40f60ff6d13c5540666c2f1` (34 tests passed, 0 failed; syntax checks and both migration passes succeeded).
 - Two-account test in the same room.
 - iOS Safari touch test and desktop Chrome pointer test.
 - Reconnect and saved-position test.
