@@ -6,7 +6,7 @@ const http = require("http");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const { rateLimit } = require("express-rate-limit");
-const { pool } = require("./src/db");
+const { pool, isDatabaseUnavailable } = require("./src/db");
 const { router: authRouter } = require("./src/auth");
 const worldRouter = require("./src/world");
 const socialRouter = require("./src/social");
@@ -84,26 +84,42 @@ app.use("/api/features", featuresRouter);
 app.use("/api/media", mediaRouter);
 
 app.get("/api/status", async (_req, res) => {
-  let database = "unavailable";
   try {
     await pool.query("SELECT 1");
-    database = "connected";
-  } catch {}
-  res.status(database === "connected" ? 200 : 503).json({
-    online: true,
-    app: "NEXORA",
-    version: "0.6.0",
-    stage: "social-game-world-foundation",
-    database,
-    message: database === "connected" ? "NEXORA API is ready" : "Database connection is not configured"
-  });
+    return res.status(200).json({
+      online: true,
+      app: "NEXORA",
+      version: "0.6.1",
+      stage: "social-game-world-foundation",
+      database: "connected",
+      message: "NEXORA API is ready"
+    });
+  } catch (error) {
+    console.error("Database health check failed:", error.code || "UNKNOWN", error.message);
+    return res.status(503).json({
+      online: true,
+      app: "NEXORA",
+      version: "0.6.1",
+      stage: "social-game-world-foundation",
+      database: "unavailable",
+      message: "Database connection is temporarily unavailable"
+    });
+  }
 });
 
 app.use(express.static(path.join(__dirname, "public")));
-app.use((err, _req, res, _next) => {
-  console.error("Request failed:", err.message);
+app.use((err, req, res, _next) => {
   if (res.headersSent) return;
-  res.status(500).json({ error: "Внутренняя ошибка сервера." });
+  if (err && (err.type === "entity.parse.failed" || err.status === 400)) {
+    return res.status(400).json({ error: "Некорректный формат запроса." });
+  }
+  if (isDatabaseUnavailable(err)) {
+    console.error("Database temporarily unavailable:", req.method, req.path, err.code || "UNKNOWN", err.message);
+    res.set("Retry-After", "3");
+    return res.status(503).json({ error: "База данных временно недоступна. Повторите попытку через несколько секунд." });
+  }
+  console.error("Request failed:", req.method, req.path, err && (err.code || err.name || "UNKNOWN"), err && err.message);
+  return res.status(500).json({ error: "Внутренняя ошибка сервера." });
 });
 
 attachRealtime(server);
