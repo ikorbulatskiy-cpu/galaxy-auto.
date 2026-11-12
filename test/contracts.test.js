@@ -103,6 +103,8 @@ test("recipient lookup, wedding rewards and clan bank retries are wired", () => 
   const features = read("src/features.js");
   const migration = read("database/migrations/003_social_game_systems.sql");
   assert.match(features, /router\.get\("\/recipients"/);
+  assert.match(features, /visibility!=="public"/);
+  assert.match(features, /FROM media_assets WHERE owner_user_id/);
   assert.match(html, /data-recipient-select/);
   assert.match(features, /nexora-wedding-ring/);
   assert.match(features, /idempotencyKey:idempotency/);
