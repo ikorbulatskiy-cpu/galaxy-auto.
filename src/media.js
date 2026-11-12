@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const express = require("express");
 const { rateLimit } = require("express-rate-limit");
 const { z } = require("zod");
-const { S3Client, PutObjectCommand, HeadObjectCommand, GetObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, PutObjectCommand, HeadObjectCommand, GetObjectCommand, CopyObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { pool } = require("./db");
 const { requireSession } = require("./auth");
@@ -62,7 +62,7 @@ router.post("/presign", uploadLimiter, async (req, res, next) => {
   try {
     const id = crypto.randomUUID();
     const extension = ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" })[parsed.data.contentType];
-    const key = "users/" + req.user.id + "/" + id + "." + extension;
+    const key = "staging/users/" + req.user.id + "/" + id + "." + extension;
     const command = new PutObjectCommand({
       Bucket: storage.bucket,
       Key: key,
@@ -84,7 +84,7 @@ router.post("/complete", uploadLimiter, async (req, res, next) => {
   if (!parsed.success) return res.status(400).json({ error: "Некорректные данные загруженного файла." });
   const storage = storageConfig();
   if (!storage) return res.status(503).json({ error: "Хранилище фотографий не настроено на сервере." });
-  const expectedPrefix = "users/" + req.user.id + "/";
+  const expectedPrefix = "staging/users/" + req.user.id + "/";
   if (!parsed.data.key.startsWith(expectedPrefix) || !parsed.data.key.includes(parsed.data.assetId)) {
     return res.status(403).json({ error: "Файл не принадлежит этому аккаунту." });
   }
@@ -103,11 +103,31 @@ router.post("/complete", uploadLimiter, async (req, res, next) => {
     }
     const appBase = (process.env.APP_BASE_URL || (req.protocol + "://" + req.get("host"))).replace(/\/+$/, "");
     const publicUrl = appBase + "/api/media/" + parsed.data.assetId;
-    const inserted = await pool.query(
-      "INSERT INTO media_assets(id,owner_user_id,storage_key,mime_type,byte_size,public_url) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(storage_key) DO NOTHING RETURNING id,public_url,mime_type,byte_size",
-      [parsed.data.assetId, req.user.id, parsed.data.key, parsed.data.contentType, parsed.data.size, publicUrl]
-    );
-    if (!inserted.rowCount) return res.status(409).json({ error: "Этот файл уже зарегистрирован." });
+    const extension = ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" })[parsed.data.contentType];
+    const finalKey = "users/" + req.user.id + "/" + parsed.data.assetId + "." + extension;
+    await storage.client.send(new CopyObjectCommand({
+      Bucket: storage.bucket,
+      CopySource: storage.bucket + "/" + parsed.data.key.split("/").map(encodeURIComponent).join("/"),
+      Key: finalKey,
+      ContentType: parsed.data.contentType,
+      MetadataDirective: "REPLACE",
+      CacheControl: "private, no-store"
+    }));
+    let inserted;
+    try {
+      inserted = await pool.query(
+        "INSERT INTO media_assets(id,owner_user_id,storage_key,mime_type,byte_size,public_url) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(storage_key) DO NOTHING RETURNING id,public_url,mime_type,byte_size",
+        [parsed.data.assetId, req.user.id, finalKey, parsed.data.contentType, parsed.data.size, publicUrl]
+      );
+      if (!inserted.rowCount) {
+        await storage.client.send(new DeleteObjectCommand({ Bucket: storage.bucket, Key: finalKey }));
+        return res.status(409).json({ error: "Этот файл уже зарегистрирован." });
+      }
+    } catch (error) {
+      await storage.client.send(new DeleteObjectCommand({ Bucket: storage.bucket, Key: finalKey })).catch(() => {});
+      throw error;
+    }
+    await storage.client.send(new DeleteObjectCommand({ Bucket: storage.bucket, Key: parsed.data.key })).catch(() => {});
     res.status(201).json({ asset: inserted.rows[0] });
   } catch (error) { next(error); }
 });
