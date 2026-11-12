@@ -229,4 +229,79 @@ router.post("/conversations/:conversationId/messages", requireSession, async (re
   } catch (error) { next(error); }
 });
 
+
+const reportSchema = z.object({
+  category: z.enum(["harassment", "spam", "impersonation", "inappropriate_content", "threats", "other"]),
+  details: z.string().trim().max(1000).default("")
+}).strict();
+
+router.get("/blocks", requireSession, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT b.blocked_id AS user_id,u.username,p.display_name,b.created_at
+       FROM blocks b JOIN users u ON u.id=b.blocked_id
+       LEFT JOIN profiles p ON p.user_id=u.id
+       WHERE b.blocker_id=$1 ORDER BY b.created_at DESC LIMIT 200`,
+      [req.user.id]
+    );
+    res.json({ blocks: result.rows });
+  } catch (error) { next(error); }
+});
+
+router.post("/blocks/:userId", requireSession, async (req, res, next) => {
+  const targetId = req.params.userId;
+  if (!validId(targetId) || targetId === req.user.id) return res.status(400).json({ error: "Некорректный пользователь." });
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const target = await client.query("SELECT id FROM users WHERE id=$1 AND status='active'", [targetId]);
+    if (!target.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Пользователь не найден." });
+    }
+    await client.query("INSERT INTO blocks (blocker_id,blocked_id) VALUES ($1,$2) ON CONFLICT DO NOTHING", [req.user.id, targetId]);
+    await client.query(
+      "DELETE FROM friendships WHERE (requester_id=$1 AND addressee_id=$2) OR (requester_id=$2 AND addressee_id=$1)",
+      [req.user.id, targetId]
+    );
+    await client.query("COMMIT");
+    res.status(201).json({ success: true });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    next(error);
+  } finally { client.release(); }
+});
+
+router.delete("/blocks/:userId", requireSession, async (req, res, next) => {
+  const targetId = req.params.userId;
+  if (!validId(targetId)) return res.status(400).json({ error: "Некорректный пользователь." });
+  try {
+    const result = await pool.query("DELETE FROM blocks WHERE blocker_id=$1 AND blocked_id=$2 RETURNING blocker_id", [req.user.id, targetId]);
+    if (!result.rowCount) return res.status(404).json({ error: "Пользователь не найден в вашем чёрном списке." });
+    res.json({ success: true });
+  } catch (error) { next(error); }
+});
+
+router.post("/reports/:userId", requireSession, async (req, res, next) => {
+  const targetId = req.params.userId;
+  const parsed = reportSchema.safeParse(req.body);
+  if (!validId(targetId) || targetId === req.user.id || !parsed.success) {
+    return res.status(400).json({ error: "Проверьте пользователя и данные жалобы." });
+  }
+  try {
+    const target = await pool.query("SELECT id FROM users WHERE id=$1 AND status='active'", [targetId]);
+    if (!target.rowCount) return res.status(404).json({ error: "Пользователь не найден." });
+    const recent = await pool.query(
+      "SELECT 1 FROM reports WHERE reporter_id=$1 AND target_user_id=$2 AND created_at>NOW()-INTERVAL '10 minutes' LIMIT 1",
+      [req.user.id, targetId]
+    );
+    if (recent.rowCount) return res.status(429).json({ error: "Вы уже недавно отправляли жалобу на этого пользователя." });
+    const result = await pool.query(
+      "INSERT INTO reports (reporter_id,target_user_id,category,details) VALUES ($1,$2,$3,$4) RETURNING id,status,created_at",
+      [req.user.id, targetId, parsed.data.category, parsed.data.details]
+    );
+    res.status(201).json({ report: result.rows[0] });
+  } catch (error) { next(error); }
+});
+
 module.exports = router;
