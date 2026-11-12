@@ -36,5 +36,5 @@
 #tab-world .nx-scene[data-theme="underwater"]{background:linear-gradient(180deg,#3b8caa,#14516f 58%,#092c49)}
 #tab-world .nx-scene[data-theme="sunset"]{background:linear-gradient(180deg,#f39b78,#594a78 58%,#24283c)}
 
-#tab-world .nx-world-dialog input[type="checkbox"]{width:auto;min-height:0;vertical-align:middle}
+.nx-world-dialog input[type="checkbox"]{width:auto;min-height:0;vertical-align:middle}
 #tab-world .nx-menu-panel .nx-mail-unread{display:inline-grid;place-items:center;min-width:19px;height:19px;margin-left:6px;padding:0 5px;border-radius:10px;background:#d94d78;color:#fff;font-size:10px;font-weight:800}
