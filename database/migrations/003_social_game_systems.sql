@@ -1,0 +1,212 @@
+-- NEXORA feature systems foundation. Idempotent schema extension.
+CREATE TABLE IF NOT EXISTS avatar_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug VARCHAR(64) NOT NULL UNIQUE,
+  name VARCHAR(100) NOT NULL,
+  description VARCHAR(500) NOT NULL DEFAULT '',
+  category VARCHAR(24) NOT NULL CHECK (category IN ('body','head','hair','outfit','shoes','accessory','pet_item','wedding')),
+  rarity VARCHAR(20) NOT NULL DEFAULT 'common' CHECK (rarity IN ('common','uncommon','rare','epic','legendary')),
+  price_coins BIGINT NOT NULL DEFAULT 0 CHECK (price_coins >= 0),
+  price_diamonds BIGINT NOT NULL DEFAULT 0 CHECK (price_diamonds >= 0),
+  asset_url TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS character_inventory (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  character_id UUID NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  item_id UUID NOT NULL REFERENCES avatar_items(id) ON DELETE RESTRICT,
+  acquired_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  equipped BOOLEAN NOT NULL DEFAULT FALSE,
+  UNIQUE(character_id,item_id)
+);
+CREATE INDEX IF NOT EXISTS character_inventory_character_idx ON character_inventory(character_id);
+
+CREATE TABLE IF NOT EXISTS clans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(40) NOT NULL UNIQUE,
+  slug VARCHAR(48) NOT NULL UNIQUE,
+  description VARCHAR(500) NOT NULL DEFAULT '',
+  emblem_url TEXT,
+  owner_user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  treasury_coins BIGINT NOT NULL DEFAULT 0 CHECK (treasury_coins >= 0),
+  level INTEGER NOT NULL DEFAULT 1 CHECK (level >= 1),
+  experience BIGINT NOT NULL DEFAULT 0 CHECK (experience >= 0),
+  visibility VARCHAR(12) NOT NULL DEFAULT 'public' CHECK (visibility IN ('public','private')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS clan_members (
+  clan_id UUID NOT NULL REFERENCES clans(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role VARCHAR(16) NOT NULL DEFAULT 'member' CHECK (role IN ('owner','deputy','officer','member')),
+  joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY(clan_id,user_id),
+  UNIQUE(user_id)
+);
+CREATE INDEX IF NOT EXISTS clan_members_clan_idx ON clan_members(clan_id,joined_at);
+CREATE TABLE IF NOT EXISTS clan_applications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clan_id UUID NOT NULL REFERENCES clans(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status VARCHAR(12) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','accepted','rejected','cancelled')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(clan_id,user_id)
+);
+CREATE TABLE IF NOT EXISTS clan_transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clan_id UUID NOT NULL REFERENCES clans(id) ON DELETE CASCADE,
+  actor_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  amount BIGINT NOT NULL CHECK (amount <> 0),
+  reason VARCHAR(120) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS clan_transactions_clan_idx ON clan_transactions(clan_id,created_at DESC);
+
+CREATE TABLE IF NOT EXISTS wallet_transfers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  receiver_user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  currency VARCHAR(12) NOT NULL DEFAULT 'coins' CHECK (currency IN ('coins','diamonds')),
+  amount BIGINT NOT NULL CHECK (amount > 0),
+  idempotency_key UUID NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CHECK (sender_user_id <> receiver_user_id)
+);
+CREATE TABLE IF NOT EXISTS purchases (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  item_id UUID NOT NULL REFERENCES avatar_items(id) ON DELETE RESTRICT,
+  currency VARCHAR(12) NOT NULL CHECK (currency IN ('coins','diamonds')),
+  amount BIGINT NOT NULL CHECK (amount >= 0),
+  idempotency_key UUID NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS gifts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  receiver_user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  item_id UUID NOT NULL REFERENCES avatar_items(id) ON DELETE RESTRICT,
+  message VARCHAR(240) NOT NULL DEFAULT '',
+  idempotency_key UUID NOT NULL UNIQUE,
+  claimed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CHECK (sender_user_id <> receiver_user_id)
+);
+
+CREATE TABLE IF NOT EXISTS pets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  character_id UUID REFERENCES characters(id) ON DELETE SET NULL,
+  name VARCHAR(32) NOT NULL,
+  species VARCHAR(32) NOT NULL,
+  level INTEGER NOT NULL DEFAULT 1 CHECK (level >= 1),
+  experience BIGINT NOT NULL DEFAULT 0 CHECK (experience >= 0),
+  mood SMALLINT NOT NULL DEFAULT 80 CHECK (mood BETWEEN 0 AND 100),
+  hunger SMALLINT NOT NULL DEFAULT 80 CHECK (hunger BETWEEN 0 AND 100),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS pets_owner_idx ON pets(owner_user_id);
+
+CREATE TABLE IF NOT EXISTS blog_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body VARCHAR(5000) NOT NULL,
+  visibility VARCHAR(12) NOT NULL DEFAULT 'public' CHECK (visibility IN ('public','friends','private')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS blog_posts_feed_idx ON blog_posts(created_at DESC);
+CREATE TABLE IF NOT EXISTS blog_photos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID NOT NULL REFERENCES blog_posts(id) ON DELETE CASCADE,
+  image_url TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS blog_comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID NOT NULL REFERENCES blog_posts(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body VARCHAR(1000) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS blog_likes (
+  post_id UUID NOT NULL REFERENCES blog_posts(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY(post_id,user_id)
+);
+
+CREATE TABLE IF NOT EXISTS relationships (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  requester_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  addressee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status VARCHAR(12) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','married','declined','divorced')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CHECK(requester_id <> addressee_id)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS relationships_one_active_per_user_idx
+ON relationships(LEAST(requester_id,addressee_id),GREATEST(requester_id,addressee_id))
+WHERE status IN ('pending','married');
+
+CREATE TABLE IF NOT EXISTS achievements (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug VARCHAR(64) NOT NULL UNIQUE,
+  name VARCHAR(100) NOT NULL,
+  description VARCHAR(300) NOT NULL DEFAULT '',
+  reward_coins BIGINT NOT NULL DEFAULT 0 CHECK (reward_coins >= 0),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS user_achievements (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  achievement_id UUID NOT NULL REFERENCES achievements(id) ON DELETE CASCADE,
+  earned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY(user_id,achievement_id)
+);
+CREATE TABLE IF NOT EXISTS mini_game_scores (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  game_slug VARCHAR(48) NOT NULL,
+  score INTEGER NOT NULL CHECK (score >= 0),
+  verified BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS mini_game_scores_leaderboard_idx ON mini_game_scores(game_slug,score DESC,created_at);
+
+CREATE TABLE IF NOT EXISTS moderation_actions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  moderator_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  target_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  action VARCHAR(20) NOT NULL CHECK (action IN ('warn','mute','suspend','unsuspend','lift')),
+  reason VARCHAR(500) NOT NULL,
+  ends_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS admin_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  action VARCHAR(80) NOT NULL,
+  target_type VARCHAR(40) NOT NULL,
+  target_id UUID,
+  details JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS admin_logs_created_idx ON admin_logs(created_at DESC);
+
+INSERT INTO avatar_items (slug,name,description,category,rarity,price_coins)
+VALUES
+ ('nexora-basic-cap','Базовая кепка','Повседневная кепка NEXORA.','head','common',40),
+ ('nexora-neon-jacket','Неоновая куртка','Куртка с яркими акцентами.','outfit','uncommon',120),
+ ('nexora-star-glasses','Очки «Звезда»','Аксессуар для образа.','accessory','rare',180),
+ ('nexora-cloud-pet-bed','Облачная лежанка','Мягкое место для питомца.','pet_item','common',60),
+ ('nexora-wedding-bloom','Свадебный букет','Символ виртуальной церемонии.','wedding','uncommon',100)
+ON CONFLICT (slug) DO NOTHING;
+
+INSERT INTO achievements (slug,name,description,reward_coins)
+VALUES
+ ('first-steps','Первые шаги','Создай первого персонажа.',25),
+ ('social-butterfly','На связи','Отправь первое сообщение.',10),
+ ('new-friend','Новый друг','Добавь первого друга.',30),
+ ('first-purchase','Первая покупка','Купи первый предмет.',15)
+ON CONFLICT (slug) DO NOTHING;
