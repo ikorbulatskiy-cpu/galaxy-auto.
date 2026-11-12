@@ -56,15 +56,16 @@ test("migration runner records each version before future runs", () => {
   assert.match(runner, /Already applied:/);
 });
 
-test("registration enforces adulthood and creates a starter wallet", () => {
+test("passwordless registration requires adult confirmation and creates a starter character", () => {
   const auth = read("src/auth.js");
-  assert.match(auth, /ageAtLeast18\(birthDate\)/);
+  assert.match(auth, /adultConfirmed: z\.literal\(true\)/);
+  assert.match(auth, /hashToken\(normalizeCharacterCode\(characterCode\)\)/);
   assert.match(auth, /INSERT INTO wallet_balances \(user_id,coins\) VALUES \(\$1,500\)/);
-  assert.match(auth, /INSERT INTO characters \(user_id,name,is_active\)/);
+  assert.match(auth, /INSERT INTO characters \(user_id,name,gender,appearance,is_active\)/);
   assert.match(auth, /INSERT INTO user_locations \(user_id,planet_id\)/);
-  assert.match(auth, /email_verified_at/);
+  assert.match(auth, /character_code_hash/);
+  assert.doesNotMatch(auth, /bcrypt|password_hash.*VALUES/);
 });
-
 
 test("travel and visual item controls are wired to authenticated APIs", () => {
   const html = read("public/index.html");
@@ -205,12 +206,29 @@ test("photo uploads are authenticated, size-limited and signature-checked", () =
   assert.match(migration, /CREATE TABLE IF NOT EXISTS media_assets/);
 });
 
-test("registration keeps the form reference across await and validates 18+ dates", () => {
+test("registration keeps the form reference and sends explicit 18+ confirmation", () => {
   const html = read("public/index.html");
   const handler = html.slice(html.indexOf('$("#auth-form").addEventListener("submit"'), html.indexOf("async function loadApp"));
   assert.match(handler, /const form=e\.currentTarget/);
   assert.match(handler, /form\.reset\(\)/);
   assert.doesNotMatch(handler, /e\.currentTarget\.reset/);
-  assert.match(handler, /Регистрация доступна только с 18 лет/);
-  assert.match(handler, /getUTCFullYear\(\)/);
+  assert.match(handler, /adultConfirmed:f\.get\("adultConfirmed"\)==="yes"/);
+  assert.match(html, /name="adultConfirmed"/);
+});
+
+
+test("avatar editor supports live 2D customization and motion controls", () => {
+  const html = read("public/index.html");
+  const game = read("src/game.js");
+  const motion = read("public/avatar-motion.js");
+  const css = read("public/avatar-motion.css");
+  for (const field of ["body","head","skinTone","hair","hairColor","eyes","eyeStyle","expression","outfit","shoes"]) {
+    assert.match(html, new RegExp('name="' + field + '"'));
+  }
+  assert.match(html, /loadAvatarPreview\(draft\)/);
+  assert.match(html, /look\.eyeStyle==="wide"/);
+  assert.match(html, /equipped\.some\(x=>x\.category==="accessory"\)/);
+  assert.match(game, /eyeStyle: z\.enum/);
+  assert.match(motion, /nx-motion-dance/);
+  assert.match(css, /@keyframes nxDance/);
 });
