@@ -65,6 +65,8 @@ test("PostgreSQL migrations, reward triggers and relationship exclusivity", { sk
     assert.deepEqual([repA.authority,repA.popularity,repA.experience],[3,6,16]);
     assert.deepEqual([repB.authority,repB.popularity,repB.experience],[2,3,10]);
     assert.deepEqual([repC.authority,repC.popularity,repC.experience],[1,2,5]);
+    const characterProgress = await client.query("SELECT experience,level FROM characters WHERE id=$1",[character.rows[0].id]);
+    assert.equal(Number(characterProgress.rows[0].experience),16);
     await client.query("SAVEPOINT relationship_conflict");
     await assert.rejects(
       client.query("INSERT INTO relationships(requester_id,addressee_id,status) VALUES($1,$2,'pending')",[a,c]),
