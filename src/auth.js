@@ -7,7 +7,7 @@ const router = express.Router();
 const COOKIE_NAME = "nexora_session";
 const SESSION_DAYS = 14;
 const isProduction = process.env.NODE_ENV === "production";
-const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const CODE_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 
 const registerSchema = z.object({
   username: z.string().trim().min(3).max(24).regex(/^[\p{L}\p{N}_-]+$/u),
@@ -15,7 +15,7 @@ const registerSchema = z.object({
   adultConfirmed: z.literal(true)
 });
 const loginSchema = z.object({
-  characterCode: z.string().trim().min(10).max(24)
+  characterCode: z.string().trim().min(9).max(24)
 });
 
 function hashToken(value) {
@@ -25,13 +25,11 @@ function randomToken() {
   return crypto.randomBytes(32).toString("base64url");
 }
 function createCharacterCode() {
-  const bytes = crypto.randomBytes(16);
   let code = "";
-  for (let i = 0; i < bytes.length; i++) {
-    if (i && i % 4 === 0) code += "-";
-    code += CODE_ALPHABET[bytes[i] & 31];
+  for (let i = 0; i < 9; i++) {
+    code += CODE_ALPHABET[crypto.randomInt(0, CODE_ALPHABET.length)];
   }
-  return "NXR-" + code;
+  return code;
 }
 function normalizeCharacterCode(value) {
   return String(value || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -120,7 +118,7 @@ router.post("/login", async (req, res, next) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Введите код персонажа." });
   const normalizedCode = normalizeCharacterCode(parsed.data.characterCode);
-  if (!/^NXR[A-Z0-9]{16}$/.test(normalizedCode)) {
+  if (!/^(?:[A-Z0-9]{9}|NXR[A-Z0-9]{16})$/.test(normalizedCode)) {
     return res.status(401).json({ error: "Неверный код персонажа." });
   }
   let client;
