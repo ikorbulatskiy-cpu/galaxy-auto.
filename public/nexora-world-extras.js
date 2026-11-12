@@ -55,6 +55,15 @@
   }
   window.addEventListener("nexora:planet-modules",e=>{const names={magic:"Магия",defender:"Защитник",games:"Игры",horoscope:"Гороскопы",love:"Любовный помощник"};const active=(e.detail?.modules||[]).map(k=>names[k]||k);const note=document.createElement("div");note.className="nx-planet-module-note";note.textContent=active.length?"! На планете установлены модули: "+active.join(", "):"! Дополнительные модули не установлены.";const log=$("#nx-chat-log");if(log){log.append(note);log.scrollTo({top:log.scrollHeight,behavior:"smooth"})}});
   const scan=()=>{installChat();installCarousel();installDrawer()};new MutationObserver(scan).observe(root,{childList:true,subtree:true});scan();updateUnreadMail();setInterval(updateUnreadMail,30000);
-  function showCharacterInfo(name){showModal("Информация о персонаже",'<p>'+safe(name)+'</p><p class="muted">Персонаж находится в текущей комнате NEXORA.</p><div class="nx-dialog-actions"><button type="button" data-close>Закрыть</button></div>');}
+  async function showCharacterInfo(name,userId){
+    const box=showModal("Информация о персонаже",'<p>'+safe(name)+'</p><p class="muted">Загружаем профиль…</p>');
+    if(!userId)return;
+    try{
+      const data=await window.NexoraAPI.request("/api/social/users/"+encodeURIComponent(userId));
+      const p=data.profile||{};
+      const interests=Array.isArray(p.interests)?p.interests.join(", "):"";
+      box.querySelector("[data-content]").innerHTML='<h2>Информация о персонаже</h2><p><b>'+safe(p.display_name||p.character_name||name)+'</b> · @'+safe(p.username)+'</p><p>Город: '+safe(p.city||"Не указан")+'</p><p>Уровень: '+Number(p.level||1)+' · Авторитет: '+Number(p.authority||0)+'</p><p>'+safe(p.bio||"Описание не заполнено.")+'</p><p>Интересы: '+safe(interests||"Не указаны")+'</p><div class="nx-dialog-actions"><button type="button" data-close>Закрыть</button></div>';
+    }catch(error){box.querySelector("[data-content]").innerHTML='<h2>Информация о персонаже</h2><p>'+safe(name)+'</p><p class="muted">'+safe(error.message||"Профиль недоступен.")+'</p><div class="nx-dialog-actions"><button type="button" data-close>Закрыть</button></div>';}
+  }
   window.NexoraExtras=Object.freeze({openPlanetModal,openMyPlanets,showCharacterInfo});
 })();
