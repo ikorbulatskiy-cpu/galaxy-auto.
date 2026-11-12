@@ -188,13 +188,13 @@ function attachMovement(server) {
           joinedRoom = packet.roomId;
           const position = await pool.query(
             `INSERT INTO room_player_positions(room_id,user_id,x,y)
-             VALUES($1,$2,50 + random()*36,65 + random()*22)
-             ON CONFLICT(room_id,user_id) DO UPDATE SET updated_at=NOW()
+             VALUES($1,$2,50 + random()*36,78)
+             ON CONFLICT(room_id,user_id) DO UPDATE SET y=78,updated_at=NOW()
              RETURNING x,y`,
             [joinedRoom, user.id]
           );
           lastX = Number(position.rows[0].x);
-          lastY = Number(position.rows[0].y);
+          lastY = 78;
           lastMoveAt = Date.now();
           if (!peers.has(joinedRoom)) peers.set(joinedRoom, new Set());
           peers.get(joinedRoom).add(socket);
@@ -240,9 +240,9 @@ function attachMovement(server) {
       moveTimes = moveTimes.filter(time => now - time < 1000);
       if (moveTimes.length >= 12 || now - lastMoveAt < 60) return;
       const x = Number(packet.x);
-      const y = Number(packet.y);
+      const y = 78;
       const elapsed = now - lastMoveAt;
-      if (!isValidPosition(x, y) || !isWithinMovementSpeed(lastX, lastY, x, y, elapsed)) return;
+      if (!Number.isFinite(x) || x < 2 || x > 98 || !isWithinMovementSpeed(lastX, lastY, x, y, elapsed)) return;
       moveTimes.push(now);
       lastMoveAt = now;
       lastX = x;
