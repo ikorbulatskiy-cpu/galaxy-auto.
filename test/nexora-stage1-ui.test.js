@@ -1,0 +1,38 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
+
+const read = file => fs.readFileSync(path.join(__dirname, "..", file), "utf8");
+
+test("2D world client parses and mounts its game screen", () => {
+  const client = read("public/nexora-world.js");
+  assert.doesNotThrow(() => new vm.Script(client));
+  for (const selector of ["nx-room-select", "nx-events-panel", "nx-event-list", "nx-avatars", "nx-player-list", "nx-chat-log", "nx-bottom-nav"]) {
+    assert.ok(client.includes(selector), "missing game-screen element " + selector);
+  }
+});
+
+test("room switching uses the authenticated room API and WebSocket", () => {
+  const client = read("public/nexora-world.js");
+  assert.match(client, /\/api\/game\/rooms\?planet=/);
+  assert.match(client, /roomSelect\.onchange/);
+  assert.match(client, /type:"join_room"/);
+  assert.match(client, /type:"room_message"/);
+  assert.match(client, /\/api\/game\/rooms\/"\+room\.id\+"\/presence/);
+});
+
+test("event feed renders untrusted event text as text, not HTML", () => {
+  const client = read("public/nexora-world.js");
+  assert.match(client, /function addEvent\(message,kind="info"\)/);
+  assert.match(client, /body\.textContent=message/);
+  assert.match(client, /while\(box\.children\.length>18\)/);
+});
+
+test("mobile and desktop styles include room and event controls", () => {
+  const css = read("public/nexora-world.css");
+  assert.match(css, /\.nx-room-select/);
+  assert.match(css, /\.nx-events-panel/);
+  assert.match(css, /@media\(max-width:700px\)/);
+});
