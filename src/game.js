@@ -151,7 +151,7 @@ router.get("/rooms/:roomId/presence", requireSession, async (req,res,next)=>{
   if (!/^[0-9a-f-]{36}$/i.test(req.params.roomId)) return res.status(400).json({error:"Некорректная комната."});
   try {
     const result=await pool.query(
-      "SELECT rp.user_id,u.username,COALESCE(c.name,u.username) AS character_name,MAX(rp.connected_at) AS connected_at " +
+      "SELECT rp.user_id,u.username,COALESCE(c.name,u.username) AS character_name,c.appearance AS character_appearance,MAX(rp.connected_at) AS connected_at " +
       "FROM room_presence rp JOIN users u ON u.id=rp.user_id " +
       "JOIN rooms r ON r.id=rp.room_id AND r.is_active=TRUE JOIN planets p ON p.id=r.planet_id AND p.is_active=TRUE JOIN user_locations l ON l.planet_id=r.planet_id AND l.user_id=$2 " +
       "LEFT JOIN characters c ON c.user_id=u.id AND c.is_active=TRUE " +
