@@ -1,0 +1,28 @@
+name: NEXORA backend checks
+
+on:
+  push:
+    branches:
+      - love-galaxy-redesign
+  pull_request:
+    branches:
+      - love-galaxy-redesign
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+      - name: Check server and API syntax
+        run: |
+          node --check server.js
+          for file in src/*.js; do
+            node --check "$file"
+          done
