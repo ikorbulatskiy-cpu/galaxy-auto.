@@ -109,3 +109,80 @@
 .nx-create-planet-dialog .field{display:block;width:100%;margin:8px 0}
 @media(max-width:700px){.nx-planet-search{width:36vw;min-width:110px}.nx-scene-meta{top:49px;font-size:10px}.nx-flight-ship{font-size:58px}.nx-aura-item{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){.nx-flight-stars,.nx-flight-ship,.nx-avatar-card:before{animation:none!important}}
+
+
+/* Classic Galaxy-inspired 2D interface skin */
+.nx-world.nx-classic{--nx-metal:#777b83;--nx-metal-dark:#34383f;--nx-edge:#a5a8ad;--nx-blue:#26394e;min-height:100vh;margin:0 calc((100vw - min(1120px,100vw - 32px))/2 * -1);width:100vw;background:#101114;color:#e6e6e6;border:1px solid #4c5056;box-shadow:none;font-family:Tahoma,Arial,sans-serif;display:flex;flex-direction:column;overflow:visible}
+.nx-classic .nx-topbar{height:auto;min-height:48px;display:flex;align-items:center;gap:10px;padding:5px 9px;background:linear-gradient(#555b63,#292d33 48%,#1c2025);border-bottom:1px solid #9ba0a7;box-shadow:inset 0 1px #ffffff55;flex-wrap:nowrap}
+.nx-classic .nx-logo{font-size:17px;letter-spacing:.5px;text-shadow:1px 1px #000;color:#f0e6c8;white-space:nowrap}
+.nx-current-planet{display:flex;flex-direction:column;min-width:95px;padding:2px 9px;border-left:1px solid #777;border-right:1px solid #111}
+.nx-current-planet small{font-size:8px;color:#b7bec8;letter-spacing:1px}.nx-current-planet b{font-size:12px;color:#ffe39a;white-space:nowrap}
+.nx-clock{font: bold 12px Tahoma;color:#d5e3f4;background:#10151b;border:1px inset #777;padding:6px 8px}
+.nx-top-actions{display:flex;align-items:center;gap:3px;margin-left:auto}
+.nx-classic .nx-icon-btn{min-width:42px;padding:4px 6px;background:linear-gradient(#626a74,#30363e);border:1px solid #9aa0a7;border-radius:2px;color:#fff;font-size:17px;line-height:17px;text-shadow:1px 1px #000;box-shadow:inset 0 1px #ffffff55}
+.nx-classic .nx-icon-btn small{display:block;font-size:8px;line-height:10px;color:#e0e0e0;text-shadow:none}
+.nx-classic .nx-account{max-width:190px;display:flex;gap:5px;font-size:10px}
+.nx-classic .nx-account #logout{padding:4px 7px;border-radius:2px;background:#363b42;border:1px solid #8b9096}
+.nx-planet-tools{display:flex;align-items:center;gap:6px;padding:5px 8px;background:#252a30;border-bottom:1px solid #555b63}
+.nx-classic .nx-planet-select{max-width:300px;min-width:120px;padding:6px 8px;border-radius:2px;border:1px solid #707780;background:#101318;color:#eee;font-size:11px}
+.nx-small-btn{padding:5px 9px;background:linear-gradient(#6a727c,#343a42);border:1px solid #969ca4;color:#fff;border-radius:2px}
+.nx-classic .nx-online{margin-left:auto;padding:5px 8px;border-radius:2px;background:#14181d;border:1px solid #626970;font-size:10px}
+.nx-classic .nx-chat-panel{background:#090a0c;border:0;border-bottom:1px solid #73777c;display:flex;flex-direction:column}
+.nx-classic .nx-chat-title{display:flex;justify-content:space-between;padding:5px 9px;background:linear-gradient(#515963,#272c32);border-bottom:1px solid #8a9098;color:#ffe29a;font-size:11px;text-shadow:1px 1px #000}
+.nx-chat-hint{color:#c2c8cf;font-size:9px;font-weight:400}
+.nx-classic .nx-chat-log{height:clamp(120px,19vh,190px);background:#050607;color:#f1f1f1;padding:6px 9px;font:12px/1.45 Tahoma,Arial,sans-serif;border:0;border-radius:0;scrollbar-color:#777 #17191c;scrollbar-width:thin}
+.nx-classic .nx-chat-line{padding:1px 0;border-bottom:1px solid #ffffff08}
+.nx-classic .nx-chat-line b{color:#ffcf68}.nx-classic .nx-chat-line:nth-child(3n) b{color:#9ec8ff}.nx-classic .nx-chat-line:nth-child(4n) b{color:#e99be4}.nx-classic .nx-chat-line small{color:#7c858e}
+.nx-classic .nx-chat-send{padding:5px 7px;background:#20252b;border-top:1px solid #555d66;gap:5px}
+.nx-classic .nx-chat-send input{margin:0;padding:7px 8px;border-radius:2px;background:#07090b;border:1px solid #626a73;color:#fff;font-size:12px}
+.nx-classic .nx-chat-send button{padding:0 13px;border-radius:2px;background:linear-gradient(#737b85,#3c424a);border:1px solid #a2a8ae;color:#fff;font-size:11px}
+.nx-eventbar{min-height:26px;display:flex;align-items:center;gap:13px;padding:4px 9px;background:linear-gradient(#333941,#1b2025);border-bottom:1px solid #70767d;color:#bfc6ce;font-size:9px;flex-wrap:wrap}
+.nx-eventbar b{color:#e6d5a9;font-weight:500}.nx-event-online{color:#a8e5b1}.nx-event-status{display:flex;align-items:center;gap:5px}.nx-event-status .nx-dot{width:6px;height:6px;box-shadow:none}.nx-event-system{margin-left:auto;color:#d6c28d}
+.nx-classic .nx-scene{flex:1;min-height:360px;height:clamp(360px,48vh,610px);background:#273347;border-top:1px solid #111;overflow:hidden}
+.nx-classic .nx-scene:before{opacity:.42}
+.nx-classic .nx-scene-label,.nx-classic .nx-scene-meta{border-radius:2px;background:#111923dd;border:1px solid #8a929b;color:#f0dfad}
+.nx-classic .nx-player-list{position:absolute;right:8px;top:8px;z-index:4;width:145px;max-height:calc(100% - 90px);overflow:auto;background:#10151bdc;border:1px solid #818890;padding:6px;border-radius:0;font-size:10px}
+.nx-classic .nx-player-list h4{font-size:10px;margin:0 0 4px;color:#e9d39b}.nx-classic .nx-player{padding:3px 0;border-bottom:1px solid #ffffff15}
+.nx-classic .nx-player svg{width:18px;height:25px}
+.nx-classic .nx-avatars{left:2%;right:160px;bottom:62px;justify-content:space-around}
+.nx-classic .nx-avatar-card{min-width:64px;cursor:default}
+.nx-classic .nx-avatar-name{border-radius:2px;background:#080b10e8;border:1px solid #a5a8ad;padding:2px 5px;font-size:10px}
+.nx-classic .nx-avatar-card.me .nx-avatar-name{color:#ffe49c;border-color:#e0c16b}
+.nx-fav-toggle{position:absolute;z-index:4;top:0;right:2px;border:1px solid #777;background:#171b20;color:#aaa;font-size:12px;padding:0 3px;line-height:15px;border-radius:0}
+.nx-fav-toggle.is-favorite{color:#ffe16c;border-color:#d2b45c}
+.nx-rank-mark{position:absolute;z-index:3;top:-17px;right:calc(50% - 21px);font-size:14px;color:#ffe08a;text-shadow:0 0 5px #ffe08a}
+.nx-classic .nx-bottom-nav{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px;padding:4px;background:linear-gradient(#4c535c,#22272d);border-top:1px solid #a0a4aa}
+.nx-classic .nx-bottom-nav button{border-radius:2px;padding:4px 3px;background:linear-gradient(#626a73,#343a42);border:1px solid #9299a1;box-shadow:inset 0 1px #ffffff55;color:#f0f0f0;font-size:10px;font-weight:500}
+.nx-classic .nx-bottom-nav button span{display:inline-block;font-size:14px;margin:0 5px 0 0;vertical-align:middle}
+.nx-classic .nx-statusbar{padding:4px 8px;background:#101317;border-top:1px solid #555d66;color:#828b95;font-size:9px;justify-content:space-between}
+.nx-classic .nx-menu-panel,.nx-classic .nx-favorites-panel,.nx-classic .nx-help-panel{position:absolute;z-index:20;top:48px;right:8px;width:min(370px,calc(100% - 16px));padding:10px;background:#20262d;border:1px solid #a1a7ad;border-radius:2px;box-shadow:0 8px 25px #000c}
+.nx-classic .nx-menu-panel[hidden],.nx-classic .nx-favorites-panel[hidden],.nx-classic .nx-help-panel[hidden]{display:none}
+.nx-classic .nx-menu-heading{padding:0 0 8px;color:#f1dba1;font-size:12px;border-bottom:1px solid #555d66}
+.nx-classic .nx-menu-heading button{font-size:20px}
+.nx-classic .nx-menu-grid button{border-radius:2px;background:linear-gradient(#4d5660,#30363e);border:1px solid #808890;font-size:11px;padding:8px}
+.nx-classic .nx-favorites-panel{top:50px;right:8px}.nx-favorites-list{padding-top:8px;font-size:11px;color:#d9d9d9}.nx-favorite-row{display:flex;justify-content:space-between;padding:6px 2px;border-bottom:1px solid #ffffff18}.nx-favorite-row button{border:1px solid #858b91;background:#363d45;color:#fff;border-radius:2px}
+.nx-classic .nx-help-panel{top:50px;max-width:330px;font-size:11px;line-height:1.5;color:#ddd}
+@media(max-width:700px){
+ .nx-world.nx-classic{min-height:100vh}
+ .nx-classic .nx-topbar{flex-wrap:wrap;gap:5px;padding:5px}
+ .nx-classic .nx-logo{font-size:14px}
+ .nx-current-planet{min-width:75px;padding:2px 5px}
+ .nx-clock{padding:4px 5px;font-size:10px}
+ .nx-top-actions{order:3;width:100%;justify-content:space-between;margin:0}
+ .nx-classic .nx-icon-btn{flex:1;min-width:0;padding:3px 2px;font-size:15px}
+ .nx-classic .nx-icon-btn small{font-size:8px}
+ .nx-classic .nx-account{max-width:45%;margin-left:auto}
+ .nx-planet-tools{gap:4px}.nx-classic .nx-planet-select{flex:1;max-width:none}
+ .nx-classic .nx-chat-log{height:clamp(105px,17vh,155px);font-size:11px}
+ .nx-eventbar{gap:8px;font-size:8px}.nx-event-system{display:none}
+ .nx-classic .nx-scene{min-height:320px;height:42vh}
+ .nx-classic .nx-player-list{width:100px;right:4px;top:4px;max-height:calc(100% - 80px)}
+ .nx-classic .nx-avatars{right:108px;left:3px;bottom:50px;justify-content:flex-start;overflow-x:auto}
+ .nx-classic .nx-avatar-card{min-width:55px}.nx-classic .nx-avatar-card svg{width:48px;height:96px}
+ .nx-classic .nx-avatar-name{font-size:8px;max-width:62px}
+ .nx-classic .nx-bottom-nav{gap:2px;padding:3px}
+ .nx-classic .nx-bottom-nav button{font-size:9px;padding:6px 1px}
+ .nx-classic .nx-bottom-nav button span{display:block;font-size:15px;margin:0 0 2px}
+ .nx-classic .nx-menu-panel,.nx-classic .nx-favorites-panel,.nx-classic .nx-help-panel{top:96px;right:5px}
+}
+@media(max-width:380px){.nx-classic .nx-account{max-width:40%}.nx-current-planet{min-width:68px}.nx-classic .nx-icon-btn small{font-size:7px}.nx-classic .nx-player-list{width:86px}.nx-classic .nx-avatars{right:94px}}
