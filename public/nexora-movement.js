@@ -193,7 +193,7 @@
   const observer = new MutationObserver(() => {
     installScene();
     const active = document.querySelector("#nx-avatars .nx-avatar-card.me");
-    if (active && !ownName) ownName = active.dataset.playerUsername;
+    if (active && active.dataset.playerUsername) ownName = active.dataset.playerUsername;
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
   installScene();
