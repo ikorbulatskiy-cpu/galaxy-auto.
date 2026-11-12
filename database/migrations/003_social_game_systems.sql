@@ -421,6 +421,8 @@ RETURNS VOID LANGUAGE plpgsql AS $$
 DECLARE
   used_today INTEGER;
 BEGIN
+  INSERT INTO reputation(user_id) VALUES(p_user_id) ON CONFLICT(user_id) DO NOTHING;
+  PERFORM 1 FROM reputation WHERE user_id=p_user_id FOR UPDATE;
   IF p_daily_cap IS NOT NULL THEN
     SELECT COUNT(*)::int INTO used_today
     FROM reputation_events
