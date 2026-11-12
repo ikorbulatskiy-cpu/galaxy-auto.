@@ -112,7 +112,6 @@ function attachRealtime(server) {
   wss.on("connection", async (socket, request) => {
     let user;
     let connectionId;
-    let joinedRoom = null;
     try {
       const origin = request.headers.origin;
       const host = request.headers.host;
@@ -138,7 +137,7 @@ function attachRealtime(server) {
 
     let messageTimes = [];
     const heartbeat = setInterval(() => {
-      if (joinedRoom && socket.readyState === 1) {
+      if (socket.joinedRoom && socket.readyState === 1) {
         pool.query("UPDATE room_presence SET connected_at=NOW() WHERE connection_id=$1", [connectionId]).catch(() => {});
       }
     }, 30000);
@@ -187,21 +186,21 @@ function attachRealtime(server) {
             );
             await client.query("COMMIT");
           } finally { client.release(); }
-          const previousRoom = joinedRoom;
+          const previousRoom = socket.joinedRoom;
           if (previousRoom && rooms.has(previousRoom)) {
             rooms.get(previousRoom).delete(socket);
             if (!rooms.get(previousRoom).size) rooms.delete(previousRoom);
             publish({ type: "presence", action: "left", roomId: previousRoom, userId: user.id, connectionId });
           }
-          joinedRoom = packet.roomId;
-          socket.joinedRoom = joinedRoom;
-          if (!rooms.has(joinedRoom)) rooms.set(joinedRoom,new Set());
-          rooms.get(joinedRoom).add(socket);
-          publish({ type: "presence", action: "joined", roomId: joinedRoom, userId: user.id, username: user.username });
-          socket.send(JSON.stringify({type:"joined_room",roomId:joinedRoom}));
+          socket.joinedRoom = packet.roomId;
+          socket.socket.joinedRoom = socket.joinedRoom;
+          if (!rooms.has(socket.joinedRoom)) rooms.set(socket.joinedRoom,new Set());
+          rooms.get(socket.joinedRoom).add(socket);
+          publish({ type: "presence", action: "joined", roomId: socket.joinedRoom, userId: user.id, username: user.username });
+          socket.send(JSON.stringify({type:"joined_room",roomId:socket.joinedRoom}));
         } catch { socket.send(JSON.stringify({type:"error",message:"Не удалось войти в комнату."})); }
       }
-      if (packet.type === "room_message" && joinedRoom && typeof packet.body === "string") {
+      if (packet.type === "room_message" && socket.joinedRoom && typeof packet.body === "string") {
         const body = packet.body.trim();
         if (!body || body.length > 1000) return;
         messageTimes.push(now);
@@ -211,29 +210,29 @@ function attachRealtime(server) {
             [user.id]
           );
           if (muted.rowCount) { socket.send(JSON.stringify({type:"error",message:"Отправка сообщений ограничена."})); return; }
-          const member = await pool.query("SELECT 1 FROM room_presence WHERE connection_id=$1 AND user_id=$2 AND room_id=$3",[connectionId,user.id,joinedRoom]);
+          const member = await pool.query("SELECT 1 FROM room_presence WHERE connection_id=$1 AND user_id=$2 AND room_id=$3",[connectionId,user.id,socket.joinedRoom]);
           if (!member.rowCount) return;
           const inserted = await pool.query(
             "INSERT INTO room_messages (room_id,user_id,character_id,body) SELECT $1,$2,id,$3 FROM characters WHERE user_id=$2 AND is_active=TRUE RETURNING id,room_id,body,created_at,character_id",
-            [joinedRoom,user.id,body]
+            [socket.joinedRoom,user.id,body]
           );
           if (!inserted.rowCount) {
             const fallback = await pool.query(
               "INSERT INTO room_messages (room_id,user_id,body) VALUES ($1,$2,$3) RETURNING id,room_id,body,created_at,character_id",
-              [joinedRoom,user.id,body]
+              [socket.joinedRoom,user.id,body]
             );
             inserted.rows = fallback.rows;
           }
-          publish({ type: "room_message", roomId: joinedRoom, message: { ...inserted.rows[0], username: user.username } });
+          publish({ type: "room_message", roomId: socket.joinedRoom, message: { ...inserted.rows[0], username: user.username } });
         } catch { socket.send(JSON.stringify({type:"error",message:"Сообщение не сохранено."})); }
       }
     });
 
     socket.on("close", async () => {
       clearInterval(heartbeat);
-      if (joinedRoom && rooms.has(joinedRoom)) {
-        rooms.get(joinedRoom).delete(socket);
-        if (!rooms.get(joinedRoom).size) rooms.delete(joinedRoom);
+      if (socket.joinedRoom && rooms.has(socket.joinedRoom)) {
+        rooms.get(socket.joinedRoom).delete(socket);
+        if (!rooms.get(socket.joinedRoom).size) rooms.delete(socket.joinedRoom);
       }
       if (connectionId) {
         try {
