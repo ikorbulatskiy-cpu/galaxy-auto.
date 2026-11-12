@@ -79,6 +79,33 @@ NEXORA — социальная платформа знакомств и вир�
 
 Для production настройте `NODE_ENV=production`, `APP_BASE_URL`, SMTP-переменные и HTTPS.
 
+
+## Социальные и игровые системы (foundation)
+
+Перед использованием новых API примените все миграции командой `npm run db:migrate`. Все маршруты ниже требуют подтверждённую сессию, если явно не указано иное.
+
+- `GET /api/game/planets` — планеты, число комнат и онлайн.
+- `GET /api/game/rooms?planet=<slug>` — комнаты выбранной планеты.
+- `POST /api/world/travel` — перемещение между планетами. JSON: `{"planetSlug":"love-planet"}`.
+- `PATCH /api/game/characters/:id` — внешность персонажа в JSON-поле `appearance`.
+- `GET /api/features/catalog`, `GET /api/features/inventory` — каталог и инвентарь.
+- `POST /api/features/characters/:characterId/equip` — надеть или снять предмет. JSON: `{"itemId":"UUID","equipped":true}`.
+- `POST /api/features/transfer` — перевод валюты с обязательным UUID `idempotencyKey`.
+- `POST /api/features/shop/buy` — покупка предмета с обязательным UUID `idempotencyKey` и `characterId`.
+- `POST /api/features/shop/gift`, `GET /api/features/gifts`, `POST /api/features/gifts/:giftId/claim` — отправка и получение подарков.
+- `GET /api/features/clans`, `POST /api/features/clans`, `POST /api/features/clans/:clanId/apply` — кланы и заявки.
+- `GET /api/features/clans/:clanId/members`, `GET /api/features/clans/:clanId/applications`, `POST /api/features/clans/:clanId/decide` — управление составом и заявками.
+- `POST /api/features/clans/:clanId/bank`, `GET /api/features/clans/:clanId/ledger` — операции кланового банка и журнал.
+- `GET /api/features/pets`, `POST /api/features/pets`, `POST /api/features/pets/:petId/care` — питомцы и уход.
+- `GET /api/features/blogs`, `POST /api/features/blogs`, `PATCH /api/features/blogs/:postId`, `DELETE /api/features/blogs/:postId`, `POST /api/features/blogs/:postId/like`, `POST /api/features/blogs/:postId/comments` — публикации и взаимодействия. Фотографии пока передаются HTTPS-ссылками; загрузка в собственное файловое хранилище ещё не подключена.
+- `GET /api/features/relationships`, `POST /api/features/relationships/propose`, `POST /api/features/relationships/:id/respond`, `POST /api/features/relationships/:id/divorce` — добровольные отношения.
+- `GET /api/features/leaderboards/:kind` — рейтинги `authority`, `experience`, `popularity`, `clans`.
+- `GET /api/features/achievements` — каталог достижений.
+- `POST /api/features/mini-games/:slug/score` — запись непроверенного результата; он не участвует в наградах и достоверных рейтингах.
+- `GET /api/features/admin/reports`, `POST /api/features/admin/reports/:id/resolve`, `POST /api/features/admin/users/:userId/punish`, `GET /api/features/admin/logs` — API модерации. Доступ ограничен ролями.
+
+Виртуальная валюта не имеет денежной стоимости. Платежи за реальные деньги не реализованы. Визуальные предметы пока представлены каталогом метаданных и слотами экипировки; графические ассеты и хранилище изображений требуют отдельного этапа.
+
 ## Клиентский интерфейс
 
 Главная страница автоматически проверяет сессию. После входа открывается личный кабинет с редактированием анкеты, поиском публичных профилей, заявками в друзья и личными диалогами. Личные сообщения пока обновляются опросом API. Для общего чата комнат добавлены WebSocket endpoint и клиентский интерфейс с выбором комнаты, историей и отправкой сообщений в реальном времени.
