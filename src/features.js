@@ -17,6 +17,16 @@ function ownerOrAdmin(req,res,next) {
 }
 router.use(requireSession);
 
+router.get("/recipients",async(req,res,next)=>{
+ const q=typeof req.query.q==="string"?req.query.q.trim().slice(0,40):"";
+ try{
+  const r=await pool.query(
+   "SELECT u.id,u.username,COALESCE(p.display_name,u.username) AS display_name FROM users u LEFT JOIN profiles p ON p.user_id=u.id WHERE u.status='active' AND u.email_verified_at IS NOT NULL AND u.id<>$1 AND ($2='' OR u.username ILIKE '%'||$2||'%' OR p.display_name ILIKE '%'||$2||'%') AND NOT EXISTS(SELECT 1 FROM blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$1)) ORDER BY u.username LIMIT 100",
+   [req.user.id,q]
+  );
+  res.json({users:r.rows});
+ }catch(e){next(e)}
+});
 router.get("/catalog", async (_req,res,next) => {
   try { const r=await pool.query("SELECT id,slug,name,description,category,rarity,price_coins,price_diamonds,asset_url FROM avatar_items WHERE is_active=TRUE ORDER BY category,price_coins"); res.json({items:r.rows}); }
   catch(e){next(e)}
