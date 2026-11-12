@@ -95,3 +95,16 @@ test("dynamic dashboard lists bind handlers through the multi-element selector",
   assert.match(html, /\$\$\("\.tabpane"\)\.forEach/);
   assert.match(html, /\$\$\(\s*"\[data-room\]"\s*\)\.forEach/);
 });
+
+
+test("recipient lookup, wedding rewards and clan bank retries are wired", () => {
+  const html = read("public/index.html");
+  const features = read("src/features.js");
+  const migration = read("database/migrations/003_social_game_systems.sql");
+  assert.match(features, /router\.get\("\/recipients"/);
+  assert.match(html, /data-recipient-select/);
+  assert.match(features, /nexora-wedding-ring/);
+  assert.match(features, /idempotencyKey:idempotency/);
+  assert.match(migration, /clan_transactions_idempotency_idx/);
+  assert.match(migration, /ADD COLUMN IF NOT EXISTS idempotency_key UUID/);
+});
