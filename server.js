@@ -63,8 +63,8 @@ app.get("/api/status", async (_req, res) => {
   res.status(database === "connected" ? 200 : 503).json({
     online: true,
     app: "NEXORA",
-    version: "0.5.0",
-    stage: "social-game-systems-foundation",
+    version: "0.6.0",
+    stage: "social-game-world-foundation",
     database,
     message: database === "connected" ? "NEXORA API is ready" : "Database connection is not configured"
   });
