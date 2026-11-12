@@ -99,7 +99,7 @@ NEXORA — социальная платформа знакомств и вир�
 - `GET /api/features/clans/:clanId/messages`, `POST /api/features/clans/:clanId/messages` — история и отправка сообщений клана (пока без WebSocket-доставки).
 - `POST /api/features/clans/:clanId/bank`, `GET /api/features/clans/:clanId/ledger` — операции кланового банка и журнал; банковские операции принимают UUID `idempotencyKey`.
 - `GET /api/features/pets`, `POST /api/features/pets`, `POST /api/features/pets/:petId/care` — питомцы, почасовое снижение сытости/настроения, рост уровня и пятиминутный cooldown ухода.
-- `GET /api/features/blogs`, `POST /api/features/blogs`, `PATCH /api/features/blogs/:postId`, `DELETE /api/features/blogs/:postId`, `POST /api/features/blogs/:postId/like`, `POST /api/features/blogs/:postId/comments` — публикации и взаимодействия. Фотографии можно передавать HTTPS-ссылками или загружать напрямую в S3-совместимое хранилище через подписанные URL; для загрузки требуется настроить переменные S3.
+- `GET /api/features/blogs`, `POST /api/features/blogs`, `PATCH /api/features/blogs/:postId`, `DELETE /api/features/blogs/:postId`, `POST /api/features/blogs/:postId/like`, `POST /api/features/blogs/:postId/comments` — публикации и взаимодействия. Фотографии можно передавать HTTPS-ссылками или загружать напрямую в приватное S3-совместимое хранилище через подписанные URL; для загрузки требуется настроить переменные S3.
 - `GET /api/features/relationships`, `POST /api/features/relationships/propose`, `POST /api/features/relationships/:id/respond`, `POST /api/features/relationships/:id/ceremony`, `POST /api/features/relationships/:id/divorce` — предложение, помолвка, виртуальная свадебная церемония, обручальные кольца и развод.
 - `GET /api/features/leaderboards/:kind` — рейтинги `authority`, `experience`, `popularity`, `clans`. Репутация и опыт персонажа растут от подтверждённых игровых событий с дневными лимитами.
 - `GET /api/features/achievements` — каталог достижений.
@@ -129,17 +129,17 @@ NEXORA — социальная платформа знакомств и вир�
 
 ## Хранилище фотографий (S3-compatible / Cloudflare R2)
 
-Фотографии загружаются напрямую в собственный S3-совместимый bucket через короткоживущую подписанную ссылку. Файлы ограничены 8 МБ и форматами JPEG, PNG и WebP; сервер проверяет владельца, размер, MIME и сигнатуру файла. В PostgreSQL сохраняются только метаданные и публичный URL.
+Фотографии загружаются напрямую в собственный S3-совместимый bucket через короткоживущую подписанную ссылку. Файлы ограничены 8 МБ и форматами JPEG, PNG и WebP; сервер проверяет владельца, размер, MIME и сигнатуру файла. В PostgreSQL сохраняются метаданные и внутренний URL приложения; изображения выдаются через авторизованный маршрут с временной подписанной ссылкой.
 
 Добавьте в серверное окружение:
 - `S3_BUCKET` — имя bucket.
 - `S3_ENDPOINT` — endpoint S3 API вашего хранилища.
 - `S3_REGION` — регион (для R2 обычно `auto`).
 - `S3_ACCESS_KEY_ID` и `S3_SECRET_ACCESS_KEY` — отдельные ключи доступа только к нужному bucket.
-- `MEDIA_PUBLIC_BASE_URL` — HTTPS-домен, с которого bucket отдаёт изображения.
+- Загрузки хранятся в приватном bucket; публичный доступ на чтение не включай. Изображения выдаются через авторизованный `/api/media/:assetId` с короткоживущей подписанной ссылкой.
 - `DATABASE_URL` — PostgreSQL connection string.
 
-Настройте CORS bucket: разрешите `PUT` с домена приложения и заголовок `Content-Type`. Не делайте ключи доступа публичными и не добавляйте их в Git. Для незавершённых загрузок настройте lifecycle-удаление временных объектов. После настройки выполните `npm run db:migrate`.
+Настройте CORS bucket: разрешите `PUT` с домена приложения и заголовок `Content-Type`. Оставь bucket приватным, не включай публичное чтение. Сервер проверяет права доступа к публикации перед выдачей короткоживущей ссылки на изображение. Не делай ключи доступа публичными и не добавляй их в Git. Для незавершённых загрузок настройте lifecycle-удаление временных объектов. После настройки выполните `npm run db:migrate`.
 
 API:
 - `POST /api/media/presign` — получить URL для загрузки (JSON: `contentType`, `size`).
