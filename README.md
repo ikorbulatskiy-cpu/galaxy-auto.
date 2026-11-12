@@ -74,7 +74,7 @@ NEXORA — социальная платформа знакомств и вир�
 1. Скопируйте `.env.example` в `.env` и заполните `DATABASE_URL`.
 2. Создайте базу PostgreSQL.
 3. Установите зависимости: `npm install`.
-4. Примените схему: `npm run db:migrate`.
+4. Примените базовую схему и отслеживаемые миграции: `npm run db:migrate`. Команда ведёт `schema_migrations` и не повторяет уже применённые версии 002/003.
 5. Запустите: `npm start`.
 
 Для production настройте `NODE_ENV=production`, `APP_BASE_URL`, SMTP-переменные и HTTPS.
@@ -99,13 +99,13 @@ NEXORA — социальная платформа знакомств и вир�
 - `POST /api/features/clans/:clanId/bank`, `GET /api/features/clans/:clanId/ledger` — операции кланового банка и журнал.
 - `GET /api/features/pets`, `POST /api/features/pets`, `POST /api/features/pets/:petId/care` — питомцы и уход.
 - `GET /api/features/blogs`, `POST /api/features/blogs`, `PATCH /api/features/blogs/:postId`, `DELETE /api/features/blogs/:postId`, `POST /api/features/blogs/:postId/like`, `POST /api/features/blogs/:postId/comments` — публикации и взаимодействия. Фотографии пока передаются HTTPS-ссылками; загрузка в собственное файловое хранилище ещё не подключена.
-- `GET /api/features/relationships`, `POST /api/features/relationships/propose`, `POST /api/features/relationships/:id/respond`, `POST /api/features/relationships/:id/divorce` — добровольные отношения.
+- `GET /api/features/relationships`, `POST /api/features/relationships/propose`, `POST /api/features/relationships/:id/respond`, `POST /api/features/relationships/:id/ceremony`, `POST /api/features/relationships/:id/divorce` — предложение, помолвка, виртуальная свадебная церемония и развод.
 - `GET /api/features/leaderboards/:kind` — рейтинги `authority`, `experience`, `popularity`, `clans`.
 - `GET /api/features/achievements` — каталог достижений.
 - `POST /api/features/mini-games/:slug/score` — запись непроверенного результата; он не участвует в наградах и достоверных рейтингах.
 - `GET /api/features/admin/users?q=...`, `GET /api/features/admin/reports`, `POST /api/features/admin/reports/:id/resolve`, `POST /api/features/admin/users/:userId/punish`, `POST /api/features/admin/users/:userId/unsuspend`, `GET /api/features/admin/logs` — API модерации и управления аккаунтами. Доступ ограничен ролями.
 
-Виртуальная валюта не имеет денежной стоимости. Платежи за реальные деньги не реализованы. Визуальные предметы пока представлены каталогом метаданных и слотами экипировки; графические ассеты и хранилище изображений требуют отдельного этапа.
+Виртуальная валюта не имеет денежной стоимости. Платежи за реальные деньги не реализованы. Визуальные предметы представлены каталогом с категориями, редкостью, ценой, превью-значками и слотами экипировки; полноценные графические ассеты и 2D/3D-редактор требуют отдельного этапа.
 
 ## Клиентский интерфейс
 
@@ -120,7 +120,7 @@ NEXORA — социальная платформа знакомств и вир�
 - Восстановление пароля и повторная отправка письма.
 - Полноценный 2D/3D-редактор персонажа, графические ассеты и файловое хранилище фотографий.
 - Полный интерфейс управления ролями кланов и административными санкциями; часть этих действий пока доступна через API.
-- Автоматическое начисление достижений, проверяемая сервером логика мини-игр и полноценная свадебная церемония.
-- Автоматические интеграционные тесты и полноценная проверка безопасности. Миграции игрового мира и социальных систем добавлены, но ещё не применялись к реальной базе в этом сеансе.
+- Проверяемая сервером логика мини-игр и полноценный графический сценарий свадебного события. Базовая виртуальная церемония и автоматическое начисление четырёх достижений уже добавлены.
+- Автоматические интеграционные тесты и полноценная проверка безопасности. Миграции игрового мира и социальных систем добавлены, но в этом сеансе не применялись к реальной PostgreSQL.
 
 Текущая версия — развивающийся backend-прототип, а не готовый публичный сервис. Перед production необходимы тесты, CSRF-защита, восстановление аккаунта, политика хранения и удаления персональных данных, а также проверка всех миграций.
