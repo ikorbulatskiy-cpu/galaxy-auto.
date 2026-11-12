@@ -171,7 +171,7 @@ $("#blog-form").addEventListener("submit",async e=>{
   const f=new FormData(form);
   const photos=String(f.get("photos")||"").split(",").map(x=>x.trim()).filter(Boolean);
   const files=[...(form.querySelector('input[name="photoFiles"]').files||[])];
-  if(photos.length+files.length>5||photos.some(url=>!url.startsWith("https://")))return toast("Добавь не более пяти фотографий и используй HTTPS-ссылки.");
+  if(photos.length+files.length>5||photos.some(url=>!url.startsWith("https://")))return toast("Добавь не более пяти фотографий и используй HTTPS-ссылки.");if(f.get("visibility")!=="public"&&photos.length)return toast("Для приватных публикаций используй загруженные фото, а не внешние ссылки.");
   const uploadedAssets=[];
   let published=false;
   try{
