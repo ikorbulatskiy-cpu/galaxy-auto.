@@ -2,7 +2,11 @@
 (() => {
   "use strict";
   const mocks = {
-    planets: [{id:"mock-planet-1",slug:"newbies-1",name:"Зал новичков",settings:{theme:"sunset",modules:["magic","games","defender"]},is_current:true,rooms:1,online:3}],
+    planets: [{id:"mock-planet-1",slug:"newbies-1",name:"Зал новичков",settings:{theme:"sunset",modules:["magic","games","defender","love"]},is_current:true,is_owner:false,rooms:1,online:2}],
+    characters: [{id:"11111111-1111-4111-8111-111111111111",name:"Пилот",gender:"male",appearance:{spriteGender:"male",body:"regular",skinTone:"medium",hair:"short",hairColor:"brown",outfit:"blue",shoes:"sneakers"},aura:"none",is_active:true,level:1,experience:0}],
+    rooms: [{id:"22222222-2222-4222-8222-222222222222",slug:"central-hall",name:"Зал новичков",capacity:100,online:2}],
+    presence: [{username:"pilot",character_name:"Пилот",character_appearance:{spriteGender:"male",body:"regular",skinTone:"medium"},character_aura:"none",is_me:false},{username:"you",character_name:"Ты",character_appearance:{spriteGender:"male",body:"regular",skinTone:"medium"},character_aura:"none",is_me:true}],
+    positions: [{username:"you",x:50,y:78},{username:"pilot",x:68,y:78}],
     messages: [{id:"mock-message-1",body:"Добро пожаловать в NEXORA!",character_name:"Магия",created_at:new Date().toISOString(),system:true}],
     profiles: [{id:"mock-user-1",username:"pilot",display_name:"Пилот NEXORA",city:"Город",bio:"Демонстрационный профиль"}]
   };
@@ -17,7 +21,12 @@
     } catch (error) {
       if (method !== "GET" || !mockEnabled()) throw error;
       if (url.includes("/api/game/planets")) return {planets:mocks.planets};
+      if (url.includes("/api/game/characters")) return {characters:mocks.characters,limit:3};
+      if (url.includes("/api/game/rooms?")) return {rooms:mocks.rooms};
       if (/\/api\/game\/rooms\/[^/]+\/messages/.test(url)) return {messages:mocks.messages};
+      if (/\/api\/game\/rooms\/[^/]+\/presence/.test(url)) return {users:mocks.presence};
+      if (/\/api\/movement\/rooms\/[^/]+\/positions/.test(url)) return {positions:mocks.positions};
+      if (url.includes("/api/social/conversations")) return {conversations:[]};
       if (url.includes("/api/social/discover")) return {users:mocks.profiles};
       throw error;
     }
