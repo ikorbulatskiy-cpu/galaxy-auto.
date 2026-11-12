@@ -151,14 +151,14 @@ CREATE TABLE IF NOT EXISTS relationships (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   requester_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   addressee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  status VARCHAR(12) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','married','declined','divorced')),
+  status VARCHAR(12) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','engaged','married','declined','divorced')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CHECK(requester_id <> addressee_id)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS relationships_one_active_per_user_idx
 ON relationships(LEAST(requester_id,addressee_id),GREATEST(requester_id,addressee_id))
-WHERE status IN ('pending','married');
+WHERE status IN ('pending','engaged','married');
 CREATE UNIQUE INDEX IF NOT EXISTS relationships_requester_active_idx ON relationships(requester_id) WHERE status IN ('pending','married');
 CREATE UNIQUE INDEX IF NOT EXISTS relationships_addressee_active_idx ON relationships(addressee_id) WHERE status IN ('pending','married');
 
@@ -345,3 +345,42 @@ SELECT nexora_award_achievement(user_id,'new-friend') FROM (
   SELECT addressee_id AS user_id FROM friendships WHERE status='accepted'
 ) existing;
 SELECT nexora_award_achievement(user_id,'first-purchase') FROM (SELECT DISTINCT user_id FROM purchases) existing;
+
+
+CREATE TABLE IF NOT EXISTS wedding_ceremonies (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  relationship_id UUID NOT NULL UNIQUE REFERENCES relationships(id) ON DELETE CASCADE,
+  venue VARCHAR(80) NOT NULL,
+  vows VARCHAR(500) NOT NULL DEFAULT '',
+  completed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE OR REPLACE FUNCTION nexora_check_relationship_exclusivity()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+  first_user UUID;
+  second_user UUID;
+BEGIN
+  IF NEW.status NOT IN ('pending','engaged','married') THEN RETURN NEW; END IF;
+  first_user := LEAST(NEW.requester_id,NEW.addressee_id);
+  second_user := GREATEST(NEW.requester_id,NEW.addressee_id);
+  PERFORM pg_advisory_xact_lock(hashtext('nexora-relationship:' || first_user::text));
+  PERFORM pg_advisory_xact_lock(hashtext('nexora-relationship:' || second_user::text));
+  IF EXISTS (
+    SELECT 1 FROM relationships r
+    WHERE r.id IS DISTINCT FROM NEW.id
+      AND r.status IN ('pending','engaged','married')
+      AND (r.requester_id IN (NEW.requester_id,NEW.addressee_id)
+        OR r.addressee_id IN (NEW.requester_id,NEW.addressee_id))
+  ) THEN
+    RAISE EXCEPTION 'A user may only have one active relationship'
+      USING ERRCODE='23505';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS nexora_relationship_exclusivity ON relationships;
+CREATE TRIGGER nexora_relationship_exclusivity
+BEFORE INSERT OR UPDATE OF requester_id,addressee_id,status ON relationships
+FOR EACH ROW EXECUTE FUNCTION nexora_check_relationship_exclusivity();
