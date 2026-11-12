@@ -11,9 +11,9 @@ test("layered avatar renderer exposes ordered independent visual layers", () => 
   const context = { window: {}, Event, Object, Array };
   vm.runInNewContext(source, context);
   assert.equal(typeof context.window.NexoraAvatar.render, "function");
-  assert.deepEqual(Array.from(context.window.NexoraAvatar.catalog.layers), ["background","shoes","body","outfit","arms","neck","face","eyes","expression","hair","headwear","accessories"]);
+  assert.deepEqual(Array.from(context.window.NexoraAvatar.catalog.layers), ["background","shoes","body","neck","outfit","arms","face","eyes","expression","hair","headwear","accessories"]);
   const svg = context.window.NexoraAvatar.render({hair:"long",hairColor:"pink",outfit:"gold",shoes:"moon-boots"});
-  for (const layer of ["shoes","body","face","hair","headwear","eyes","accessories","arms"]) {
+  for (const layer of ["background","shoes","body","neck","outfit","face","eyes","expression","hair","headwear","accessories","arms"]) {
     assert.match(svg, new RegExp('data-layer="'+layer+'"'));
   }
   assert.match(svg, /#ed72b2/);
