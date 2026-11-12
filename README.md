@@ -77,7 +77,7 @@ NEXORA — социальная платформа знакомств и вир�
 4. Примените базовую схему и отслеживаемые миграции: `npm run db:migrate`. Команда записывает `001_base_schema`, `002_game_world.sql`, `003_social_game_systems.sql` и `004_media_assets.sql` в `schema_migrations` и пропускает уже применённые версии.
 5. Запустите: `npm start`.
 
-Для production настройте `NODE_ENV=production`, `APP_BASE_URL`, SMTP-переменные и HTTPS.
+Для production настройте `NODE_ENV=production`, `APP_BASE_URL`, SMTP-переменные и HTTPS. Для первоначального доступа к панели администратора можно временно задать `NEXORA_BOOTSTRAP_ADMIN_EMAIL` на email уже подтверждённого аккаунта и выполнить `npm run db:migrate`; аккаунт получит роль `developer`. После этого удалите переменную из окружения.
 
 
 ## Социальные и игровые системы (foundation)
