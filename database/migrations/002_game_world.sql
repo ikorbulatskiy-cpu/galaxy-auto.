@@ -53,6 +53,27 @@ CROSS JOIN (VALUES
 WHERE p.slug='nexora-prime'
 ON CONFLICT (planet_id,slug) DO NOTHING;
 
+INSERT INTO rooms (planet_id,slug,name,description,capacity)
+SELECT p.id,seed.slug,seed.name,seed.description,seed.capacity
+FROM planets p
+JOIN (VALUES
+ ('love-planet','heart-bay','Бухта сердец','Тихая набережная для знакомств.',60),
+ ('love-planet','moon-garden','Лунный сад','Сад для прогулок и встреч.',40),
+ ('love-planet','date-lounge','Лаунж свиданий','Комната для спокойного общения.',35),
+ ('neon-city','neon-square','Неоновая площадь','Центр ночного города.',100),
+ ('neon-city','night-club','Ночной клуб','Музыка и вечеринки.',80),
+ ('neon-city','rooftop','Крыша небоскрёба','Вид на огни города.',45),
+ ('paradise','ocean-beach','Океанский пляж','Пляжная зона отдыха.',70),
+ ('paradise','waterfall','Водопад','Уединённое место у воды.',35),
+ ('paradise','sunset-cafe','Кафе на закате','Кафе с видом на океан.',40),
+ ('mystery-planet','ancient-portal','Древний портал','Точка начала исследований.',50),
+ ('mystery-planet','crystal-cave','Кристальная пещера','Загадочная пещера.',35),
+ ('mystery-planet','star-observatory','Звёздная обсерватория','Площадка для наблюдения за космосом.',40),
+ ('vip-world','vip-lounge','VIP лаунж','Закрытая комната для VIP-участников.',50),
+ ('vip-world','vip-garden','VIP сад','Приватный сад.',30)
+) AS seed(planet_slug,slug,name,description,capacity) ON seed.planet_slug=p.slug
+ON CONFLICT (planet_id,slug) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS room_presence (
   connection_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
