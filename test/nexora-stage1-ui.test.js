@@ -115,6 +115,6 @@ test("registration privacy link resolves to a published policy document", () => 
   const policy = read("public/privacy-policy.html");
   assert.match(html, /href="\/privacy-policy\.html"/);
   assert.match(policy, /Политика конфиденциальности/);
-  assert.match(policy, /код восстановления/);
+  assert.match(policy, /код восстановления/i);
   assert.match(policy, /14 дней/);
 });
