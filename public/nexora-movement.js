@@ -194,7 +194,7 @@
       selector.addEventListener("change", () => connectRoom(selector.value));
     }
     const active = document.querySelector("#nx-avatars .nx-avatar-card.me");
-    if (active && !ownName) ownName = active.dataset.playerKey;
+    if (active && !ownName) ownName = active.dataset.playerUsername;
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
   installScene();
