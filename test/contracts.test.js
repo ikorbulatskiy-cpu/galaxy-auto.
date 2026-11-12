@@ -228,7 +228,7 @@ test("avatar editor supports live 2D customization and motion controls", () => {
   }
   assert.match(html, /loadAvatarPreview\(draft\)/);
   assert.match(avatar, /look\.eyeStyle==="wide"/);
-  assert.match(html, /nexora-star-glasses/);
+  assert.match(avatar, /nexora-star-glasses/);
   assert.match(html, /function renderCatalogItemArt/);
   assert.match(html, /function roomAvatarSvg/);
   assert.match(html, /roomAvatarSvg\(u\.character_appearance\|\|\{\}\)/);
