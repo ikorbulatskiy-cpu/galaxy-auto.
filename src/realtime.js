@@ -186,7 +186,7 @@ function attachRealtime(server) {
               "SELECT r.id,r.capacity FROM rooms r JOIN user_locations l ON l.planet_id=r.planet_id WHERE r.id=$1 AND r.is_active=TRUE AND l.user_id=$2 FOR UPDATE OF l",
               [packet.roomId,user.id]
             );
-            if (!room.rowCount) { await client.query("ROLLBACK"); return; }
+            if (!room.rowCount) { await client.query("ROLLBACK"); socket.send(JSON.stringify({type:"error",message:"Комната недоступна на текущей планете."})); return; }
             const character = await client.query(
               "SELECT id FROM characters WHERE user_id=$1 AND is_active=TRUE LIMIT 1",
               [user.id]
