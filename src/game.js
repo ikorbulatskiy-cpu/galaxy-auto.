@@ -54,6 +54,7 @@ router.patch("/characters/:characterId", requireSession, async (req, res, next) 
     characterAge: z.number().int().min(18).max(120).nullable().optional(),
     bio: z.string().trim().max(500).optional(),
     appearance: z.object({
+      spriteGender: z.enum(["male","female"]).optional(),
       body: z.string().max(40).optional(),
       skinTone: z.string().max(24).optional(),
       head: z.string().max(40).optional(),
