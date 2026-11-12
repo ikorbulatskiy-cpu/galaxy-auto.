@@ -12,7 +12,8 @@
     badge.setAttribute("role","status");
     badge.setAttribute("aria-live","polite");
     badge.textContent="Ожидание";
-    header.append(badge);
+    const exitButton=header.querySelector('.nx-exit-button');
+    if(exitButton)header.insertBefore(badge,exitButton);else header.append(badge);
     let connectionState="pending";
     const update=()=>{
       const raw=(source.textContent||"").trim();
