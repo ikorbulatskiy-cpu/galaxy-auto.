@@ -110,14 +110,6 @@ function attachRealtime(server) {
   });
 
   wss.on("connection", async (socket, request) => {
-    const authStartedAt = Date.now();
-    let disconnectedDuringAuth = false;
-    socket.once("close", () => { disconnectedDuringAuth = true; });
-    console.info("Realtime socket connection received:", {
-      host: request.headers.host || "",
-      origin: request.headers.origin || "",
-      hasSessionCookie: String(request.headers.cookie || "").split(";").some(x => x.trim().startsWith(COOKIE_NAME + "="))
-    });
     let user;
     let connectionId;
     try {
@@ -137,28 +129,9 @@ function attachRealtime(server) {
       socket.userId = user.id;
       connectionId = crypto.randomUUID();
       socket.connectionId = connectionId;
-      console.info("Realtime socket authenticated:", {
-        connectionId,
-        durationMs: Date.now() - authStartedAt,
-        userId: user.id
-      });
-      if (disconnectedDuringAuth || socket.readyState !== 1) {
-        console.warn("Realtime socket closed before auth completed:", {
-          connectionId,
-          durationMs: Date.now() - authStartedAt
-        });
-        return;
-      }
       socket.send(JSON.stringify({ type: "ready", userId: user.id }));
-    } catch (error) {
-      console.warn("Realtime socket authentication rejected:", {
-        reason: error.message,
-        code: error.code || null,
-        durationMs: Date.now() - authStartedAt
-      });
-      if (socket.readyState === 1) {
-        socket.close(1008, error.message === "origin" ? "Origin rejected" : "Authentication required");
-      }
+    } catch {
+      socket.close(1008, "Authentication required");
       return;
     }
 
