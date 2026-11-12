@@ -20,6 +20,7 @@
       return data;
     } catch (error) {
       if (method !== "GET" || !mockEnabled()) throw error;
+      if (url.includes("/api/world/me")) return {profile:{display_name:"Пилот NEXORA",city:"Демо-город",bio:"Тестовый профиль",interests:["игры","общение"],coins:25,diamonds:2,level:1,authority:0,planet_name:"Зал новичков"}};
       if (url.includes("/api/game/planets")) return {planets:mocks.planets};
       if (url.includes("/api/game/characters")) return {characters:mocks.characters,limit:3};
       if (url.includes("/api/game/rooms?")) return {rooms:mocks.rooms};
