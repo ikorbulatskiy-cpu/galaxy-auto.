@@ -15,8 +15,8 @@
  function renderPlayers(users=[]){
   const stage=document.getElementById("nx-avatars");if(!stage)return;
   const all=users.slice(0,14);
-  if(!all.some(u=>u.is_me))all.unshift({username:"you",character_name:meName,character_appearance:meAppearance,is_me:true});
-  stage.innerHTML=all.map(u=>'<div class="nx-avatar-card '+(u.is_me?"me":"")+'"><div class="nx-avatar-name">'+(u.is_me?"👑 ":"")+esc(u.character_name||u.username)+'</div>'+avatar(u.character_appearance||{})+'</div>').join("");
+  if(!all.some(u=>u.is_me))all.unshift({username:"you",character_name:meName,character_appearance:meAppearance,character_aura:meAura,is_me:true});
+  stage.innerHTML=all.map(u=>'<div class="nx-avatar-card aura-'+esc(u.character_aura||"none")+' '+(u.is_me?"me":"")+'"><div class="nx-avatar-name">'+(u.is_me?"👑 ":"")+esc(u.character_name||u.username)+'</div>'+avatar(u.character_appearance||{})+'</div>').join("");
   document.getElementById("nx-online").textContent="Онлайн: "+users.length;
   document.getElementById("nx-player-list").innerHTML='<h4>В комнате:</h4>'+all.map(u=>'<div class="nx-player">'+avatar(u.character_appearance||{},true)+'<span>'+esc(u.character_name||u.username)+'</span></div>').join("");
  }
