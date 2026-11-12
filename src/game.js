@@ -153,7 +153,8 @@ router.get("/rooms/:roomId/presence", requireSession, async (req,res,next)=>{
       "FROM room_presence rp JOIN users u ON u.id=rp.user_id " +
       "JOIN rooms r ON r.id=rp.room_id JOIN user_locations l ON l.planet_id=r.planet_id AND l.user_id=$2 " +
       "LEFT JOIN characters c ON c.user_id=u.id AND c.is_active=TRUE " +
-      "WHERE rp.room_id=$1 AND rp.connected_at>NOW()-INTERVAL '2 minutes' " +
+      "WHERE rp.room_id=$1 AND rp.connected_at>NOW()-INTERVAL '2 minutes' AND u.status='active' " +
+      "AND NOT EXISTS(SELECT 1 FROM blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=rp.user_id) OR (b.blocker_id=rp.user_id AND b.blocked_id=$2)) " +
       "GROUP BY rp.user_id,u.username,c.name ORDER BY character_name",
       [req.params.roomId,req.user.id]
     );
