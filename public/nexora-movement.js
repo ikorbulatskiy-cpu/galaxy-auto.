@@ -141,7 +141,7 @@
         const ownCard = cards().find(card => card.classList.contains("me"));
         if (ownCard) ownName = ownCard.dataset.playerUsername;
         if (ownName) applyPosition(ownName, current.x, 78);
-      const ownCard=placementCard();if(ownCard)ownCard.classList.add("nx-moving");
+      const movingCard=placementCard();if(movingCard)movingCard.classList.add("nx-moving");
         loadPositions(id, true);
       }
       if (packet.type === "position_list") {
