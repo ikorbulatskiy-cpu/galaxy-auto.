@@ -166,3 +166,20 @@ test("admin dashboard exposes operational metrics and catalog image assets", () 
   assert.match(html, /i\.asset_url\?/);
   assert.match(html, /x\.asset_url\?/);
 });
+
+
+test("photo uploads are authenticated, size-limited and signature-checked", () => {
+  const server = read("server.js");
+  const media = read("src/media.js");
+  const html = read("public/index.html");
+  const migration = read("database/migrations/004_media_assets.sql");
+  assert.match(server, /app\.use\("\/api\/media", mediaRouter\)/);
+  assert.match(server, /mediaUploadOrigin/);
+  assert.match(media, /router\.use\(requireSession\)/);
+  assert.match(media, /maxBytes = 8 \* 1024 \* 1024/);
+  assert.match(media, /matchesImageSignature/);
+  assert.match(media, /HeadObjectCommand/);
+  assert.match(html, /name="photoFiles"/);
+  assert.match(html, /uploadPhotoToNexora/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS media_assets/);
+});
