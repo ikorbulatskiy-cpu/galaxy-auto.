@@ -204,3 +204,13 @@ test("photo uploads are authenticated, size-limited and signature-checked", () =
   assert.match(html, /image\/heic/);
   assert.match(migration, /CREATE TABLE IF NOT EXISTS media_assets/);
 });
+
+test("registration keeps the form reference across await and validates 18+ dates", () => {
+  const html = read("public/index.html");
+  const handler = html.slice(html.indexOf('$("#auth-form").addEventListener("submit"'), html.indexOf("async function loadApp"));
+  assert.match(handler, /const form=e\.currentTarget/);
+  assert.match(handler, /form\.reset\(\)/);
+  assert.doesNotMatch(handler, /e\.currentTarget\.reset/);
+  assert.match(handler, /Регистрация доступна только с 18 лет/);
+  assert.match(handler, /getUTCFullYear\(\)/);
+});
