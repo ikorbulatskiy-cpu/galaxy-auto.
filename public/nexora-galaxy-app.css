@@ -49,7 +49,7 @@ body:has(#dashboard:not(.hidden)){background:#171c24;color:#f4f6f8}
 #dashboard>#tab-world .nx-online{display:inline-flex!important;align-items:center;justify-content:center;min-width:27px;height:23px;padding:0 7px;border-radius:99px;background:#414a58;color:#dfe4e9;font-size:10px}
 #dashboard>#tab-world .nx-connection-status,#dashboard>#tab-world .nx-event-status{display:inline-flex;align-items:center;gap:5px;max-width:104px;min-width:0;height:27px;padding:0 7px;border:1px solid #ffffff1b;border-radius:9px;background:#202630;color:#cbd4dd;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #dashboard>#tab-world .nx-event-status .nx-dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#d6aa45}
-#dashboard>#tab-world .nx-eventbar{display:none!important}
+#dashboard>#tab-world .nx-eventbar,#dashboard>#tab-world .nx-statusbar{display:none!important}
 #dashboard>#tab-world .nx-planet-tools{display:none!important}
 #dashboard>#tab-world .nx-chat-panel{grid-row:2!important;min-width:0;min-height:0!important;height:100%!important;display:flex;flex-direction:column;overflow:hidden;padding:0!important;border:0!important;border-radius:0!important;background-color:#242933!important;background-image:radial-gradient(circle at 12% 18%,#ffffff0b 0 18px,transparent 19px),radial-gradient(circle at 88% 34%,#76c8400a 0 22px,transparent 23px),radial-gradient(circle at 22% 78%,#f5d0420a 0 15px,transparent 16px),linear-gradient(145deg,#242933,#2b313d)!important}
 #dashboard>#tab-world .nx-chat-title{min-height:31px;flex:0 0 31px;padding:7px 11px;background:#2b313d;border-bottom:1px solid var(--ng-line);color:#f5d86a;font-size:10px}
