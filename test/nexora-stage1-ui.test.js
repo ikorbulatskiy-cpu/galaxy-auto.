@@ -94,3 +94,10 @@ test("inline application script parses after the entry-screen changes", () => {
   assert.equal(scripts.length, 1, "expected one inline application script");
   assert.doesNotThrow(() => new vm.Script(scripts[0][1]));
 });
+
+
+test("body picker initialization iterates a NodeList array, not a single element", () => {
+  const html = read("public/index.html");
+  assert.match(html, /\$\$\("\[data-body-choice\]"\)\.forEach/);
+  assert.doesNotMatch(html, /\$\("\[data-body-choice\]"\)\.forEach/);
+});
