@@ -56,7 +56,7 @@ dbTest("base and feature migrations are idempotently recorded", async () => {
   const pool = new Pool({ connectionString: databaseUrl });
   try {
     const before = await pool.query("SELECT version,applied_at FROM schema_migrations ORDER BY version");
-    assert.equal(before.rowCount, 3);
+    assert.equal(before.rowCount, 4);
     assert.ok(before.rows.every(row => row.applied_at instanceof Date));
   } finally {
     await pool.end();
