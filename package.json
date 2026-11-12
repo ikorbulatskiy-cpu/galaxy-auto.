@@ -1,7 +1,8 @@
 {
-  "name": "chert-ai",
-  "version": "1.0.0",
+  "name": "nexora",
+  "version": "0.1.0",
   "private": true,
+  "description": "NEXORA — Meet. Connect. Discover.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
