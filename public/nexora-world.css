@@ -197,3 +197,20 @@
 .nx-classic .nx-avatar-card.aura-almighty svg{filter:drop-shadow(0 0 3px #ffd66b)}
 .nx-classic .nx-avatar-card.aura-universe svg{filter:drop-shadow(0 0 3px #ff5b73)}
 .nx-classic .nx-avatar-card.aura-legend svg{filter:drop-shadow(0 0 3px #66caff)}
+
+
+/* Stage 1: working room selector, event stream and character accessories */
+.nx-room-select{min-width:130px;max-width:220px;padding:6px 8px;background:#101318;color:#eee;border:1px solid #707780;border-radius:2px;font:11px Tahoma,Arial,sans-serif}
+.nx-events-toggle{padding:4px 8px;background:linear-gradient(#626a73,#343a42);border:1px solid #9299a1;color:#fff;border-radius:2px;font:10px Tahoma,Arial,sans-serif}
+.nx-events-panel{position:absolute;z-index:35;top:116px;right:10px;width:min(340px,calc(100% - 20px));max-height:260px;overflow:auto;padding:9px;background:#171c22;border:1px solid #a1a7ad;box-shadow:0 8px 25px #000b}
+.nx-events-panel[hidden]{display:none}
+.nx-events-panel .nx-menu-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;color:#f1dba1;font-size:12px}
+.nx-events-panel .nx-menu-heading button{border:0;background:none;color:#fff;font-size:20px}
+.nx-event-item{display:flex;gap:8px;padding:5px 2px;border-bottom:1px solid #ffffff16;color:#e2e4e8;font:10px/1.4 Tahoma,Arial,sans-serif}
+.nx-event-item time{flex:0 0 34px;color:#929ba5}
+.nx-event-item.nx-event-success span{color:#a8e5b1}
+.nx-event-item.nx-event-warning span{color:#ffd18a}
+.nx-event-item.nx-event-chat span{color:#d9d5e7}
+.nx-avatar-accessories{position:relative;z-index:3;display:flex;gap:3px;justify-content:center;flex-wrap:wrap;max-width:100px;margin:-4px auto 0}
+.nx-avatar-accessories span{padding:1px 3px;background:#111923e8;border:1px solid #a4aab1;color:#ffe6a5;font:8px Tahoma,Arial,sans-serif;white-space:nowrap}
+@media(max-width:700px){.nx-room-select{flex:1;max-width:none;min-width:90px;font-size:10px;padding:6px 4px}.nx-events-panel{top:148px;right:5px}.nx-events-toggle{font-size:9px;padding:4px 5px}}
