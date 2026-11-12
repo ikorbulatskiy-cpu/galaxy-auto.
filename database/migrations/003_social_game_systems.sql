@@ -259,7 +259,8 @@ VALUES
  ('first-steps','Первые шаги','Создай первого персонажа.',25),
  ('social-butterfly','На связи','Отправь первое сообщение.',10),
  ('new-friend','Новый друг','Добавь первого друга.',30),
- ('first-purchase','Первая покупка','Купи первый предмет.',15)
+ ('first-purchase','Первая покупка','Купи первый предмет.',15),
+ ('wedding-day','День свадьбы','Проведи виртуальную свадебную церемонию.',50)
 ON CONFLICT (slug) DO NOTHING;
 
 
@@ -384,3 +385,22 @@ DROP TRIGGER IF EXISTS nexora_relationship_exclusivity ON relationships;
 CREATE TRIGGER nexora_relationship_exclusivity
 BEFORE INSERT OR UPDATE OF requester_id,addressee_id,status ON relationships
 FOR EACH ROW EXECUTE FUNCTION nexora_check_relationship_exclusivity();
+
+
+CREATE OR REPLACE FUNCTION nexora_wedding_achievement_trigger()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+  couple RECORD;
+BEGIN
+  SELECT requester_id,addressee_id INTO couple FROM relationships WHERE id=NEW.relationship_id;
+  IF FOUND THEN
+    PERFORM nexora_award_achievement(couple.requester_id,'wedding-day');
+    PERFORM nexora_award_achievement(couple.addressee_id,'wedding-day');
+  END IF;
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS nexora_wedding_achievement ON wedding_ceremonies;
+CREATE TRIGGER nexora_wedding_achievement
+AFTER INSERT ON wedding_ceremonies FOR EACH ROW
+EXECUTE FUNCTION nexora_wedding_achievement_trigger();
