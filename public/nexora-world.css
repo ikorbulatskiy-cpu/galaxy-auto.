@@ -1,0 +1,40 @@
+/* NEXORA virtual planet room: original 2D social-game presentation */
+#tab-world{margin:0!important}
+.nx-world{--nx-purple:#8d63ed;--nx-pink:#e879d2;min-height:calc(100vh - 120px);margin:0 calc((min(1120px,100vw - 32px) - 100vw)/2);width:100vw;background:#100d21;color:#f8f3ff;border:1px solid #59418c;box-shadow:0 20px 70px #0008;overflow:hidden}
+.nx-topbar{height:62px;display:flex;align-items:center;gap:16px;padding:8px 16px;background:linear-gradient(180deg,#55359a,#241943);border-bottom:2px solid #a987ff;box-shadow:0 4px 18px #0008}
+.nx-logo{font-weight:1000;font-size:clamp(19px,3vw,29px);letter-spacing:1px;color:#fff;text-shadow:0 2px 0 #9e6bff,0 0 15px #d58cff}
+.nx-planet-select{max-width:280px;min-width:0;flex:1;background:#211838;color:#fff;border:1px solid #a47bff;border-radius:12px;padding:10px;font-weight:800}
+.nx-online{margin-left:auto;white-space:nowrap;background:#211838;border:1px solid #8f6bd5;border-radius:12px;padding:10px 13px;font-weight:800}
+.nx-icon-btn{background:#241b40;color:#fff;border:1px solid #9270d8;border-radius:12px;padding:10px 13px;font-size:18px}
+.nx-chat-layout{display:grid;grid-template-columns:minmax(0,1fr) 210px;background:#11101b}
+.nx-chat-panel{min-width:0;background:linear-gradient(135deg,#171622,#0d0d16);border-right:2px solid #665092}
+.nx-chat-title{padding:8px 13px;color:#cdb8ff;font-weight:900;border-bottom:1px solid #59417a;background:#201938}
+.nx-chat-log{height:clamp(190px,26vh,270px);overflow:auto;padding:10px 14px;font-size:14px;line-height:1.6}
+.nx-chat-line{padding:2px 0;overflow-wrap:anywhere}.nx-chat-line b{color:#ffca68}.nx-chat-line:nth-child(3n) b{color:#f58cdb}.nx-chat-line small{color:#8f8a9e;margin-right:7px}
+.nx-chat-send{display:flex;gap:7px;padding:8px;border-top:1px solid #493765}
+.nx-chat-send input{flex:1;min-width:0;margin:0;background:#0c0b15;border-color:#5d477e}
+.nx-chat-send button{background:linear-gradient(135deg,#8f5cf0,#bd58c7);border:1px solid #d7b7ff;border-radius:10px;color:white;font-weight:900;padding:0 17px}
+.nx-player-list{padding:10px;background:linear-gradient(180deg,#201638,#100e1c);max-height:340px;overflow:auto}
+.nx-player-list h4{margin:2px 0 10px;color:#d5c1ff}
+.nx-player{display:flex;align-items:center;gap:8px;padding:5px 2px;border-bottom:1px solid #ffffff12;font-size:12px}
+.nx-player img{width:25px;height:32px;object-fit:contain}
+.nx-scene{position:relative;min-height:390px;overflow:hidden;background:radial-gradient(ellipse at 75% 18%,#bd8abf 0,#75518e 17%,transparent 38%),radial-gradient(ellipse at 12% 55%,#4e6694 0,#202e59 32%,transparent 54%),linear-gradient(180deg,#111c43 0%,#29224c 48%,#6a527e 78%,#b08ca4 100%)}
+.nx-scene:before{content:"";position:absolute;inset:0;background-image:radial-gradient(#fff 1px,transparent 1.6px),radial-gradient(#d8caff 1px,transparent 1.8px);background-size:49px 47px,83px 79px;background-position:0 0,23px 17px;opacity:.65}
+.nx-planet{position:absolute;width:250px;height:250px;border-radius:50%;right:7%;top:-90px;background:radial-gradient(circle at 35% 30%,#ffd7c4,#b68acb 48%,#594e92 75%);box-shadow:inset -22px -18px 35px #1b194a88,0 0 35px #e7a9ff55}
+.nx-scene-arch{position:absolute;left:8%;right:8%;bottom:60px;height:210px;border:12px solid #b6a9db;border-bottom:0;border-radius:180px 180px 0 0;box-shadow:0 0 18px #e5c7ff99,inset 0 0 20px #c7aaff55;opacity:.7}
+.nx-floor{position:absolute;left:-5%;right:-5%;bottom:-15px;height:115px;background:repeating-linear-gradient(90deg,#c8a9c5 0 2px,transparent 2px 100px),linear-gradient(180deg,#b38db4,#6d5c91);border-top:4px solid #e6caff;transform:perspective(260px) rotateX(12deg);box-shadow:0 -8px 25px #d5baff44}
+.nx-scene-label{position:absolute;top:14px;left:16px;background:#17102dc9;border:1px solid #ad8aff;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:800;z-index:2}
+.nx-avatars{position:absolute;z-index:2;left:2%;right:2%;bottom:74px;display:flex;align-items:flex-end;justify-content:space-around;gap:5px;overflow-x:auto}
+.nx-avatar-card{min-width:68px;text-align:center;position:relative;animation:nxBob 3s ease-in-out infinite}
+.nx-avatar-card:nth-child(2n){animation-delay:.45s}.nx-avatar-card:nth-child(3n){animation-delay:.9s}
+.nx-avatar-name{display:inline-block;max-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#1b1237e8;border:1px solid #9971dc;border-radius:9px;padding:3px 6px;font-size:10px;font-weight:900;color:#fff;text-shadow:0 1px #000;margin-bottom:3px}
+.nx-avatar-card svg{display:block;width:65px;height:130px;margin:auto;filter:drop-shadow(0 5px 3px #1c183b88)}
+.nx-avatar-card.me .nx-avatar-name{border-color:#ffd46c;color:#ffe3a2}
+.nx-avatar-card.me:after{content:"👑";position:absolute;top:-17px;left:calc(50% - 10px);font-size:15px}
+.nx-bottom-nav{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;padding:10px;background:linear-gradient(180deg,#36215e,#1b1430);border-top:2px solid #a987ff}
+.nx-bottom-nav button{min-width:0;background:linear-gradient(180deg,#7250b4,#35245d);border:1px solid #b79aff;border-radius:12px;color:#fff;padding:10px 4px;font-weight:850;box-shadow:inset 0 1px #ffffff44,0 3px 5px #0007}
+.nx-bottom-nav button span{display:block;font-size:22px;margin-bottom:3px}.nx-statusbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#0d0d17;border-top:1px solid #665092;color:#b9b4c7;font-size:11px}.nx-dot{width:9px;height:9px;border-radius:50%;background:#55e68a;box-shadow:0 0 8px #55e68a}
+.nx-emote{animation:nxEmote .7s ease-in-out 2!important}
+@keyframes nxBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes nxEmote{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-16px) rotate(-8deg)}70%{transform:translateY(-5px) rotate(8deg)}}
+@media(max-width:700px){.nx-world{margin:0 calc((100vw - (100vw - 26px))/2 - 13px);width:100vw}.nx-topbar{gap:7px;padding:7px}.nx-online{font-size:11px;padding:8px}.nx-planet-select{font-size:11px;padding:8px}.nx-chat-layout{grid-template-columns:minmax(0,1fr) 112px}.nx-player-list{padding:7px}.nx-player{font-size:10px;gap:4px}.nx-player img{width:20px}.nx-chat-log{height:190px;font-size:12px;padding:8px}.nx-scene{min-height:310px}.nx-planet{width:170px;height:170px;top:-55px}.nx-scene-arch{height:160px;bottom:50px}.nx-avatar-card{min-width:57px}.nx-avatar-card svg{width:54px;height:108px}.nx-avatar-name{font-size:9px;max-width:68px}.nx-avatars{bottom:60px;justify-content:flex-start}.nx-bottom-nav{grid-template-columns:repeat(3,minmax(0,1fr))}.nx-bottom-nav button{padding:8px 3px;font-size:11px}.nx-bottom-nav button span{font-size:19px}}
