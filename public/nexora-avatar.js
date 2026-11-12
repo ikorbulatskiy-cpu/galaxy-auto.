@@ -22,16 +22,19 @@
       outfit: {violet:"#8062d9",blue:"#477ed6",pink:"#dc6eaa",white:"#e6e9f2",green:"#4f9c77",gold:"#c99b3c"},
       shoes: {sneakers:"#30384b",boots:"#4a3540",heels:"#a34d76","moon-boots":"#a4b8d8"}
     },
-    layers: ["background","shoes","body","outfit","arms","neck","face","eyes","expression","hair","headwear","accessories"]
+    layers: ["background","shoes","body","neck","outfit","arms","face","eyes","expression","hair","headwear","accessories"]
   };
   const safe=(value, choices, fallback)=>Object.prototype.hasOwnProperty.call(choices,value)?choices[value]:fallback;
   function render(look={}, equipped=[], size="full") {
     const p=catalog.palettes;
     const skin=safe(look.skinTone,p.skin,p.skin.medium);
-    const hair=safe(look.hairColor,p.hair,p.hair.brown);
+    const hairKey=slugs.includes("nexora-pink-hair")?"pink":slugs.includes("nexora-blue-hair")?"blue":slugs.includes("nexora-emerald-hair")?"purple":look.hairColor;
+    const outfitKey=slugs.includes("nexora-neon-jacket")?"gold":slugs.includes("nexora-aurora-hoodie")?"green":slugs.includes("nexora-star-shirt")?"blue":slugs.includes("nexora-sunset-coat")?"pink":look.outfit;
+    const shoesKey=slugs.includes("nexora-midnight-boots")?"boots":slugs.includes("nexora-galaxy-sneakers")?"sneakers":slugs.includes("nexora-moon-boots")?"moon-boots":look.shoes;
+    const hair=safe(hairKey,p.hair,p.hair.brown);
     const eyes=safe(look.eyes,p.eyes,p.eyes.brown);
-    const outfit=safe(look.outfit,p.outfit,p.outfit.violet);
-    const shoes=safe(look.shoes,p.shoes,p.shoes.sneakers);
+    const outfit=safe(outfitKey,p.outfit,p.outfit.violet);
+    const shoes=safe(shoesKey,p.shoes,p.shoes.sneakers);
     const body=catalog.body[look.body]||catalog.body.regular;
     const hairPath=catalog.hair[look.hair]||catalog.hair.short;
     const head=look.head==="soft" ? '<ellipse cx="60" cy="54" rx="27" ry="31" fill="'+skin+'"/>' :
@@ -53,12 +56,11 @@
       slugs.includes("nexora-heart-pendant") ? '<path d="M60 98 C44 87 50 77 60 85 C70 77 76 87 60 98 Z" fill="#ed78ae" stroke="#ffe2f1" stroke-width="1.5"/>' :
       slugs.includes("nexora-rainbow-scarf") ? '<path d="M43 91 Q60 103 77 91 L74 108 Q60 117 46 108 Z" fill="#c27be8" stroke="#f3d8ff" stroke-width="2"/>' : "";
     const wedding=equippedList.some(x=>x.category==="wedding") ? '<path d="M43 25 L48 14 L57 23 L64 12 L72 24 L79 15 L80 32 L43 32 Z" fill="#f4d57a" stroke="#fff0b2" stroke-width="1.5"/>' : "";
-    const width=size==="mini"?60:size==="room"?60:120, height=size==="mini"?82:size==="room"?82:170;
     if(size==="mini"||size==="room"){
       const miniHair=look.hair==="long"?"M12 25 Q12 2 30 3 Q49 2 48 25 L50 58 L42 55 L40 31 Q30 22 20 31 L18 55 L10 58 Z":look.hair==="curly"?"M12 25 Q7 8 19 8 Q25 0 32 8 Q44 1 48 17 L43 31 Q30 21 18 31 Z":"M12 25 Q12 2 30 3 Q49 2 48 25 L42 18 Q30 12 18 19 Z";
       return '<svg viewBox="0 0 60 82" aria-hidden="true"><path d="M12 78 Q12 43 21 40 L39 40 Q48 43 48 78 Z" fill="'+outfit+'"/><circle cx="30" cy="26" r="17" fill="'+skin+'"/><path d="'+miniHair+'" fill="'+hair+'"/><circle cx="24" cy="28" r="2" fill="'+eyes+'"/><circle cx="36" cy="28" r="2" fill="'+eyes+'"/><path d="M25 36 Q30 40 35 36" stroke="#713e43" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>';
     }
-    return '<svg class="avatar-svg" viewBox="0 0 120 170" role="img" aria-label="2D персонаж" data-avatar-layers="'+catalog.layers.join(",")+'"><g data-layer="shoes"><path d="M35 158 L57 158 L57 168 L31 168 Z M63 158 L85 158 L89 168 L63 168 Z" fill="'+shoes+'"/></g><g data-layer="body"><path d="'+body+'" fill="'+outfit+'"/><path d="M43 99 L43 86 L77 86 L77 101 Z" fill="'+skin+'"/></g><g data-layer="face">'+head+'</g><g data-layer="hair"><path d="'+hairPath+'" fill="'+hair+'"/></g><g data-layer="headwear">'+headwear+'</g><g data-layer="eyes">'+eyeLayer+mouth+'</g><g data-layer="accessories">'+accessory+wedding+'</g><g data-layer="arms"><path d="M30 126 L17 151 L32 157 L43 132 Z M90 126 L103 151 L88 157 L77 132 Z" fill="'+outfit+'"/></g></svg>';
+    return '<svg class="avatar-svg" viewBox="0 0 120 170" role="img" aria-label="2D персонаж" data-avatar-layers="'+catalog.layers.join(",")+'"><g data-layer="background"><ellipse cx="60" cy="165" rx="35" ry="4" fill="#17152b" opacity=".45"/></g><g data-layer="shoes"><path d="M35 158 L57 158 L57 168 L31 168 Z M63 158 L85 158 L89 168 L63 168 Z" fill="'+shoes+'"/></g><g data-layer="body"><path d="'+body+'" fill="'+skin+'"/></g><g data-layer="neck"><path d="M43 78 L43 103 L77 103 L77 78 Z" fill="'+skin+'"/></g><g data-layer="outfit"><path d="M31 108 Q40 98 46 99 L74 99 Q82 98 89 108 L99 160 L21 160 Z" fill="'+outfit+'"/><path d="M48 101 L60 116 L72 101" fill="none" stroke="#ffffff55" stroke-width="2"/></g><g data-layer="arms"><path d="M30 111 L17 151 L32 157 L45 125 Z M90 111 L103 151 L88 157 L75 125 Z" fill="'+skin+'"/><path d="M27 122 L22 143 L34 147 L42 126 Z M93 122 L98 143 L86 147 L78 126 Z" fill="'+outfit+'"/></g><g data-layer="face">'+head+'</g><g data-layer="eyes">'+eyeLayer+'</g><g data-layer="expression">'+mouth+'</g><g data-layer="hair"><path d="'+hairPath+'" fill="'+hair+'"/></g><g data-layer="headwear">'+headwear+'</g><g data-layer="accessories">'+accessory+wedding+'</g></svg>';
   }
   function mountLibrary(host, form) {
     if(!host||!form||host.dataset.ready==="1")return;
