@@ -7,7 +7,7 @@
   let modal=null,selectedIndex=0;
   const safe=v=>String(v||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   function showModal(title,body){
-    if(!modal){modal=document.createElement("div");modal.className="nx-world-modal";modal.hidden=true;modal.innerHTML='<section class="nx-world-dialog" role="dialog" aria-modal="true"><button type="button" data-close style="float:right">×</button><div data-content></div></section>';document.body.append(modal);modal.addEventListener("click",e=>{if(e.target===modal||e.target.closest("[data-close]"))modal.hidden=true});document.addEventListener("keydown",e=>{if(e.key==="Escape"&&modal)modal.hidden=true})}
+    if(!modal){modal=document.createElement("div");modal.className="nx-world-modal";modal.hidden=true;modal.innerHTML='<section class="nx-world-dialog" role="dialog" aria-modal="true"><button type="button" data-close style="float:right">×</button><div data-content></div></section>';root.append(modal);modal.addEventListener("click",e=>{if(e.target===modal||e.target.closest("[data-close]"))modal.hidden=true});document.addEventListener("keydown",e=>{if(e.key==="Escape"&&modal)modal.hidden=true})}
     modal.querySelector("[data-content]").innerHTML="<h2>"+safe(title)+"</h2>"+body;modal.hidden=false;return modal;
   }
   function openPlanetModal(create){
@@ -41,7 +41,6 @@
   function installDrawer(){
     const menu=$("#nx-menu-panel");if(!menu||menu.dataset.extrasReady)return;menu.dataset.extrasReady="1";
     const grid=menu.querySelector(".nx-menu-grid");if(grid){const b=document.createElement("button");b.type="button";b.innerHTML="<span>♛</span>Мои планеты";b.onclick=()=>{menu.hidden=true;openMyPlanets()};grid.append(b)}
-    $("#nx-menu-planets")?.addEventListener("click",()=>{menu.hidden=true;openMyPlanets()});
   }
   window.addEventListener("nexora:planet-modules",e=>{const names={magic:"Магия",defender:"Защитник",games:"Игры",horoscope:"Гороскопы",love:"Любовный помощник"};const active=(e.detail?.modules||[]).map(k=>names[k]||k);const note=document.createElement("div");note.className="nx-planet-module-note";note.textContent=active.length?"! На планете установлены модули: "+active.join(", "):"! Дополнительные модули не установлены.";const log=$("#nx-chat-log");if(log){log.append(note);log.scrollTo({top:log.scrollHeight,behavior:"smooth"})}});
   const scan=()=>{installChat();installCarousel();installDrawer()};new MutationObserver(scan).observe(root,{childList:true,subtree:true});scan();
