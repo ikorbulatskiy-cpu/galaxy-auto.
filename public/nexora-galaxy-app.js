@@ -64,7 +64,7 @@
     const raw=(statusSource.textContent||"").trim();
     const lower=raw.toLocaleLowerCase("ru");
     let state="pending",label="Подключение";
-    if(/соединение:\\s*(отличное|стабильное|активно)|соединение с комнатой установлено|подключен к комнате|connected/.test(lower)){
+    if(/соединение:\s*(отличное|стабильное|активно)|соединение с комнатой установлено|подключен к комнате|connected/.test(lower)){
      state="connected";label="На связи";
     }else if(/связь потеряна|проблема сети|закрыт|ошиб|недоступ|не удалось|timeout|failed/.test(lower)){
      state="error";label="Нет связи";
