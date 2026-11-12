@@ -129,8 +129,9 @@ function attachRealtime(server) {
       socket.userId = user.id;
       connectionId = crypto.randomUUID();
       socket.connectionId = connectionId;
-      socket.send(JSON.stringify({ type: "ready", userId: user.id }));
-    } catch {
+      console.info("Realtime socket authenticated:", { connectionId, userId: user.id });
+    } catch (error) {
+      console.warn("Realtime socket authentication rejected:", error.message);
       socket.close(1008, "Authentication required");
       return;
     }
@@ -260,6 +261,7 @@ function attachRealtime(server) {
         } catch {}
       }
     });
+    socket.send(JSON.stringify({ type: "ready", userId: user.id }));
   });
 
   return wss;
