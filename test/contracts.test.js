@@ -135,6 +135,10 @@ test("production HTTP security is configured without trusting arbitrary proxies"
 
 test("realtime events are distributed through PostgreSQL notifications", () => {
   const realtime = read("src/realtime.js");
+  const html = read("public/index.html");
+  assert.match(html, /roomReconnectAttempts/);
+  assert.match(html, /roomReconnectTimer=setTimeout/);
+  assert.match(realtime, /scheduleReconnect/);
   assert.match(realtime, /LISTEN nexora_room_events/);
   assert.match(realtime, /pg_notify\('nexora_room_events'/);
   assert.match(realtime, /notification\)/);
