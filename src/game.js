@@ -145,7 +145,7 @@ router.get("/planets", requireSession, async (req,res,next)=>{
 });
 
 router.post("/planets", requireSession, async (req,res,next)=>{
- const parsed=z.object({name:z.string().trim().min(3).max(48).regex(/^[\\p{L}\\p{N} _*.-]+$/u),description:z.string().trim().max(300).default(""),weather:z.string().trim().max(40).default("Ясно"),interior:z.string().trim().max(60).default("Космический зал"),theme:z.enum(["sunset","space","forest","city","underwater"]).default("sunset"),modules:z.array(z.enum(["magic","defender","games","horoscope","love"])).max(5).default(["magic","games"])}).strict().safeParse(req.body);
+ const parsed=z.object({name:z.string().trim().min(3).max(48).regex(/^[\p{L}\p{N} _*.-]+$/u),description:z.string().trim().max(300).default(""),weather:z.string().trim().max(40).default("Ясно"),interior:z.string().trim().max(60).default("Космический зал"),theme:z.enum(["sunset","space","forest","city","underwater"]).default("sunset"),modules:z.array(z.enum(["magic","defender","games","horoscope","love"])).max(5).default(["magic","games"])}).strict().safeParse(req.body);
  if(!parsed.success)return res.status(400).json({error:"Проверьте название, описание и оформление планеты."});
  const client=await pool.connect();
  try{
