@@ -78,7 +78,7 @@ test("entry screen offers the two-step Galaxy-style registration and recovery-co
 test("room movement client is loaded and its browser script parses", () => {
   const html = read("public/index.html");
   const movement = read("public/nexora-movement.js");
-  assert.match(html, /nexora-movement\.js\?v=3/);
+  assert.match(html, /nexora-movement\.js\?v=\d+/);
   assert.doesNotThrow(() => new vm.Script(movement));
   assert.match(movement, /addEventListener\("nexora:room-joined"/);
   assert.match(movement, /function moveTo\(x, y\)/);
