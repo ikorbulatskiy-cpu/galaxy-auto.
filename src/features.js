@@ -88,7 +88,7 @@ router.post("/shop/buy", async (req,res,next) => {
     await client.query(`UPDATE wallet_balances SET ${col}=${col}-$2,updated_at=NOW() WHERE user_id=$1`,[req.user.id,amount.toString()]);
     const purchase=await client.query("INSERT INTO purchases(user_id,item_id,character_id,currency,amount,idempotency_key) VALUES($1,$2,$3,$4,$5,$6) RETURNING id",[req.user.id,p.data.itemId,p.data.characterId,col,amount.toString(),p.data.idempotencyKey]);
     await client.query("INSERT INTO character_inventory(character_id,item_id) VALUES($1,$2) ON CONFLICT(character_id,item_id) DO NOTHING",[p.data.characterId,p.data.itemId]);
-    await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id) VALUES($1,$2,$3,'Покупка предмета',$4)",[req.user.id,col,(-amount).toString(),purchase.rows[0].id]);
+    if(amount>0n)await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id) VALUES($1,$2,$3,'Покупка предмета',$4)",[req.user.id,col,(-amount).toString(),purchase.rows[0].id]);
     await client.query("COMMIT");res.status(201).json({purchaseId:purchase.rows[0].id,amount:amount.toString()});
   }catch(e){await client.query("ROLLBACK");if(e.code==="23505")return res.status(409).json({error:"Покупка уже зарегистрирована."});next(e)}
   finally{client.release()}
@@ -110,7 +110,7 @@ router.post("/shop/gift", async (req,res,next) => {
     if(!wallet.rowCount||BigInt(wallet.rows[0].coins)<amount){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно Coins."})}
     await client.query("UPDATE wallet_balances SET coins=coins-$2,updated_at=NOW() WHERE user_id=$1",[req.user.id,amount.toString()]);
     const gift=await client.query("INSERT INTO gifts(sender_user_id,receiver_user_id,item_id,message,idempotency_key) VALUES($1,$2,$3,$4,$5) RETURNING id",[req.user.id,p.data.toUserId,p.data.itemId,p.data.message,p.data.idempotencyKey]);
-    await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id) VALUES($1,'coins',$2,'Подарок отправлен',$3)",[req.user.id,(-amount).toString(),gift.rows[0].id]);
+    if(amount>0n)await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id) VALUES($1,'coins',$2,'Подарок отправлен',$3)",[req.user.id,(-amount).toString(),gift.rows[0].id]);
     await client.query("INSERT INTO notifications(user_id,actor_user_id,kind,title,body,data) VALUES($1,$2,'gift','Новый подарок',$3,$4::jsonb)",[p.data.toUserId,req.user.id,p.data.message||"Вам отправили подарок.",JSON.stringify({giftId:gift.rows[0].id})]);
     await client.query("COMMIT");res.status(201).json({giftId:gift.rows[0].id});
   }catch(e){await client.query("ROLLBACK");if(e.code==="23505")return res.status(409).json({error:"Ключ операции уже использован."});next(e)}
