@@ -502,13 +502,27 @@ AFTER INSERT ON blog_posts FOR EACH ROW
 EXECUTE FUNCTION nexora_blog_progress_trigger();
 
 CREATE OR REPLACE FUNCTION nexora_clan_progress_trigger()
-RETURNS TRIGGER LANGUAGE plpgsql AS $$
+RETURNS TRIGGER LANGUAGE plpgsql AS $
 BEGIN
+  UPDATE clans SET experience=experience+10,level=GREATEST(level,1+((experience+10)/100)::int) WHERE id=NEW.id;
   PERFORM nexora_add_reputation(NEW.owner_user_id,NULL,'clan_created',5,3,10,1);
   RETURN NEW;
 END;
-$$;
+$;
 DROP TRIGGER IF EXISTS nexora_clan_progress ON clans;
 CREATE TRIGGER nexora_clan_progress
 AFTER INSERT ON clans FOR EACH ROW
 EXECUTE FUNCTION nexora_clan_progress_trigger();
+
+
+CREATE OR REPLACE FUNCTION nexora_clan_member_progress_trigger()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE clans SET experience=experience+5,level=GREATEST(level,1+((experience+5)/100)::int) WHERE id=NEW.clan_id;
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS nexora_clan_member_progress ON clan_members;
+CREATE TRIGGER nexora_clan_member_progress
+AFTER INSERT ON clan_members FOR EACH ROW
+EXECUTE FUNCTION nexora_clan_member_progress_trigger();
