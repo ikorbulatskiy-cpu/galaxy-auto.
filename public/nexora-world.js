@@ -101,13 +101,24 @@
   if(generation!==joinGeneration||activeRoom!==room.id)return;
   const wsProtocol=location.protocol==="https:"?"wss:":"ws:";
   const ws=new WebSocket(wsProtocol+"//"+location.host+"/ws");socket=ws;
+  let readyTimer=setTimeout(()=>{
+   if(socket===ws&&generation===joinGeneration&&ws.readyState===WebSocket.OPEN){
+    addEvent("Сервер не подтвердил авторизацию WebSocket за 10 секунд.","warning");
+    ws.close(4000,"Authentication handshake timeout");
+   }
+  },10000);
   ws.onopen=()=>{
    if(socket!==ws||generation!==joinGeneration)return;
-   ws.send(JSON.stringify({type:"join_room",roomId:room.id}));
+   status("Проверка сессии и подключение к комнате…");
   };
   ws.onmessage=e=>{
    if(socket!==ws||generation!==joinGeneration)return;
    let packet;try{packet=JSON.parse(e.data)}catch{return}
+   if(packet.type==="ready"){
+    clearTimeout(readyTimer);readyTimer=null;
+    ws.send(JSON.stringify({type:"join_room",roomId:room.id}));
+    return;
+   }
    if(packet.type==="joined_room"&&packet.roomId===room.id){
     reconnectAttempts=0;window.nexoraActiveRoom=room.id;
     window.dispatchEvent(new CustomEvent("nexora:room-joined",{detail:{roomId:room.id}}));
@@ -124,12 +135,14 @@
   };
   ws.onerror=()=>{if(socket===ws)status("Проблема сети. Восстанавливаем соединение…")};
   ws.onclose=event=>{
+   if(readyTimer){clearTimeout(readyTimer);readyTimer=null}
    if(socket===ws)socket=null;
    if(generation!==joinGeneration||activeRoom!==room.id)return;
    window.nexoraActiveRoom="";
    window.dispatchEvent(new Event("nexora:room-left"));
-   status("Связь потеряна. Повторное подключение…");
-   addEvent("Соединение прервано. Пытаемся вернуться в комнату.","warning");
+   const closeInfo="Код "+event.code+(event.reason?" · "+event.reason:"");
+   status("Связь потеряна ("+closeInfo+"). Повторное подключение…");
+   addEvent("Соединение прервано ("+closeInfo+"). Пытаемся вернуться в комнату.","warning");
    if(reconnectTimer)return;
    const delay=Math.min(30000,1000*Math.pow(2,Math.min(reconnectAttempts++,5)))+Math.floor(Math.random()*500);
    reconnectTimer=setTimeout(async()=>{
