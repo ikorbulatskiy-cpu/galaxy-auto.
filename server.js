@@ -11,6 +11,7 @@ const { router: authRouter } = require("./src/auth");
 const worldRouter = require("./src/world");
 const socialRouter = require("./src/social");
 const gameRouter = require("./src/game");
+const featuresRouter = require("./src/features");
 const { attachRealtime } = require("./src/realtime");
 
 const app = express();
@@ -51,6 +52,7 @@ app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/world", worldRouter);
 app.use("/api/social", socialRouter);
 app.use("/api/game", gameRouter);
+app.use("/api/features", featuresRouter);
 
 app.get("/api/status", async (_req, res) => {
   let database = "unavailable";
@@ -61,8 +63,8 @@ app.get("/api/status", async (_req, res) => {
   res.status(database === "connected" ? 200 : 503).json({
     online: true,
     app: "NEXORA",
-    version: "0.4.0",
-    stage: "game-world-foundation",
+    version: "0.5.0",
+    stage: "social-game-systems-foundation",
     database,
     message: database === "connected" ? "NEXORA API is ready" : "Database connection is not configured"
   });
