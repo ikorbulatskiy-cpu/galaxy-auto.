@@ -94,7 +94,8 @@ NEXORA — социальная платформа знакомств и вир�
 - `POST /api/features/shop/buy` — покупка предмета с обязательным UUID `idempotencyKey` и `characterId`.
 - `POST /api/features/shop/gift`, `GET /api/features/gifts`, `POST /api/features/gifts/:giftId/claim` — отправка и получение подарков.
 - `GET /api/features/clans`, `POST /api/features/clans`, `POST /api/features/clans/:clanId/apply` — кланы и заявки.
-- `GET /api/features/clans/:clanId/members`, `GET /api/features/clans/:clanId/applications`, `POST /api/features/clans/:clanId/decide` — управление составом и заявками.
+- `GET /api/features/clans/:clanId/members`, `GET /api/features/clans/:clanId/applications`, `POST /api/features/clans/:clanId/decide`, `PATCH /api/features/clans/:clanId/members/:userId/role`, `DELETE /api/features/clans/:clanId/members/:userId` — управление составом и ролями.
+- `GET /api/features/clans/:clanId/messages`, `POST /api/features/clans/:clanId/messages` — история и отправка сообщений клана (пока без WebSocket-доставки).
 - `POST /api/features/clans/:clanId/bank`, `GET /api/features/clans/:clanId/ledger` — операции кланового банка и журнал.
 - `GET /api/features/pets`, `POST /api/features/pets`, `POST /api/features/pets/:petId/care` — питомцы и уход.
 - `GET /api/features/blogs`, `POST /api/features/blogs`, `PATCH /api/features/blogs/:postId`, `DELETE /api/features/blogs/:postId`, `POST /api/features/blogs/:postId/like`, `POST /api/features/blogs/:postId/comments` — публикации и взаимодействия. Фотографии пока передаются HTTPS-ссылками; загрузка в собственное файловое хранилище ещё не подключена.
