@@ -211,6 +211,7 @@
       current = { x: current.x + Math.sign(dx) * step, y: 78 };
       socket.send(JSON.stringify({ type: "move", x: Number(current.x.toFixed(2)), y: Number(current.y.toFixed(2)) }));
       if (ownName) applyPosition(ownName, current.x, current.y);
+      const ownCard=placementCard();if(ownCard)ownCard.classList.add("nx-moving");
     }, 110);
   }
 
