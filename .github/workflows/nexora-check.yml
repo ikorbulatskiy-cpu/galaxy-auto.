@@ -26,3 +26,15 @@ jobs:
           for file in src/*.js; do
             node --check "$file"
           done
+      - name: Check browser client syntax
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          html = Path("public/index.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script>([\\s\\S]*?)</script>", html)
+          if not scripts:
+              raise SystemExit("No inline client script found")
+          Path("/tmp/nexora-client.js").write_text("\\n".join(scripts), encoding="utf-8")
+          PY
+          node --check /tmp/nexora-client.js
