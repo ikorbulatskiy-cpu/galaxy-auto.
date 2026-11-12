@@ -3,12 +3,12 @@
 #dashboard>#tab-world>.nx-world{
   --gx-ink:#171a22;--gx-panel:#20242d;--gx-line:#343b46;--gx-teal:#123c43;--gx-text:#f4f6f8;
   width:min(420px,100vw);height:100dvh;min-height:100dvh;max-width:420px;margin:0 auto;
-  display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:54px minmax(0,1fr) 194px 58px;
+  display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:calc(54px + env(safe-area-inset-top)) minmax(0,1fr) 194px calc(58px + env(safe-area-inset-bottom));
   overflow:hidden;border:0;border-radius:0;background:var(--gx-ink);color:var(--gx-text);
   box-shadow:0 0 55px #0009;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   isolation:isolate
 }
-#dashboard>#tab-world .nx-topbar{grid-row:1;min-height:54px;height:54px;padding:0 13px;display:flex;align-items:center;gap:12px;
+#dashboard>#tab-world .nx-topbar{grid-row:1;min-height:calc(54px + env(safe-area-inset-top));height:calc(54px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 13px 0;display:flex;align-items:center;gap:12px;
   background:linear-gradient(180deg,#303640,#222831);border:0;border-bottom:1px solid #ffffff12;box-shadow:0 2px 12px #0005;z-index:5}
 #dashboard>#tab-world .nx-logo{font-size:15px;letter-spacing:1px;font-weight:900;text-shadow:0 1px 8px #8d79ff55}
 #dashboard>#tab-world .nx-current-planet,#dashboard>#tab-world .nx-clock,#dashboard>#tab-world .nx-account{display:none!important}
@@ -89,8 +89,8 @@
   opacity:0;visibility:hidden;transform:translateY(5px);transition:opacity .16s ease,transform .16s ease}
 #dashboard>#tab-world .nx-scene.nx-actions-open .nx-action-bar{opacity:1;visibility:visible;transform:none}
 #dashboard>#tab-world .nx-action-bar button{padding:6px 8px;border:1px solid #ffffff55;border-radius:9px;background:#1d2634eF;color:#fff;font-size:10px}
-#dashboard>#tab-world .nx-bottom-nav{grid-row:4;height:58px;min-height:58px;display:grid;grid-template-columns:42px 42px minmax(0,1fr) 42px;align-items:center;gap:7px;
-  padding:6px 10px;background:linear-gradient(180deg,#343a43,#20262e);border:0;border-top:1px solid #ffffff18}
+#dashboard>#tab-world .nx-bottom-nav{grid-row:4;height:calc(58px + env(safe-area-inset-bottom));min-height:calc(58px + env(safe-area-inset-bottom));display:grid;grid-template-columns:42px 42px minmax(0,1fr) 42px;align-items:center;gap:7px;
+  padding:6px 10px calc(6px + env(safe-area-inset-bottom));background:linear-gradient(180deg,#343a43,#20262e);border:0;border-top:1px solid #ffffff18}
 #dashboard>#tab-world .nx-bottom-nav button{height:40px;min-width:0;padding:0;border:1px solid #ffffff16;border-radius:10px;background:#ffffff09;color:#e5e9ee;font-size:11px;font-weight:700;box-shadow:none}
 #dashboard>#tab-world .nx-bottom-nav button span{display:block;margin:0;font-size:18px}
 #dashboard>#tab-world .nx-bottom-nav .nx-character-title{border:0;background:transparent;color:#f4e4bd;font-size:13px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -109,7 +109,7 @@
 @keyframes nxBlueAura{0%,100%{transform:translate(-50%,0) scale(.96);opacity:.66}50%{transform:translate(-50%,-8px) scale(1.06);opacity:1}}
 @media(min-width:600px){#dashboard>#tab-world>.nx-world{height:100dvh}}
 @media(max-width:360px){
- #dashboard>#tab-world>.nx-world{grid-template-rows:50px minmax(0,1fr) 174px 54px}
+ #dashboard>#tab-world>.nx-world{grid-template-rows:calc(50px + env(safe-area-inset-top)) minmax(0,1fr) 174px calc(54px + env(safe-area-inset-bottom))}
  #dashboard>#tab-world .nx-scene{height:174px}
  #dashboard>#tab-world .nx-avatars{left:9%;right:18%;height:132px;bottom:31px}
  #dashboard>#tab-world .nx-avatar-card{height:130px;flex-basis:55px;min-width:55px}
