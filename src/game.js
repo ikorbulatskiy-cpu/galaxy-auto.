@@ -145,6 +145,22 @@ router.get("/rooms", requireSession, async (req, res, next) => {
     res.json({ rooms: result.rows });
   } catch (error) { next(error); }
 });
+router.get("/rooms/:roomId/presence", requireSession, async (req,res,next)=>{
+  if (!/^[0-9a-f-]{36}$/i.test(req.params.roomId)) return res.status(400).json({error:"Некорректная комната."});
+  try {
+    const result=await pool.query(
+      "SELECT rp.user_id,u.username,COALESCE(c.name,u.username) AS character_name,MAX(rp.connected_at) AS connected_at " +
+      "FROM room_presence rp JOIN users u ON u.id=rp.user_id " +
+      "JOIN rooms r ON r.id=rp.room_id JOIN user_locations l ON l.planet_id=r.planet_id AND l.user_id=$2 " +
+      "LEFT JOIN characters c ON c.user_id=u.id AND c.is_active=TRUE " +
+      "WHERE rp.room_id=$1 AND rp.connected_at>NOW()-INTERVAL '2 minutes' " +
+      "GROUP BY rp.user_id,u.username,c.name ORDER BY character_name",
+      [req.params.roomId,req.user.id]
+    );
+    res.json({users:result.rows});
+  } catch(e){next(e)}
+});
+
 router.get("/rooms/:roomId/messages", requireSession, async (req, res, next) => {
   if (!/^[0-9a-f-]{36}$/i.test(req.params.roomId)) return res.status(400).json({ error: "Некорректная комната." });
   const limit = Math.min(Math.max(Number.parseInt(req.query.limit,10) || 50,1),100);
