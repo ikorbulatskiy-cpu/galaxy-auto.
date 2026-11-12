@@ -43,7 +43,16 @@
    const sway=this.animation==="walk"?Math.sin(this.frame*Math.PI/4)*2:this.animation==="dance"?Math.sin(this.frame*Math.PI/2)*3:this.animation==="happy"||this.animation==="wave"?Math.sin(this.frame*Math.PI/3)*1.5:0;
    const bob=this.animation==="idle"?Math.sin(this.frame*Math.PI/2)*1.2:this.animation==="walk"?Math.abs(Math.sin(this.frame*Math.PI/4))*2:this.animation==="dance"?Math.sin(this.frame*Math.PI/2)*3:0;
    c.save();c.translate(sway,bob);
-   for(const key of ["body","outfit","shoes","head","hair","accessories"]){const img=this.images.get(key);if(img)c.drawImage(img,0,0,128,192)}
+   for(const key of ["body","outfit","shoes","head","hair","accessories"]){
+    const img=this.images.get(key);if(!img)continue;
+    if(key==="body"){
+     const scale=this.look.body==="slim"?.9:this.look.body==="athletic"?1.08:1;
+     c.save();c.translate(64,0);c.scale(scale,1);c.translate(-64,0);c.drawImage(img,0,0,128,192);c.restore();
+    }else if(key==="head"){
+     const scale=this.look.head==="soft"?.94:this.look.head==="angular"?1.05:1;
+     c.save();c.translate(64,44);c.scale(scale,scale);c.translate(-64,-44);c.drawImage(img,0,0,128,192);c.restore();
+    }else c.drawImage(img,0,0,128,192);
+   }
    c.restore();
   }
   start(){
