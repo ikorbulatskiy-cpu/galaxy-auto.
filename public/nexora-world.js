@@ -111,8 +111,7 @@
  }
  function connectRoomSocket(room,generation){
   if(generation!==joinGeneration||activeRoom!==room.id)return;
-  const wsProtocol=location.protocol==="https:"?"wss:":"ws:";
-  const ws=new WebSocket(wsProtocol+"//"+location.host+"/ws");socket=ws;
+  const ws=new WebSocket(window.NexoraAPI?window.NexoraAPI.websocketUrl("/ws"):(location.protocol==="https:"?"wss:":"ws:")+"//"+location.host+"/ws");socket=ws;
   ws.onopen=()=>{
    if(socket!==ws||generation!==joinGeneration)return;
    status("Сервер проверяет подключение…");
