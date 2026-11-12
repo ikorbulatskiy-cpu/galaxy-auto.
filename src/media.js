@@ -128,8 +128,10 @@ router.delete("/:assetId", async (req, res, next) => {
   const storage = storageConfig();
   if (!storage) return res.status(503).json({ error: "Хранилище фотографий не настроено на сервере." });
   try {
-    const asset = await pool.query("SELECT storage_key FROM media_assets WHERE id=$1 AND owner_user_id=$2", [req.params.assetId, req.user.id]);
+    const asset = await pool.query("SELECT storage_key,public_url FROM media_assets WHERE id=$1 AND owner_user_id=$2", [req.params.assetId, req.user.id]);
     if (!asset.rowCount) return res.status(404).json({ error: "Фотография не найдена." });
+    const used = await pool.query("SELECT 1 FROM blog_photos WHERE image_url=$1 LIMIT 1", [asset.rows[0].public_url]);
+    if (used.rowCount) return res.status(409).json({ error: "Сначала удали публикацию, в которой используется эта фотография." });
     await storage.client.send(new DeleteObjectCommand({ Bucket: storage.bucket, Key: asset.rows[0].storage_key }));
     await pool.query("DELETE FROM media_assets WHERE id=$1 AND owner_user_id=$2", [req.params.assetId, req.user.id]);
     res.json({ success: true });
