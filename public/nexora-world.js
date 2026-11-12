@@ -3,7 +3,7 @@
  const root=document.getElementById("tab-world");if(!root)return;
  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const api=async(url,options={})=>{const r=await fetch(url,{credentials:"same-origin",...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||"Ошибка "+r.status);return d};
- let planets=[],rooms=[],activePlanet="",activeRoom="",socket=null,meName="Ты",meAppearance={},meAura="none",activeCharacterId="",poll=null;
+ let planets=[],rooms=[],activePlanet="",activeRoom="",socket=null,meName="Ты",meAppearance={},meAura="none",activeCharacterId="",poll=null,reconnectTimer=null,reconnectAttempts=0,joinGeneration=0;
  const palette={light:"#f2c9a5",medium:"#d49a6c",tan:"#a96e45",dark:"#68402f"};
  function avatar(look={},mini=false){
   const skin=palette[look.skinTone]||"#d49a6c";
@@ -82,18 +82,85 @@
    const old=activeRoom;const room=rooms.find(x=>x.id===old)||rooms[0];select.value=room.id;await join(room);
   }catch(e){status(e.message);document.getElementById("nx-room-label").textContent="Выбери доступную планету"}
  }
- function disconnect(){if(poll)clearInterval(poll);poll=null;if(socket){socket.onclose=null;socket.close();socket=null}activeRoom="";window.nexoraActiveRoom="";window.dispatchEvent(new Event("nexora:room-left"))}
+ function disconnect(){
+  joinGeneration++;
+  if(reconnectTimer)clearTimeout(reconnectTimer);
+  reconnectTimer=null;reconnectAttempts=0;
+  if(poll)clearInterval(poll);poll=null;
+  if(socket){socket.onclose=null;socket.close(1000,"Room changed");socket=null}
+  activeRoom="";window.nexoraActiveRoom="";
+  window.dispatchEvent(new Event("nexora:room-left"));
+ }
+ async function refreshRoomSnapshot(room,generation){
+  const [m,p]=await Promise.all([api("/api/game/rooms/"+room.id+"/messages"),api("/api/game/rooms/"+room.id+"/presence")]);
+  if(generation!==joinGeneration||activeRoom!==room.id)return;
+  const log=document.getElementById("nx-chat-log");if(log)log.innerHTML="";
+  (m.messages||[]).forEach(appendMessage);renderPlayers(p.users||[]);
+ }
+ function connectRoomSocket(room,generation){
+  if(generation!==joinGeneration||activeRoom!==room.id)return;
+  const wsProtocol=location.protocol==="https:"?"wss:":"ws:";
+  const ws=new WebSocket(wsProtocol+"//"+location.host+"/ws");socket=ws;
+  ws.onopen=()=>{
+   if(socket!==ws||generation!==joinGeneration)return;
+   ws.send(JSON.stringify({type:"join_room",roomId:room.id}));
+  };
+  ws.onmessage=e=>{
+   if(socket!==ws||generation!==joinGeneration)return;
+   let packet;try{packet=JSON.parse(e.data)}catch{return}
+   if(packet.type==="joined_room"&&packet.roomId===room.id){
+    reconnectAttempts=0;window.nexoraActiveRoom=room.id;
+    window.dispatchEvent(new CustomEvent("nexora:room-joined",{detail:{roomId:room.id}}));
+    status("Соединение: отличное");
+    addEvent("Соединение с комнатой установлено.","success");
+   }
+   if(packet.type==="room_message"&&packet.message){appendMessage(packet.message);addEvent((packet.message.character_name||packet.message.username||"Игрок")+": "+packet.message.body,"chat")}
+   if(packet.type==="presence"&&packet.roomId===room.id){
+    if(packet.action==="joined")addEvent((packet.username||"Игрок")+" вошёл в комнату.","join");
+    if(packet.action==="left")addEvent("Игрок покинул комнату.","leave");
+    loadPresence(room.id);
+   }
+   if(packet.type==="error"){status(packet.message);addEvent(packet.message,"warning")}
+  };
+  ws.onerror=()=>{if(socket===ws)status("Проблема сети. Восстанавливаем соединение…")};
+  ws.onclose=event=>{
+   if(socket===ws)socket=null;
+   if(generation!==joinGeneration||activeRoom!==room.id)return;
+   window.nexoraActiveRoom="";
+   window.dispatchEvent(new Event("nexora:room-left"));
+   status("Связь потеряна. Повторное подключение…");
+   addEvent("Соединение прервано. Пытаемся вернуться в комнату.","warning");
+   if(reconnectTimer)return;
+   const delay=Math.min(30000,1000*Math.pow(2,Math.min(reconnectAttempts++,5)))+Math.floor(Math.random()*500);
+   reconnectTimer=setTimeout(async()=>{
+    reconnectTimer=null;
+    if(generation!==joinGeneration||activeRoom!==room.id)return;
+    try{
+     await refreshRoomSnapshot(room,generation);
+     if(generation===joinGeneration&&activeRoom===room.id)connectRoomSocket(room,generation);
+    }catch(error){
+     status("Комната временно недоступна. Повторяем подключение…");
+     if(generation===joinGeneration&&activeRoom===room.id){
+      reconnectTimer=setTimeout(()=>{reconnectTimer=null;if(generation===joinGeneration)connectRoomSocket(room,generation)},Math.min(30000,delay*2));
+     }
+    }
+   },delay);
+  };
+ }
  async function join(room){
-  disconnect();activeRoom=room.id;const selector=document.getElementById("nx-room-select");if(selector)selector.value=room.id;addEvent("Ты вошёл в комнату «"+room.name+"».","join");document.getElementById("nx-room-label").textContent="🪐 "+room.name;document.getElementById("nx-chat-title").textContent="Общий чат · "+room.name;document.getElementById("nx-chat-log").innerHTML="";status("Подключение к комнате…");
+  disconnect();activeRoom=room.id;const generation=joinGeneration;
+  const selector=document.getElementById("nx-room-select");if(selector)selector.value=room.id;
+  addEvent("Ты вошёл в комнату «"+room.name+"».","join");
+  document.getElementById("nx-room-label").textContent="🪐 "+room.name;
+  document.getElementById("nx-chat-title").textContent="Общий чат · "+room.name;
+  document.getElementById("nx-chat-log").innerHTML="";
+  status("Подключение к комнате…");
   try{
-   const [m,p]=await Promise.all([api("/api/game/rooms/"+room.id+"/messages"),api("/api/game/rooms/"+room.id+"/presence")]);
-   (m.messages||[]).forEach(appendMessage);renderPlayers(p.users||[]);
-   const ws=location.protocol==="https:"?"wss:":"ws:";socket=new WebSocket(ws+"//"+location.host+"/ws");
-   socket.onopen=()=>socket.send(JSON.stringify({type:"join_room",roomId:room.id}));
-   socket.onmessage=e=>{let packet;try{packet=JSON.parse(e.data)}catch{return}if(packet.type==="joined_room"){window.nexoraActiveRoom=room.id;window.dispatchEvent(new CustomEvent("nexora:room-joined",{detail:{roomId:room.id}}));status("Соединение: отличное");addEvent("Соединение с комнатой установлено.","success")}if(packet.type==="room_message"&&packet.message){appendMessage(packet.message);addEvent((packet.message.character_name||packet.message.username||"Игрок")+": "+packet.message.body,"chat")}if(packet.type==="presence"){if(packet.action==="joined")addEvent((packet.username||"Игрок")+" вошёл в комнату.","join");if(packet.action==="left")addEvent("Игрок покинул комнату.","leave");loadPresence(room.id)}if(packet.type==="error"){status(packet.message);addEvent(packet.message,"warning")}};
-   socket.onclose=()=>{if(activeRoom===room.id){window.nexoraActiveRoom="";window.dispatchEvent(new Event("nexora:room-left"));status("Связь с комнатой потеряна")}};
+   await refreshRoomSnapshot(room,generation);
+   if(generation!==joinGeneration||activeRoom!==room.id)return;
+   connectRoomSocket(room,generation);
    poll=setInterval(()=>loadPresence(room.id),25000);
-  }catch(e){status(e.message)}
+  }catch(e){if(generation===joinGeneration){status(e.message);addEvent("Не удалось загрузить комнату: "+e.message,"warning")}}
  }
  async function loadPresence(id){try{const p=await api("/api/game/rooms/"+id+"/presence");if(activeRoom===id)renderPlayers(p.users||[])}catch{}}
  
