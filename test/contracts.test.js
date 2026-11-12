@@ -119,3 +119,23 @@ test("avatar editor renders a safe layered 2D preview and persists selectable ap
   assert.match(html, /await loadAvatarPreview\(\)/);
   assert.match(game, /skinTone: z\.string\(\)\.max\(24\)\.optional\(\)/);
 });
+
+
+test("production HTTP security is configured without trusting arbitrary proxies", () => {
+  const server = read("server.js");
+  assert.match(server, /TRUST_PROXY_HOPS/);
+  assert.match(server, /app\.set\("trust proxy", proxyHops === undefined \? false : Number\(proxyHops\)\)/);
+  assert.match(server, /contentSecurityPolicy:/);
+  assert.match(server, /frameAncestors: \["'none'"\]/);
+  assert.match(server, /sec-fetch-site/);
+});
+
+test("realtime events are distributed through PostgreSQL notifications", () => {
+  const realtime = read("src/realtime.js");
+  assert.match(realtime, /LISTEN nexora_room_events/);
+  assert.match(realtime, /pg_notify\('nexora_room_events'/);
+  assert.match(realtime, /notification\)/);
+  assert.match(realtime, /DELETE FROM room_presence WHERE connected_at < NOW\(\) - INTERVAL '2 minutes'/);
+  assert.match(realtime, /action: "joined"/);
+  assert.match(realtime, /action: "left"/);
+});
