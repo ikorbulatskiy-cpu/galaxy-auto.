@@ -4,3 +4,5 @@
 .avatar-stage .nx-sprite-canvas{width:128px;height:192px;margin:0 auto}
 .nx-sprite-canvas[data-animation="walk"]{filter:drop-shadow(0 5px 8px #0007)}
 @media(max-width:600px){.nx-avatar-card .nx-sprite-canvas{width:64px;height:96px}.avatar-stage .nx-sprite-canvas{width:112px;height:168px}}
+
+.nx-action-bar{position:absolute;z-index:7;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:5px;max-width:calc(100% - 150px);overflow-x:auto;padding:5px;background:#10101bdc;border:1px solid #ffffff2b;border-radius:10px}.nx-action-bar button{white-space:nowrap;border:1px solid #665b83;border-radius:7px;background:#29233d;color:#f5edff;padding:5px 8px;font-size:10px}.nx-action-bar button.active{background:#7450ad;border-color:#d4b5ff}@media(max-width:600px){.nx-action-bar{left:8px;right:8px;bottom:7px;transform:none;max-width:none;justify-content:flex-start}.nx-action-bar button{font-size:9px;padding:5px 6px}}
