@@ -45,5 +45,5 @@
   }
   window.addEventListener("nexora:planet-modules",e=>{const names={magic:"Магия",defender:"Защитник",games:"Игры",horoscope:"Гороскопы",love:"Любовный помощник"};const active=(e.detail?.modules||[]).map(k=>names[k]||k);const note=document.createElement("div");note.className="nx-planet-module-note";note.textContent=active.length?"! На планете установлены модули: "+active.join(", "):"! Дополнительные модули не установлены.";const log=$("#nx-chat-log");if(log){log.append(note);log.scrollTo({top:log.scrollHeight,behavior:"smooth"})}});
   const scan=()=>{installChat();installCarousel();installDrawer()};new MutationObserver(scan).observe(root,{childList:true,subtree:true});scan();
-  window.NexoraExtras=Object.freeze({openPlanetModal,openMyPlanets});
+  function showCharacterInfo(name){showModal("Информация о персонаже",'<p>'+safe(name)+'</p><p class="muted">Персонаж находится в текущей комнате NEXORA.</p><div class="nx-dialog-actions"><button type="button" data-close>Закрыть</button></div>');}\n  window.NexoraExtras=Object.freeze({openPlanetModal,openMyPlanets,showCharacterInfo});
 })();
