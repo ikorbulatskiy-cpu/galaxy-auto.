@@ -220,7 +220,7 @@ function attachRealtime(server) {
           pool.query("SELECT p.name,p.settings FROM rooms r JOIN planets p ON p.id=r.planet_id WHERE r.id=$1",[socket.joinedRoom]).then(result=>{
             if(!result.rowCount||socket.readyState!==1)return;
             const settings=result.rows[0].settings||{};
-            const modules=Array.isArray(settings.modules)?settings.modules:["magic","games","defender"];
+            const modules=Array.isArray(settings.modules)?settings.modules:["magic","games","defender","love"];
             socket.send(JSON.stringify({type:"planet_modules",planetName:result.rows[0].name,modules}));
           }).catch(error=>console.error("Planet module lookup failed:",error.message));
         } catch { socket.send(JSON.stringify({type:"error",message:"Не удалось войти в комнату."})); }
@@ -237,8 +237,7 @@ function attachRealtime(server) {
           if (muted.rowCount) { socket.send(JSON.stringify({type:"error",message:"Отправка сообщений ограничена."})); return; }
           const member = await pool.query("SELECT 1 FROM room_presence WHERE connection_id=$1 AND user_id=$2 AND room_id=$3",[connectionId,user.id,socket.joinedRoom]);
           if (!member.rowCount) return;
-          messageTimes.push(now);
-          const command=body.split(/\\s+/,1)[0].toLocaleLowerCase("ru-RU");
+          const command=body.split(/\s+/,1)[0].toLocaleLowerCase("ru-RU");
           const botCommands={
             "/гороскоп":{module:"magic",name:"Магия",reply:"Сегодня звёзды советуют не торопиться с выводами. Случайная встреча может стать началом хорошего дня."},
             "/сон":{module:"magic",name:"Магия",reply:"Твой сон: впереди перемены. Запомни детали и не принимай сон за предсказание."},
