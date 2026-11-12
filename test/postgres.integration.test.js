@@ -46,7 +46,7 @@ test("PostgreSQL migrations, reward triggers and relationship exclusivity", { sk
     await client.query("INSERT INTO clans(name,slug,owner_user_id) VALUES($1,$2,$3)",["Test clan "+suffix,"test-clan-"+suffix,b]);
     const awards = await client.query(
       "SELECT u.id,a.slug FROM user_achievements u JOIN achievements a ON a.id=u.achievement_id WHERE u.user_id=ANY($1::uuid[])",
-      [[a,b]]
+      [[a,b,c]]
     );
     const awardSet = new Set(awards.rows.map(row => row.id + ":" + row.slug));
     assert.ok(awardSet.has(a + ":first-steps"));
@@ -56,7 +56,7 @@ test("PostgreSQL migrations, reward triggers and relationship exclusivity", { sk
     assert.ok(awardSet.has(c + ":new-friend"));
     assert.ok(awardSet.has(a + ":wedding-day"));
     assert.ok(awardSet.has(b + ":wedding-day"));
-    const balances = await client.query("SELECT user_id,coins FROM wallet_balances WHERE user_id=ANY($1::uuid[])",[[a,b]]);
+    const balances = await client.query("SELECT user_id,coins FROM wallet_balances WHERE user_id=ANY($1::uuid[])",[[a,b,c]]);
     assert.equal(Number(balances.rows.find(row => row.user_id===a).coins),230);
     assert.equal(Number(balances.rows.find(row => row.user_id===b).coins),150);
     assert.equal(Number(balances.rows.find(row => row.user_id===c).coins),130);
