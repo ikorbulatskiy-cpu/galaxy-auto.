@@ -71,8 +71,8 @@ function attachRealtime(server) {
             await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", ["nexora-room:" + packet.roomId]);
             await client.query("DELETE FROM room_presence WHERE connected_at < NOW() - INTERVAL '2 minutes'");
             const room = await client.query(
-              "SELECT r.id,r.capacity FROM rooms r WHERE r.id=$1 AND r.is_active=TRUE",
-              [packet.roomId]
+              "SELECT r.id,r.capacity FROM rooms r JOIN user_locations l ON l.planet_id=r.planet_id WHERE r.id=$1 AND r.is_active=TRUE AND l.user_id=$2",
+              [packet.roomId,user.id]
             );
             if (!room.rowCount) { await client.query("ROLLBACK"); return; }
             const character = await client.query(
