@@ -32,10 +32,10 @@ test("database migrations define the required game systems", () => {
   const world = read("database/migrations/002_game_world.sql");
   const systems = read("database/migrations/003_social_game_systems.sql");
   for (const table of ["characters", "rooms", "room_presence", "room_messages", "notifications"]) {
-    assert.match(world, new RegExp("CREATE TABLE IF NOT EXISTS " + table + "\\b"));
+    assert.match(world, new RegExp("CREATE TABLE IF NOT EXISTS " + table + "\b"));
   }
   for (const table of ["avatar_items", "character_inventory", "clans", "clan_members", "wallet_transfers", "purchases", "gifts", "pets", "blog_posts", "blog_photos", "relationships", "achievements", "user_achievements", "mini_game_scores", "admin_logs"]) {
-    assert.match(systems, new RegExp("CREATE TABLE IF NOT EXISTS " + table + "\\b"));
+    assert.match(systems, new RegExp("CREATE TABLE IF NOT EXISTS " + table + "\b"));
   }
   assert.match(systems, /nexora_award_achievement/);
   assert.match(systems, /nexora_first_purchase_achievement/);
