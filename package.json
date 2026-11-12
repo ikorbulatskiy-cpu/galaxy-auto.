@@ -1,12 +1,12 @@
 {
   "name": "nexora",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "NEXORA — Meet. Connect. Discover.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "db:migrate": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f database/schema.sql -f database/migrations/002_game_world.sql",
+    "db:migrate": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f database/schema.sql -f database/migrations/002_game_world.sql -f database/migrations/003_social_game_systems.sql",
     "check": "node --check server.js && for file in src/*.js; do node --check \"$file\"; done"
   },
   "engines": {
