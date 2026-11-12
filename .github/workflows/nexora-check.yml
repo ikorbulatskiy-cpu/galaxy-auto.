@@ -46,7 +46,8 @@ jobs:
           done
       - name: Check browser client syntax
         run: |
-          node --check public/avatar-motion.js\n          node --check public/nexora-world.js
+          node --check public/avatar-motion.js
+          node --check public/nexora-world.js
           python3 - <<'PY'
           import re
           from pathlib import Path
