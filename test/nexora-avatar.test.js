@@ -33,3 +33,13 @@ test("avatar sprite library binds each appearance group to the existing form con
   assert.match(source, /data-avatar-field/);
   assert.match(source, /dispatchEvent\(new Event\("change"/);
 });
+
+
+test("avatar renderer initializes equipment slugs before rendering and supports empty equipment", () => {
+  const context = { window: {}, Event, Object, Array };
+  vm.runInNewContext(source, context);
+  const empty = context.window.NexoraAvatar.render({ body: "regular" }, []);
+  const equipped = context.window.NexoraAvatar.render({ hair: "short" }, [{ slug: "nexora-pink-hair", category: "hair" }]);
+  assert.match(empty, /<svg/);
+  assert.match(equipped, /#ed72b2/);
+});
