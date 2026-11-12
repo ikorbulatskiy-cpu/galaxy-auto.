@@ -228,7 +228,7 @@
     if (!stage.dataset.movementBound) {
       stage.dataset.movementBound = "true";
       stage.addEventListener("pointerdown", event => {
-        if (event.target.closest("button, a, .nx-player-list")) return;
+        if (event.target.closest("button, a, .nx-player-list, .nx-avatar-card, .nx-action-popover")) return;
         const bounds = stage.getBoundingClientRect();
         const x = (event.clientX - bounds.left) / bounds.width * 100;
         const y = (event.clientY - bounds.top) / bounds.height * 100;

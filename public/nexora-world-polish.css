@@ -1,0 +1,76 @@
+/* NEXORA world polish: stable proportions, full avatar visibility and mobile-friendly room controls. */
+.nx-classic .nx-scene{
+  min-height:clamp(520px,72vh,820px)!important;
+  height:clamp(520px,72vh,820px);
+  overflow:hidden;
+  isolation:isolate;
+  background:
+    radial-gradient(ellipse at 50% 72%,#8c79ad55 0,transparent 46%),
+    radial-gradient(ellipse at 82% 16%,#d59acb66 0,transparent 35%),
+    linear-gradient(180deg,#101b3d 0%,#28234e 42%,#5c4a79 72%,#96769a 100%);
+  touch-action:pan-y;
+}
+.nx-classic .nx-scene:after{
+  content:"";position:absolute;inset:42% 0 0;z-index:0;pointer-events:none;
+  background:linear-gradient(180deg,transparent,#d3b5d622 65%,#17132955);
+}
+.nx-classic .nx-planet{z-index:0;opacity:.86}
+.nx-classic .nx-scene-arch{z-index:0;bottom:92px;height:clamp(190px,32vh,310px)}
+.nx-classic .nx-floor{
+  z-index:1;height:24%;min-height:112px;
+  background:
+    linear-gradient(180deg,#d4b6d5aa,#8e79a9cc),
+    repeating-linear-gradient(90deg,#e9d9ee55 0 2px,transparent 2px 9%);
+  border-top:3px solid #ead6f0;box-shadow:0 -10px 34px #d9baff44;
+}
+.nx-classic .nx-avatars{z-index:3;overflow:visible!important;pointer-events:none}
+.nx-classic .nx-avatars .nx-avatar-card{
+  width:clamp(88px,10vw,124px);min-width:0!important;height:auto;
+  display:flex;flex-direction:column;align-items:center;
+  transform:translate(-50%,-100%);pointer-events:auto;
+  transition:left .16s linear,top .16s linear;
+  animation:none!important;
+}
+.nx-classic .nx-avatar-card .nx-avatar-name{
+  order:0;max-width:120px;margin:0 0 4px;padding:4px 9px;
+  font-size:11px;background:#17112deF;border:1px solid #bca2e6;
+}
+.nx-classic .nx-avatar-card .nx-fav-toggle{position:absolute;right:2px;top:26px;z-index:5}
+.nx-classic .nx-avatar-card .nx-sprite-canvas,
+.nx-classic .nx-avatar-card svg{
+  display:block!important;order:1;width:clamp(82px,8vw,108px)!important;
+  height:clamp(123px,12vw,162px)!important;max-width:none;object-fit:contain;
+  object-position:center bottom;filter:drop-shadow(0 8px 5px #17102b99);
+}
+.nx-classic .nx-avatar-card.me .nx-avatar-name{border-color:#ffdc8c}
+.nx-classic .nx-avatar-card.selected{filter:drop-shadow(0 0 12px #ffe29a)}
+.nx-classic .nx-action-bar{display:none!important}
+.nx-action-popover{
+ position:absolute;z-index:12;min-width:176px;max-width:calc(100% - 20px);
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;
+ padding:9px;background:#171329f2;border:1px solid #b99be8;border-radius:14px;
+ box-shadow:0 12px 34px #0009;transform:translate(-50%,-100%);
+}
+.nx-action-popover[hidden]{display:none}
+.nx-action-popover .nx-action-title{grid-column:1/-1;color:#e9d9ff;font-size:11px;font-weight:900;padding:2px 4px}
+.nx-action-popover button{
+ border:1px solid #66558a;border-radius:9px;padding:8px 7px;
+ background:linear-gradient(145deg,#443263,#251d3c);color:#fff;font-size:11px;font-weight:800;
+}
+.nx-action-popover button:active{background:#8057bb}
+.nx-scene-hint{
+ position:absolute;z-index:5;left:12px;top:54px;padding:7px 10px;
+ color:#f6efff;background:#171329c9;border:1px solid #b99be866;border-radius:10px;
+ font-size:11px;pointer-events:none;backdrop-filter:blur(8px)
+}
+.nx-classic .nx-player-list{z-index:6}
+@media(max-width:700px){
+ .nx-classic .nx-scene{min-height:560px!important;height:68vh;max-height:760px}
+ .nx-classic .nx-avatars .nx-avatar-card{width:76px}
+ .nx-classic .nx-avatar-card .nx-sprite-canvas,.nx-classic .nx-avatar-card svg{width:72px!important;height:108px!important}
+ .nx-classic .nx-avatar-card .nx-avatar-name{max-width:86px;font-size:10px}
+ .nx-action-popover{min-width:164px}
+}
+@media(prefers-reduced-motion:reduce){
+ .nx-classic .nx-avatar-card,.nx-classic .nx-avatar-card *{animation:none!important;transition:none!important}
+}
