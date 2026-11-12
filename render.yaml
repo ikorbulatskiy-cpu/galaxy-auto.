@@ -21,7 +21,6 @@ services:
         value: "false"
       - key: TRUST_PROXY_HOPS
         value: "1"
-        value: https://nexora-web.onrender.com
 
 databases:
   - name: nexora-postgres
@@ -30,4 +29,3 @@ databases:
     databaseName: nexora
     postgresMajorVersion: "17"
     ipAllowList: []
-
