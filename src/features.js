@@ -45,8 +45,9 @@ router.post("/characters/:characterId/equip", async (req,res,next) => {
   const client=await pool.connect();
   try{
     await client.query("BEGIN");
-    const item=await client.query(`SELECT i.id,i.category FROM avatar_items i JOIN character_inventory ci ON ci.item_id=i.id
-      JOIN characters c ON c.id=ci.character_id WHERE i.id=$1 AND ci.character_id=$2 AND c.user_id=$3`,[p.data.itemId,req.params.characterId,req.user.id]);
+    const character=await client.query("SELECT id FROM characters WHERE id=$1 AND user_id=$2 FOR UPDATE",[req.params.characterId,req.user.id]);
+    if(!character.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Персонаж не найден."})}
+    const item=await client.query("SELECT i.id,i.category FROM avatar_items i JOIN character_inventory ci ON ci.item_id=i.id WHERE i.id=$1 AND ci.character_id=$2",[p.data.itemId,req.params.characterId]);
     if(!item.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Предмет не найден в инвентаре."})}
     if(p.data.equipped)await client.query(`UPDATE character_inventory ci SET equipped=FALSE FROM avatar_items i
       WHERE ci.item_id=i.id AND ci.character_id=$1 AND i.category=$2`,[req.params.characterId,item.rows[0].category]);
