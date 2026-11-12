@@ -16,6 +16,8 @@
   let reconnectTimer = null;
   let reconnectAttempts = 0;
   let positionsLoading = false;
+  let positionsLoadingRoom = "";
+  let positionsRequestId = 0;
   let lastPositionRefresh = 0;
   const scene = () => document.querySelector("#tab-world .nx-scene");
   const avatars = () => document.getElementById("nx-avatars");
@@ -45,17 +47,24 @@
   }
 
   async function loadPositions(id, force = false) {
-    if (positionsLoading || (!force && Date.now() - lastPositionRefresh < 12000)) return;
+    if ((positionsLoading && positionsLoadingRoom === id) || (!force && Date.now() - lastPositionRefresh < 12000)) return;
     positionsLoading = true;
+    positionsLoadingRoom = id;
+    const requestId = ++positionsRequestId;
     lastPositionRefresh = Date.now();
     try {
       const data = await api("/api/movement/rooms/" + encodeURIComponent(id) + "/positions");
-      (data.positions || []).forEach(item => applyPosition(item.username, item.x, item.y));
+      if (roomId === id && requestId === positionsRequestId) {
+        (data.positions || []).forEach(item => applyPosition(item.username, item.x, item.y));
+      }
     } catch (error) {
       const status = document.getElementById("nx-status");
-      if (status) status.textContent = error.message;
+      if (roomId === id && status) status.textContent = error.message;
     } finally {
-      positionsLoading = false;
+      if (requestId === positionsRequestId) {
+        positionsLoading = false;
+        positionsLoadingRoom = "";
+      }
     }
   }
 
@@ -72,6 +81,11 @@
     }
     roomId = "";
     connecting = false;
+    ownName = "";
+    positionsRequestId++;
+    positionsLoading = false;
+    positionsLoadingRoom = "";
+    lastPositionRefresh = 0;
   }
 
   function connectRoom(id) {
