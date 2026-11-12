@@ -24,13 +24,7 @@
     pop.style.top = Math.max(8, cardRect.top - stageRect.top - 84) + "px";
     stage.append(pop);
     activePopover = pop;
-    pop.querySelector("[data-player-info]").addEventListener("click", () => {
-      const modal=document.querySelector("#tab-world .nx-world-modal");
-      const name=card.querySelector(".nx-avatar-name")?.textContent?.trim()||"Персонаж";
-      if(modal){const content=modal.querySelector("[data-content]");content.innerHTML="<h2>Информация о персонаже</h2><p>"+name.replace(/[&<>\"]/g,"")+"</p><p class=muted>Персонаж находится в текущей комнате NEXORA.</p><div class=nx-dialog-actions><button type=button data-close>Закрыть</button></div>";modal.hidden=false;}
-      closePopover();
-    });
-    pop.querySelector("[data-player-move]").addEventListener("click", () => {
+    pop.querySelector("[data-player-info]").addEventListener("click", () => {\n      window.NexoraExtras?.showCharacterInfo(name);\n      closePopover();\n    });\n    pop.querySelector("[data-player-move]").addEventListener("click", () => {
       closePopover();
       window.NexoraMovement?.beginPlacement();
     });
