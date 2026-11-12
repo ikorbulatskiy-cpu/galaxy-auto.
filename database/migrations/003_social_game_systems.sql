@@ -335,3 +335,13 @@ DROP TRIGGER IF EXISTS nexora_first_purchase_achievement ON purchases;
 CREATE TRIGGER nexora_first_purchase_achievement
 AFTER INSERT ON purchases FOR EACH ROW
 EXECUTE FUNCTION nexora_purchase_achievement_trigger();
+
+-- Backfill one-time achievements for activity that predates the triggers.
+SELECT nexora_award_achievement(user_id,'first-steps') FROM (SELECT DISTINCT user_id FROM characters) existing;
+SELECT nexora_award_achievement(sender_id,'social-butterfly') FROM (SELECT DISTINCT sender_id FROM messages) existing;
+SELECT nexora_award_achievement(user_id,'new-friend') FROM (
+  SELECT requester_id AS user_id FROM friendships WHERE status='accepted'
+  UNION
+  SELECT addressee_id AS user_id FROM friendships WHERE status='accepted'
+) existing;
+SELECT nexora_award_achievement(user_id,'first-purchase') FROM (SELECT DISTINCT user_id FROM purchases) existing;
