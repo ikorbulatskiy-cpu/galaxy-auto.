@@ -1,0 +1,30 @@
+/* Permanent removal of obsolete room labels and balanced avatar placement. */
+#dashboard>#tab-world .nx-scene-hint,
+#dashboard>#tab-world .nx-scene-meta{display:none!important}
+#dashboard>#tab-world .nx-scene{position:relative!important;overflow:hidden!important;isolation:isolate}
+#dashboard>#tab-world .nx-avatars{position:absolute!important;inset:0!important;overflow:visible!important;pointer-events:none}
+#dashboard>#tab-world .nx-avatar-card{pointer-events:auto;z-index:12}
+#dashboard>#tab-world .nx-avatar-card.me{z-index:16!important}
+#dashboard>#tab-world .nx-avatar-card .nx-avatar-name{
+ display:block!important;position:relative;z-index:18;visibility:visible!important;opacity:1!important;
+ max-width:112px!important;min-height:18px!important;margin:0 auto 4px!important;
+ overflow:visible;text-overflow:clip;white-space:nowrap;text-align:center;
+ padding:3px 8px!important;font-size:11px!important;line-height:1.2!important;
+}
+#dashboard>#tab-world .nx-avatar-card.me .nx-sprite-canvas,
+#dashboard>#tab-world .nx-avatar-card.me svg{
+ width:76px!important;height:114px!important;max-width:76px!important;max-height:114px!important;
+ object-fit:contain;object-position:center bottom;
+}
+#dashboard>#tab-world .nx-action-popover{
+ position:absolute!important;z-index:100!important;display:grid!important;
+ visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+ left:auto!important;right:8px!important;top:8px!important;bottom:auto!important;
+ transform:none!important;max-width:calc(100% - 16px)!important;
+}
+#dashboard>#tab-world .nx-action-popover[hidden]{display:none!important}
+@media(max-width:700px){
+ #dashboard>#tab-world .nx-avatar-card.me .nx-sprite-canvas,
+ #dashboard>#tab-world .nx-avatar-card.me svg{width:68px!important;height:102px!important;max-width:68px!important;max-height:102px!important}
+ #dashboard>#tab-world .nx-avatar-card.me .nx-avatar-name{font-size:10px!important}
+}
