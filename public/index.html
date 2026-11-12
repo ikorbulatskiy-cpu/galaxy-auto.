@@ -354,4 +354,5 @@ loadApp();
 <script src="/nexora-galaxy-app.js?v=3" defer></script>
 
 
+<script>if(window.NexoraAPI?.mockEnabled()){document.getElementById("landing")?.classList.add("hidden");document.getElementById("dashboard")?.classList.remove("hidden");document.getElementById("top-actions")?.classList.add("hidden");if(typeof window.switchTab==="function")window.switchTab("world");}</script>
 </body></html>
