@@ -91,9 +91,9 @@ async function requireSession(req, res, next) {
     }
     if (!result.rows[0].email_verified_at) return res.status(403).json({ error: "Сначала подтвердите email." });
     req.user = result.rows[0];
-    next();
+    return next();
   } catch (error) {
-    next(error);
+    return next(error);
   }
 }
 
@@ -102,11 +102,16 @@ router.post("/register", async (req, res, next) => {
   if (!parsed.success) return res.status(400).json({ error: "Проверьте email, ник, пароль и дату рождения." });
   const { email, username, password, birthDate } = parsed.data;
   if (!ageAtLeast18(birthDate)) return res.status(400).json({ error: "NEXORA доступна только совершеннолетним пользователям (18+)." });
-  const client = await pool.connect();
+
+  let client;
+  let transactionStarted = false;
   try {
+    client = await pool.connect();
     const passwordHash = await bcrypt.hash(password, 12);
     const verificationToken = randomToken();
+
     await client.query("BEGIN");
+    transactionStarted = true;
     const inserted = await client.query(
       "INSERT INTO users (email, username, password_hash) VALUES ($1,$2,$3) RETURNING id,email,username",
       [email, username, passwordHash]
@@ -120,6 +125,8 @@ router.post("/register", async (req, res, next) => {
     await client.query("INSERT INTO user_locations (user_id,planet_id) SELECT $1,id FROM planets WHERE slug='nexora-prime' ON CONFLICT (user_id) DO NOTHING", [user.id]);
     await client.query("INSERT INTO email_verification_tokens (user_id, token_hash, expires_at) VALUES ($1,$2,NOW() + INTERVAL '24 hours')", [user.id, hashToken(verificationToken)]);
     await client.query("COMMIT");
+    transactionStarted = false;
+
     let devVerificationUrl = null;
     try {
       devVerificationUrl = await sendVerificationEmail(email, verificationToken);
@@ -132,11 +139,14 @@ router.post("/register", async (req, res, next) => {
       ...(devVerificationUrl && process.env.NODE_ENV !== "production" ? { devVerificationUrl } : {})
     });
   } catch (error) {
-    await client.query("ROLLBACK");
+    if (transactionStarted && client) {
+      try { await client.query("ROLLBACK"); }
+      catch (rollbackError) { console.error("Registration rollback failed:", rollbackError.code || "UNKNOWN", rollbackError.message); }
+    }
     if (error.code === "23505") return res.status(409).json({ error: "Этот email или ник уже занят." });
-    next(error);
+    return next(error);
   } finally {
-    client.release();
+    if (client) client.release();
   }
 });
 
@@ -153,14 +163,17 @@ router.get("/verify", async (req, res, next) => {
     if (!result.rowCount) return res.status(400).send("Ссылка недействительна или срок её действия истёк.");
     await pool.query("UPDATE email_verification_tokens SET consumed_at = NOW() WHERE token_hash = $1", [hashToken(token)]);
     return res.status(200).send("Email подтверждён. Теперь можно войти в NEXORA.");
-  } catch (error) { next(error); }
+  } catch (error) { return next(error); }
 });
 
 router.post("/login", async (req, res, next) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Введите корректный email и пароль." });
+
+  let client;
   try {
-    const result = await pool.query(
+    client = await pool.connect();
+    const result = await client.query(
       "SELECT id,email,username,password_hash,email_verified_at,status FROM users WHERE email = $1",
       [parsed.data.email]
     );
@@ -168,14 +181,19 @@ router.post("/login", async (req, res, next) => {
     const valid = user && user.status === "active" && await bcrypt.compare(parsed.data.password, user.password_hash);
     if (!valid) return res.status(401).json({ error: "Неверный email или пароль." });
     if (!user.email_verified_at) return res.status(403).json({ error: "Подтвердите email перед входом." });
+
     const token = randomToken();
-    await pool.query(
+    await client.query(
       "INSERT INTO sessions (user_id, token_hash, expires_at) VALUES ($1,$2,NOW() + INTERVAL '14 days')",
       [user.id, hashToken(token)]
     );
     setSessionCookie(res, token);
     return res.json({ user: { id: user.id, email: user.email, username: user.username } });
-  } catch (error) { next(error); }
+  } catch (error) {
+    return next(error);
+  } finally {
+    if (client) client.release();
+  }
 });
 
 router.get("/me", requireSession, async (req, res) => {
@@ -187,8 +205,10 @@ router.post("/logout", async (req, res, next) => {
     const token = req.cookies && req.cookies[COOKIE_NAME];
     if (token) await pool.query("DELETE FROM sessions WHERE token_hash = $1", [hashToken(token)]);
     clearSessionCookie(res);
-    res.json({ success: true });
-  } catch (error) { next(error); }
+    return res.json({ success: true });
+  } catch (error) {
+    return next(error);
+  }
 });
 
 module.exports = { router, requireSession };
