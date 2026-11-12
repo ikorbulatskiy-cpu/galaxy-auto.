@@ -178,8 +178,11 @@ test("photo uploads are authenticated, size-limited and signature-checked", () =
   assert.match(media, /router\.use\(requireSession\)/);
   assert.match(media, /maxBytes = 8 \* 1024 \* 1024/);
   assert.match(media, /matchesImageSignature/);
+  assert.match(media, /uploadLimiter/);
   assert.match(media, /HeadObjectCommand/);
   assert.match(html, /name="photoFiles"/);
   assert.match(html, /uploadPhotoToNexora/);
+  assert.match(html, /normalizePhotoForUpload/);
+  assert.match(html, /image\/heic/);
   assert.match(migration, /CREATE TABLE IF NOT EXISTS media_assets/);
 });
