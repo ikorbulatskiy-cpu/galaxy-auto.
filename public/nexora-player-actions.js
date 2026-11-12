@@ -25,7 +25,7 @@
     stage.append(pop);
     activePopover = pop;
     pop.querySelector("[data-player-info]").addEventListener("click", () => {
-      window.NexoraExtras?.showCharacterInfo(name);
+      window.NexoraExtras?.showCharacterInfo(name,card.dataset.playerUserId);
       closePopover();
     });
     pop.querySelector("[data-player-move]").addEventListener("click", () => {
