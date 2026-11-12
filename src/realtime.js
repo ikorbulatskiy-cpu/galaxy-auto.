@@ -110,6 +110,11 @@ function attachRealtime(server) {
   });
 
   wss.on("connection", async (socket, request) => {
+    console.info("Realtime socket connection received:", {
+      host: request.headers.host || "",
+      origin: request.headers.origin || "",
+      hasSessionCookie: String(request.headers.cookie || "").split(";").some(x => x.trim().startsWith(COOKIE_NAME + "="))
+    });
     let user;
     let connectionId;
     try {
@@ -130,8 +135,9 @@ function attachRealtime(server) {
       connectionId = crypto.randomUUID();
       socket.connectionId = connectionId;
       socket.send(JSON.stringify({ type: "ready", userId: user.id }));
-    } catch {
-      socket.close(1008, "Authentication required");
+    } catch (error) {
+      console.warn("Realtime socket authentication rejected:", error.message);
+      socket.close(1008, error.message === "origin" ? "Origin rejected" : "Authentication required");
       return;
     }
 

@@ -53,3 +53,10 @@ test("realtime WebSocket uses protocol ping/pong to keep presence alive", () => 
   assert.match(realtime, /socket\.terminate\(\)/);
   assert.match(realtime, /Realtime socket closed:/);
 });
+
+test("room join waits for the authenticated WebSocket ready packet", () => {
+  const client = read("public/nexora-world.js");
+  assert.match(client, /if\(packet\.type==="ready"\)[\s\S]*?ws\.send\(JSON\.stringify\(\{type:"join_room",roomId:room\.id\}\)\)/);
+  assert.match(client, /Authentication handshake timeout/);
+  assert.match(client, /event\.code/);
+});
