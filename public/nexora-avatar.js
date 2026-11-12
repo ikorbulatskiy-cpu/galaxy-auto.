@@ -28,6 +28,8 @@
   function render(look={}, equipped=[], size="full") {
     const p=catalog.palettes;
     const skin=safe(look.skinTone,p.skin,p.skin.medium);
+    const equippedList=Array.isArray(equipped)?equipped:[];
+    const slugs=equippedList.map(x=>x.slug);
     const hairKey=slugs.includes("nexora-pink-hair")?"pink":slugs.includes("nexora-blue-hair")?"blue":slugs.includes("nexora-emerald-hair")?"purple":look.hairColor;
     const outfitKey=slugs.includes("nexora-neon-jacket")?"gold":slugs.includes("nexora-aurora-hoodie")?"green":slugs.includes("nexora-star-shirt")?"blue":slugs.includes("nexora-sunset-coat")?"pink":look.outfit;
     const shoesKey=slugs.includes("nexora-midnight-boots")?"boots":slugs.includes("nexora-galaxy-sneakers")?"sneakers":slugs.includes("nexora-moon-boots")?"moon-boots":look.shoes;
@@ -45,8 +47,6 @@
       '<ellipse cx="49" cy="57" rx="3" ry="4" fill="'+eyes+'"/><ellipse cx="71" cy="57" rx="3" ry="4" fill="'+eyes+'"/>';
     const mouth=look.expression==="neutral" ? '<path d="M53 74 L67 74" stroke="#713e43" stroke-width="2" stroke-linecap="round"/>' :
       '<path d="M53 72 Q60 78 67 72" fill="none" stroke="#713e43" stroke-width="2" stroke-linecap="round"/>';
-    const equippedList=Array.isArray(equipped)?equipped:[];
-    const slugs=equippedList.map(x=>x.slug);
     const headwear=slugs.includes("nexora-crystal-crown") ? '<path d="M34 34 L42 17 L54 29 L61 12 L70 29 L82 17 L87 35 Z" fill="#a8e7ff" stroke="#f2fbff" stroke-width="2"/>' :
       slugs.includes("nexora-gold-halo") ? '<ellipse cx="60" cy="19" rx="22" ry="5" fill="none" stroke="#f5d46d" stroke-width="4"/>' :
       equippedList.some(x=>x.category==="head") ? '<path d="M29 43 Q31 12 60 12 Q89 12 91 43 L84 38 Q60 27 36 38 Z" fill="#8b6cff" stroke="#d6c7ff" stroke-width="2"/>' : "";
