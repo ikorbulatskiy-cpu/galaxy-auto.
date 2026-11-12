@@ -56,6 +56,13 @@ router.post("/characters/:characterId/equip", async (req,res,next) => {
   }catch(e){await client.query("ROLLBACK");next(e)}finally{client.release()}
 });
 
+router.get("/wallet/ledger",async(req,res,next)=>{
+ const limit=Math.min(Math.max(Number.parseInt(req.query.limit,10)||50,1),100);
+ try{
+  const result=await pool.query("SELECT id,currency,amount,reason,reference_id,created_at FROM wallet_ledger WHERE user_id=$1 ORDER BY created_at DESC LIMIT $2",[req.user.id,limit]);
+  res.json({transactions:result.rows});
+ }catch(e){next(e)}
+});
 router.post("/transfer", async (req,res,next) => {
   const p=z.object({toUserId:uuid,amount:z.number().int().positive().max(1000000),currency:z.enum(["coins","diamonds"]).default("coins"),idempotencyKey:idempotency}).strict().safeParse(req.body);
   if(!p.success||p.data.toUserId===req.user.id)return res.status(400).json({error:"Проверьте получателя и сумму."});
