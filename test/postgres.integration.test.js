@@ -10,6 +10,10 @@ test("PostgreSQL migrations, reward triggers and relationship exclusivity", { sk
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    const seededRooms = await client.query("SELECT p.slug,COUNT(r.id)::int AS rooms FROM planets p LEFT JOIN rooms r ON r.planet_id=p.id GROUP BY p.slug");
+    for (const slug of ["nexora-prime","love-planet","neon-city","paradise","mystery-planet"]) {
+      assert.ok(Number(seededRooms.rows.find(row => row.slug===slug)?.rooms||0)>=3, "expected rooms on " + slug);
+    }
     const suffix = crypto.randomBytes(5).toString("hex");
     const inserted = await client.query(
       "INSERT INTO users(email,username,password_hash,email_verified_at) VALUES($1,$2,'integration-test',NOW()),($3,$4,'integration-test',NOW()),($5,$6,'integration-test',NOW()) RETURNING id",
