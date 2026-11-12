@@ -36,3 +36,20 @@ test("mobile and desktop styles include room and event controls", () => {
   assert.match(css, /\.nx-events-panel/);
   assert.match(css, /@media\(max-width:700px\)/);
 });
+
+test("room WebSocket reconnects with backoff and restores room state", () => {
+  const client = read("public/nexora-world.js");
+  assert.match(client, /function connectRoomSocket\(room,generation\)/);
+  assert.match(client, /reconnectTimer=setTimeout/);
+  assert.match(client, /Math\.min\(30000,1000\*Math\.pow\(2,/);
+  assert.match(client, /refreshRoomSnapshot\(room,generation\)/);
+  assert.match(client, /joinGeneration\+\+/);
+});
+
+test("realtime WebSocket uses protocol ping/pong to keep presence alive", () => {
+  const realtime = read("src/realtime.js");
+  assert.match(realtime, /socket\.ping\(\)/);
+  assert.match(realtime, /socket\.on\("pong"/);
+  assert.match(realtime, /socket\.terminate\(\)/);
+  assert.match(realtime, /Realtime socket closed:/);
+});
