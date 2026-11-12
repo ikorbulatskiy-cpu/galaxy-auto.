@@ -61,6 +61,15 @@ CREATE TABLE IF NOT EXISTS clan_transactions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS clan_transactions_clan_idx ON clan_transactions(clan_id,created_at DESC);
+CREATE TABLE IF NOT EXISTS clan_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clan_id UUID NOT NULL REFERENCES clans(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body VARCHAR(1000) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS clan_messages_feed_idx ON clan_messages(clan_id,created_at DESC);
+
 
 CREATE TABLE IF NOT EXISTS wallet_transfers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
