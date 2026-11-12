@@ -38,6 +38,19 @@
     document.head.append(style);
   }
 
+
+  function applyAvatarAction(username, action, direction = "front") {
+    const card = cards().find(node => node.dataset.playerUsername === username);
+    const canvas = card?.querySelector("canvas[data-nexora-sprite]");
+    const avatar = canvas && window.NexoraSpriteAvatar?.get(canvas);
+    if (avatar) { avatar.setAnimation(action); avatar.setDirection(direction); }
+  }
+
+  function sendAction(action, direction = "front") {
+    if (!socket || socket.readyState !== WebSocket.OPEN || !roomId) return;
+    socket.send(JSON.stringify({ type: "action", action, direction }));
+  }
+
   function applyPosition(username, x, y) {
     const card = cards().find(node => node.dataset.playerUsername === username);
     if (!card) return;
@@ -129,6 +142,9 @@
       if (packet.type === "position_list") {
         (packet.positions || []).forEach(item => applyPosition(item.username || item.user_id, item.x, item.y));
       }
+      if (packet.type === "player_action" && packet.roomId === roomId) {
+        applyAvatarAction(packet.username, packet.action, packet.direction);
+      }
       if ((packet.type === "player_moved" || packet.type === "player_joined") && packet.roomId === roomId) {
         applyPosition(packet.username, packet.x, packet.y);
         if (packet.type === "player_joined" && packet.username !== ownName) {
@@ -168,6 +184,8 @@
   function moveTo(x, y) {
     if (!socket || socket.readyState !== WebSocket.OPEN || !roomId) return;
     target = { x: Math.max(2, Math.min(98, x)), y: Math.max(8, Math.min(92, y)) };
+    const direction = target.x < current.x ? "left" : target.x > current.x ? "right" : target.y < current.y ? "back" : "front";
+    sendAction("walk", direction);
     if (moveTimer) return;
     moveTimer = setInterval(() => {
       if (!target || !socket || socket.readyState !== WebSocket.OPEN) {
@@ -181,6 +199,7 @@
       if (distance < 1.2) {
         current = target;
         target = null;
+        sendAction("idle");
         clearInterval(moveTimer);
         moveTimer = null;
         return;
@@ -218,7 +237,7 @@
     }
   }
 
-  window.NexoraMovement = { join: connectRoom, leave: closeSocket };
+  window.NexoraMovement = { join: connectRoom, leave: closeSocket, action: sendAction };
   window.addEventListener("nexora:room-joined", event => connectRoom(event.detail?.roomId));
   window.addEventListener("nexora:room-left", closeSocket);
 
