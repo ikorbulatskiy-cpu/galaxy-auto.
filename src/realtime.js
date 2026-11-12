@@ -106,7 +106,7 @@ function attachRealtime(server) {
       const auth = await pool.query(
         `SELECT u.id,u.username,s.id AS session_id FROM sessions s
          JOIN users u ON u.id=s.user_id
-         WHERE s.token_hash=$1 AND s.expires_at>NOW() AND u.status='active' AND u.email_verified_at IS NOT NULL`,
+         WHERE s.token_hash=$1 AND s.expires_at>NOW() AND u.status='active'`,
         [hash(token)]
       );
       if (!auth.rowCount) throw new Error("auth");
@@ -136,7 +136,7 @@ function attachRealtime(server) {
       let packet;
       try { packet = JSON.parse(raw.toString()); } catch { return; }
       if (!packet || typeof packet.type !== "string") return;
-      const stillAuthenticated = await pool.query("SELECT 1 FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.id=$1 AND s.expires_at>NOW() AND u.status='active' AND u.email_verified_at IS NOT NULL", [user.session_id]).catch(() => ({ rowCount: 0 }));
+      const stillAuthenticated = await pool.query("SELECT 1 FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.id=$1 AND s.expires_at>NOW() AND u.status='active'", [user.session_id]).catch(() => ({ rowCount: 0 }));
       if (!stillAuthenticated.rowCount) {
         socket.close(1008, "Session expired");
         return;
