@@ -41,6 +41,8 @@ test("database migrations define the required game systems", () => {
   assert.match(systems, /nexora_first_purchase_achievement/);
   assert.match(systems, /CREATE TABLE IF NOT EXISTS wedding_ceremonies/);
   assert.match(systems, /nexora_check_relationship_exclusivity/);
+  assert.match(systems, /nexora_wedding_achievement/);
+  assert.match(systems, /last_cared_at/);
 });
 
 test("migration runner records each version before future runs", () => {
