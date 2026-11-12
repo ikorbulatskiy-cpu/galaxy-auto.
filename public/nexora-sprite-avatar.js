@@ -46,7 +46,7 @@
   return loadImage(url);
  }
  function resolveLook(look={}){
-  const gender=look.spriteGender==="female"?"female":"male",base=PARTS[gender];
+  const gender=look.spriteGender==="female"||look.gender==="female"?"female":"male",base=PARTS[gender];
   const hair=look.hair==="long"?"hair/hair_long_chestnut.png":"hair/hair_short_brown.png";
   const outfit=look.outfit==="pink"||look.outfit==="rose"?"outfits/dress_rose.png":"outfits/hoodie_blue.png";
   const accessory=Array.isArray(look.accessories)?look.accessories:typeof look.accessories==="string"?look.accessories.split(","):[];
@@ -64,7 +64,7 @@
   }
   async setLook(look={}){
    this.look={...look};const parts=resolveLook(look);
-   await Promise.all(Object.entries(parts).filter(([,src])=>src).map(async([key,src])=>{try{this.images.set(key,await loadImage(src))}catch{this.images.set(key,await proceduralImage(key,look))}}));
+   await Promise.all(Object.entries(parts).filter(([,src])=>src).map(async([key,src])=>{try{if(key==="head"){this.images.set(key,await proceduralImage("head",look));return}this.images.set(key,await loadImage(src))}catch{this.images.set(key,await proceduralImage(key,look))}}));
    if(!this.destroyed)this.draw();return this;
   }
   setAnimation(name){if(!ANIMATIONS[name])name="idle";if(this.animation!==name){this.animation=name;this.frame=0;this.lastTick=0;this.canvas.dataset.animation=name;this.draw()}}
