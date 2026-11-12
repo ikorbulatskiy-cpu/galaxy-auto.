@@ -92,6 +92,7 @@ NEXORA — социальная платформа знакомств и вир�
 - `GET /api/features/recipients?q=...` — список доступных подтверждённых пользователей для переводов, подарков и предложений отношений.
 - `GET /api/features/catalog`, `GET /api/features/inventory` — каталог и инвентарь.
 - `POST /api/features/characters/:characterId/equip` — надеть или снять предмет. JSON: `{"itemId":"UUID","equipped":true}`.
+- `GET /api/features/wallet/ledger` — последние операции кошелька.
 - `POST /api/features/transfer` — перевод валюты с обязательным UUID `idempotencyKey`.
 - `POST /api/features/shop/buy` — покупка предмета с обязательным UUID `idempotencyKey` и `characterId`.
 - `POST /api/features/shop/gift`, `GET /api/features/gifts`, `POST /api/features/gifts/:giftId/claim` — отправка и получение подарков.
