@@ -55,7 +55,48 @@ function openAuth(mode){authMode=mode;$("#auth-form").classList.remove("hidden")
 $$("[data-open]").forEach(b=>b.addEventListener("click",()=>openAuth(b.dataset.open)));
 $("#close-modal").onclick=()=>$("#auth-modal").classList.remove("open");
 $("#auth-modal").addEventListener("click",e=>{if(e.target.id==="auth-modal")e.currentTarget.classList.remove("open")});
-$("#auth-form").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget),payload={email:f.get("email"),password:f.get("password")};if(authMode==="register"){payload.username=f.get("username");payload.birthDate=f.get("birthDate");if(!payload.username||!payload.birthDate)return toast("Заполни ник и дату рождения.")}try{const result=await api("/api/auth/"+(authMode==="login"?"login":"register"),{method:"POST",body:JSON.stringify(payload)});e.currentTarget.reset();if(authMode==="register"){if(result.devVerificationUrl){$("#auth-title").textContent="Подтверди email";$("#auth-copy").textContent="Аккаунт создан. В тестовом режиме подтверждение доступно по ссылке ниже.";$("#auth-form").classList.add("hidden");$("#verify-link").href=result.devVerificationUrl;$("#verify-link").classList.remove("hidden");$("#auth-modal").classList.add("open")}else{$("#auth-modal").classList.remove("open");toast(result.message)}}else{$("#auth-modal").classList.remove("open");toast("Вход выполнен.");await loadApp()}}catch(err){toast(err.message)}});
+$("#auth-form").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const form=e.currentTarget;
+ const f=new FormData(form);
+ const payload={email:f.get("email"),password:f.get("password")};
+ if(authMode==="register"){
+  payload.username=String(f.get("username")||"").trim();
+  payload.birthDate=String(f.get("birthDate")||"");
+  if(!payload.username||!payload.birthDate)return toast("Заполни ник и дату рождения.");
+  const match=/^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(payload.birthDate);
+  if(!match)return toast("Укажи корректную дату рождения.");
+  const [,yearText,monthText,dayText]=match;
+  const year=Number(yearText),month=Number(monthText),day=Number(dayText);
+  const birth=new Date(Date.UTC(year,month-1,day));
+  if(birth.getUTCFullYear()!==year||birth.getUTCMonth()!==month-1||birth.getUTCDate()!==day)return toast("Укажи корректную дату рождения.");
+  const today=new Date();
+  let age=today.getUTCFullYear()-year;
+  if(today.getUTCMonth()+1<month||(today.getUTCMonth()+1===month&&today.getUTCDate()<day))age--;
+  if(age<18||birth>today)return toast("Регистрация доступна только с 18 лет.");
+ }
+ try{
+  const result=await api("/api/auth/"+(authMode==="login"?"login":"register"),{method:"POST",body:JSON.stringify(payload)});
+  form.reset();
+  if(authMode==="register"){
+   if(result.devVerificationUrl){
+    $("#auth-title").textContent="Подтверди email";
+    $("#auth-copy").textContent="Аккаунт создан. В тестовом режиме подтверждение доступно по ссылке ниже.";
+    form.classList.add("hidden");
+    $("#verify-link").href=result.devVerificationUrl;
+    $("#verify-link").classList.remove("hidden");
+    $("#auth-modal").classList.add("open");
+   }else{
+    $("#auth-modal").classList.remove("open");
+    toast(result.message);
+   }
+  }else{
+   $("#auth-modal").classList.remove("open");
+   toast("Вход выполнен.");
+   await loadApp();
+  }
+ }catch(err){toast(err.message)}
+});
 async function loadApp(){try{const data=await api("/api/auth/me");currentUser=data.user;const adminNav=$('[data-tab="admin"]');if(adminNav)adminNav.hidden=!["admin","developer","moderator"].includes(currentUser.role);if(currentUser.role==="moderator")$("#load-admin-logs").hidden=true;$("#landing").classList.add("hidden");$("#dashboard").classList.remove("hidden");$("#top-actions").classList.add("hidden");$("#welcome").textContent="Привет, "+currentUser.username+"!";$("#account-label").textContent=currentUser.email;await loadProfile();await loadFriends();await loadConversations();switchTab("profile")}catch(err){if(err.status===401||err.status===403)return;toast(err.message)}}
 function switchTab(tab){$$("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));$$(".tabpane").forEach(p=>p.classList.toggle("hidden",p.id!=="tab-"+tab));if(tab==="discover")loadDiscover();if(tab==="friends")loadFriends();if(tab==="messages")loadConversations();if(tab==="characters")loadCharacters();if(tab==="world")loadRooms();if(tab==="notifications")loadNotifications();if(["clans","economy","pets","blogs","relationships","rankings","admin"].includes(tab))loadFeatureTab(tab)}
 $$("[data-tab]").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
