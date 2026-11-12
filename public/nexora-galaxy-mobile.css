@@ -1,0 +1,121 @@
+/* NEXORA Galaxy-inspired mobile shell. Isolated to the authenticated world tab. */
+#dashboard>#tab-world{width:100%;max-width:none;min-height:100dvh;margin:0;padding:0!important;border:0!important;background:#10131b!important}
+#dashboard>#tab-world>.nx-world{
+  --gx-ink:#171a22;--gx-panel:#20242d;--gx-line:#343b46;--gx-teal:#123c43;--gx-text:#f4f6f8;
+  width:min(420px,100vw);height:100dvh;min-height:100dvh;max-width:420px;margin:0 auto;
+  display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:calc(54px + env(safe-area-inset-top)) minmax(0,1fr) 194px calc(58px + env(safe-area-inset-bottom));
+  overflow:hidden;border:0;border-radius:0;background:var(--gx-ink);color:var(--gx-text);
+  box-shadow:0 0 55px #0009;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  isolation:isolate
+}
+#dashboard>#tab-world .nx-topbar{grid-row:1;min-height:calc(54px + env(safe-area-inset-top));height:calc(54px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 13px 0;display:flex;align-items:center;gap:12px;
+  background:linear-gradient(180deg,#303640,#222831);border:0;border-bottom:1px solid #ffffff12;box-shadow:0 2px 12px #0005;z-index:5}
+#dashboard>#tab-world .nx-logo{font-size:15px;letter-spacing:1px;font-weight:900;text-shadow:0 1px 8px #8d79ff55}
+#dashboard>#tab-world .nx-current-planet,#dashboard>#tab-world .nx-clock,#dashboard>#tab-world .nx-account{display:none!important}
+#dashboard>#tab-world .nx-menu-trigger{width:38px;height:38px;flex:0 0 38px;margin:0;padding:0;border:1px solid #ffffff1a;border-radius:10px;
+  color:#fff;background:#ffffff0b;font-size:19px;display:grid;place-items:center}
+#dashboard>#tab-world .nx-menu-trigger span{display:none}
+#dashboard>#tab-world .nx-online-wrap{display:flex;align-items:center;gap:8px;margin-left:auto;color:#e6e9ee;font-size:13px;font-weight:750}
+#dashboard>#tab-world .nx-online-wrap:before{content:"online";color:#c9cdd4;font-weight:650}
+#dashboard>#tab-world #nx-online{min-width:29px;height:25px;padding:0 8px;display:grid;place-items:center;border:0;border-radius:99px;background:#505762;color:white;font-size:12px}
+#dashboard>#tab-world .nx-exit-button{width:36px;height:36px;border:0;border-radius:10px;background:#193e32;color:#8ce5b1;font-size:20px}
+#dashboard>#tab-world .nx-planet-tools{display:flex;flex-wrap:wrap;gap:7px;padding:10px;margin:0 0 10px;background:#171d27;border:1px solid #ffffff18;border-radius:12px}
+#dashboard>#tab-world .nx-planet-tools .nx-planet-select{max-width:none;flex:1 1 100%;width:100%;background:#0e141c;border:1px solid #3b4653;border-radius:9px;color:white}
+#dashboard>#tab-world .nx-planet-tools .nx-room-select{max-width:none;flex:1;min-width:0;background:#0e141c;border:1px solid #3b4653;border-radius:9px;color:white;padding:8px}
+#dashboard>#tab-world .nx-planet-tools .nx-small-btn{border:1px solid #45515e;border-radius:9px;background:#29313b;color:#fff;padding:0 13px}
+#dashboard>#tab-world .nx-chat-panel{grid-row:2;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:0;border:0;border-radius:0;
+  background-color:#121820;background-image:radial-gradient(circle at 15% 18%,#3e5c7226 0 2px,transparent 3px),
+  radial-gradient(circle at 78% 32%,#7d6da522 0 2px,transparent 3px),
+  radial-gradient(circle at 42% 72%,#5c8a9220 0 1.5px,transparent 2.5px),
+  radial-gradient(ellipse at 85% 0%,#283c5529,transparent 48%),
+  linear-gradient(145deg,#111821,#151d27 55%,#111820)}
+#dashboard>#tab-world .nx-chat-title{min-height:34px;flex:0 0 34px;padding:8px 13px;background:#1a222c;border:0;border-bottom:1px solid #ffffff10;
+  color:#dce3e8;font-size:11px;letter-spacing:.2px;display:flex;justify-content:space-between}
+#dashboard>#tab-world .nx-chat-hint{color:#87939e;font-weight:500}
+#dashboard>#tab-world .nx-chat-log{height:auto;min-height:0;flex:1;overflow:auto;padding:12px 10px 16px;font-size:13px;line-height:1.35;
+  overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#4d6670 transparent}
+#dashboard>#tab-world .nx-chat-line{display:grid;grid-template-columns:31px minmax(0,1fr);gap:8px;align-items:start;padding:5px 2px;margin:2px 0;overflow:visible}
+#dashboard>#tab-world .nx-message-avatar{width:30px;height:30px;display:grid;place-items:center;border-radius:50%;border:1px solid #9bc0c544;
+  background:linear-gradient(145deg,#486b79,#283c4a);color:#eaf8fa;font-size:12px;font-weight:850;box-shadow:0 2px 7px #0005}
+#dashboard>#tab-world .nx-message-bubble{min-width:0;padding:7px 9px 6px;border:1px solid #47707855;border-radius:4px 12px 12px 12px;
+  background:linear-gradient(145deg,#17434a,#12363d);box-shadow:0 2px 5px #0002;overflow-wrap:anywhere}
+#dashboard>#tab-world .nx-message-meta{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:3px}
+#dashboard>#tab-world .nx-chat-line b{color:#bce5df;font-size:11px;font-weight:800}
+#dashboard>#tab-world .nx-chat-line small{order:2;margin:0;color:#9bb5b6;font-size:9px;white-space:nowrap}
+#dashboard>#tab-world .nx-message-text{color:#f1f6f6;font-size:12px;line-height:1.4}
+#dashboard>#tab-world .nx-chat-send{flex:0 0 54px;min-height:54px;display:flex;align-items:center;gap:8px;padding:7px 10px;background:#272d36;border:0;border-top:1px solid #ffffff12}
+#dashboard>#tab-world .nx-chat-send:before{content:"☺";width:29px;flex:0 0 29px;text-align:center;color:#aeb8c1;font-size:23px}
+#dashboard>#tab-world .nx-chat-send input{height:38px;min-width:0;flex:1;margin:0;padding:0 12px;background:#171d25;border:1px solid #414b56;border-radius:19px;color:#fff;font-size:13px;box-shadow:none}
+#dashboard>#tab-world .nx-chat-send input::placeholder{color:#8d98a3}
+#dashboard>#tab-world .nx-chat-send button{width:38px;height:38px;flex:0 0 38px;padding:0;border:0;border-radius:50%;background:#2b745d;color:transparent;font-size:0;position:relative}
+#dashboard>#tab-world .nx-chat-send button:after{content:"➤";position:absolute;inset:0;display:grid;place-items:center;color:#e4fff1;font-size:18px}
+#dashboard>#tab-world .nx-eventbar,#dashboard>#tab-world .nx-statusbar,#dashboard>#tab-world .nx-player-list{display:none!important}
+#dashboard>#tab-world .nx-scene{grid-row:3;position:relative;min-height:0;height:194px;max-height:none;overflow:hidden;border:0;border-top:1px solid #ffffff26;
+  background:linear-gradient(180deg,#533f79 0%,#a75f8b 42%,#f0a078 72%,#e9b38b 100%)}
+#dashboard>#tab-world .nx-scene:before{content:"";position:absolute;inset:0;z-index:0;opacity:.55;
+  background:radial-gradient(ellipse at 70% 35%,#ffd9b8 0 2%,transparent 33%),radial-gradient(circle at 18% 16%,#fff 0 1px,transparent 2px),
+  radial-gradient(circle at 34% 25%,#fff 0 1px,transparent 2px),radial-gradient(circle at 88% 14%,#fff 0 1px,transparent 2px)}
+#dashboard>#tab-world .nx-scene:after{content:"";position:absolute;left:0;right:0;bottom:0;height:48px;z-index:1;
+  background:linear-gradient(180deg,#4e435d,#272e39 35%,#171e28);border-top:3px solid #f6c6aa;box-shadow:0 -9px 22px #ffb68a55}
+#dashboard>#tab-world .nx-planet,#dashboard>#tab-world .nx-scene-arch{display:none}
+#dashboard>#tab-world .nx-scene-label{top:8px;left:9px;z-index:4;padding:4px 8px;border:1px solid #ffffff38;border-radius:8px;
+  background:#29263dbd;color:#fff;font-size:10px;backdrop-filter:blur(5px)}
+#dashboard>#tab-world .nx-scene-meta{display:none}
+#dashboard>#tab-world .nx-roof-prop{position:absolute;z-index:2;bottom:28px;pointer-events:none}
+#dashboard>#tab-world .nx-roof-chair{right:12%;width:46px;height:36px;border-radius:18px 18px 10px 10px;background:linear-gradient(145deg,#e2a6a8,#865d83);
+  box-shadow:inset -6px -4px 0 #513f61,0 4px 5px #20182c88;transform:rotate(-5deg)}
+#dashboard>#tab-world .nx-roof-chair:after{content:"";position:absolute;left:7px;right:7px;bottom:-8px;height:10px;border-radius:0 0 5px 5px;background:#55475c}
+#dashboard>#tab-world .nx-roof-plant{left:5%;width:23px;height:35px;border-radius:50% 50% 5px 5px;background:linear-gradient(90deg,#31594c,#79a47b 50%,#244b43);
+  clip-path:polygon(50% 0,67% 36%,100% 13%,78% 54%,96% 70%,58% 65%,50% 100%,39% 65%,4% 73%,25% 48%,0 22%,39% 39%)}
+#dashboard>#tab-world .nx-roof-plant:after{content:"";position:absolute;left:-4px;right:-4px;bottom:-9px;height:10px;border-radius:3px;background:#a86f64;clip-path:none}
+#dashboard>#tab-world .nx-avatars{position:absolute;z-index:3;left:14%;right:22%;bottom:35px;display:flex;align-items:flex-end;justify-content:flex-start;gap:8px;
+  height:145px;overflow-x:auto;overflow-y:visible;padding:0 8px;scrollbar-width:none}
+#dashboard>#tab-world .nx-avatar-card{position:relative;flex:0 0 62px;min-width:62px;height:142px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  animation:nxGalaxyFloat 3.8s ease-in-out infinite;isolation:isolate}
+#dashboard>#tab-world .nx-avatar-card:nth-child(2n){animation-delay:.55s}
+#dashboard>#tab-world .nx-avatar-card:nth-child(3n){animation-delay:1.1s}
+#dashboard>#tab-world .nx-avatar-name{position:relative;z-index:4;max-width:62px;margin:0 0 2px;padding:2px 5px;border:1px solid #f2d99c88;border-radius:6px;
+  background:#242335dc;color:#fff;font-size:9px;text-shadow:none}
+#dashboard>#tab-world .nx-avatar-card canvas[data-nexora-sprite]{position:relative;z-index:2;display:block;width:58px!important;height:116px!important;max-width:none;filter:drop-shadow(0 4px 3px #17132299)}
+#dashboard>#tab-world .nx-avatar-card:before{content:"";position:absolute;z-index:1;left:50%;bottom:9px;width:62px;height:105px;transform:translateX(-50%);
+  opacity:0;pointer-events:none;filter:blur(5px);background:radial-gradient(ellipse at 50% 75%,#24c8ffb8 0 14%,#5945ff9c 33%,#7a2cff66 56%,transparent 75%);
+  clip-path:polygon(50% 100%,30% 82%,24% 61%,7% 45%,24% 39%,18% 17%,38% 32%,48% 0,59% 28%,82% 12%,75% 43%,100% 53%,77% 69%,70% 88%)}
+#dashboard>#tab-world .nx-avatar-card.me:before,.nx-avatar-card.aura-angel:before,.nx-avatar-card.aura-god:before,.nx-avatar-card.aura-almighty:before,.nx-avatar-card.aura-universe:before,.nx-avatar-card.aura-legend:before{
+  opacity:.9;animation:nxBlueAura 2.8s ease-in-out infinite}
+#dashboard>#tab-world .nx-avatar-card:after{content:"★";position:absolute;z-index:4;top:2px;left:50%;transform:translateX(-50%);color:#ffe18a;font-size:13px;text-shadow:0 0 8px #ffcf4d}
+#dashboard>#tab-world .nx-avatar-card.me .nx-avatar-name{border-color:#ffe09b;color:#fff1c7}
+#dashboard>#tab-world .nx-avatar-card .nx-fav-toggle{z-index:5}
+#dashboard>#tab-world .nx-action-bar{position:absolute;z-index:6;left:8px;right:8px;bottom:7px;display:flex;justify-content:center;gap:5px;
+  opacity:0;visibility:hidden;transform:translateY(5px);transition:opacity .16s ease,transform .16s ease}
+#dashboard>#tab-world .nx-scene.nx-actions-open .nx-action-bar{opacity:1;visibility:visible;transform:none}
+#dashboard>#tab-world .nx-action-bar button{padding:6px 8px;border:1px solid #ffffff55;border-radius:9px;background:#1d2634eF;color:#fff;font-size:10px}
+#dashboard>#tab-world .nx-bottom-nav{grid-row:4;height:calc(58px + env(safe-area-inset-bottom));min-height:calc(58px + env(safe-area-inset-bottom));display:grid;grid-template-columns:42px 42px minmax(0,1fr) 42px;align-items:center;gap:7px;
+  padding:6px 10px calc(6px + env(safe-area-inset-bottom));background:linear-gradient(180deg,#343a43,#20262e);border:0;border-top:1px solid #ffffff18}
+#dashboard>#tab-world .nx-bottom-nav button{height:40px;min-width:0;padding:0;border:1px solid #ffffff16;border-radius:10px;background:#ffffff09;color:#e5e9ee;font-size:11px;font-weight:700;box-shadow:none}
+#dashboard>#tab-world .nx-bottom-nav button span{display:block;margin:0;font-size:18px}
+#dashboard>#tab-world .nx-bottom-nav .nx-character-title{border:0;background:transparent;color:#f4e4bd;font-size:13px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#dashboard>#tab-world .nx-menu-panel{position:fixed;z-index:10050;left:50%;top:50%;transform:translate(-50%,-50%);width:min(400px,calc(100vw - 22px));
+  max-height:min(84dvh,700px);overflow:auto;padding:13px;background:#1b222c;border:1px solid #626e7c;border-radius:15px;box-shadow:0 18px 70px #000e}
+#dashboard>#tab-world .nx-menu-panel .nx-menu-heading{color:#f5dca4}
+#dashboard>#tab-world .nx-menu-panel .nx-menu-subtitle{color:#9eabb7}
+#dashboard>#tab-world .nx-primary-menu{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+#dashboard>#tab-world .nx-menu-panel button{min-height:42px;border:1px solid #ffffff18;border-radius:9px;background:#ffffff08;color:#eef2f5}
+#dashboard>#tab-world .nx-menu-panel .nx-planet-tools{order:2}
+#dashboard>#tab-world .nx-menu-panel .nx-primary-menu button span{font-size:18px}
+#dashboard>#tab-world .nx-favorites-panel,#dashboard>#tab-world .nx-help-panel,#dashboard>#tab-world .nx-settings-panel,#dashboard>#tab-world .nx-events-panel{
+  position:fixed;z-index:10051;left:50%;top:50%;transform:translate(-50%,-50%);width:min(390px,calc(100vw - 24px));max-height:80dvh;overflow:auto;
+  padding:14px;background:#1b222c;border:1px solid #65717e;border-radius:14px;box-shadow:0 18px 60px #000e}
+@keyframes nxGalaxyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes nxBlueAura{0%,100%{transform:translate(-50%,0) scale(.96);opacity:.66}50%{transform:translate(-50%,-8px) scale(1.06);opacity:1}}
+@media(min-width:600px){#dashboard>#tab-world>.nx-world{height:100dvh}}
+@media(max-width:360px){
+ #dashboard>#tab-world>.nx-world{grid-template-rows:calc(50px + env(safe-area-inset-top)) minmax(0,1fr) 174px calc(54px + env(safe-area-inset-bottom))}
+ #dashboard>#tab-world .nx-scene{height:174px}
+ #dashboard>#tab-world .nx-avatars{left:9%;right:18%;height:132px;bottom:31px}
+ #dashboard>#tab-world .nx-avatar-card{height:130px;flex-basis:55px;min-width:55px}
+ #dashboard>#tab-world .nx-avatar-card canvas[data-nexora-sprite]{width:52px!important;height:104px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ #dashboard>#tab-world .nx-avatar-card,#dashboard>#tab-world .nx-avatar-card:before{animation:none!important}
+ #dashboard>#tab-world *{scroll-behavior:auto!important;transition:none!important}
+}
