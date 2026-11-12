@@ -57,5 +57,7 @@ jobs:
           node --check /tmp/nexora-client.js
       - name: Apply PostgreSQL migrations
         run: npm run db:migrate
+      - name: Verify database migrations are idempotent
+        run: npm run db:migrate
       - name: Run structural and database integration tests
         run: npm test
