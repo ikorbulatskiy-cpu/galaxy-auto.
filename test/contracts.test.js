@@ -91,7 +91,7 @@ test("moderation actions cannot be applied to the current admin account", () => 
 test("dynamic dashboard lists bind handlers through the multi-element selector", () => {
   const html = read("public/index.html");
   assert.match(html, /\$\$=s=>\[\.\.\.document\.querySelectorAll\(s\)\]/);
-  assert.doesNotMatch(html, /(?<!\$)\$\(["'][^)]*["']\)\.forEach/);
+  assert.doesNotMatch(html, /(?<!\$)\$\(\s*["\'][^)]*["\']\s*\)\.forEach/);
   assert.match(html, /\$\$\("\.tabpane"\)\.forEach/);
   assert.match(html, /\$\$\(\s*"\[data-room\]"\s*\)\.forEach/);
 });
@@ -107,4 +107,15 @@ test("recipient lookup, wedding rewards and clan bank retries are wired", () => 
   assert.match(features, /idempotencyKey:idempotency/);
   assert.match(migration, /clan_transactions_idempotency_idx/);
   assert.match(migration, /ADD COLUMN IF NOT EXISTS idempotency_key UUID/);
+});
+
+
+test("avatar editor renders a safe layered 2D preview and persists selectable appearance", () => {
+  const html = read("public/index.html");
+  const game = read("src/game.js");
+  assert.match(html, /id="character-avatar-preview"/);
+  assert.match(html, /class="avatar-svg"/);
+  assert.match(html, /name="skinTone"/);
+  assert.match(html, /await loadAvatarPreview\(\)/);
+  assert.match(game, /skinTone: z\.string\(\)\.max\(24\)\.optional\(\)/);
 });
