@@ -11,7 +11,8 @@ const CODE_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 
 const registerSchema = z.object({
   username: z.string().trim().min(3).max(24).regex(/^[\p{L}\p{N}_-]+$/u),
-  gender: z.enum(["female", "male"]),
+  gender: z.enum(["female", "male"]).optional(),
+  body: z.enum(["slim", "regular", "athletic"]).optional(),
   adultConfirmed: z.literal(true)
 });
 const loginSchema = z.object({
@@ -89,7 +90,7 @@ router.post("/register", async (req, res, next) => {
     await client.query("INSERT INTO wallet_ledger (user_id,currency,amount,reason) VALUES ($1,'coins',500,'Стартовый бонус NEXORA')", [user.id]);
     await client.query(
       "INSERT INTO characters (user_id,name,gender,appearance,is_active) VALUES ($1,$2,$3,$4::jsonb,TRUE)",
-      [user.id, username, gender, JSON.stringify({ body:"regular", head:"classic", skinTone:"medium", hair:"short", hairColor:"brown", eyes:"brown", outfit:gender === "female" ? "pink" : "blue", shoes:"sneakers" })]
+      [user.id, username, gender || "male", JSON.stringify({ body:parsed.data.body || "regular", head:"classic", skinTone:"medium", hair:"short", hairColor:"brown", eyes:"brown", outfit:(gender || "male") === "female" ? "pink" : "blue", shoes:"sneakers" })]
     );
     await client.query("INSERT INTO user_locations (user_id,planet_id) SELECT $1,id FROM planets WHERE slug='newbies-1' ON CONFLICT (user_id) DO NOTHING", [user.id]);
     const sessionToken = randomToken();
