@@ -14,13 +14,25 @@ function cookieValue(header, name) {
 function attachRealtime(server) {
   const wss = new WebSocketServer({ server, path: "/ws", maxPayload: 4096 });
   const rooms = new Map();
+  const instanceId = crypto.randomUUID();
+  const broadcastLocal = event => {
+    for (const peer of rooms.get(event.roomId) || []) {
+      if (peer.readyState === 1) {
+        try { peer.send(JSON.stringify(event)); } catch {}
+      }
+    }
+  };
   const listener = process.env.DATABASE_URL ? new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: true } : undefined
   }) : null;
-  const publish = payload => pool.query("SELECT pg_notify('nexora_room_events',$1)", [JSON.stringify(payload)]).catch(error => {
-    console.error("Realtime event publish failed:", error.message);
-  });
+  const publish = payload => {
+    const event = { ...payload, source: instanceId };
+    broadcastLocal(event);
+    return pool.query("SELECT pg_notify('nexora_room_events',$1)", [JSON.stringify(event)]).catch(error => {
+      console.error("Realtime event publish failed:", error.message);
+    });
+  };
   if (listener) {
     listener.connect().then(() => listener.query("LISTEN nexora_room_events")).catch(error => {
       console.error("Realtime cross-instance listener unavailable:", error.message);
@@ -28,12 +40,8 @@ function attachRealtime(server) {
     listener.on("notification", notification => {
       let event;
       try { event = JSON.parse(notification.payload); } catch { return; }
-      if (!event || typeof event.roomId !== "string") return;
-      for (const peer of rooms.get(event.roomId) || []) {
-        if (peer.readyState === 1) {
-          try { peer.send(JSON.stringify(event)); } catch {}
-        }
-      }
+      if (!event || typeof event.roomId !== "string" || event.source === instanceId) return;
+      broadcastLocal(event);
     });
     listener.on("error", error => console.error("Realtime listener error:", error.message));
   }
