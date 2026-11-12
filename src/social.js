@@ -1,0 +1,232 @@
+const express = require("express");
+const { z } = require("zod");
+const { pool } = require("./db");
+const { requireSession } = require("./auth");
+
+const router = express.Router();
+
+const friendRequestSchema = z.object({}).strict();
+const friendDecisionSchema = z.object({ decision: z.enum(["accept", "reject"]) }).strict();
+const messageSchema = z.object({ body: z.string().trim().min(1).max(4000) }).strict();
+const uuidSchema = z.string().uuid();
+
+function validId(value) {
+  return uuidSchema.safeParse(value).success;
+}
+
+async function isBlocked(client, firstId, secondId) {
+  const result = await client.query(
+    "SELECT 1 FROM blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1) LIMIT 1",
+    [firstId, secondId]
+  );
+  return result.rowCount > 0;
+}
+
+async function areFriends(client, firstId, secondId) {
+  const result = await client.query(
+    "SELECT 1 FROM friendships WHERE status='accepted' AND ((requester_id=$1 AND addressee_id=$2) OR (requester_id=$2 AND addressee_id=$1)) LIMIT 1",
+    [firstId, secondId]
+  );
+  return result.rowCount > 0;
+}
+
+router.get("/friends", requireSession, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT f.id, f.status, f.created_at,
+              CASE WHEN f.requester_id=$1 THEN 'outgoing' ELSE 'incoming' END AS direction,
+              u.id AS user_id, u.username,
+              p.display_name, p.city, p.avatar_url
+       FROM friendships f
+       JOIN users u ON u.id=CASE WHEN f.requester_id=$1 THEN f.addressee_id ELSE f.requester_id END
+       LEFT JOIN profiles p ON p.user_id=u.id
+       WHERE (f.requester_id=$1 OR f.addressee_id=$1)
+         AND f.status IN ('pending','accepted')
+       ORDER BY CASE WHEN f.status='pending' THEN 0 ELSE 1 END, f.created_at DESC
+       LIMIT 200`,
+      [req.user.id]
+    );
+    res.json({ friends: result.rows });
+  } catch (error) { next(error); }
+});
+
+router.post("/friends/:userId", requireSession, async (req, res, next) => {
+  const targetId = req.params.userId;
+  if (!validId(targetId) || targetId === req.user.id) {
+    return res.status(400).json({ error: "Некорректный пользователь." });
+  }
+  try {
+    const target = await pool.query("SELECT id FROM users WHERE id=$1 AND status='active' AND email_verified_at IS NOT NULL", [targetId]);
+    if (!target.rowCount) return res.status(404).json({ error: "Пользователь не найден." });
+    if (await isBlocked(pool, req.user.id, targetId)) return res.status(403).json({ error: "Нельзя отправить запрос этому пользователю." });
+    const existing = await pool.query(
+      "SELECT id,status,requester_id,addressee_id FROM friendships WHERE (requester_id=$1 AND addressee_id=$2) OR (requester_id=$2 AND addressee_id=$1) LIMIT 1",
+      [req.user.id, targetId]
+    );
+    if (existing.rowCount) {
+      const relation = existing.rows[0];
+      if (relation.status === "accepted") return res.status(409).json({ error: "Вы уже друзья." });
+      if (relation.status === "pending") return res.status(409).json({ error: relation.requester_id === req.user.id ? "Запрос уже отправлен." : "Этот пользователь уже отправил вам запрос." });
+      await pool.query("DELETE FROM friendships WHERE id=$1", [relation.id]);
+    }
+    const created = await pool.query(
+      "INSERT INTO friendships (requester_id,addressee_id,status) VALUES ($1,$2,'pending') RETURNING id,status,created_at",
+      [req.user.id, targetId]
+    );
+    res.status(201).json({ request: created.rows[0] });
+  } catch (error) {
+    if (error.code === "23505") return res.status(409).json({ error: "Запрос дружбы уже существует." });
+    next(error);
+  }
+});
+
+router.patch("/friends/:userId", requireSession, async (req, res, next) => {
+  const targetId = req.params.userId;
+  const parsed = friendDecisionSchema.safeParse(req.body);
+  if (!validId(targetId) || !parsed.success) return res.status(400).json({ error: "Некорректное решение или пользователь." });
+  try {
+    const result = await pool.query(
+      "UPDATE friendships SET status=$3 WHERE requester_id=$1 AND addressee_id=$2 AND status='pending' RETURNING id,status",
+      [targetId, req.user.id, parsed.data.decision === "accept" ? "accepted" : "rejected"]
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Входящий запрос не найден." });
+    res.json({ request: result.rows[0] });
+  } catch (error) { next(error); }
+});
+
+router.delete("/friends/:userId", requireSession, async (req, res, next) => {
+  const targetId = req.params.userId;
+  if (!validId(targetId) || targetId === req.user.id) return res.status(400).json({ error: "Некорректный пользователь." });
+  try {
+    const result = await pool.query(
+      "DELETE FROM friendships WHERE status='accepted' AND ((requester_id=$1 AND addressee_id=$2) OR (requester_id=$2 AND addressee_id=$1)) RETURNING id",
+      [req.user.id, targetId]
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Дружба не найдена." });
+    res.json({ success: true });
+  } catch (error) { next(error); }
+});
+
+router.post("/conversations/:userId", requireSession, async (req, res, next) => {
+  const targetId = req.params.userId;
+  if (!validId(targetId) || targetId === req.user.id) return res.status(400).json({ error: "Некорректный пользователь." });
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const target = await client.query("SELECT id FROM users WHERE id=$1 AND status='active' AND email_verified_at IS NOT NULL", [targetId]);
+    if (!target.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Пользователь не найден." });
+    }
+    if (await isBlocked(client, req.user.id, targetId)) {
+      await client.query("ROLLBACK");
+      return res.status(403).json({ error: "Общение недоступно." });
+    }
+    if (!await areFriends(client, req.user.id, targetId)) {
+      await client.query("ROLLBACK");
+      return res.status(403).json({ error: "Личные сообщения доступны друзьям." });
+    }
+    const lockKey = [req.user.id, targetId].sort().join(":");
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [lockKey]);
+    const existing = await client.query(
+      `SELECT c.id
+       FROM conversations c
+       JOIN conversation_members a ON a.conversation_id=c.id AND a.user_id=$1
+       JOIN conversation_members b ON b.conversation_id=c.id AND b.user_id=$2
+       WHERE (SELECT COUNT(*) FROM conversation_members m WHERE m.conversation_id=c.id)=2
+       LIMIT 1`,
+      [req.user.id, targetId]
+    );
+    let conversationId;
+    if (existing.rowCount) {
+      conversationId = existing.rows[0].id;
+    } else {
+      const created = await client.query("INSERT INTO conversations DEFAULT VALUES RETURNING id");
+      conversationId = created.rows[0].id;
+      await client.query(
+        "INSERT INTO conversation_members (conversation_id,user_id) VALUES ($1,$2),($1,$3)",
+        [conversationId, req.user.id, targetId]
+      );
+    }
+    await client.query("COMMIT");
+    res.status(existing.rowCount ? 200 : 201).json({ conversationId });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    next(error);
+  } finally { client.release(); }
+});
+
+router.get("/conversations", requireSession, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT c.id, c.created_at,
+              other.id AS user_id, other.username,
+              p.display_name, p.avatar_url,
+              last.body AS last_message, last.created_at AS last_message_at
+       FROM conversation_members mine
+       JOIN conversations c ON c.id=mine.conversation_id
+       JOIN conversation_members theirs ON theirs.conversation_id=c.id AND theirs.user_id<>$1
+       JOIN users other ON other.id=theirs.user_id AND other.status='active'
+       LEFT JOIN profiles p ON p.user_id=other.id
+       LEFT JOIN LATERAL (
+         SELECT body,created_at FROM messages
+         WHERE conversation_id=c.id ORDER BY created_at DESC LIMIT 1
+       ) last ON TRUE
+       WHERE mine.user_id=$1
+       ORDER BY COALESCE(last.created_at,c.created_at) DESC
+       LIMIT 100`,
+      [req.user.id]
+    );
+    res.json({ conversations: result.rows });
+  } catch (error) { next(error); }
+});
+
+router.get("/conversations/:conversationId/messages", requireSession, async (req, res, next) => {
+  const conversationId = req.params.conversationId;
+  if (!validId(conversationId)) return res.status(400).json({ error: "Некорректный диалог." });
+  const limit = Math.min(Math.max(Number.parseInt(req.query.limit, 10) || 50, 1), 100);
+  try {
+    const member = await pool.query(
+      "SELECT 1 FROM conversation_members WHERE conversation_id=$1 AND user_id=$2",
+      [conversationId, req.user.id]
+    );
+    if (!member.rowCount) return res.status(404).json({ error: "Диалог не найден." });
+    const result = await pool.query(
+      `SELECT m.id,m.body,m.created_at,m.read_at,u.id AS sender_id,u.username
+       FROM messages m JOIN users u ON u.id=m.sender_id
+       WHERE m.conversation_id=$1
+       ORDER BY m.created_at DESC LIMIT $2`,
+      [conversationId, limit]
+    );
+    res.json({ messages: result.rows.reverse() });
+  } catch (error) { next(error); }
+});
+
+router.post("/conversations/:conversationId/messages", requireSession, async (req, res, next) => {
+  const conversationId = req.params.conversationId;
+  const parsed = messageSchema.safeParse(req.body);
+  if (!validId(conversationId) || !parsed.success) return res.status(400).json({ error: "Сообщение пустое или содержит некорректные данные." });
+  try {
+    const members = await pool.query(
+      "SELECT user_id FROM conversation_members WHERE conversation_id=$1",
+      [conversationId]
+    );
+    if (members.rowCount !== 2 || !members.rows.some(row => row.user_id === req.user.id)) {
+      return res.status(404).json({ error: "Диалог не найден." });
+    }
+    const otherId = members.rows.find(row => row.user_id !== req.user.id).user_id;
+    if (await isBlocked(pool, req.user.id, otherId)) return res.status(403).json({ error: "Отправка сообщений недоступна." });
+    const muted = await pool.query(
+      "SELECT 1 FROM punishments WHERE user_id=$1 AND kind='mute' AND lifted_at IS NULL AND (ends_at IS NULL OR ends_at>NOW()) LIMIT 1",
+      [req.user.id]
+    );
+    if (muted.rowCount) return res.status(403).json({ error: "Отправка сообщений временно ограничена." });
+    const result = await pool.query(
+      "INSERT INTO messages (conversation_id,sender_id,body) VALUES ($1,$2,$3) RETURNING id,conversation_id,sender_id,body,created_at",
+      [conversationId, req.user.id, parsed.data.body]
+    );
+    res.status(201).json({ message: result.rows[0] });
+  } catch (error) { next(error); }
+});
+
+module.exports = router;
