@@ -24,6 +24,11 @@ SELECT u.id, COALESCE(NULLIF(LEFT(p.display_name,32),''),u.username), TRUE, COAL
 FROM users u LEFT JOIN profiles p ON p.user_id=u.id
 WHERE NOT EXISTS (SELECT 1 FROM characters c WHERE c.user_id=u.id);
 
+INSERT INTO user_locations (user_id,planet_id)
+SELECT u.id,p.id FROM users u CROSS JOIN planets p
+WHERE p.slug='nexora-prime'
+ON CONFLICT (user_id) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS rooms (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   planet_id UUID NOT NULL REFERENCES planets(id) ON DELETE CASCADE,
