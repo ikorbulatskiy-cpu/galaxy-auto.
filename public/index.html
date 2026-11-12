@@ -188,11 +188,21 @@ async function loadMediaLibrary(){
 async function loadBlogs(){
  try{
   const d=await api("/api/features/blogs");
-  $("#blog-list").innerHTML=d.posts.length?d.posts.map(p=>'<article class="panel"><b>@'+escapeHtml(p.username)+'</b><p>'+escapeHtml(p.body)+'</p>'+(p.photos||[]).map(url=>'<img src="'+escapeHtml(url)+'" alt="Фото публикации" loading="lazy" style="width:100%;max-width:420px;border-radius:14px;margin:8px 0">').join("")+'<small>'+Number(p.likes)+' лайков · '+Number(p.comments)+' комментариев</small>'+(p.recent_comments||[]).map(c=>'<div class="muted"><b>@'+escapeHtml(c.username)+'</b>: '+escapeHtml(c.body)+'</div>').join("")+'<button class="btn small" data-like-post="'+escapeHtml(p.id)+'">Нравится</button><form class="sendrow" data-comment-form="'+escapeHtml(p.id)+'"><input class="field" name="body" maxlength="1000" placeholder="Написать комментарий" required><button class="btn small">Ответить</button></form></article>').join(""):'<div class="muted">Публикаций пока нет.</div>';
+  $("#blog-list").innerHTML=d.posts.length?d.posts.map(p=>'<article class="panel"><b>@'+escapeHtml(p.username)+'</b><p>'+escapeHtml(p.body)+'</p>'+(p.photos||[]).map(url=>'<img src="'+escapeHtml(url)+'" alt="Фото публикации" loading="lazy" style="width:100%;max-width:420px;border-radius:14px;margin:8px 0">').join("")+'<small>'+Number(p.likes)+' лайков · '+Number(p.comments)+' комментариев</small>'+(p.recent_comments||[]).map(c=>'<div class="muted"><b>@'+escapeHtml(c.username)+'</b>: '+escapeHtml(c.body)+'</div>').join("")+(p.user_id===currentUser.id?'<button class="btn small" data-edit-post="'+escapeHtml(p.id)+'">Изменить</button><button class="btn small" data-delete-post="'+escapeHtml(p.id)+'">Удалить</button>':'')+'<button class="btn small" data-like-post="'+escapeHtml(p.id)+'">Нравится</button><form class="sendrow" data-comment-form="'+escapeHtml(p.id)+'"><input class="field" name="body" maxlength="1000" placeholder="Написать комментарий" required><button class="btn small">Ответить</button></form></article>').join(""):'<div class="muted">Публикаций пока нет.</div>';
   $$("[data-like-post]").forEach(b=>b.onclick=async()=>{
    try{await api("/api/features/blogs/"+b.dataset.likePost+"/like",{method:"POST",body:"{}"});await loadBlogs()}catch(e){toast(e.message)}
   });
-  $$("[data-comment-form]").forEach(form=>form.addEventListener("submit",async e=>{
+  $("[data-edit-post]").forEach(b=>b.onclick=async()=>{
+   const post=d.posts.find(x=>x.id===b.dataset.editPost);if(!post)return;
+   const body=prompt("Текст публикации:",post.body);if(body===null)return;
+   const visibility=prompt("Видимость: public, friends или private",post.visibility);if(visibility===null)return;
+   try{await api("/api/features/blogs/"+post.id,{method:"PATCH",body:JSON.stringify({body,visibility})});await loadBlogs();toast("Публикация обновлена.")}catch(e){toast(e.message)}
+  });
+  $("[data-delete-post]").forEach(b=>b.onclick=async()=>{
+   if(!confirm("Удалить публикацию вместе с комментариями?"))return;
+   try{await api("/api/features/blogs/"+b.dataset.deletePost,{method:"DELETE"});await loadBlogs();toast("Публикация удалена.")}catch(e){toast(e.message)}
+  });
+  $("[data-comment-form]").forEach(form=>form.addEventListener("submit",async e=>{
    e.preventDefault();const body=new FormData(form).get("body");
    try{await api("/api/features/blogs/"+form.dataset.commentForm+"/comments",{method:"POST",body:JSON.stringify({body})});await loadBlogs()}catch(err){toast(err.message)}
   }));
