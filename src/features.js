@@ -74,17 +74,19 @@ router.post("/shop/buy", async (req,res,next) => {
   const client=await pool.connect();
   try{
     await client.query("BEGIN");
-    const old=await client.query("SELECT id,user_id,item_id FROM purchases WHERE idempotency_key=$1",[p.data.idempotencyKey]);
-    if(old.rowCount){await client.query("COMMIT");if(old.rows[0].user_id!==req.user.id||old.rows[0].item_id!==p.data.itemId)return res.status(409).json({error:"Ключ операции уже использован для другой покупки."});return res.json({purchaseId:old.rows[0].id,replayed:true})}
+    const old=await client.query("SELECT id,user_id,item_id,character_id,currency FROM purchases WHERE idempotency_key=$1",[p.data.idempotencyKey]);
+    if(old.rowCount){await client.query("COMMIT");if(old.rows[0].user_id!==req.user.id||old.rows[0].item_id!==p.data.itemId||old.rows[0].character_id!==p.data.characterId||old.rows[0].currency!==p.data.currency)return res.status(409).json({error:"Ключ операции уже использован для другой покупки."});return res.json({purchaseId:old.rows[0].id,replayed:true})}
     const owned=await client.query("SELECT id FROM characters WHERE id=$1 AND user_id=$2 FOR UPDATE",[p.data.characterId,req.user.id]);
     const item=await client.query("SELECT id,price_coins,price_diamonds FROM avatar_items WHERE id=$1 AND is_active=TRUE FOR UPDATE",[p.data.itemId]);
     if(!owned.rowCount||!item.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Персонаж или предмет не найден."})}
+    const alreadyOwned=await client.query("SELECT 1 FROM character_inventory WHERE character_id=$1 AND item_id=$2",[p.data.characterId,p.data.itemId]);
+    if(alreadyOwned.rowCount){await client.query("ROLLBACK");return res.status(409).json({error:"Этот предмет уже есть у персонажа."})}
     const amount=BigInt(item.rows[0][p.data.currency==="coins"?"price_coins":"price_diamonds"]);
     const wallet=await client.query("SELECT coins,diamonds FROM wallet_balances WHERE user_id=$1 FOR UPDATE",[req.user.id]);
     if(!wallet.rowCount||BigInt(wallet.rows[0][p.data.currency])<amount){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно средств."})}
     const col=p.data.currency;
     await client.query(`UPDATE wallet_balances SET ${col}=${col}-$2,updated_at=NOW() WHERE user_id=$1`,[req.user.id,amount.toString()]);
-    const purchase=await client.query("INSERT INTO purchases(user_id,item_id,currency,amount,idempotency_key) VALUES($1,$2,$3,$4,$5) RETURNING id",[req.user.id,p.data.itemId,col,amount.toString(),p.data.idempotencyKey]);
+    const purchase=await client.query("INSERT INTO purchases(user_id,item_id,character_id,currency,amount,idempotency_key) VALUES($1,$2,$3,$4,$5,$6) RETURNING id",[req.user.id,p.data.itemId,p.data.characterId,col,amount.toString(),p.data.idempotencyKey]);
     await client.query("INSERT INTO character_inventory(character_id,item_id) VALUES($1,$2) ON CONFLICT(character_id,item_id) DO NOTHING",[p.data.characterId,p.data.itemId]);
     await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id) VALUES($1,$2,$3,'Покупка предмета',$4)",[req.user.id,col,(-amount).toString(),purchase.rows[0].id]);
     await client.query("COMMIT");res.status(201).json({purchaseId:purchase.rows[0].id,amount:amount.toString()});
