@@ -197,6 +197,21 @@ CREATE TABLE IF NOT EXISTS admin_logs (
 );
 CREATE INDEX IF NOT EXISTS admin_logs_created_idx ON admin_logs(created_at DESC);
 
+-- One-time welcome grant for existing accounts with no wallet activity.
+WITH granted AS (
+  UPDATE wallet_balances w
+  SET coins=coins+500, updated_at=NOW()
+  WHERE w.coins=0
+    AND NOT EXISTS (
+      SELECT 1 FROM wallet_ledger l
+      WHERE l.user_id=w.user_id AND l.reason='Стартовый бонус NEXORA'
+    )
+  RETURNING w.user_id
+)
+INSERT INTO wallet_ledger(user_id,currency,amount,reason)
+SELECT user_id,'coins',500,'Стартовый бонус NEXORA' FROM granted;
+
+
 INSERT INTO avatar_items (slug,name,description,category,rarity,price_coins)
 VALUES
  ('nexora-basic-cap','Базовая кепка','Повседневная кепка NEXORA.','head','common',40),
