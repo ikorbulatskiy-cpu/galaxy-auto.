@@ -52,8 +52,10 @@ async function sendVerificationEmail(email, token) {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, APP_BASE_URL } = process.env;
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS || !SMTP_FROM || !APP_BASE_URL) {
     if (process.env.NODE_ENV !== "production") {
-      console.info("NEXORA development verification link:", APP_BASE_URL ? APP_BASE_URL + "/api/auth/verify?token=" + encodeURIComponent(token) : "Set APP_BASE_URL to construct the link.");
-      return;
+      const verificationUrl = APP_BASE_URL ? new URL("/api/auth/verify", APP_BASE_URL) : null;
+      if (verificationUrl) verificationUrl.searchParams.set("token", token);
+      console.info("NEXORA development verification link:", verificationUrl ? verificationUrl.toString() : "Set APP_BASE_URL to construct the link.");
+      return verificationUrl ? verificationUrl.toString() : null;
     }
     throw new Error("Email delivery is not configured.");
   }
@@ -71,6 +73,7 @@ async function sendVerificationEmail(email, token) {
     subject: "Подтверждение почты NEXORA",
     text: "Подтвердите адрес электронной почты: " + url.toString()
   });
+  return null;
 }
 async function requireSession(req, res, next) {
   try {
@@ -114,13 +117,17 @@ router.post("/register", async (req, res, next) => {
     await client.query("INSERT INTO wallet_balances (user_id) VALUES ($1)", [user.id]);
     await client.query("INSERT INTO email_verification_tokens (user_id, token_hash, expires_at) VALUES ($1,$2,NOW() + INTERVAL '24 hours')", [user.id, hashToken(verificationToken)]);
     await client.query("COMMIT");
+    let devVerificationUrl = null;
     try {
-      await sendVerificationEmail(email, verificationToken);
+      devVerificationUrl = await sendVerificationEmail(email, verificationToken);
     } catch (mailError) {
       console.error("Verification email delivery failed:", mailError.message);
       return res.status(202).json({ message: "Аккаунт создан, но письмо не отправлено. Администратору нужно проверить почтовую конфигурацию." });
     }
-    return res.status(201).json({ message: "Аккаунт создан. Проверьте почту и подтвердите адрес." });
+    return res.status(201).json({
+      message: "Аккаунт создан. Подтвердите адрес электронной почты.",
+      ...(devVerificationUrl && process.env.NODE_ENV !== "production" ? { devVerificationUrl } : {})
+    });
   } catch (error) {
     await client.query("ROLLBACK");
     if (error.code === "23505") return res.status(409).json({ error: "Этот email или ник уже занят." });
