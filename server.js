@@ -13,6 +13,7 @@ const socialRouter = require("./src/social");
 const gameRouter = require("./src/game");
 const featuresRouter = require("./src/features");
 const { attachRealtime } = require("./src/realtime");
+const movement = require("./src/movement");
 const mediaRouter = require("./src/media");
 
 const app = express();
@@ -80,6 +81,7 @@ app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/world", worldRouter);
 app.use("/api/social", socialRouter);
 app.use("/api/game", gameRouter);
+app.use("/api/movement", movement.router);
 app.use("/api/features", featuresRouter);
 app.use("/api/media", mediaRouter);
 
@@ -123,6 +125,7 @@ app.use((err, req, res, _next) => {
 });
 
 attachRealtime(server);
+movement.attachMovement(server);
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`NEXORA запущен на порту ${PORT}`);
 });
