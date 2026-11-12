@@ -1,6 +1,7 @@
 name: NEXORA backend checks
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - love-galaxy-redesign
