@@ -26,9 +26,11 @@ pool.on("error", (error) => {
 
 function isDatabaseUnavailable(error) {
   const code = String(error && error.code || "");
+  const message = String(error && error.message || "");
   return (
     code.startsWith("08") ||
-    ["ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "EPIPE", "57P01", "57P02", "57P03", "53300"].includes(code)
+    ["ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "EPIPE", "57P01", "57P02", "57P03", "53300"].includes(code) ||
+    /timeout exceeded when trying to connect|connection terminated|server closed the connection unexpectedly|connection refused|connection reset|terminating connection due to administrator command/i.test(message)
   );
 }
 
