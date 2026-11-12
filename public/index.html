@@ -138,8 +138,30 @@ $("#transfer-form").addEventListener("submit",async e=>{e.preventDefault();const
 $("#gift-form").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{await api("/api/features/shop/gift",{method:"POST",body:JSON.stringify({toUserId:f.get("toUserId"),itemId:f.get("itemId"),message:f.get("message"),idempotencyKey:crypto.randomUUID()})});e.currentTarget.reset();toast("Подарок отправлен.")}catch(err){toast(err.message)}});
 async function loadPets(){const d=await api("/api/features/pets");$("#pet-list").innerHTML=d.pets.length?d.pets.map(p=>'<div class="row"><div><b>'+escapeHtml(p.name)+'</b><small>'+escapeHtml(p.species)+' · уровень '+Number(p.level)+' · настроение '+Number(p.mood)+' · сытость '+Number(p.hunger)+'</small></div><div><button class="btn small" data-pet-care="'+escapeHtml(p.id)+'" data-action="feed">Покормить</button><button class="btn small" data-pet-care="'+escapeHtml(p.id)+'" data-action="play">Играть</button></div></div>').join(""):'<div class="muted">Питомцев пока нет.</div>';$$("[data-pet-care]").forEach(b=>b.onclick=async()=>{try{await api("/api/features/pets/"+b.dataset.petCare+"/care",{method:"POST",body:JSON.stringify({action:b.dataset.action})});await loadPets()}catch(e){toast(e.message)}})}
 $("#pet-form").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{await api("/api/features/pets",{method:"POST",body:JSON.stringify({name:f.get("name"),species:f.get("species")})});e.currentTarget.reset();await loadPets();toast("Питомец появился.")}catch(err){toast(err.message)}});
-async function loadMediaLibrary(){try{const d=await api("/api/media");$("#media-library").innerHTML=d.assets.length?d.assets.map(a=>'<article class="card"><img src="'+escapeHtml(a.public_url)+'" alt="Моя фотография" loading="lazy" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px"><small>'+Math.ceil(Number(a.byte_size)/1024)+' KB'+(a.in_use?' · Используется в публикации':'')+'</small>'+(a.in_use?'':'<button class="btn small" data-delete-media="'+escapeHtml(a.id)+'">Удалить</button>')+'</article>').join(""):'<div class="muted">Фотографий пока нет.</div>';$("[data-delete-media]").forEach(b=>b.onclick=async()=>{if(!confirm("Удалить эту фотографию?"))return;try{await api("/api/media/"+b.dataset.deleteMedia,{method:"DELETE"});await loadMediaLibrary();toast("Фотография удалена.")}catch(e){toast(e.message)}})}catch(e){toast(e.message)}}
-async function loadBlogs(){const d=await api("/api/features/blogs");$("#blog-list").innerHTML=d.posts.length?d.posts.map(p=>'<article class="panel"><b>@'+escapeHtml(p.username)+'</b><p>'+escapeHtml(p.body)+'</p>'+(p.photos||[]).map(url=>'<img src="'+escapeHtml(url)+'" alt="Фото публикации" loading="lazy" style="width:100%;max-width:420px;border-radius:14px;margin:8px 0">').join("")+'<small>'+Number(p.likes)+' лайков · '+Number(p.comments)+' комментариев</small>'+(p.recent_comments||[]).map(c=>'<div class="muted"><b>@'+escapeHtml(c.username)+'</b>: '+escapeHtml(c.body)+'</div>').join("")+'<button class="btn small" data-like-post="'+escapeHtml(p.id)+'">Нравится</button><form class="sendrow" data-comment-form="'+escapeHtml(p.id)+'"><input class="field" name="body" maxlength="1000" placeholder="Написать комментарий" required><button class="btn small">Ответить</button></form></article>').join(""):'<div class="muted">Публикаций пока нет.</div>';$$("[data-like-post]").forEach(b=>b.onclick=async()=>{try{await api("/api/features/blogs/"+b.dataset.likePost+"/like",{method:"POST",body:"{}"});await loadBlogs()}catch(e){toast(e.message)}await loadMediaLibrary()});$$("[data-comment-form]").forEach(form=>form.addEventListener("submit",async e=>{e.preventDefault();const body=new FormData(form).get("body");try{await api("/api/features/blogs/"+form.dataset.commentForm+"/comments",{method:"POST",body:JSON.stringify({body})});await loadBlogs()}catch(err){toast(err.message)}}))}
+async function loadMediaLibrary(){
+ try{
+  const d=await api("/api/media");
+  $("#media-library").innerHTML=d.assets.length?d.assets.map(a=>'<article class="card"><img src="'+escapeHtml(a.public_url)+'" alt="Моя фотография" loading="lazy" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px"><small>'+Math.ceil(Number(a.byte_size)/1024)+' KB'+(a.in_use?' · Используется в публикации':'')+'</small>'+(a.in_use?'':'<button class="btn small" data-delete-media="'+escapeHtml(a.id)+'">Удалить</button>')+'</article>').join(""):'<div class="muted">Фотографий пока нет.</div>';
+  $$("[data-delete-media]").forEach(b=>b.onclick=async()=>{
+   if(!confirm("Удалить эту фотографию?"))return;
+   try{await api("/api/media/"+b.dataset.deleteMedia,{method:"DELETE"});await loadMediaLibrary();toast("Фотография удалена.")}catch(e){toast(e.message)}
+  });
+ }catch(e){toast(e.message)}
+}
+async function loadBlogs(){
+ try{
+  const d=await api("/api/features/blogs");
+  $("#blog-list").innerHTML=d.posts.length?d.posts.map(p=>'<article class="panel"><b>@'+escapeHtml(p.username)+'</b><p>'+escapeHtml(p.body)+'</p>'+(p.photos||[]).map(url=>'<img src="'+escapeHtml(url)+'" alt="Фото публикации" loading="lazy" style="width:100%;max-width:420px;border-radius:14px;margin:8px 0">').join("")+'<small>'+Number(p.likes)+' лайков · '+Number(p.comments)+' комментариев</small>'+(p.recent_comments||[]).map(c=>'<div class="muted"><b>@'+escapeHtml(c.username)+'</b>: '+escapeHtml(c.body)+'</div>').join("")+'<button class="btn small" data-like-post="'+escapeHtml(p.id)+'">Нравится</button><form class="sendrow" data-comment-form="'+escapeHtml(p.id)+'"><input class="field" name="body" maxlength="1000" placeholder="Написать комментарий" required><button class="btn small">Ответить</button></form></article>').join(""):'<div class="muted">Публикаций пока нет.</div>';
+  $$("[data-like-post]").forEach(b=>b.onclick=async()=>{
+   try{await api("/api/features/blogs/"+b.dataset.likePost+"/like",{method:"POST",body:"{}"});await loadBlogs()}catch(e){toast(e.message)}
+  });
+  $$("[data-comment-form]").forEach(form=>form.addEventListener("submit",async e=>{
+   e.preventDefault();const body=new FormData(form).get("body");
+   try{await api("/api/features/blogs/"+form.dataset.commentForm+"/comments",{method:"POST",body:JSON.stringify({body})});await loadBlogs()}catch(err){toast(err.message)}
+  }));
+ }catch(e){toast(e.message)}
+ await loadMediaLibrary();
+}
 async function normalizePhotoForUpload(file){
  if(!["image/heic","image/heif"].includes(file.type))return file;
  const url=URL.createObjectURL(file);
