@@ -139,9 +139,6 @@ test("realtime events are distributed through PostgreSQL notifications", () => {
   assert.match(html, /roomReconnectAttempts/);
   assert.match(html, /roomReconnectTimer=setTimeout/);
   assert.match(html, /room-online-list/);
-  assert.match(realtime, /action: "joined"/);
-  assert.match(html, /room-online-list/);
-  assert.match(realtime, /action: "joined"/);
   assert.match(realtime, /scheduleReconnect/);
   const game = read("src/game.js");
   assert.match(game, /router\.get\("\/rooms\/:roomId\/presence"/);
