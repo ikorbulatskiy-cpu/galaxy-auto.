@@ -53,6 +53,7 @@ function attachMovement(server) {
   const instanceId = crypto.randomUUID();
   const broadcast = event => {
     for (const peer of peers.get(event.roomId) || []) {
+      if (peer.userId !== event.userId && peer.blockedUserIds?.has(event.userId)) continue;
       if (peer.readyState === 1) {
         try { peer.send(JSON.stringify(event)); } catch {}
       }
@@ -121,6 +122,11 @@ function attachMovement(server) {
       if (!auth.rowCount) throw new Error("auth");
       user = auth.rows[0];
       socket.userId = user.id;
+      const blocks = await pool.query(
+        "SELECT blocked_id AS user_id FROM blocks WHERE blocker_id=$1 UNION SELECT blocker_id AS user_id FROM blocks WHERE blocked_id=$1",
+        [user.id]
+      );
+      socket.blockedUserIds = new Set(blocks.rows.map(row => row.user_id));
       socket.send(JSON.stringify({ type: "ready" }));
     } catch {
       socket.close(1008, "Authentication required");
@@ -184,8 +190,11 @@ function attachMovement(server) {
                AND rp.connected_at>NOW()-INTERVAL '2 minutes'
              JOIN users u ON u.id=p.user_id AND u.status='active'
              WHERE p.room_id=$1
+               AND NOT EXISTS(SELECT 1 FROM blocks b
+                 WHERE (b.blocker_id=$2 AND b.blocked_id=p.user_id)
+                    OR (b.blocker_id=p.user_id AND b.blocked_id=$2))
              ORDER BY p.user_id,rp.connected_at DESC`,
-            [joinedRoom]
+            [joinedRoom, user.id]
           );
           socket.send(JSON.stringify({ type: "joined_room", roomId: joinedRoom, x: lastX, y: lastY }));
           socket.send(JSON.stringify({ type: "position_list", roomId: joinedRoom, positions: current.rows }));
