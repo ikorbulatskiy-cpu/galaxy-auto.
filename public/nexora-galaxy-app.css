@@ -1,0 +1,136 @@
+/* NEXORA Galaxy social app skin. Presentation layer only; existing forms and API hooks stay intact. */
+:root{--ng-bg:#242933;--ng-panel:#2b313d;--ng-panel-2:#363e4d;--ng-system:#36494e;--ng-topic:#544e36;--ng-green:#76c840;--ng-green-dark:#315b2a;--ng-gold:#f5d042;--ng-muted:#aeb6c2;--ng-line:#ffffff16}
+body:has(#dashboard:not(.hidden)){background:#171c24;color:#f4f6f8}
+#dashboard{width:min(430px,100vw)!important;max-width:430px!important;min-height:100dvh;margin:0 auto!important;padding:0!important;background:var(--ng-bg);box-shadow:0 0 45px #0008}
+#dashboard>.head,#dashboard>.dashnav{display:none!important}
+#dashboard>.tabpane{width:100%;min-height:100dvh;margin:0;padding:calc(env(safe-area-inset-top) + 10px) 12px calc(72px + env(safe-area-inset-bottom));background:var(--ng-bg);color:#f4f6f8;overflow-x:hidden}
+#dashboard .nx-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px;padding:4px 0 12px;border-bottom:1px solid var(--ng-line)}
+#dashboard .nx-section-heading h1{margin:0;color:var(--ng-gold);font-size:19px;line-height:1.2;font-weight:850;letter-spacing:.1px}
+#dashboard .nx-section-heading p{margin:5px 0 0;color:var(--ng-muted);font-size:11px;line-height:1.35}
+#dashboard .nx-section-heading>button{width:34px;height:34px;flex:0 0 34px;border:1px solid var(--ng-line);border-radius:11px;background:#ffffff0b;color:#fff;font-size:19px}
+#dashboard .panel,#dashboard .card{min-width:0;margin:0 0 11px;padding:13px;border:1px solid var(--ng-line);border-radius:15px;background:var(--ng-panel);box-shadow:0 5px 16px #0002}
+#dashboard h2,#dashboard h3,#dashboard h4{color:#f3d65c}
+#dashboard h3{margin:0 0 10px;font-size:14px}
+#dashboard .muted,#dashboard small{color:var(--ng-muted)}
+#dashboard .field,#dashboard input.field,#dashboard textarea.field,#dashboard select.field{width:100%;min-width:0;min-height:42px;margin:4px 0;padding:10px 12px;border:1px solid #4a5361;border-radius:11px;background:#202630;color:#f7f8fa;font-size:13px;box-shadow:none}
+#dashboard .field::placeholder{color:#929ba8}
+#dashboard .btn{min-height:38px;padding:8px 13px;border:1px solid #505a68;border-radius:11px;background:#3a4350;color:#f5f7fa;font-size:12px;font-weight:750}
+#dashboard .btn.primary{border:0;background:var(--ng-green);color:#14200f;box-shadow:0 3px 10px #76c84030}
+#dashboard .btn.small{min-height:31px;padding:6px 9px}
+#dashboard .row{gap:10px;padding:11px 0;border-color:var(--ng-line)}
+#dashboard .row strong,#dashboard .row b{color:#f5d86a;font-size:12px}
+#dashboard .row small{display:block;margin-top:3px;font-size:10px}
+#dashboard .stack{gap:8px}
+#dashboard .grid{grid-template-columns:1fr;gap:9px}
+#dashboard .dashgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+#dashboard .formgrid{grid-template-columns:minmax(0,1fr)}
+#dashboard .formgrid .wide{grid-column:auto}
+#dashboard .sendrow{display:flex;align-items:center;gap:7px;min-width:0}
+#dashboard .sendrow .field{flex:1}
+#dashboard .chatbox{height:min(52dvh,440px);min-height:220px;margin:9px 0;padding:10px;border:1px solid var(--ng-line);border-radius:13px;background:#202630}
+#dashboard .msg{max-width:90%;padding:9px 11px;border:1px solid var(--ng-line);border-radius:4px 13px 13px 13px;background:var(--ng-panel-2);color:#f4f6f8;font-size:12px}
+#dashboard .msg.mine{background:#345b3c;border-color:#76c84055}
+#dashboard .msg small{color:#b8c1cc}
+#dashboard .nx-social-bottom{position:fixed;z-index:80;left:50%;bottom:0;transform:translateX(-50%);width:min(430px,100vw);height:calc(58px + env(safe-area-inset-bottom));padding:5px 9px calc(5px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;border-top:1px solid #ffffff18;background:#202630f2;backdrop-filter:blur(18px)}
+#dashboard .nx-social-bottom button{display:grid;align-content:center;justify-items:center;gap:2px;min-width:0;border:0;border-radius:10px;background:transparent;color:#aeb6c2}
+#dashboard .nx-social-bottom button span{font-size:18px;line-height:1}
+#dashboard .nx-social-bottom button small{font-size:9px;color:inherit}
+#dashboard .nx-social-bottom button.active{background:#76c8401c;color:var(--ng-green)}
+/* World shell: 430px on desktop, edge-to-edge on phones. */
+#dashboard>#tab-world{width:100%!important;max-width:none!important;min-height:100dvh;margin:0;padding:0!important;background:var(--ng-bg)!important}
+#dashboard>#tab-world>.nx-world{width:100%!important;max-width:430px!important;height:100dvh!important;min-height:0!important;max-height:100dvh!important;margin:0 auto!important;padding:0!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:calc(54px + env(safe-area-inset-top)) minmax(0,1fr) 190px calc(58px + env(safe-area-inset-bottom))!important;gap:0!important;overflow:hidden!important;border:0!important;border-radius:0!important;background:var(--ng-bg)!important;box-shadow:0 0 45px #0008!important}
+#dashboard>#tab-world .nx-topbar{grid-row:1!important;min-height:calc(54px + env(safe-area-inset-top))!important;height:calc(54px + env(safe-area-inset-top))!important;display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top) + 5px) 10px 0!important;background:#2b313d;border-bottom:1px solid var(--ng-line)}
+#dashboard>#tab-world .nx-logo{font-size:12px!important;letter-spacing:.4px!important;color:var(--ng-gold)}
+#dashboard>#tab-world .nx-current-planet{display:flex!important;align-items:center;gap:5px;min-width:0;max-width:none;flex:1;padding:0 8px;border:0;border-left:1px solid var(--ng-line);background:transparent;color:#f7f8fa;cursor:pointer}
+#dashboard>#tab-world .nx-current-planet small{display:none}
+#dashboard>#tab-world .nx-current-planet b{max-width:105px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:#fff}
+#dashboard>#tab-world .nx-current-planet:after{content:"▾";color:var(--ng-gold);font-size:11px}
+#dashboard>#tab-world .nx-menu-trigger{width:34px!important;height:34px!important;min-width:34px;flex:0 0 34px;margin:0;padding:0;border:1px solid var(--ng-line);border-radius:10px;background:#ffffff0b;color:white;font-size:17px}
+#dashboard>#tab-world .nx-online{display:inline-flex!important;align-items:center;justify-content:center;min-width:27px;height:23px;padding:0 7px;border-radius:99px;background:#414a58;color:#dfe4e9;font-size:10px}
+#dashboard>#tab-world .nx-connection-status,#dashboard>#tab-world .nx-event-status{display:inline-flex;align-items:center;gap:5px;max-width:104px;min-width:0;height:27px;padding:0 7px;border:1px solid #ffffff1b;border-radius:9px;background:#202630;color:#cbd4dd;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#dashboard>#tab-world .nx-event-status .nx-dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#d6aa45}
+#dashboard>#tab-world .nx-eventbar{display:none!important}
+#dashboard>#tab-world .nx-planet-tools{display:none!important}
+#dashboard>#tab-world .nx-chat-panel{grid-row:2!important;min-width:0;min-height:0!important;height:100%!important;display:flex;flex-direction:column;overflow:hidden;padding:0!important;border:0!important;border-radius:0!important;background-color:#242933!important;background-image:radial-gradient(circle at 12% 18%,#ffffff0b 0 18px,transparent 19px),radial-gradient(circle at 88% 34%,#76c8400a 0 22px,transparent 23px),radial-gradient(circle at 22% 78%,#f5d0420a 0 15px,transparent 16px),linear-gradient(145deg,#242933,#2b313d)!important}
+#dashboard>#tab-world .nx-chat-title{min-height:31px;flex:0 0 31px;padding:7px 11px;background:#2b313d;border-bottom:1px solid var(--ng-line);color:#f5d86a;font-size:10px}
+#dashboard>#tab-world .nx-chat-hint{color:#aeb6c2;font-size:9px}
+#dashboard>#tab-world .nx-chat-log{flex:1;min-height:0;overflow:auto;padding:8px 9px 12px;scrollbar-width:thin;overscroll-behavior:contain}
+#dashboard>#tab-world .nx-chat-topic{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:25px minmax(0,1fr);gap:8px;margin:0 0 8px;padding:9px;border:1px solid #8c7c43;border-radius:10px;background:var(--ng-topic);box-shadow:0 4px 12px #0003}
+#dashboard>#tab-world .nx-chat-topic>span{width:24px;height:24px;display:grid;place-items:center;border-radius:8px;background:#f5d04224;color:var(--ng-gold)}
+#dashboard>#tab-world .nx-chat-topic b{display:block;margin-bottom:2px;color:var(--ng-gold);font-size:10px}
+#dashboard>#tab-world .nx-chat-topic p{margin:0;color:#f0ead2;font-size:10px;line-height:1.35}
+#dashboard>#tab-world .nx-chat-line{display:grid;grid-template-columns:29px minmax(0,1fr);gap:7px;align-items:start;margin:4px 0;padding:2px 0}
+#dashboard>#tab-world .nx-message-avatar{width:28px;height:28px;display:grid;place-items:center;border:1px solid #ffffff20;border-radius:50%;background:#485568;color:#fff;font-size:10px;font-weight:800}
+#dashboard>#tab-world .nx-message-bubble{min-width:0;padding:7px 9px;border:1px solid #ffffff0c;border-radius:4px 11px 11px 11px;background:#363e4d;overflow-wrap:anywhere}
+#dashboard>#tab-world .nx-message-bubble.system{background:#36494e}
+#dashboard>#tab-world .nx-message-meta{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:3px}
+#dashboard>#tab-world .nx-message-meta b{color:var(--ng-gold);font-size:10px}
+#dashboard>#tab-world .nx-message-meta time{flex:0 0 auto;color:#aeb6c2;font-size:8px}
+#dashboard>#tab-world .nx-message-text{color:#f3f5f7;font-size:11px;line-height:1.4;white-space:pre-wrap}
+#dashboard>#tab-world .nx-chat-send{flex:0 0 51px;min-height:51px;display:flex;align-items:center;gap:7px;padding:6px 9px;background:#2b313d;border-top:1px solid var(--ng-line)}
+#dashboard>#tab-world .nx-chat-send:before{content:"☺";width:25px;flex:0 0 25px;color:#d3d9df;font-size:20px;text-align:center}
+#dashboard>#tab-world .nx-chat-send input{height:36px;min-width:0;flex:1;margin:0;padding:0 11px;border:1px solid #4a5361;border-radius:18px;background:#202630;color:#fff;font-size:12px}
+#dashboard>#tab-world .nx-chat-send button{width:36px;height:36px;flex:0 0 36px;padding:0;border:0;border-radius:50%;background:var(--ng-green);color:#14200f;font-size:0}
+#dashboard>#tab-world .nx-chat-send button:after{content:"➤";font-size:16px}
+#dashboard>#tab-world .nx-scene{grid-row:3!important;position:relative!important;min-height:0!important;height:190px!important;max-height:none!important;overflow:hidden!important;border:0!important;border-top:1px solid #ffffff30;background:linear-gradient(180deg,#5b5576 0%,#a66f84 48%,#e7a27d 100%)!important}
+#dashboard>#tab-world .nx-scene:after{height:38px!important;background:linear-gradient(180deg,#5b5262,#30343e 40%,#202630)!important;border-top:2px solid #f4c49d}
+#dashboard>#tab-world .nx-avatars{position:absolute!important;inset:auto 0 28px!important;height:125px!important;min-height:0!important;display:flex!important;align-items:flex-end!important;justify-content:center!important;gap:7px!important;padding:0 8px!important;overflow-x:auto!important;overflow-y:hidden!important}
+#dashboard>#tab-world .nx-avatar-card{position:relative!important;flex:0 0 58px!important;width:58px!important;height:122px!important;min-height:122px!important;max-height:122px!important;margin:0!important;padding:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-end!important;animation:none!important}
+#dashboard>#tab-world .nx-avatar-card canvas,#dashboard>#tab-world .nx-avatar-card svg,#dashboard>#tab-world .nx-avatar-card img{display:block;width:49px!important;height:100px!important;max-width:49px!important;max-height:100px!important;object-fit:contain;object-position:center bottom;flex:0 0 auto}
+#dashboard>#tab-world .nx-avatar-name{position:relative;z-index:4;width:58px!important;max-width:58px!important;height:14px;margin:0 0 1px!important;padding:1px 2px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;font-size:8px!important;line-height:12px!important;color:#fff!important;text-shadow:0 1px 3px #000}
+#dashboard>#tab-world .nx-avatar-card:before{bottom:0!important}
+#dashboard>#tab-world .nx-avatar-card:after{top:1px!important}
+#dashboard>#tab-world .nx-action-bar{left:5px!important;right:5px!important;bottom:3px!important;z-index:8;display:flex;justify-content:center;gap:4px!important}
+#dashboard>#tab-world .nx-action-bar button{min-width:0;min-height:25px!important;padding:3px 6px!important;border:1px solid #ffffff30;border-radius:8px;background:#202630d9;color:#f5f6f7;font-size:9px!important}
+#dashboard>#tab-world .nx-bottom-nav{grid-row:4!important;width:100%;height:calc(58px + env(safe-area-inset-bottom))!important;min-height:calc(58px + env(safe-area-inset-bottom))!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;align-items:center;gap:3px!important;padding:5px 7px calc(5px + env(safe-area-inset-bottom))!important;background:#202630;border-top:1px solid var(--ng-line)}
+#dashboard>#tab-world .nx-bottom-nav button{min-width:0!important;min-height:42px!important;padding:3px 1px!important;border:0;border-radius:9px;background:transparent;color:#b7c0cb;font-size:9px!important;white-space:nowrap}
+#dashboard>#tab-world .nx-bottom-nav button span{display:block;margin-bottom:2px;font-size:16px!important}
+#dashboard>#tab-world .nx-bottom-nav button:active{background:#76c84020;color:var(--ng-green)}
+/* Planet picker sheet. */
+.nx-planet-sheet-backdrop{position:fixed;inset:0;z-index:12000;display:none;align-items:flex-end;justify-content:center;background:#080b10a8;backdrop-filter:blur(4px)}
+.nx-planet-sheet-backdrop.open{display:flex}
+.nx-planet-sheet{width:min(430px,100vw);max-height:min(78dvh,680px);padding:10px 14px calc(16px + env(safe-area-inset-bottom));overflow:auto;border:1px solid #ffffff20;border-bottom:0;border-radius:20px 20px 0 0;background:#2b313d;box-shadow:0 -15px 45px #0008}
+.nx-planet-sheet-handle{width:38px;height:4px;margin:0 auto 13px;border-radius:9px;background:#727b87}
+.nx-planet-sheet h2{margin:0 0 12px;color:var(--ng-gold);font-size:17px}
+.nx-planet-categories{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:12px}
+.nx-planet-categories button{min-height:39px;padding:7px 9px;border:1px solid #ffffff16;border-radius:10px;background:#242933;color:#dfe4e9;text-align:left;font-size:11px}
+.nx-planet-categories button.active{border-color:#76c84088;background:#76c84018;color:#a7e57f}
+.nx-planet-sheet .nx-planet-tools{display:flex!important;flex-wrap:wrap;gap:7px;padding:0!important;border:0!important;background:transparent!important}
+.nx-planet-sheet .nx-planet-select{flex:1 1 100%;width:100%;min-height:42px}
+.nx-planet-sheet .nx-room-select{flex:1;min-width:0;max-width:none!important;min-height:40px}
+.nx-planet-sheet .nx-small-btn{min-width:42px;min-height:40px}
+.nx-planet-sheet .nx-online{display:none!important}
+/* Profile, inbox, friends, discovery pages. */
+#tab-profile .dashgrid{gap:10px}
+#tab-profile .dashgrid>.panel:first-child{text-align:center;background:linear-gradient(145deg,#303b4b,#252c36)}
+#tab-profile .avatar{width:116px;height:116px;margin:8px auto 12px;border:2px solid #f5d04266;border-radius:50%;background:linear-gradient(145deg,#4a5c70,#252c36)}
+#tab-profile #profile-summary{font-size:12px;line-height:1.6;text-align:left}
+#tab-profile #profile-form{display:grid;gap:7px}
+#tab-profile #profile-form h3{margin-bottom:2px}
+#tab-messages .dashgrid{gap:9px}
+#tab-messages .dashgrid>.panel:first-child{max-height:38dvh;overflow:auto}
+#tab-messages #conversation-list .row{padding:10px 2px}
+#tab-messages #chatbox{height:42dvh;min-height:190px;background:#242933}
+#tab-messages #send-form{position:sticky;bottom:0;padding:5px 0;background:var(--ng-panel)}
+#tab-messages .nx-new-message-fab{position:fixed;z-index:70;right:max(16px,calc((100vw - 430px)/2 + 16px));bottom:calc(72px + env(safe-area-inset-bottom));width:48px;height:48px;border:0;border-radius:50%;background:var(--ng-green);color:#14200f;font-size:22px;box-shadow:0 6px 18px #0006}
+#tab-friends .nx-friends-city-banner{margin:0 0 10px;padding:12px;border:1px solid #76c84044;border-radius:12px;background:#76c84012;color:#dcebd6;font-size:11px;line-height:1.4}
+#tab-friends .nx-friends-city-banner b{display:block;margin-bottom:3px;color:#a9e47f}
+#tab-discover #search-form{display:flex;gap:7px;flex-wrap:wrap}
+#tab-discover #search-form .field{flex:1 1 100%;margin:0}
+#tab-discover .nx-search-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:0 0 10px}
+#tab-discover .nx-search-filters button{min-width:0;min-height:32px;padding:5px 2px;border:1px solid #ffffff1b;border-radius:99px;background:#363e4d;color:#c8d0d9;font-size:9px}
+#tab-discover .nx-search-filters button.active{border-color:#76c840;background:#76c840;color:#172111;font-weight:800}
+#tab-discover .nx-search-age-city{width:100%;margin:0 0 10px;text-align:left}
+#tab-discover #discover-list .card{padding:11px}
+@media(min-width:700px){
+ body:has(#dashboard:not(.hidden)){background:#171c24}
+ #dashboard{min-height:100dvh}
+}
+@media(max-width:380px){
+ #dashboard>#tab-world>.nx-world{grid-template-rows:calc(51px + env(safe-area-inset-top)) minmax(0,1fr) 176px calc(55px + env(safe-area-inset-bottom))!important}
+ #dashboard>#tab-world .nx-logo{display:none}
+ #dashboard>#tab-world .nx-connection-status{max-width:84px}
+ #dashboard>#tab-world .nx-avatar-card{flex-basis:53px!important;width:53px!important;min-width:53px!important}
+ #dashboard>#tab-world .nx-avatar-name{width:53px!important}
+}
+@media(prefers-reduced-motion:reduce){#dashboard *,#dashboard *:before,#dashboard *:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
