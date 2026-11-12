@@ -152,6 +152,8 @@ test("media uploads use authenticated presigned object-storage operations", () =
   assert.match(media, /router\.use\(requireSession\)/);
   assert.match(media, /getSignedUrl/);
   assert.match(media, /HeadObjectCommand/);
+  assert.match(media, /CopyObjectCommand/);
+  assert.match(media, /staging\/users/);
   assert.match(media, /router\.get\("\/:assetId"/);
   assert.match(media, /GetObjectCommand/);
   assert.match(media, /b\.visibility=/);
