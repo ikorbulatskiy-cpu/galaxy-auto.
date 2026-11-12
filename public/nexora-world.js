@@ -3,7 +3,7 @@
  const root=document.getElementById("tab-world");if(!root)return;
  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const api=async(url,options={})=>{const r=await fetch(url,{credentials:"same-origin",...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||"Ошибка "+r.status);return d};
- let planets=[],rooms=[],activePlanet="",activeRoom="",socket=null,meName="Ты",meAppearance={},meAura="none",activeCharacterId="",poll=null,reconnectTimer=null,reconnectAttempts=0,joinGeneration=0;
+ let planets=[],rooms=[],activePlanet="",activeRoom="",socket=null,meName="Ты",meAppearance={},meAura="none",activeCharacterId="",poll=null,reconnectTimer=null,reconnectAttempts=0,joinGeneration=0,roomAckTimer=null;
  const palette={light:"#f2c9a5",medium:"#d49a6c",tan:"#a96e45",dark:"#68402f"};
  function avatar(look={},mini=false){
   const skin=palette[look.skinTone]||"#d49a6c";
@@ -85,6 +85,7 @@
  function disconnect(){
   joinGeneration++;
   if(reconnectTimer)clearTimeout(reconnectTimer);
+  if(roomAckTimer)clearTimeout(roomAckTimer);roomAckTimer=null;
   reconnectTimer=null;reconnectAttempts=0;
   if(poll)clearInterval(poll);poll=null;
   if(socket){socket.onclose=null;socket.close(1000,"Room changed");socket=null}
@@ -103,12 +104,17 @@
   const ws=new WebSocket(wsProtocol+"//"+location.host+"/ws");socket=ws;
   ws.onopen=()=>{
    if(socket!==ws||generation!==joinGeneration)return;
-   ws.send(JSON.stringify({type:"join_room",roomId:room.id}));
+   status("Сервер проверяет подключение…");
+   roomAckTimer=setTimeout(()=>{if(socket===ws&&ws.readyState===WebSocket.OPEN){addEvent("Сервер не подтвердил вход в комнату за 10 секунд.","warning");ws.close(4001,"Room join acknowledgement timeout")}},10000);
   };
   ws.onmessage=e=>{
    if(socket!==ws||generation!==joinGeneration)return;
    let packet;try{packet=JSON.parse(e.data)}catch{return}
+   if(packet.type==="ready"){
+    if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:"join_room",roomId:room.id}));
+   }
    if(packet.type==="joined_room"&&packet.roomId===room.id){
+    if(roomAckTimer)clearTimeout(roomAckTimer);roomAckTimer=null;
     reconnectAttempts=0;window.nexoraActiveRoom=room.id;
     window.dispatchEvent(new CustomEvent("nexora:room-joined",{detail:{roomId:room.id}}));
     status("Соединение: отличное");
@@ -120,11 +126,13 @@
     if(packet.action==="left")addEvent("Игрок покинул комнату.","leave");
     loadPresence(room.id);
    }
-   if(packet.type==="error"){status(packet.message);addEvent(packet.message,"warning")}
+   if(packet.type==="error"){if(roomAckTimer)clearTimeout(roomAckTimer);roomAckTimer=null;status(packet.message);addEvent(packet.message,"warning")}
   };
   ws.onerror=()=>{if(socket===ws)status("Проблема сети. Восстанавливаем соединение…")};
   ws.onclose=event=>{
+   if(roomAckTimer)clearTimeout(roomAckTimer);roomAckTimer=null;
    if(socket===ws)socket=null;
+   addEvent("WebSocket закрыт: код "+event.code+(event.reason?" · "+event.reason:""),"warning");
    if(generation!==joinGeneration||activeRoom!==room.id)return;
    window.nexoraActiveRoom="";
    window.dispatchEvent(new Event("nexora:room-left"));

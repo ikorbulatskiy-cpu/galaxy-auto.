@@ -129,8 +129,9 @@ function attachRealtime(server) {
       socket.userId = user.id;
       connectionId = crypto.randomUUID();
       socket.connectionId = connectionId;
-      socket.send(JSON.stringify({ type: "ready", userId: user.id }));
-    } catch {
+      console.info("Realtime socket authenticated:", { connectionId, userId: user.id });
+    } catch (error) {
+      console.warn("Realtime socket authentication rejected:", error.message);
       socket.close(1008, "Authentication required");
       return;
     }
@@ -185,7 +186,7 @@ function attachRealtime(server) {
               "SELECT r.id,r.capacity FROM rooms r JOIN user_locations l ON l.planet_id=r.planet_id WHERE r.id=$1 AND r.is_active=TRUE AND l.user_id=$2 FOR UPDATE OF l",
               [packet.roomId,user.id]
             );
-            if (!room.rowCount) { await client.query("ROLLBACK"); return; }
+            if (!room.rowCount) { await client.query("ROLLBACK"); socket.send(JSON.stringify({type:"error",message:"Комната недоступна на текущей планете."})); return; }
             const character = await client.query(
               "SELECT id FROM characters WHERE user_id=$1 AND is_active=TRUE LIMIT 1",
               [user.id]
@@ -260,6 +261,7 @@ function attachRealtime(server) {
         } catch {}
       }
     });
+    socket.send(JSON.stringify({ type: "ready", userId: user.id }));
   });
 
   return wss;

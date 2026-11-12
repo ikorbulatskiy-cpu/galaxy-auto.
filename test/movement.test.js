@@ -15,3 +15,15 @@ test("movement speed is bounded by elapsed server time", () => {
   assert.equal(isWithinMovementSpeed(50, 50, 60, 50, 100), false);
   assert.equal(isWithinMovementSpeed(50, 50, 54, 50, 0), true);
 });
+
+
+test("movement WebSocket waits for readiness and has a server heartbeat", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const client = fs.readFileSync(path.join(__dirname, "..", "public/nexora-movement.js"), "utf8");
+  const server = fs.readFileSync(path.join(__dirname, "..", "src/movement.js"), "utf8");
+  assert.match(client, /packet\.type === "ready"/);
+  assert.match(client, /Movement join acknowledgement timeout/);
+  assert.match(server, /socket\.on\("pong"/);
+  assert.match(server, /socket\.ping\(\)/);
+});

@@ -19,6 +19,8 @@ test("room switching uses the authenticated room API and WebSocket", () => {
   assert.match(client, /\/api\/game\/rooms\?planet=/);
   assert.match(client, /roomSelect\.onchange/);
   assert.match(client, /type:"join_room"/);
+  assert.match(client, /packet\.type==="ready"/);
+  assert.match(client, /Room join acknowledgement timeout/);
   assert.match(client, /type:"room_message"/);
   assert.match(client, /\/api\/game\/rooms\/"\+room\.id\+"\/presence/);
 });
@@ -52,4 +54,5 @@ test("realtime WebSocket uses protocol ping/pong to keep presence alive", () => 
   assert.match(realtime, /socket\.on\("pong"/);
   assert.match(realtime, /socket\.terminate\(\)/);
   assert.match(realtime, /Realtime socket closed:/);
+  assert.match(realtime, /socket\.send\(JSON\.stringify\(\{ type: "ready"/);
 });
