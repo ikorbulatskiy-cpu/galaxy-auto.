@@ -52,7 +52,7 @@ test("PostgreSQL migrations, reward triggers and relationship exclusivity", { sk
     const clanProgress = await client.query("SELECT experience,level FROM clans WHERE id=$1",[testClan.rows[0].id]);
     assert.equal(Number(clanProgress.rows[0].experience),15);
     const awards = await client.query(
-      "SELECT u.id,a.slug FROM user_achievements u JOIN achievements a ON a.id=u.achievement_id WHERE u.user_id=ANY($1::uuid[])",
+      "SELECT u.user_id AS id,a.slug FROM user_achievements u JOIN achievements a ON a.id=u.achievement_id WHERE u.user_id=ANY($1::uuid[])",
       [[a,b,c]]
     );
     const awardSet = new Set(awards.rows.map(row => row.id + ":" + row.slug));
