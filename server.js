@@ -7,6 +7,7 @@ const helmet = require("helmet");
 const { rateLimit } = require("express-rate-limit");
 const { pool } = require("./src/db");
 const { router: authRouter } = require("./src/auth");
+const worldRouter = require("./src/world");
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -43,6 +44,7 @@ const authLimiter = rateLimit({
 });
 
 app.use("/api/auth", authLimiter, authRouter);
+app.use("/api/world", worldRouter);
 
 app.get("/api/status", async (_req, res) => {
   let database = "unavailable";
