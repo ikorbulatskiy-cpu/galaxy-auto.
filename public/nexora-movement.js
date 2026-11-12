@@ -14,6 +14,7 @@
   let current = { x: 50, y: 78 };
   let connecting = false;
   let reconnectTimer = null;
+  let joinAckTimer = null;
   let reconnectAttempts = 0;
   let positionsLoading = false;
   let positionsLoadingRoom = "";
@@ -71,6 +72,8 @@
   function closeSocket() {
     if (moveTimer) clearInterval(moveTimer);
     if (reconnectTimer) clearTimeout(reconnectTimer);
+    if (joinAckTimer) clearTimeout(joinAckTimer);
+    joinAckTimer = null;
     reconnectTimer = null;
     moveTimer = null;
     target = null;
@@ -98,14 +101,24 @@
     socket = ws;
     ws.onopen = () => {
       if (socket !== ws) return;
-      reconnectAttempts = 0;
-      ws.send(JSON.stringify({ type: "join_room", roomId: id }));
+      joinAckTimer = setTimeout(() => {
+        if (socket === ws && ws.readyState === WebSocket.OPEN) {
+          addMovementEvent("Сервер не подтвердил подключение движения за 10 секунд.");
+          ws.close(4001, "Movement join acknowledgement timeout");
+        }
+      }, 10000);
     };
     ws.onmessage = event => {
       let packet;
       try { packet = JSON.parse(event.data); } catch { return; }
-      if (packet.type === "ready") return;
+      if (packet.type === "ready") {
+        if (socket === ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "join_room", roomId: id }));
+        return;
+      }
       if (packet.type === "joined_room") {
+        if (joinAckTimer) clearTimeout(joinAckTimer);
+        joinAckTimer = null;
+        reconnectAttempts = 0;
         connecting = false;
         current = { x: Number(packet.x), y: Number(packet.y) };
         const ownCard = cards().find(card => card.classList.contains("me"));
@@ -128,8 +141,11 @@
         if (socket === ws && ws.readyState === WebSocket.OPEN) ws.close(1011, "Room join failed");
       }
     };
-    ws.onclose = () => {
+    ws.onclose = event => {
+      if (joinAckTimer) clearTimeout(joinAckTimer);
+      joinAckTimer = null;
       if (socket === ws) socket = null;
+      addMovementEvent("Канал движения закрыт: код " + event.code + (event.reason ? " · " + event.reason : ""));
       if (roomId === id) {
         connecting = false;
         const delay = Math.min(30000, 1000 * Math.pow(2, Math.min(reconnectAttempts++, 5)));
