@@ -105,30 +105,40 @@ router.post("/complete", uploadLimiter, async (req, res, next) => {
     const publicUrl = appBase + "/api/media/" + parsed.data.assetId;
     const extension = ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" })[parsed.data.contentType];
     const finalKey = "users/" + req.user.id + "/" + parsed.data.assetId + "." + extension;
-    await storage.client.send(new CopyObjectCommand({
-      Bucket: storage.bucket,
-      CopySource: storage.bucket + "/" + parsed.data.key.split("/").map(encodeURIComponent).join("/"),
-      Key: finalKey,
-      ContentType: parsed.data.contentType,
-      MetadataDirective: "REPLACE",
-      CacheControl: "private, no-store"
-    }));
-    let inserted;
+    const client = await pool.connect();
+    let copied = false;
     try {
-      inserted = await pool.query(
-        "INSERT INTO media_assets(id,owner_user_id,storage_key,mime_type,byte_size,public_url) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(storage_key) DO NOTHING RETURNING id,public_url,mime_type,byte_size",
-        [parsed.data.assetId, req.user.id, finalKey, parsed.data.contentType, parsed.data.size, publicUrl]
-      );
-      if (!inserted.rowCount) {
-        await storage.client.send(new DeleteObjectCommand({ Bucket: storage.bucket, Key: finalKey }));
+      await client.query("BEGIN");
+      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", ["nexora-media:" + parsed.data.assetId]);
+      const existing = await client.query("SELECT 1 FROM media_assets WHERE id=$1 OR storage_key=$2", [parsed.data.assetId,finalKey]);
+      if (existing.rowCount) {
+        await client.query("ROLLBACK");
+        await storage.client.send(new DeleteObjectCommand({ Bucket: storage.bucket, Key: parsed.data.key })).catch(() => {});
         return res.status(409).json({ error: "Этот файл уже зарегистрирован." });
       }
+      await storage.client.send(new CopyObjectCommand({
+        Bucket: storage.bucket,
+        CopySource: storage.bucket + "/" + parsed.data.key.split("/").map(encodeURIComponent).join("/"),
+        Key: finalKey,
+        ContentType: parsed.data.contentType,
+        MetadataDirective: "REPLACE",
+        CacheControl: "private, no-store"
+      }));
+      copied = true;
+      const inserted = await client.query(
+        "INSERT INTO media_assets(id,owner_user_id,storage_key,mime_type,byte_size,public_url) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,public_url,mime_type,byte_size",
+        [parsed.data.assetId, req.user.id, finalKey, parsed.data.contentType, parsed.data.size, publicUrl]
+      );
+      await client.query("COMMIT");
+      await storage.client.send(new DeleteObjectCommand({ Bucket: storage.bucket, Key: parsed.data.key })).catch(() => {});
+      res.status(201).json({ asset: inserted.rows[0] });
     } catch (error) {
-      await storage.client.send(new DeleteObjectCommand({ Bucket: storage.bucket, Key: finalKey })).catch(() => {});
+      await client.query("ROLLBACK").catch(() => {});
+      if (copied) await storage.client.send(new DeleteObjectCommand({ Bucket: storage.bucket, Key: finalKey })).catch(() => {});
       throw error;
+    } finally {
+      client.release();
     }
-    await storage.client.send(new DeleteObjectCommand({ Bucket: storage.bucket, Key: parsed.data.key })).catch(() => {});
-    res.status(201).json({ asset: inserted.rows[0] });
   } catch (error) { next(error); }
 });
 
