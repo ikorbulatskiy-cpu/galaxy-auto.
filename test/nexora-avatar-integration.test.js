@@ -26,3 +26,13 @@ test("layered avatar stylesheet is loaded", () => {
   assert.match(css, /\.nx-sprite-choice\.active/);
   assert.match(css, /#avatar-layer-library/);
 });
+
+test("PNG sprite engine is loaded before shared avatar and multiplayer clients", () => {
+  const html = fs.readFileSync(path.join(root, "public/index.html"), "utf8");
+  assert.ok(html.indexOf("/nexora-sprite-avatar.js") < html.indexOf("/nexora-avatar.js"));
+  assert.ok(html.indexOf("/nexora-sprite-avatar.css") > 0);
+  const engine = fs.readFileSync(path.join(root, "public/nexora-sprite-avatar.js"), "utf8");
+  assert.match(engine, /window.NexoraSpriteAvatar/);
+  assert.match(engine, /heads\/head-01.png/);
+  assert.match(engine, /bodies\/body-classic.png/);
+});
