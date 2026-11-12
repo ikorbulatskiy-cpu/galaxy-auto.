@@ -94,12 +94,14 @@
     connecting = true;
     roomId = id;
     const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-    socket = new WebSocket(protocol + "//" + location.host + "/ws-movement");
-    socket.onopen = () => {
+    const ws = new WebSocket(protocol + "//" + location.host + "/ws-movement");
+    socket = ws;
+    ws.onopen = () => {
+      if (socket !== ws) return;
       reconnectAttempts = 0;
-      socket.send(JSON.stringify({ type: "join_room", roomId: id }));
+      ws.send(JSON.stringify({ type: "join_room", roomId: id }));
     };
-    socket.onmessage = event => {
+    ws.onmessage = event => {
       let packet;
       try { packet = JSON.parse(event.data); } catch { return; }
       if (packet.type === "ready") return;
@@ -123,13 +125,13 @@
       if (packet.type === "error") {
         const status = document.getElementById("nx-status");
         if (status) status.textContent = packet.message;
-        if (socket && socket.readyState === WebSocket.OPEN) socket.close(1011, "Room join failed");
+        if (socket === ws && ws.readyState === WebSocket.OPEN) ws.close(1011, "Room join failed");
       }
     };
-    socket.onclose = () => {
+    ws.onclose = () => {
+      if (socket === ws) socket = null;
       if (roomId === id) {
         connecting = false;
-        socket = null;
         const delay = Math.min(30000, 1000 * Math.pow(2, Math.min(reconnectAttempts++, 5)));
         reconnectTimer = setTimeout(() => {
           reconnectTimer = null;
