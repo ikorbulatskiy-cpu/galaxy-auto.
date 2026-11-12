@@ -18,10 +18,11 @@ const mediaRouter = require("./src/media");
 const app = express();
 const server = http.createServer(app);
 const PORT = Number(process.env.PORT || 3000);
+const mediaUploadOrigin = process.env.S3_ENDPOINT ? new URL(process.env.S3_ENDPOINT).origin : null;
 
 app.disable("x-powered-by");
 const proxyHops = process.env.TRUST_PROXY_HOPS?.trim();
-if (proxyHops && !/^\\d+$/.test(proxyHops)) {
+if (proxyHops && !/^\d+$/.test(proxyHops)) {
   throw new Error("TRUST_PROXY_HOPS must be a non-negative integer.");
 }
 app.set("trust proxy", proxyHops ? Number(proxyHops) : false);
@@ -36,7 +37,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "ws:", "wss:"],
+      connectSrc: ["'self'", "ws:", "wss:", ...(mediaUploadOrigin ? [mediaUploadOrigin] : [])],
       upgradeInsecureRequests: process.env.NODE_ENV === "production" ? [] : null
     }
   }
