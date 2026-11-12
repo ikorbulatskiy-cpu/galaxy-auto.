@@ -10,7 +10,7 @@ const isProduction = process.env.NODE_ENV === "production";
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 const registerSchema = z.object({
-  username: z.string().trim().min(3).max(24).regex(/^[\\p{L}\\p{N}_-]+$/u),
+  username: z.string().trim().min(3).max(24).regex(/^[\p{L}\p{N}_-]+$/u),
   gender: z.enum(["female", "male"]),
   adultConfirmed: z.literal(true)
 });
