@@ -57,3 +57,44 @@ dbTest("base and feature migrations are idempotently recorded", async () => {
     await pool.end();
   }
 });
+
+
+dbTest("trusted character events award achievements and relationships stay exclusive", async () => {
+  const pool = new Pool({ connectionString: databaseUrl });
+  const client = await pool.connect();
+  const { randomUUID } = require("node:crypto");
+  try {
+    await client.query("BEGIN");
+    const users = [0,1,2].map(() => randomUUID());
+    for (let i=0;i<users.length;i++) {
+      await client.query(
+        "INSERT INTO users(id,email,username,password_hash) VALUES($1,$2,$3,'test-hash')",
+        [users[i],users[i]+"@nexora.test","nexora_test_"+users[i].replaceAll("-","").slice(0,12)]
+      );
+    }
+    await client.query("INSERT INTO wallet_balances(user_id,coins) VALUES($1,100)",[users[0]]);
+    await client.query("INSERT INTO characters(user_id,name,is_active) VALUES($1,'Test Hero',TRUE)",[users[0]]);
+    const award = await client.query(
+      "SELECT w.coins,COUNT(ua.achievement_id)::int AS earned FROM wallet_balances w JOIN user_achievements ua ON ua.user_id=w.user_id JOIN achievements a ON a.id=ua.achievement_id WHERE w.user_id=$1 AND a.slug='first-steps' GROUP BY w.coins",
+      [users[0]]
+    );
+    assert.equal(award.rowCount,1);
+    assert.equal(Number(award.rows[0].coins),125);
+    assert.equal(award.rows[0].earned,1);
+
+    await client.query("INSERT INTO relationships(requester_id,addressee_id) VALUES($1,$2)",[users[0],users[1]]);
+    await client.query("SAVEPOINT relationship_conflict");
+    let conflict;
+    try {
+      await client.query("INSERT INTO relationships(requester_id,addressee_id) VALUES($1,$2)",[users[2],users[0]]);
+    } catch (error) {
+      conflict=error;
+    }
+    assert.equal(conflict?.code,"23505");
+    await client.query("ROLLBACK TO SAVEPOINT relationship_conflict");
+    await client.query("ROLLBACK");
+  } finally {
+    client.release();
+    await pool.end();
+  }
+});
