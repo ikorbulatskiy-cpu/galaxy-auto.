@@ -40,7 +40,7 @@ app.use(helmet({
       formAction: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
+      imgSrc: ["'self'", "data:", "https:", ...(mediaUploadOrigin ? [mediaUploadOrigin] : [])],
       connectSrc: ["'self'", "ws:", "wss:", ...(mediaUploadOrigin ? [mediaUploadOrigin] : [])],
       upgradeInsecureRequests: process.env.NODE_ENV === "production" ? [] : null
     }
