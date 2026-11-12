@@ -123,6 +123,8 @@ router.delete("/characters/:characterId", requireSession, async (req, res, next)
   } finally { client.release(); }
 });
 
+router.get("/planets", requireSession, async (req,res,next)=>{try{const r=await pool.query("SELECT p.id,p.slug,p.name,p.description,p.access_type,p.ticket_price,(SELECT COUNT(*)::int FROM rooms rm WHERE rm.planet_id=p.id AND rm.is_active=TRUE) AS rooms,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp JOIN rooms rm ON rm.id=rp.room_id WHERE rm.planet_id=p.id) AS online FROM planets p WHERE p.is_active=TRUE ORDER BY p.name");res.json({planets:r.rows})}catch(e){next(e)}});
+
 router.get("/rooms", requireSession, async (req, res, next) => {
   const planetSlug = typeof req.query.planet === "string" ? req.query.planet : "nexora-prime";
   try {
