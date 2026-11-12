@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const express = require("express");
+const { rateLimit } = require("express-rate-limit");
 const { z } = require("zod");
 const { S3Client, PutObjectCommand, HeadObjectCommand, GetObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
@@ -10,6 +11,7 @@ const router = express.Router();
 router.use(requireSession);
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxBytes = 8 * 1024 * 1024;
+const uploadLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 30, standardHeaders: "draft-7", legacyHeaders: false, message: { error: "Слишком много загрузок. Попробуйте позже." } });
 
 async function readPrefix(body, limit = 16) {
   const chunks = [];
@@ -34,6 +36,10 @@ function matchesImageSignature(type, bytes) {
 function storageConfig() {
   const { S3_BUCKET, S3_ENDPOINT, S3_REGION, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, MEDIA_PUBLIC_BASE_URL } = process.env;
   if (!S3_BUCKET || !S3_ENDPOINT || !S3_ACCESS_KEY_ID || !S3_SECRET_ACCESS_KEY || !MEDIA_PUBLIC_BASE_URL) return null;
+  let endpointUrl, publicUrl;
+  try { endpointUrl = new URL(S3_ENDPOINT); publicUrl = new URL(MEDIA_PUBLIC_BASE_URL); } catch { return null; }
+  if (![ "http:", "https:" ].includes(endpointUrl.protocol) || publicUrl.protocol !== "https:") return null;
+  if (process.env.NODE_ENV === "production" && endpointUrl.protocol !== "https:") return null;
   return {
     bucket: S3_BUCKET,
     publicBase: MEDIA_PUBLIC_BASE_URL.replace(/\/+$/, ""),
@@ -46,7 +52,7 @@ function storageConfig() {
   };
 }
 
-router.post("/presign", async (req, res, next) => {
+router.post("/presign", uploadLimiter, async (req, res, next) => {
   const parsed = z.object({
     contentType: z.string().refine(value => allowedTypes.has(value)),
     size: z.number().int().positive().max(maxBytes)
@@ -69,7 +75,7 @@ router.post("/presign", async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
-router.post("/complete", async (req, res, next) => {
+router.post("/complete", uploadLimiter, async (req, res, next) => {
   const parsed = z.object({
     assetId: z.string().uuid(),
     key: z.string().min(10).max(240),
