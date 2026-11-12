@@ -141,7 +141,7 @@ test("realtime events are distributed through PostgreSQL notifications", () => {
   assert.match(realtime, /scheduleReconnect/);
   assert.match(realtime, /LISTEN nexora_room_events/);
   assert.match(realtime, /pg_notify\('nexora_room_events'/);
-  assert.match(realtime, /notification\)/);
+  assert.match(realtime, /on\("notification", handleNotification\)/);
   assert.match(realtime, /DELETE FROM room_presence WHERE connected_at < NOW\(\) - INTERVAL '2 minutes'/);
   assert.match(realtime, /action: "joined"/);
   assert.match(realtime, /action: "left"/);
