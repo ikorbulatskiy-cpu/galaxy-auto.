@@ -27,6 +27,9 @@ dbTest("PostgreSQL migrations create all game and social subsystems", async () =
       "001_base_schema","002_game_world.sql","003_social_game_systems.sql"
     ]));
 
+    const bankKey = await pool.query("SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='clan_transactions' AND column_name='idempotency_key'");
+    assert.equal(bankKey.rowCount, 1, "clan bank operations must support idempotency");
+
     const seeded = await pool.query("SELECT COUNT(*)::int AS count FROM avatar_items WHERE slug LIKE 'nexora-%'");
     assert.ok(seeded.rows[0].count >= 20, "visual catalog seed is incomplete");
 
