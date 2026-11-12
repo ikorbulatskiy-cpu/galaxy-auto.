@@ -13,6 +13,8 @@
   let target = null;
   let current = { x: 50, y: 78 };
   let connecting = false;
+  let reconnectTimer = null;
+  let reconnectAttempts = 0;
   let positionsLoading = false;
   let lastPositionRefresh = 0;
   const scene = () => document.querySelector("#tab-world .nx-scene");
@@ -34,7 +36,7 @@
   }
 
   function applyPosition(username, x, y) {
-    const card = cards().find(node => node.dataset.playerKey === username);
+    const card = cards().find(node => node.dataset.playerUsername === username);
     if (!card) return;
     card.style.left = Math.max(2, Math.min(98, Number(x))) + "%";
     card.style.top = Math.max(8, Math.min(92, Number(y))) + "%";
@@ -59,6 +61,8 @@
 
   function closeSocket() {
     if (moveTimer) clearInterval(moveTimer);
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    reconnectTimer = null;
     moveTimer = null;
     target = null;
     if (socket) {
@@ -77,7 +81,10 @@
     roomId = id;
     const protocol = location.protocol === "https:" ? "wss:" : "ws:";
     socket = new WebSocket(protocol + "//" + location.host + "/ws-movement");
-    socket.onopen = () => socket.send(JSON.stringify({ type: "join_room", roomId: id }));
+    socket.onopen = () => {
+      reconnectAttempts = 0;
+      socket.send(JSON.stringify({ type: "join_room", roomId: id }));
+    };
     socket.onmessage = event => {
       let packet;
       try { packet = JSON.parse(event.data); } catch { return; }
@@ -86,15 +93,18 @@
         connecting = false;
         current = { x: Number(packet.x), y: Number(packet.y) };
         const ownCard = cards().find(card => card.classList.contains("me"));
-        if (ownCard) ownName = ownCard.dataset.playerKey;
+        if (ownCard) ownName = ownCard.dataset.playerUsername;
         if (ownName) applyPosition(ownName, current.x, current.y);
         loadPositions(id, true);
       }
       if (packet.type === "position_list") {
         (packet.positions || []).forEach(item => applyPosition(item.username || item.user_id, item.x, item.y));
       }
-      if (packet.type === "player_moved" && packet.roomId === roomId) {
+      if ((packet.type === "player_moved" || packet.type === "player_joined") && packet.roomId === roomId) {
         applyPosition(packet.username, packet.x, packet.y);
+        if (packet.type === "player_joined" && packet.username !== ownName) {
+          addMovementEvent((packet.username || "Игрок") + " появился в комнате.");
+        }
       }
       if (packet.type === "error") {
         const status = document.getElementById("nx-status");
@@ -105,8 +115,21 @@
       if (roomId === id) {
         connecting = false;
         socket = null;
+        const delay = Math.min(30000, 1000 * Math.pow(2, Math.min(reconnectAttempts++, 5)));
+        reconnectTimer = setTimeout(() => {
+          reconnectTimer = null;
+          if (roomId === id) {
+            roomId = "";
+            connectRoom(id);
+          }
+        }, delay);
       }
     };
+  }
+
+  function addMovementEvent(message) {
+    const status = document.getElementById("nx-status");
+    if (status) status.textContent = message;
   }
 
   function moveTo(x, y) {
