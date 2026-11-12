@@ -1,5 +1,10 @@
 /* NEXORA original 2D avatar motion controls */
 (() => {
+  const movement = document.createElement("script");
+  movement.src = "/nexora-movement.js?v=1";
+  movement.defer = true;
+  document.head.append(movement);
+
   const stage = document.getElementById("character-avatar-preview");
   if (!stage) return;
   const motions = {
