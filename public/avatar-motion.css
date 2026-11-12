@@ -1,0 +1,26 @@
+/* NEXORA Avatar Motion Kit: original lightweight 2D character animation layer */
+.avatar-stage{position:relative;isolation:isolate}
+.avatar-stage::before{content:"";position:absolute;inset:12% 20%;border-radius:50%;background:radial-gradient(ellipse,rgba(167,120,255,.24),transparent 68%);filter:blur(18px);z-index:-1;animation:nxAura 4s ease-in-out infinite}
+.avatar-svg{transform-origin:50% 88%;animation:nxIdle 3.2s ease-in-out infinite;will-change:transform,filter}
+.avatar-stage.nx-motion-wave .avatar-svg{animation:nxWave .85s ease-in-out 3}
+.avatar-stage.nx-motion-dance .avatar-svg{animation:nxDance .7s ease-in-out 4}
+.avatar-stage.nx-motion-heart .avatar-svg{animation:nxHeart 1s ease-in-out 2}
+.avatar-stage.nx-motion-clap .avatar-svg{animation:nxClap .42s ease-in-out 5}
+.avatar-motion-controls{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;width:100%;margin-top:8px}
+.avatar-motion-controls button{border:1px solid #ffffff24;border-radius:999px;padding:8px 11px;background:#ffffff0d;color:#f7f3ff;font-size:12px;font-weight:700;transition:transform .18s,border-color .18s,background .18s}
+.avatar-motion-controls button:active{transform:scale(.94)}
+.avatar-motion-controls button[aria-pressed="true"]{background:#9b72ff35;border-color:#b99bff;color:#fff}
+.avatar-motion-note{min-height:16px;color:#c9bbef;font-size:11px;text-align:center}
+.nx-motion-fx{position:absolute;pointer-events:none;left:50%;top:28%;font-size:24px;opacity:0;transform:translate(-50%,10px) scale(.5)}
+.nx-motion-heart .nx-motion-fx{animation:nxFloatFx 1s ease-out 2}
+.nx-motion-wave .nx-motion-fx{animation:nxSparkFx .9s ease-out 2}
+.nx-motion-dance .nx-motion-fx{animation:nxSparkFx .7s ease-out 4}
+@keyframes nxIdle{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(-.7deg)}}
+@keyframes nxAura{0%,100%{opacity:.55;transform:scale(.92)}50%{opacity:1;transform:scale(1.08)}}
+@keyframes nxWave{0%,100%{transform:rotate(0) translateY(0)}25%{transform:rotate(-8deg) translateY(-3px)}55%{transform:rotate(7deg) translateY(-2px)}80%{transform:rotate(-4deg)}}
+@keyframes nxDance{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-9px) rotate(-7deg)}50%{transform:translateY(0) rotate(0)}75%{transform:translateY(-9px) rotate(7deg)}}
+@keyframes nxHeart{0%,100%{transform:scale(1)}35%{transform:scale(1.09) translateY(-5px)}65%{transform:scale(.98)}}
+@keyframes nxClap{0%,100%{transform:translateX(0) scale(1)}25%{transform:translateX(-4px) scale(1.02)}75%{transform:translateX(4px) scale(1.02)}}
+@keyframes nxFloatFx{0%{opacity:0;transform:translate(-50%,12px) scale(.5)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-65px) scale(1.35)}}
+@keyframes nxSparkFx{0%{opacity:0;transform:translate(-50%,8px) scale(.5)}35%{opacity:1}100%{opacity:0;transform:translate(-50%,-45px) scale(1.3)}}
+@media(prefers-reduced-motion:reduce){.avatar-svg,.avatar-stage::before,.nx-motion-fx{animation:none!important;transition:none!important}}
