@@ -143,7 +143,8 @@ router.get("/:assetId", async (req,res,next)=>{
       Bucket:storage.bucket,
       Key:asset.rows[0].storage_key,
       ResponseContentType:asset.rows[0].mime_type,
-      ResponseContentDisposition:"inline"
+      ResponseContentDisposition:"inline",
+      ResponseCacheControl:"private, no-store"
     }),{expiresIn:300});
     res.set("Cache-Control","private, no-store");
     res.redirect(302,url);
