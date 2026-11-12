@@ -57,6 +57,6 @@
  function run(){removeLegacyLabels();alignAvatar();keepActionsVisible();}
  run();
  const observer=new MutationObserver(run);
- observer.observe(root,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:["class","hidden","style"]});
+ observer.observe(root,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:["class","hidden"]});
  window.addEventListener("resize",run,{passive:true});
 })();
