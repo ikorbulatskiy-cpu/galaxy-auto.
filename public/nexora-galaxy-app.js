@@ -49,8 +49,39 @@
   planet.setAttribute("role","button");planet.setAttribute("tabindex","0");planet.setAttribute("aria-label","Сменить планету");
   const online=$("#nx-online",world);
   if(online){online.classList.add("nx-online");top.insertBefore(online,planet.nextSibling)}
-  const status=$(".nx-event-status",world);
-  if(status){status.classList.add("nx-connection-status");top.append(status)}
+  const statusSource=$("#nx-status",world);
+  if(statusSource){
+   let badge=$("#nx-connection-indicator",top);
+   if(!badge){
+    badge=make("div","nx-connection-status");
+    badge.id="nx-connection-indicator";
+    badge.setAttribute("role","status");
+    badge.setAttribute("aria-live","polite");
+    const exit= $(".nx-exit-button",top);
+    if(exit)top.insertBefore(badge,exit);else top.append(badge);
+   }
+   const updateConnection=()=>{
+    const raw=(statusSource.textContent||"").trim();
+    const lower=raw.toLocaleLowerCase("ru");
+    let state="pending",label="Подключение";
+    if(/соединение:\\s*(отличное|стабильное|активно)|соединение с комнатой установлено|подключен к комнате|connected/.test(lower)){
+     state="connected";label="На связи";
+    }else if(/связь потеряна|проблема сети|закрыт|ошиб|недоступ|не удалось|timeout|failed/.test(lower)){
+     state="error";label="Нет связи";
+    }else if(/подключ|восстанавливаем|ожидан|проверяет подключение/.test(lower)){
+     state="pending";label="Подключение";
+    }else if(badge.dataset.state==="connected"){
+     state="connected";label="На связи";
+    }else if(badge.dataset.state==="error"){
+     state="error";label="Нет связи";
+    }
+    badge.dataset.state=state;
+    badge.textContent=label;
+    badge.title=raw||"Состояние подключения";
+   };
+   updateConnection();
+   new MutationObserver(updateConnection).observe(statusSource,{childList:true,characterData:true,subtree:true});
+  }
   const backdrop=make("div","nx-planet-sheet-backdrop");
   backdrop.setAttribute("aria-hidden","true");
   const sheet=make("section","nx-planet-sheet");sheet.setAttribute("role","dialog");sheet.setAttribute("aria-modal","true");sheet.setAttribute("aria-label","Сменить планету");
