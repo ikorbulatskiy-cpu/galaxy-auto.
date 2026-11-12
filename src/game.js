@@ -136,24 +136,20 @@ router.delete("/characters/:characterId", requireSession, async (req, res, next)
 router.get("/planets", requireSession, async (req,res,next)=>{try{const r=await pool.query("SELECT p.id,p.slug,p.name,p.description,p.access_type,p.ticket_price,(SELECT COUNT(*)::int FROM rooms rm WHERE rm.planet_id=p.id AND rm.is_active=TRUE) AS rooms,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp JOIN rooms rm ON rm.id=rp.room_id WHERE rm.planet_id=p.id) AS online FROM planets p WHERE p.is_active=TRUE ORDER BY p.name");res.json({planets:r.rows})}catch(e){next(e)}});
 
 router.get("/rooms", requireSession, async (req, res, next) => {
-  const planetSlug = typeof req.query.planet === "string" ? req.query.planet : "nexora-prime";
+  const planetSlug = typeof req.query.planet === "string" ? req.query.planet : "";
   try {
-    const result = await pool.query(
-      `SELECT r.id,r.slug,r.name,r.description,r.capacity,p.slug AS planet_slug,p.name AS planet_name,
-        (SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp WHERE rp.room_id=r.id) AS online
-       FROM rooms r JOIN planets p ON p.id=r.planet_id
-       WHERE r.is_active=TRUE AND p.is_active=TRUE AND p.slug=$1 ORDER BY r.name`,
-      [planetSlug]
-    );
+    const location = await pool.query("SELECT p.slug FROM user_locations l JOIN planets p ON p.id=l.planet_id WHERE l.user_id=$1", [req.user.id]);
+    if (!location.rowCount) return res.status(409).json({ error: "Сначала выбери планету отправления." });
+    if (planetSlug && planetSlug !== location.rows[0].slug) return res.status(409).json({ error: "Сначала перелетите на выбранную планету." });
+    const result = await pool.query("SELECT r.id,r.slug,r.name,r.description,r.capacity,p.slug AS planet_slug,p.name AS planet_name,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp WHERE rp.room_id=r.id AND rp.connected_at>NOW()-INTERVAL '2 minutes') AS online FROM rooms r JOIN planets p ON p.id=r.planet_id WHERE r.is_active=TRUE AND p.is_active=TRUE AND p.slug=$1 ORDER BY r.name",[location.rows[0].slug]);
     res.json({ rooms: result.rows });
   } catch (error) { next(error); }
 });
-
 router.get("/rooms/:roomId/messages", requireSession, async (req, res, next) => {
   if (!/^[0-9a-f-]{36}$/i.test(req.params.roomId)) return res.status(400).json({ error: "Некорректная комната." });
   const limit = Math.min(Math.max(Number.parseInt(req.query.limit,10) || 50,1),100);
   try {
-    const room = await pool.query("SELECT id FROM rooms WHERE id=$1 AND is_active=TRUE", [req.params.roomId]);
+    const room = await pool.query("SELECT r.id FROM rooms r JOIN user_locations l ON l.planet_id=r.planet_id WHERE r.id=$1 AND r.is_active=TRUE AND l.user_id=$2", [req.params.roomId,req.user.id]);
     if (!room.rowCount) return res.status(404).json({ error: "Комната не найдена." });
     const messages = await pool.query(
       `SELECT m.id,m.body,m.created_at,c.id AS character_id,COALESCE(c.name,u.username) AS character_name
