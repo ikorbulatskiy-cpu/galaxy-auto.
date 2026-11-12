@@ -159,14 +159,23 @@ router.delete("/clans/:clanId/members/:userId",async(req,res,next)=>{if(!uuid.sa
 router.get("/clans/:clanId/messages",async(req,res,next)=>{if(!uuid.safeParse(req.params.clanId).success)return res.status(400).json({error:"Некорректный клан."});try{const member=await pool.query("SELECT 1 FROM clan_members WHERE clan_id=$1 AND user_id=$2",[req.params.clanId,req.user.id]);if(!member.rowCount)return res.status(403).json({error:"Доступ только участникам клана."});const r=await pool.query("SELECT m.id,m.body,m.created_at,u.username FROM clan_messages m JOIN users u ON u.id=m.user_id WHERE m.clan_id=$1 ORDER BY m.created_at DESC LIMIT 100",[req.params.clanId]);res.json({messages:r.rows.reverse()})}catch(e){next(e)}});
 router.post("/clans/:clanId/messages",async(req,res,next)=>{const p=z.object({body:z.string().trim().min(1).max(1000)}).strict().safeParse(req.body);if(!p.success||!uuid.safeParse(req.params.clanId).success)return res.status(400).json({error:"Некорректное сообщение."});try{const member=await pool.query("SELECT 1 FROM clan_members WHERE clan_id=$1 AND user_id=$2",[req.params.clanId,req.user.id]);if(!member.rowCount)return res.status(403).json({error:"Доступ только участникам клана."});const muted=await pool.query("SELECT 1 FROM punishments WHERE user_id=$1 AND kind='mute' AND lifted_at IS NULL AND (ends_at IS NULL OR ends_at>NOW()) LIMIT 1",[req.user.id]);if(muted.rowCount)return res.status(403).json({error:"Отправка сообщений ограничена."});const recent=await pool.query("SELECT COUNT(*)::int AS n FROM clan_messages WHERE user_id=$1 AND created_at>NOW()-INTERVAL '10 seconds'",[req.user.id]);if(recent.rows[0].n>=5)return res.status(429).json({error:"Слишком часто. Подожди немного."});const r=await pool.query("INSERT INTO clan_messages(clan_id,user_id,body) VALUES($1,$2,$3) RETURNING id,body,created_at",[req.params.clanId,req.user.id,p.data.body]);res.status(201).json({message:r.rows[0]})}catch(e){next(e)}});
 router.post("/clans/:clanId/bank", async (req,res,next)=>{
- const p=z.object({direction:z.enum(["deposit","withdraw"]),amount:z.number().int().positive().max(1000000),reason:z.string().trim().min(3).max(120)}).strict().safeParse(req.body);
+ const p=z.object({direction:z.enum(["deposit","withdraw"]),amount:z.number().int().positive().max(1000000),reason:z.string().trim().min(3).max(120),idempotencyKey:idempotency}).strict().safeParse(req.body);
  if(!p.success||!uuid.safeParse(req.params.clanId).success)return res.status(400).json({error:"Некорректная операция банка."});
  const client=await pool.connect();
  try{await client.query("BEGIN");
+ const signed=p.data.direction==="deposit"?BigInt(p.data.amount):-BigInt(p.data.amount);
+ const prior=await client.query("SELECT id,clan_id,actor_user_id,amount,reason FROM clan_transactions WHERE idempotency_key=$1",[p.data.idempotencyKey]);
+ if(prior.rowCount){
+  const row=prior.rows[0];
+  await client.query("COMMIT");
+  if(row.clan_id!==req.params.clanId||row.actor_user_id!==req.user.id||BigInt(row.amount)!==signed||row.reason!==p.data.reason)return res.status(409).json({error:"Ключ операции уже использован для другой операции."});
+  return res.json({success:true,replayed:true,transactionId:row.id});
+ }
  const member=await client.query("SELECT role FROM clan_members WHERE clan_id=$1 AND user_id=$2 FOR UPDATE",[req.params.clanId,req.user.id]);
  if(!member.rowCount){await client.query("ROLLBACK");return res.status(403).json({error:"Вы не состоите в этом клане."})}
- if(p.data.direction==="withdraw"&&!["owner","deputy"].includes(member.rows[0].role)){await client.query("ROLLBACK");return res.status(403).json({error:"Снимать средства могут лидер и заместитель."})}
+ if(p.data.direction==="withdraw"&& !["owner","deputy"].includes(member.rows[0].role)){await client.query("ROLLBACK");return res.status(403).json({error:"Снимать средства могут лидер и заместитель."})}
  const clan=await client.query("SELECT treasury_coins FROM clans WHERE id=$1 FOR UPDATE",[req.params.clanId]);
+ if(!clan.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Клан не найден."})}
  const wallet=await client.query("SELECT coins FROM wallet_balances WHERE user_id=$1 FOR UPDATE",[req.user.id]);
  const amount=BigInt(p.data.amount);
  if(p.data.direction==="deposit"){
@@ -175,14 +184,14 @@ router.post("/clans/:clanId/bank", async (req,res,next)=>{
   await client.query("UPDATE clans SET treasury_coins=treasury_coins+$2 WHERE id=$1",[req.params.clanId,amount.toString()]);
  }else{
   if(BigInt(clan.rows[0].treasury_coins)<amount){await client.query("ROLLBACK");return res.status(402).json({error:"В банке клана недостаточно средств."})}
+  if(!wallet.rowCount){await client.query("ROLLBACK");return res.status(409).json({error:"Кошелёк не найден."})}
   await client.query("UPDATE clans SET treasury_coins=treasury_coins-$2 WHERE id=$1",[req.params.clanId,amount.toString()]);
-  await client.query("UPDATE wallet_balances SET coins=coins+$2 WHERE user_id=$1",[req.user.id,amount.toString()]);
+  await client.query("UPDATE wallet_balances SET coins=coins+$2,updated_at=NOW() WHERE user_id=$1",[req.user.id,amount.toString()]);
  }
- const signed=p.data.direction==="deposit"?amount.toString():(-amount).toString();
- await client.query("INSERT INTO clan_transactions(clan_id,actor_user_id,amount,reason) VALUES($1,$2,$3,$4)",[req.params.clanId,req.user.id,signed,p.data.reason]);
- await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason) VALUES($1,'coins',$2,$3)",[req.user.id,p.data.direction==="deposit"?(-amount).toString():amount.toString(),"Операция кланового банка"]);
- await client.query("COMMIT");res.json({success:true});
- }catch(e){await client.query("ROLLBACK");next(e)}finally{client.release()}
+ const transaction=await client.query("INSERT INTO clan_transactions(clan_id,actor_user_id,amount,reason,idempotency_key) VALUES($1,$2,$3,$4,$5) RETURNING id",[req.params.clanId,req.user.id,signed.toString(),p.data.reason,p.data.idempotencyKey]);
+ await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id) VALUES($1,'coins',$2,$3,$4)",[req.user.id,p.data.direction==="deposit"?(-amount).toString():amount.toString(),"Операция кланового банка",transaction.rows[0].id]);
+ await client.query("COMMIT");res.json({success:true,transactionId:transaction.rows[0].id});
+ }catch(e){await client.query("ROLLBACK");if(e.code==="23505")return res.status(409).json({error:"Операция с этим ключом уже зарегистрирована."});next(e)}finally{client.release()}
 });
 router.get("/clans/:clanId/ledger",async(req,res,next)=>{if(!uuid.safeParse(req.params.clanId).success)return res.status(400).json({error:"Некорректный клан."});try{const member=await pool.query("SELECT 1 FROM clan_members WHERE clan_id=$1 AND user_id=$2",[req.params.clanId,req.user.id]);if(!member.rowCount)return res.status(403).json({error:"Нет доступа."});const r=await pool.query("SELECT amount,reason,created_at FROM clan_transactions WHERE clan_id=$1 ORDER BY created_at DESC LIMIT 100",[req.params.clanId]);res.json({transactions:r.rows})}catch(e){next(e)}});
 router.get("/pets",async(req,res,next)=>{try{await pool.query("UPDATE pets SET hunger=GREATEST(0,hunger-(FLOOR(EXTRACT(EPOCH FROM (NOW()-last_decay_at))/3600)::int*5)),mood=GREATEST(0,mood-(FLOOR(EXTRACT(EPOCH FROM (NOW()-last_decay_at))/3600)::int*2)),last_decay_at=last_decay_at+(FLOOR(EXTRACT(EPOCH FROM (NOW()-last_decay_at))/3600)::int*INTERVAL '1 hour'),updated_at=NOW() WHERE owner_user_id=$1 AND last_decay_at<NOW()-INTERVAL '1 hour'",[req.user.id]);const r=await pool.query("SELECT id,name,species,level,experience,mood,hunger,created_at FROM pets WHERE owner_user_id=$1 ORDER BY created_at",[req.user.id]);res.json({pets:r.rows})}catch(e){next(e)}});
