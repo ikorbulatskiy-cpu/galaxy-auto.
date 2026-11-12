@@ -117,6 +117,7 @@ CREATE TABLE IF NOT EXISTS pets (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS pets_owner_idx ON pets(owner_user_id);
+ALTER TABLE pets ADD COLUMN IF NOT EXISTS last_cared_at TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS blog_posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
