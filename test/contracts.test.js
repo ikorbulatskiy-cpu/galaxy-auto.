@@ -150,6 +150,11 @@ test("media uploads use authenticated presigned object-storage operations", () =
   assert.match(media, /router\.use\(requireSession\)/);
   assert.match(media, /getSignedUrl/);
   assert.match(media, /HeadObjectCommand/);
+  assert.match(media, /router\.get\("\/:assetId"/);
+  assert.match(media, /GetObjectCommand/);
+  assert.match(media, /b\.visibility=/);
+  assert.match(media, /FROM blocks bl/);
+  assert.match(media, /ResponseCacheControl/);
   assert.match(media, /ContentLength !== parsed\.data\.size/);
   assert.match(media, /expectedPrefix/);
   assert.match(migration, /CREATE TABLE IF NOT EXISTS media_assets/);
