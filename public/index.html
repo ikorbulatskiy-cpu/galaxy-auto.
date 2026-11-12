@@ -72,8 +72,8 @@ async function refreshMessages(){if(!activeConversation)return;try{const d=await
 $("#send-form").addEventListener("submit",async e=>{e.preventDefault();if(!activeConversation)return;const input=e.currentTarget.elements.body;const body=input.value.trim();if(!body)return;try{await api("/api/social/conversations/"+activeConversation+"/messages",{method:"POST",body:JSON.stringify({body})});input.value="";await refreshMessages();await loadConversations()}catch(err){toast(err.message)}});
 $("#logout").onclick=async()=>{closeRoomSocket();try{await api("/api/auth/logout",{method:"POST",body:"{}"})}catch{}currentUser=null;activeConversation=null;if(poller)clearInterval(poller);$("#dashboard").classList.add("hidden");$("#landing").classList.remove("hidden");$("#top-actions").classList.remove("hidden");toast("Вы вышли из аккаунта.")};
 
-let activeRoom=null, roomSocket=null, roomShouldReconnect=false, roomReconnectTimer=null, roomReconnectAttempts=0;
-function closeRoomSocket(){roomShouldReconnect=false;activeRoom=null;if(roomReconnectTimer){clearTimeout(roomReconnectTimer);roomReconnectTimer=null}if(roomSocket){const socket=roomSocket;roomSocket=null;socket.close()}}
+let activeRoom=null, roomSocket=null, roomShouldReconnect=false, roomReconnectTimer=null, roomReconnectAttempts=0, roomGeneration=0;
+function closeRoomSocket(){roomGeneration++;roomShouldReconnect=false;activeRoom=null;if(roomReconnectTimer){clearTimeout(roomReconnectTimer);roomReconnectTimer=null}if(roomSocket){const socket=roomSocket;roomSocket=null;socket.close()}}
 async function loadCharacters(){try{const d=await api("/api/game/characters");$("#character-list").innerHTML=d.characters.length?d.characters.map(c=>'<div class="row"><div><strong>'+escapeHtml(c.name)+'</strong><small>Уровень '+Number(c.level)+' · '+Number(c.experience)+' опыта'+(c.is_active?' · Активный':'')+'</small></div><div>'+(c.is_active?'<span class="pill">Выбран</span>':'<button class="btn small" data-activate-character="'+escapeHtml(c.id)+'">Выбрать</button>')+' <button class="btn small" data-delete-character="'+escapeHtml(c.id)+'">Удалить</button></div></div>').join(""):'<div class="muted">Персонажей пока нет.</div>';$("#character-form").elements.name.disabled=d.characters.length>=3;$("#character-form").querySelector("button").disabled=d.characters.length>=3;$$("[data-activate-character]").forEach(b=>b.onclick=async()=>{try{await api("/api/game/characters/"+b.dataset.activateCharacter+"/activate",{method:"POST",body:"{}"});await loadCharacters();toast("Персонаж выбран.")}catch(e){toast(e.message)}});$$("[data-delete-character]").forEach(b=>b.onclick=async()=>{if(!confirm("Удалить этого персонажа?"))return;try{await api("/api/game/characters/"+b.dataset.deleteCharacter,{method:"DELETE"});await loadCharacters();toast("Персонаж удалён.")}catch(e){toast(e.message)}});await loadAvatarPreview()}catch(e){toast(e.message)}}
 async function loadAvatarPreview(){
  const d=await api("/api/game/characters");
@@ -108,6 +108,7 @@ async function loadRooms(){try{const planets=await api("/api/game/planets");cons
 function appendRoomMessage(m){const el=$("#room-chatbox");const row=document.createElement("div");row.className="msg";const body=document.createElement("div");body.textContent=m.body||"";const meta=document.createElement("small");meta.textContent=(m.character_name||m.username||"Игрок")+" · "+new Date(m.created_at).toLocaleString();row.append(body,meta);el.append(row);el.scrollTop=el.scrollHeight}
 async function openGameRoom(roomId,name){
  closeRoomSocket();
+ const generation=roomGeneration;
  activeRoom=roomId;
  roomShouldReconnect=true;
  $("#room-title").textContent=name;
@@ -116,7 +117,7 @@ async function openGameRoom(roomId,name){
  $("#room-chatbox").textContent="";
  try{
   const d=await api("/api/game/rooms/"+roomId+"/messages");
-  if(!roomShouldReconnect||activeRoom!==roomId)return;
+  if(!roomShouldReconnect||activeRoom!==roomId||generation!==roomGeneration)return;
   d.messages.forEach(appendRoomMessage);
   const scheme=location.protocol==="https:"?"wss:":"ws:";
   const socket=new WebSocket(scheme+"//"+location.host+"/ws");
@@ -125,13 +126,13 @@ async function openGameRoom(roomId,name){
   socket.onmessage=e=>{let packet;try{packet=JSON.parse(e.data)}catch{return}if(packet.type==="joined_room"){roomReconnectAttempts=0;$("#room-hint").textContent="Ты находишься в комнате. Сообщения видны участникам онлайн."}if(packet.type==="room_message"&&packet.message)appendRoomMessage(packet.message);if(packet.type==="error")toast(packet.message)};
   socket.onclose=()=>{
    if(roomSocket===socket)roomSocket=null;
-   if(roomShouldReconnect&&activeRoom===roomId){
+   if(roomShouldReconnect&&activeRoom===roomId&&generation===roomGeneration){
     const delay=Math.min(30000,1000*Math.pow(2,Math.min(roomReconnectAttempts++,5)));
     $("#room-hint").textContent="Связь потеряна. Повторное подключение через "+Math.ceil(delay/1000)+" сек.";
-    roomReconnectTimer=setTimeout(()=>{roomReconnectTimer=null;if(roomShouldReconnect&&activeRoom===roomId)openGameRoom(roomId,name)},delay);
+    roomReconnectTimer=setTimeout(()=>{roomReconnectTimer=null;if(roomShouldReconnect&&activeRoom===roomId&&generation===roomGeneration)openGameRoom(roomId,name)},delay);
    }
   };
- }catch(e){toast(e.message)}
+ }catch(e){if(generation===roomGeneration)toast(e.message)}
 }
 $("#room-send-form").addEventListener("submit",e=>{e.preventDefault();const input=e.currentTarget.elements.body;const body=input.value.trim();if(!body||!roomSocket||roomSocket.readyState!==WebSocket.OPEN)return toast("Нет подключения к общему чату.");roomSocket.send(JSON.stringify({type:"room_message",body}));input.value=""});
 async function loadNotifications(){try{const d=await api("/api/game/notifications");$("#notification-list").innerHTML=d.notifications.length?d.notifications.map(n=>'<div class="row"><div><strong>'+escapeHtml(n.title)+'</strong><small>'+escapeHtml(n.body)+' · '+new Date(n.created_at).toLocaleString()+'</small></div>'+(n.read_at?'<span class="pill">Прочитано</span>':'<button class="btn small" data-read-notification="'+escapeHtml(n.id)+'">Прочитать</button>')+'</div>').join(""):'<div class="muted">Новых уведомлений пока нет.</div>';$$("[data-read-notification]").forEach(b=>b.onclick=async()=>{await api("/api/game/notifications/read",{method:"PATCH",body:JSON.stringify({ids:[b.dataset.readNotification]})});loadNotifications()})}catch(e){toast(e.message)}}
