@@ -58,5 +58,11 @@ test("room join waits for the authenticated WebSocket ready packet", () => {
   const client = read("public/nexora-world.js");
   assert.match(client, /if\(packet\.type==="ready"\)[\s\S]*?ws\.send\(JSON\.stringify\(\{type:"join_room",roomId:room\.id\}\)\)/);
   assert.match(client, /Authentication handshake timeout/);
+  assert.match(client, /\},20000\)/);
+  assert.match(client, /за 20 секунд/);
   assert.match(client, /event\.code/);
+  const realtime = read("src/realtime.js");
+  assert.match(realtime, /Realtime socket authenticated:/);
+  assert.match(realtime, /durationMs: Date\.now\(\) - authStartedAt/);
+  assert.match(realtime, /disconnectedDuringAuth \|\| socket\.readyState !== 1/);
 });
