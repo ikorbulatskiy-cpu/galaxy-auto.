@@ -62,7 +62,7 @@ test("entry screen offers the two-step Galaxy-style registration and recovery-co
   const html = read("public/index.html");
   assert.match(html, /data-open="register">Создать персонажа/);
   assert.match(html, /data-open="restore">Уже есть персонаж/);
-  assert.match(html, /ШАГ \+step\+ ИЗ 2/);
+  assert.match(html, /id="nx-step-caption">ШАГ 1 ИЗ 2/);
   assert.match(html, /data-gender-choice="female"/);
   assert.match(html, /data-gender-choice="male"/);
   assert.match(html, /id="nx-body-prev"/);
