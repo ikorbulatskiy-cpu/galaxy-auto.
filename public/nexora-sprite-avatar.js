@@ -1,126 +1,66 @@
-/* NEXORA PNG sprite avatar engine.
- * Layered raster parts + sprite-sheet animation. Legacy SVG renderer remains the fallback.
- */
+/* NEXORA layered PNG avatar renderer. Legacy SVG remains available as fallback. */
 (()=> {
-  "use strict";
-  const DEFAULTS = {
-    width: 180, height: 300, frameRate: 8,
-    anchors: {
-      shoes:{x:43,y:260,w:94,h:35}, body:{x:30,y:92,w:120,h:175},
-      outfit:{x:28,y:98,w:124,h:165}, head:{x:48,y:8,w:84,h:92},
-      hair:{x:42,y:2,w:96,h:110}, accessories:{x:30,y:0,w:120,h:285}
-    },
-    order:["shoes","body","outfit","head","hair","accessories"]
-  };
-  const cache = new Map();
-  const catalog = Object.freeze({
-    version:1,
-    // Paths are intentionally explicit. Missing artwork falls back to the existing SVG renderer.
-    parts:{
-      heads:["heads/head-01.png","heads/head-02.png","heads/head-03.png"],
-      bodies:["bodies/body-slim.png","bodies/body-classic.png","bodies/body-athletic.png"],
-      hair:["hair/hair-short.png","hair/hair-long.png","hair/hair-curly.png"],
-      outfits:["outfits/outfit-casual.png","outfits/outfit-jacket.png"],
-      shoes:["shoes/shoes-sneakers.png","shoes/shoes-boots.png"],
-      accessories:["accessories/glasses.png","accessories/halo.png","accessories/wings.png"]
-    },
-    animations:{
-      idle:{frames:4,fps:4}, walk:{frames:8,fps:12},
-      dance:{frames:8,fps:10}, happy:{frames:6,fps:8}
-    }
-  });
-  function loadImage(src) {
-    if(cache.has(src)) return cache.get(src);
-    const promise=new Promise((resolve,reject)=>{
-      const image=new Image();
-      image.decoding="async";
-      image.onload=()=>resolve(image);
-      image.onerror=()=>reject(new Error("Sprite not found: "+src));
-      image.src=src;
-    });
-    cache.set(src,promise);
-    promise.catch(()=>cache.delete(src));
-    return promise;
+ "use strict";
+ const ROOT="/assets/avatars/";
+ const PARTS={
+  male:{body:"bodies/body_male_01.png",head:"heads/head_male_classic.png",hair:"hair/hair_short_brown.png",outfit:"outfits/hoodie_blue.png",shoes:"shoes/sneakers_white.png"},
+  female:{body:"bodies/body_female_01.png",head:"heads/head_female_classic.png",hair:"hair/hair_long_chestnut.png",outfit:"outfits/dress_rose.png",shoes:"shoes/sneakers_white.png"}
+ };
+ const ACCESSORIES={cap:"accessories/cap_blue.png"};
+ const ANIMATIONS=Object.freeze({idle:{frames:4,fps:4},walk:{frames:8,fps:12},dance:{frames:8,fps:10},happy:{frames:6,fps:8},wave:{frames:6,fps:8},heart:{frames:6,fps:8}});
+ const cache=new Map(),instances=new WeakMap();
+ function loadImage(src){
+  if(cache.has(src))return cache.get(src);
+  const promise=new Promise((resolve,reject)=>{const img=new Image();img.decoding="async";img.onload=()=>resolve(img);img.onerror=()=>reject(new Error("PNG sprite missing: "+src));img.src=src});
+  cache.set(src,promise);promise.catch(()=>cache.delete(src));return promise;
+ }
+ function resolveLook(look={}){
+  const gender=look.spriteGender==="female"?"female":"male",base=PARTS[gender];
+  const hair=look.hair==="long"?"hair/hair_long_chestnut.png":"hair/hair_short_brown.png";
+  const outfit=look.outfit==="pink"||look.outfit==="rose"?"outfits/dress_rose.png":"outfits/hoodie_blue.png";
+  const accessory=Array.isArray(look.accessories)?look.accessories:typeof look.accessories==="string"?look.accessories.split(","):[];
+  return {body:ROOT+(look.spriteBody||base.body),head:ROOT+(look.spriteHead||base.head),hair:ROOT+(look.spriteHair||hair),outfit:ROOT+(look.spriteOutfit||outfit),shoes:ROOT+(look.spriteShoes||base.shoes),accessories:accessory.includes("cap")?ROOT+ACCESSORIES.cap:null};
+ }
+ class SpriteAvatar{
+  constructor(canvas,options={}){
+   if(!canvas||typeof canvas.getContext!=="function")throw new TypeError("Canvas required");
+   this.canvas=canvas;this.ctx=canvas.getContext("2d");if(!this.ctx)throw new Error("Canvas 2D unavailable");
+   this.width=options.width||128;this.height=options.height||192;this.dpr=Math.min(window.devicePixelRatio||1,2);
+   this.canvas.width=Math.round(this.width*this.dpr);this.canvas.height=Math.round(this.height*this.dpr);
+   this.canvas.style.width=(options.cssWidth||this.width)+"px";this.canvas.style.height=(options.cssHeight||this.height)+"px";
+   this.ctx.setTransform(this.dpr,0,0,this.dpr,0,0);this.look={};this.images=new Map();this.animation="idle";this.direction="front";this.frame=0;this.lastTick=0;this.raf=0;this.destroyed=false;
+   this.setLook(options.look||{});if(options.animate!==false)this.start();
   }
-  class SpriteAvatar {
-    constructor(canvas, options={}) {
-      if(!canvas || typeof canvas.getContext!=="function") throw new TypeError("A canvas element is required");
-      this.canvas=canvas; this.ctx=canvas.getContext("2d");
-      if(!this.ctx) throw new Error("2D canvas context is unavailable");
-      this.options={...DEFAULTS,...options,anchors:{...DEFAULTS.anchors,...(options.anchors||{})}};
-      this.look={}; this.animation="idle"; this.direction="front";
-      this.frame=0; this.lastTick=0; this.raf=0; this.destroyed=false;
-      this.images=new Map(); this.dpr=Math.min(window.devicePixelRatio||1,2);
-      this.resize();
-    }
-    resize(){
-      const {width,height}=this.options;
-      this.canvas.width=Math.round(width*this.dpr);
-      this.canvas.height=Math.round(height*this.dpr);
-      this.canvas.style.width=width+"px"; this.canvas.style.height=height+"px";
-      this.ctx.setTransform(this.dpr,0,0,this.dpr,0,0);
-      this.draw();
-    }
-    async setLook(look={}) {
-      this.look={...look};
-      const sources=Object.values(look).filter(v=>typeof v==="string"&&/\.png(?:\?|$)/i.test(v));
-      await Promise.all(sources.map(async src=>this.images.set(src,await loadImage(src))));
-      this.draw();
-      return this;
-    }
-    setAnimation(name){
-      if(!catalog.animations[name]) name="idle";
-      if(this.animation!==name){this.animation=name;this.frame=0;this.lastTick=0;this.draw();}
-    }
-    setDirection(direction){
-      this.direction=["front","back","left","right"].includes(direction)?direction:"front";
-      this.draw();
-    }
-    drawPart(key,src){
-      if(!src) return;
-      let image=this.images.get(src);
-      if(!image){
-        loadImage(src).then(loaded=>{
-          if(this.destroyed||this.look[key]!==src)return;
-          this.images.set(src,loaded);
-          this.draw();
-        }).catch(error=>this.canvas.dispatchEvent(new CustomEvent("spriteerror",{detail:{part:key,src,error}})));
-        return;
-      }
-      const anchor=this.options.anchors[key]||{x:0,y:0,w:this.options.width,h:this.options.height};
-      const meta=this.look.frames?.[key]||{};
-      const frames=Math.max(1,Number(meta.count)||1);
-      if(frames===1&&!meta.sheet){
-        this.ctx.drawImage(image,anchor.x,anchor.y,anchor.w,anchor.h);
-        return;
-      }
-      const fw=Number(meta.width)||image.width/frames;
-      const fh=Number(meta.height)||image.height/4;
-      const rows=meta.directions||{front:0,back:1,left:2,right:3};
-      const col=this.frame%frames, row=Number(rows[this.direction]??0);
-      this.ctx.drawImage(image,col*fw,row*fh,fw,fh,anchor.x,anchor.y,anchor.w,anchor.h);
-    }
-    draw(timestamp=0){
-      if(this.destroyed)return;
-      const ctx=this.ctx;ctx.clearRect(0,0,this.options.width,this.options.height);
-      // Stable synchronous compositing after each requested image has loaded.
-      for(const key of this.options.order)this.drawPart(key,this.look[key],timestamp);
-    }
-    start(){
-      if(this.raf||this.destroyed)return;
-      const tick=(time)=>{
-        if(this.destroyed)return;
-        const animation=catalog.animations[this.animation]||catalog.animations.idle;
-        const interval=1000/(Number(animation.fps)||this.options.frameRate);
-        if(time-this.lastTick>=interval){this.frame=(this.frame+1)%animation.frames;this.lastTick=time;this.draw(time);}
-        this.raf=requestAnimationFrame(tick);
-      };
-      this.raf=requestAnimationFrame(tick);
-      return this;
-    }
-    stop(){if(this.raf)cancelAnimationFrame(this.raf);this.raf=0;return this;}
-    destroy(){this.stop();this.destroyed=true;this.images.clear();this.ctx.clearRect(0,0,this.options.width,this.options.height);}
+  async setLook(look={}){
+   this.look={...look};const parts=resolveLook(look);
+   await Promise.all(Object.entries(parts).filter(([,src])=>src).map(async([key,src])=>this.images.set(key,await loadImage(src))));
+   if(!this.destroyed)this.draw();return this;
   }
-  function create(canvas,options){return new SpriteAvatar(canvas,options)}
-  window.NexoraSpriteAvatar=Object.freeze({create,loadImage,catalog,SpriteAvatar,clearCache(){cache.clear();}});
+  setAnimation(name){if(!ANIMATIONS[name])name="idle";if(this.animation!==name){this.animation=name;this.frame=0;this.lastTick=0;this.canvas.dataset.animation=name;this.draw()}}
+  setDirection(name){this.direction=["front","back","left","right"].includes(name)?name:"front";this.canvas.dataset.direction=this.direction;this.draw()}
+  draw(){
+   if(this.destroyed)return;const c=this.ctx;c.clearRect(0,0,this.width,this.height);
+   const sway=this.animation==="walk"?Math.sin(this.frame*Math.PI/4)*2:this.animation==="dance"?Math.sin(this.frame*Math.PI/2)*3:this.animation==="happy"||this.animation==="wave"?Math.sin(this.frame*Math.PI/3)*1.5:0;
+   const bob=this.animation==="idle"?Math.sin(this.frame*Math.PI/2)*1.2:this.animation==="walk"?Math.abs(Math.sin(this.frame*Math.PI/4))*2:this.animation==="dance"?Math.sin(this.frame*Math.PI/2)*3:0;
+   c.save();c.translate(sway,bob);
+   for(const key of ["body","outfit","shoes","head","hair","accessories"]){const img=this.images.get(key);if(img)c.drawImage(img,0,0,128,192)}
+   c.restore();
+  }
+  start(){
+   if(this.raf||this.destroyed)return this;
+   const tick=t=>{if(this.destroyed)return;const a=ANIMATIONS[this.animation]||ANIMATIONS.idle;if(t-this.lastTick>=1000/a.fps){this.frame=(this.frame+1)%a.frames;this.lastTick=t;this.draw()}this.raf=requestAnimationFrame(tick)};
+   this.raf=requestAnimationFrame(tick);return this;
+  }
+  stop(){if(this.raf)cancelAnimationFrame(this.raf);this.raf=0;return this}
+  destroy(){this.stop();this.destroyed=true;this.images.clear();this.ctx.clearRect(0,0,this.width,this.height)}
+ }
+ function mount(canvas,look={},options={}){
+  if(!canvas)return null;const old=instances.get(canvas);if(old){old.setLook(look);return old}
+  const instance=new SpriteAvatar(canvas,{...options,look});instances.set(canvas,instance);
+  canvas.addEventListener("spriteerror",e=>canvas.dispatchEvent(new CustomEvent("nexora:sprite-error",{detail:e.detail})));
+  return instance;
+ }
+ function mountAll(root=document){root.querySelectorAll("canvas[data-nexora-sprite]").forEach(canvas=>{let look={};try{look=JSON.parse(canvas.dataset.look||"{}")}catch{}mount(canvas,look,{width:128,height:192,cssWidth:canvas.dataset.size==="mini"?"42px":"84px",cssHeight:canvas.dataset.size==="mini"?"63px":"126px"})})}
+ window.NexoraSpriteAvatar=Object.freeze({create:(canvas,options)=>new SpriteAvatar(canvas,options),mount,mountAll,loadImage,catalog:{parts:PARTS,animations:ANIMATIONS},get(canvas){return instances.get(canvas)||null}});
+ document.addEventListener("DOMContentLoaded",()=>mountAll());
 })();
