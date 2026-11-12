@@ -1,0 +1,198 @@
+const express = require("express");
+const { z } = require("zod");
+const { pool } = require("./db");
+const { requireSession } = require("./auth");
+
+const router = express.Router();
+const uuid = z.string().uuid();
+const idempotency = z.string().uuid();
+
+function adminOnly(req,res,next) {
+  if (!["admin","developer","moderator"].includes(req.user.role)) return res.status(403).json({error:"Недостаточно прав."});
+  next();
+}
+function ownerOrAdmin(req,res,next) {
+  if (!["admin","developer"].includes(req.user.role)) return res.status(403).json({error:"Требуются права администратора."});
+  next();
+}
+router.use(requireSession);
+
+router.get("/catalog", async (_req,res,next) => {
+  try { const r=await pool.query("SELECT id,slug,name,description,category,rarity,price_coins,price_diamonds,asset_url FROM avatar_items WHERE is_active=TRUE ORDER BY category,price_coins"); res.json({items:r.rows}); }
+  catch(e){next(e)}
+});
+router.get("/inventory", async (req,res,next) => {
+  try {
+    const r=await pool.query(`SELECT ci.id,ci.character_id,ci.equipped,ci.acquired_at,i.id AS item_id,i.slug,i.name,i.category,i.rarity,i.asset_url
+      FROM character_inventory ci JOIN avatar_items i ON i.id=ci.item_id JOIN characters c ON c.id=ci.character_id
+      WHERE c.user_id=$1 ORDER BY ci.acquired_at DESC`,[req.user.id]);
+    res.json({items:r.rows});
+  } catch(e){next(e)}
+});
+router.post("/characters/:characterId/equip", async (req,res,next) => {
+  const p=z.object({itemId:uuid,equipped:z.boolean().default(true)}).strict().safeParse(req.body);
+  if(!p.success||!uuid.safeParse(req.params.characterId).success)return res.status(400).json({error:"Некорректные данные."});
+  const client=await pool.connect();
+  try{
+    await client.query("BEGIN");
+    const item=await client.query(`SELECT i.id,i.category FROM avatar_items i JOIN character_inventory ci ON ci.item_id=i.id
+      JOIN characters c ON c.id=ci.character_id WHERE i.id=$1 AND ci.character_id=$2 AND c.user_id=$3`,[p.data.itemId,req.params.characterId,req.user.id]);
+    if(!item.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Предмет не найден в инвентаре."})}
+    if(p.data.equipped)await client.query(`UPDATE character_inventory ci SET equipped=FALSE FROM avatar_items i
+      WHERE ci.item_id=i.id AND ci.character_id=$1 AND i.category=$2`,[req.params.characterId,item.rows[0].category]);
+    const result=await client.query("UPDATE character_inventory SET equipped=$3 WHERE character_id=$1 AND item_id=$2 RETURNING id,equipped",[req.params.characterId,p.data.itemId,p.data.equipped]);
+    await client.query("COMMIT");res.json({item:result.rows[0]});
+  }catch(e){await client.query("ROLLBACK");next(e)}finally{client.release()}
+});
+
+router.post("/transfer", async (req,res,next) => {
+  const p=z.object({toUserId:uuid,amount:z.number().int().positive().max(1000000),currency:z.enum(["coins","diamonds"]).default("coins"),idempotencyKey:idempotency}).strict().safeParse(req.body);
+  if(!p.success||p.data.toUserId===req.user.id)return res.status(400).json({error:"Проверьте получателя и сумму."});
+  const client=await pool.connect();
+  try{
+    await client.query("BEGIN");
+    const existing=await client.query("SELECT id,sender_user_id FROM wallet_transfers WHERE idempotency_key=$1",[p.data.idempotencyKey]);
+    if(existing.rowCount){await client.query("COMMIT");if(existing.rows[0].sender_user_id!==req.user.id)return res.status(409).json({error:"Ключ операции уже использован."});return res.json({transferId:existing.rows[0].id,replayed:true})}
+    const ids=[req.user.id,p.data.toUserId].sort();
+    const wallets=await client.query("SELECT user_id,coins,diamonds FROM wallet_balances WHERE user_id=ANY($1::uuid[]) ORDER BY user_id FOR UPDATE",[ids]);
+    if(wallets.rowCount!==2){await client.query("ROLLBACK");return res.status(404).json({error:"Получатель не найден."})}
+    const sender=wallets.rows.find(x=>x.user_id===req.user.id);
+    if(BigInt(sender[p.data.currency])<BigInt(p.data.amount)){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно средств."})}
+    const col=p.data.currency;
+    await client.query(`UPDATE wallet_balances SET ${col}=${col}-$2,updated_at=NOW() WHERE user_id=$1`,[req.user.id,p.data.amount]);
+    await client.query(`UPDATE wallet_balances SET ${col}=${col}+$2,updated_at=NOW() WHERE user_id=$1`,[p.data.toUserId,p.data.amount]);
+    const t=await client.query("INSERT INTO wallet_transfers(sender_user_id,receiver_user_id,currency,amount,idempotency_key) VALUES($1,$2,$3,$4,$5) RETURNING id",[req.user.id,p.data.toUserId,col,p.data.amount,p.data.idempotencyKey]);
+    await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id) VALUES($1,$2,$3,'Перевод отправлен',$4),($5,$2,$6,'Перевод получен',$4)",[req.user.id,col,-p.data.amount,t.rows[0].id,p.data.toUserId,p.data.amount]);
+    await client.query("COMMIT");res.status(201).json({transferId:t.rows[0].id});
+  }catch(e){await client.query("ROLLBACK");if(e.code==="23505")return res.status(409).json({error:"Ключ операции уже использован."});next(e)}
+  finally{client.release()}
+});
+
+router.post("/shop/buy", async (req,res,next) => {
+  const p=z.object({itemId:uuid,currency:z.enum(["coins","diamonds"]).default("coins"),idempotencyKey:idempotency,characterId:uuid}).strict().safeParse(req.body);
+  if(!p.success)return res.status(400).json({error:"Некорректные данные покупки."});
+  const client=await pool.connect();
+  try{
+    await client.query("BEGIN");
+    const old=await client.query("SELECT id,user_id FROM purchases WHERE idempotency_key=$1",[p.data.idempotencyKey]);
+    if(old.rowCount){await client.query("COMMIT");if(old.rows[0].user_id!==req.user.id)return res.status(409).json({error:"Ключ операции уже использован."});return res.json({purchaseId:old.rows[0].id,replayed:true})}
+    const owned=await client.query("SELECT id FROM characters WHERE id=$1 AND user_id=$2 FOR UPDATE",[p.data.characterId,req.user.id]);
+    const item=await client.query("SELECT id,price_coins,price_diamonds FROM avatar_items WHERE id=$1 AND is_active=TRUE FOR UPDATE",[p.data.itemId]);
+    if(!owned.rowCount||!item.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Персонаж или предмет не найден."})}
+    const amount=BigInt(item.rows[0][p.data.currency==="coins"?"price_coins":"price_diamonds"]);
+    const wallet=await client.query("SELECT coins,diamonds FROM wallet_balances WHERE user_id=$1 FOR UPDATE",[req.user.id]);
+    if(!wallet.rowCount||BigInt(wallet.rows[0][p.data.currency])<amount){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно средств."})}
+    const col=p.data.currency;
+    await client.query(`UPDATE wallet_balances SET ${col}=${col}-$2,updated_at=NOW() WHERE user_id=$1`,[req.user.id,amount.toString()]);
+    const purchase=await client.query("INSERT INTO purchases(user_id,item_id,currency,amount,idempotency_key) VALUES($1,$2,$3,$4,$5) RETURNING id",[req.user.id,p.data.itemId,col,amount.toString(),p.data.idempotencyKey]);
+    await client.query("INSERT INTO character_inventory(character_id,item_id) VALUES($1,$2) ON CONFLICT(character_id,item_id) DO NOTHING",[p.data.characterId,p.data.itemId]);
+    await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id) VALUES($1,$2,$3,'Покупка предмета',$4)",[req.user.id,col,(-amount).toString(),purchase.rows[0].id]);
+    await client.query("COMMIT");res.status(201).json({purchaseId:purchase.rows[0].id,amount:amount.toString()});
+  }catch(e){await client.query("ROLLBACK");if(e.code==="23505")return res.status(409).json({error:"Покупка уже зарегистрирована."});next(e)}
+  finally{client.release()}
+});
+
+router.post("/shop/gift", async (req,res,next) => {
+  const p=z.object({toUserId:uuid,itemId:uuid,message:z.string().max(240).default(""),idempotencyKey:idempotency}).strict().safeParse(req.body);
+  if(!p.success||p.data.toUserId===req.user.id)return res.status(400).json({error:"Проверьте подарок."});
+  const client=await pool.connect();
+  try{
+    await client.query("BEGIN");
+    const duplicate=await client.query("SELECT id,sender_user_id FROM gifts WHERE idempotency_key=$1",[p.data.idempotencyKey]);
+    if(duplicate.rowCount){await client.query("COMMIT");if(duplicate.rows[0].sender_user_id!==req.user.id)return res.status(409).json({error:"Ключ операции уже использован."});return res.json({giftId:duplicate.rows[0].id,replayed:true})}
+    const item=await client.query("SELECT id,price_coins FROM avatar_items WHERE id=$1 AND is_active=TRUE FOR UPDATE",[p.data.itemId]);
+    const receiver=await client.query("SELECT id FROM users WHERE id=$1 AND status='active'",[p.data.toUserId]);
+    if(!item.rowCount||!receiver.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Предмет или получатель не найден."})}
+    const wallet=await client.query("SELECT coins FROM wallet_balances WHERE user_id=$1 FOR UPDATE",[req.user.id]);
+    const amount=BigInt(item.rows[0].price_coins);
+    if(!wallet.rowCount||BigInt(wallet.rows[0].coins)<amount){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно Coins."})}
+    await client.query("UPDATE wallet_balances SET coins=coins-$2,updated_at=NOW() WHERE user_id=$1",[req.user.id,amount.toString()]);
+    const gift=await client.query("INSERT INTO gifts(sender_user_id,receiver_user_id,item_id,message,idempotency_key) VALUES($1,$2,$3,$4,$5) RETURNING id",[req.user.id,p.data.toUserId,p.data.itemId,p.data.message,p.data.idempotencyKey]);
+    await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id) VALUES($1,'coins',$2,'Подарок отправлен',$3)",[req.user.id,(-amount).toString(),gift.rows[0].id]);
+    await client.query("INSERT INTO notifications(user_id,actor_user_id,kind,title,body,data) VALUES($1,$2,'gift','Новый подарок',$3,$4::jsonb)",[p.data.toUserId,req.user.id,p.data.message||"Вам отправили подарок.",JSON.stringify({giftId:gift.rows[0].id})]);
+    await client.query("COMMIT");res.status(201).json({giftId:gift.rows[0].id});
+  }catch(e){await client.query("ROLLBACK");if(e.code==="23505")return res.status(409).json({error:"Ключ операции уже использован."});next(e)}
+  finally{client.release()}
+});
+router.get("/gifts",async(req,res,next)=>{try{const r=await pool.query("SELECT g.id,g.message,g.claimed_at,g.created_at,i.name AS item_name,u.username AS sender FROM gifts g JOIN avatar_items i ON i.id=g.item_id JOIN users u ON u.id=g.sender_user_id WHERE g.receiver_user_id=$1 ORDER BY g.created_at DESC",[req.user.id]);res.json({gifts:r.rows})}catch(e){next(e)}});
+router.post("/gifts/:giftId/claim",async(req,res,next)=>{if(!uuid.safeParse(req.params.giftId).success)return res.status(400).json({error:"Некорректный подарок."});const client=await pool.connect();try{await client.query("BEGIN");const g=await client.query("SELECT id,item_id FROM gifts WHERE id=$1 AND receiver_user_id=$2 AND claimed_at IS NULL FOR UPDATE",[req.params.giftId,req.user.id]);if(!g.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Подарок не найден или уже получен."})}const ch=await client.query("SELECT id FROM characters WHERE user_id=$1 AND is_active=TRUE",[req.user.id]);if(!ch.rowCount){await client.query("ROLLBACK");return res.status(409).json({error:"Сначала создай персонажа."})}await client.query("INSERT INTO character_inventory(character_id,item_id) VALUES($1,$2) ON CONFLICT DO NOTHING",[ch.rows[0].id,g.rows[0].item_id]);await client.query("UPDATE gifts SET claimed_at=NOW() WHERE id=$1",[g.rows[0].id]);await client.query("COMMIT");res.json({success:true})}catch(e){await client.query("ROLLBACK");next(e)}finally{client.release()}});
+
+router.post("/clans", async (req,res,next) => {
+  const p=z.object({name:z.string().trim().min(3).max(40),slug:z.string().trim().min(3).max(48).regex(/^[a-z0-9-]+$/),description:z.string().max(500).default("")}).strict().safeParse(req.body);
+  if(!p.success)return res.status(400).json({error:"Проверьте название клана."});
+  const client=await pool.connect();
+  try{
+    await client.query("BEGIN");
+    const c=await client.query("INSERT INTO clans(name,slug,description,owner_user_id) VALUES($1,$2,$3,$4) RETURNING id,name,slug,treasury_coins",[p.data.name,p.data.slug,p.data.description,req.user.id]);
+    await client.query("INSERT INTO clan_members(clan_id,user_id,role) VALUES($1,$2,'owner')",[c.rows[0].id,req.user.id]);
+    await client.query("COMMIT");res.status(201).json({clan:c.rows[0]});
+  }catch(e){await client.query("ROLLBACK");if(e.code==="23505")return res.status(409).json({error:"Название, адрес клана или ваш аккаунт уже заняты."});next(e)}
+  finally{client.release()}
+});
+router.get("/clans", async (_req,res,next)=>{try{const r=await pool.query("SELECT c.id,c.name,c.slug,c.description,c.level,c.experience,COUNT(m.user_id)::int AS members FROM clans c LEFT JOIN clan_members m ON m.clan_id=c.id GROUP BY c.id ORDER BY c.created_at DESC LIMIT 100");res.json({clans:r.rows})}catch(e){next(e)}});
+router.get("/clans/:clanId/members",async(req,res,next)=>{if(!uuid.safeParse(req.params.clanId).success)return res.status(400).json({error:"Некорректный клан."});try{const r=await pool.query("SELECT m.user_id,u.username,m.role,m.joined_at FROM clan_members m JOIN users u ON u.id=m.user_id WHERE m.clan_id=$1 ORDER BY CASE m.role WHEN 'owner' THEN 0 WHEN 'deputy' THEN 1 WHEN 'officer' THEN 2 ELSE 3 END,m.joined_at",[req.params.clanId]);res.json({members:r.rows})}catch(e){next(e)}});
+router.get("/clans/:clanId/applications",async(req,res,next)=>{if(!uuid.safeParse(req.params.clanId).success)return res.status(400).json({error:"Некорректный клан."});try{const role=await pool.query("SELECT role FROM clan_members WHERE clan_id=$1 AND user_id=$2",[req.params.clanId,req.user.id]);if(!role.rowCount||!["owner","deputy","officer"].includes(role.rows[0].role))return res.status(403).json({error:"Недостаточно прав."});const r=await pool.query("SELECT a.id,a.user_id,u.username,a.created_at FROM clan_applications a JOIN users u ON u.id=a.user_id WHERE a.clan_id=$1 AND a.status='pending' ORDER BY a.created_at",[req.params.clanId]);res.json({applications:r.rows})}catch(e){next(e)}});
+router.post("/clans/:clanId/apply", async (req,res,next)=>{
+ if(!uuid.safeParse(req.params.clanId).success)return res.status(400).json({error:"Некорректный клан."});
+ try{const r=await pool.query("INSERT INTO clan_applications(clan_id,user_id) SELECT id,$2 FROM clans WHERE id=$1 AND visibility='public' ON CONFLICT(clan_id,user_id) DO UPDATE SET status='pending' RETURNING id,status",[req.params.clanId,req.user.id]);if(!r.rowCount)return res.status(404).json({error:"Публичный клан не найден."});res.status(201).json({application:r.rows[0]})}catch(e){next(e)}
+});
+router.post("/clans/:clanId/decide", async (req,res,next)=>{
+ const p=z.object({applicationId:uuid,decision:z.enum(["accept","reject"])}).strict().safeParse(req.body);
+ if(!p.success||!uuid.safeParse(req.params.clanId).success)return res.status(400).json({error:"Некорректное решение."});
+ const client=await pool.connect();
+ try{await client.query("BEGIN");
+ const actor=await client.query("SELECT role FROM clan_members WHERE clan_id=$1 AND user_id=$2 FOR UPDATE",[req.params.clanId,req.user.id]);
+ if(!actor.rowCount||!["owner","deputy","officer"].includes(actor.rows[0].role)){await client.query("ROLLBACK");return res.status(403).json({error:"Недостаточно прав клана."})}
+ const app=await client.query("SELECT user_id FROM clan_applications WHERE id=$1 AND clan_id=$2 AND status='pending' FOR UPDATE",[p.data.applicationId,req.params.clanId]);
+ if(!app.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Заявка не найдена."})}
+ if(p.data.decision==="accept")await client.query("INSERT INTO clan_members(clan_id,user_id) VALUES($1,$2)",[req.params.clanId,app.rows[0].user_id]);
+ await client.query("UPDATE clan_applications SET status=$2 WHERE id=$1",[p.data.applicationId,p.data.decision==="accept"?"accepted":"rejected"]);
+ await client.query("COMMIT");res.json({success:true});
+ }catch(e){await client.query("ROLLBACK");if(e.code==="23505")return res.status(409).json({error:"Пользователь уже состоит в клане."});next(e)}finally{client.release()}
+});
+router.post("/clans/:clanId/bank", async (req,res,next)=>{
+ const p=z.object({direction:z.enum(["deposit","withdraw"]),amount:z.number().int().positive().max(1000000),reason:z.string().trim().min(3).max(120)}).strict().safeParse(req.body);
+ if(!p.success||!uuid.safeParse(req.params.clanId).success)return res.status(400).json({error:"Некорректная операция банка."});
+ const client=await pool.connect();
+ try{await client.query("BEGIN");
+ const member=await client.query("SELECT role FROM clan_members WHERE clan_id=$1 AND user_id=$2 FOR UPDATE",[req.params.clanId,req.user.id]);
+ if(!member.rowCount){await client.query("ROLLBACK");return res.status(403).json({error:"Вы не состоите в этом клане."})}
+ if(p.data.direction==="withdraw"&&!["owner","deputy"].includes(member.rows[0].role)){await client.query("ROLLBACK");return res.status(403).json({error:"Снимать средства могут лидер и заместитель."})}
+ const clan=await client.query("SELECT treasury_coins FROM clans WHERE id=$1 FOR UPDATE",[req.params.clanId]);
+ const wallet=await client.query("SELECT coins FROM wallet_balances WHERE user_id=$1 FOR UPDATE",[req.user.id]);
+ const amount=BigInt(p.data.amount);
+ if(p.data.direction==="deposit"){
+  if(!wallet.rowCount||BigInt(wallet.rows[0].coins)<amount){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно Coins."})}
+  await client.query("UPDATE wallet_balances SET coins=coins-$2,updated_at=NOW() WHERE user_id=$1",[req.user.id,amount.toString()]);
+  await client.query("UPDATE clans SET treasury_coins=treasury_coins+$2 WHERE id=$1",[req.params.clanId,amount.toString()]);
+ }else{
+  if(BigInt(clan.rows[0].treasury_coins)<amount){await client.query("ROLLBACK");return res.status(402).json({error:"В банке клана недостаточно средств."})}
+  await client.query("UPDATE clans SET treasury_coins=treasury_coins-$2 WHERE id=$1",[req.params.clanId,amount.toString()]);
+  await client.query("UPDATE wallet_balances SET coins=coins+$2 WHERE user_id=$1",[req.user.id,amount.toString()]);
+ }
+ const signed=p.data.direction==="deposit"?amount.toString():(-amount).toString();
+ await client.query("INSERT INTO clan_transactions(clan_id,actor_user_id,amount,reason) VALUES($1,$2,$3,$4)",[req.params.clanId,req.user.id,signed,p.data.reason]);
+ await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason) VALUES($1,'coins',$2,$3)",[req.user.id,p.data.direction==="deposit"?(-amount).toString():amount.toString(),"Операция кланового банка"]);
+ await client.query("COMMIT");res.json({success:true});
+ }catch(e){await client.query("ROLLBACK");next(e)}finally{client.release()}
+});
+router.get("/clans/:clanId/ledger",async(req,res,next)=>{if(!uuid.safeParse(req.params.clanId).success)return res.status(400).json({error:"Некорректный клан."});try{const member=await pool.query("SELECT 1 FROM clan_members WHERE clan_id=$1 AND user_id=$2",[req.params.clanId,req.user.id]);if(!member.rowCount)return res.status(403).json({error:"Нет доступа."});const r=await pool.query("SELECT amount,reason,created_at FROM clan_transactions WHERE clan_id=$1 ORDER BY created_at DESC LIMIT 100",[req.params.clanId]);res.json({transactions:r.rows})}catch(e){next(e)}});
+router.get("/pets",async(req,res,next)=>{try{const r=await pool.query("SELECT id,name,species,level,experience,mood,hunger,created_at FROM pets WHERE owner_user_id=$1 ORDER BY created_at",[req.user.id]);res.json({pets:r.rows})}catch(e){next(e)}});
+router.post("/pets",async(req,res,next)=>{const p=z.object({name:z.string().trim().min(2).max(32),species:z.enum(["cat","dog","fox","dragon","owl"])}).strict().safeParse(req.body);if(!p.success)return res.status(400).json({error:"Проверьте имя и вид питомца."});try{const count=await pool.query("SELECT COUNT(*)::int AS n FROM pets WHERE owner_user_id=$1",[req.user.id]);if(count.rows[0].n>=5)return res.status(409).json({error:"Максимум пять питомцев на аккаунт."});const r=await pool.query("INSERT INTO pets(owner_user_id,name,species) VALUES($1,$2,$3) RETURNING id,name,species,level,experience,mood,hunger",[req.user.id,p.data.name,p.data.species]);res.status(201).json({pet:r.rows[0]})}catch(e){next(e)}});
+router.post("/pets/:petId/care",async(req,res,next)=>{const p=z.object({action:z.enum(["feed","play"])}).strict().safeParse(req.body);if(!p.success||!uuid.safeParse(req.params.petId).success)return res.status(400).json({error:"Некорректное действие."});try{const sql=p.data.action==="feed"?"UPDATE pets SET hunger=LEAST(100,hunger+25),mood=LEAST(100,mood+5),experience=experience+2,updated_at=NOW() WHERE id=$1 AND owner_user_id=$2 RETURNING id,name,hunger,mood,level,experience":"UPDATE pets SET mood=LEAST(100,mood+20),hunger=GREATEST(0,hunger-5),experience=experience+5,updated_at=NOW() WHERE id=$1 AND owner_user_id=$2 RETURNING id,name,hunger,mood,level,experience";const r=await pool.query(sql,[req.params.petId,req.user.id]);if(!r.rowCount)return res.status(404).json({error:"Питомец не найден."});res.json({pet:r.rows[0]})}catch(e){next(e)}});
+router.get("/blogs",async(_req,res,next)=>{try{const r=await pool.query("SELECT b.id,b.user_id,u.username,b.body,b.visibility,b.created_at,COUNT(DISTINCT l.user_id)::int AS likes,COUNT(DISTINCT c.id)::int AS comments FROM blog_posts b JOIN users u ON u.id=b.user_id LEFT JOIN blog_likes l ON l.post_id=b.id LEFT JOIN blog_comments c ON c.post_id=b.id WHERE b.visibility='public' GROUP BY b.id,u.username ORDER BY b.created_at DESC LIMIT 50");res.json({posts:r.rows})}catch(e){next(e)}});
+router.post("/blogs",async(req,res,next)=>{const p=z.object({body:z.string().trim().min(1).max(5000),visibility:z.enum(["public","friends","private"]).default("public"),photos:z.array(z.string().url().max(2000)).max(5).default([])}).strict().safeParse(req.body);if(!p.success)return res.status(400).json({error:"Проверьте текст и ссылки фотографий."});const client=await pool.connect();try{await client.query("BEGIN");const post=await client.query("INSERT INTO blog_posts(user_id,body,visibility) VALUES($1,$2,$3) RETURNING id,body,visibility,created_at",[req.user.id,p.data.body,p.data.visibility]);for(const url of p.data.photos)await client.query("INSERT INTO blog_photos(post_id,image_url) VALUES($1,$2)",[post.rows[0].id,url]);await client.query("COMMIT");res.status(201).json({post:post.rows[0]})}catch(e){await client.query("ROLLBACK");next(e)}finally{client.release()}});
+router.post("/blogs/:postId/like",async(req,res,next)=>{if(!uuid.safeParse(req.params.postId).success)return res.status(400).json({error:"Некорректная публикация."});try{const r=await pool.query("INSERT INTO blog_likes(post_id,user_id) SELECT id,$2 FROM blog_posts WHERE id=$1 AND visibility='public' ON CONFLICT DO NOTHING RETURNING post_id",[req.params.postId,req.user.id]);if(!r.rowCount)return res.status(404).json({error:"Публикация не найдена или недоступна."});res.json({liked:true})}catch(e){next(e)}});
+router.post("/blogs/:postId/comments",async(req,res,next)=>{const p=z.object({body:z.string().trim().min(1).max(1000)}).strict().safeParse(req.body);if(!p.success||!uuid.safeParse(req.params.postId).success)return res.status(400).json({error:"Некорректный комментарий."});try{const r=await pool.query("INSERT INTO blog_comments(post_id,user_id,body) SELECT id,$2,$3 FROM blog_posts WHERE id=$1 AND visibility='public' RETURNING id,body,created_at",[req.params.postId,req.user.id,p.data.body]);if(!r.rowCount)return res.status(404).json({error:"Публичная публикация не найдена."});res.status(201).json({comment:r.rows[0]})}catch(e){next(e)}});
+router.post("/relationships/propose",async(req,res,next)=>{const p=z.object({toUserId:uuid}).strict().safeParse(req.body);if(!p.success||p.data.toUserId===req.user.id)return res.status(400).json({error:"Некорректный адресат."});try{const r=await pool.query("INSERT INTO relationships(requester_id,addressee_id) SELECT $1,id FROM users WHERE id=$2 AND status='active' ON CONFLICT DO NOTHING RETURNING id,status",[req.user.id,p.data.toUserId]);if(!r.rowCount)return res.status(409).json({error:"Предложение уже существует или пользователь недоступен."});await pool.query("INSERT INTO notifications(user_id,actor_user_id,kind,title,body,data) VALUES($1,$2,'relationship','Предложение отношений','Вам поступило предложение.',$3::jsonb)",[p.data.toUserId,req.user.id,JSON.stringify({relationshipId:r.rows[0].id})]);res.status(201).json({relationship:r.rows[0]})}catch(e){next(e)}});
+router.post("/relationships/:id/respond",async(req,res,next)=>{const p=z.object({decision:z.enum(["accept","decline"])}).strict().safeParse(req.body);if(!p.success||!uuid.safeParse(req.params.id).success)return res.status(400).json({error:"Некорректный ответ."});try{const r=await pool.query("UPDATE relationships SET status=$3,updated_at=NOW() WHERE id=$1 AND addressee_id=$2 AND status='pending' RETURNING requester_id,addressee_id,status",[req.params.id,req.user.id,p.data.decision==="accept"?"married":"declined"]);if(!r.rowCount)return res.status(404).json({error:"Предложение не найдено."});await pool.query("INSERT INTO notifications(user_id,actor_user_id,kind,title,body,data) VALUES($1,$2,'relationship_response','Ответ на предложение',$3,$4::jsonb)",[r.rows[0].requester_id,req.user.id,p.data.decision==="accept"?"Предложение принято.":"Предложение отклонено.",JSON.stringify({relationshipId:req.params.id})]);res.json({relationship:r.rows[0]})}catch(e){next(e)}});
+router.post("/relationships/:id/divorce",async(req,res,next)=>{if(!uuid.safeParse(req.params.id).success)return res.status(400).json({error:"Некорректная запись."});try{const r=await pool.query("UPDATE relationships SET status='divorced',updated_at=NOW() WHERE id=$1 AND status='married' AND (requester_id=$2 OR addressee_id=$2) RETURNING id",[req.params.id,req.user.id]);if(!r.rowCount)return res.status(404).json({error:"Отношения не найдены."});res.json({success:true})}catch(e){next(e)}});
+router.get("/leaderboards/:kind",async(req,res,next)=>{const kind=req.params.kind;if(!["authority","experience","popularity","clans"].includes(kind))return res.status(400).json({error:"Неизвестный рейтинг."});try{const sql=kind==="clans"?"SELECT c.id,c.name,c.level,c.experience,COUNT(m.user_id)::int AS members FROM clans c LEFT JOIN clan_members m ON m.clan_id=c.id GROUP BY c.id ORDER BY c.experience DESC LIMIT 100":`SELECT u.id,u.username,r.level,r.authority,r.experience,r.popularity FROM users u JOIN reputation r ON r.user_id=u.id WHERE u.status='active' ORDER BY r.${kind} DESC LIMIT 100`;const r=await pool.query(sql);res.json({ranking:r.rows})}catch(e){next(e)}});
+router.get("/achievements",async(req,res,next)=>{try{const r=await pool.query("SELECT a.slug,a.name,a.description,a.reward_coins,ua.earned_at FROM achievements a LEFT JOIN user_achievements ua ON ua.achievement_id=a.id AND ua.user_id=$1 ORDER BY a.name",[req.user.id]);res.json({achievements:r.rows})}catch(e){next(e)}});
+router.post("/mini-games/:slug/score",async(req,res,next)=>{const p=z.object({score:z.number().int().min(0).max(100000)}).strict().safeParse(req.body);if(!p.success||!/^[a-z0-9-]{2,48}$/.test(req.params.slug))return res.status(400).json({error:"Некорректный результат."});try{const r=await pool.query("INSERT INTO mini_game_scores(user_id,game_slug,score,verified) VALUES($1,$2,$3,FALSE) RETURNING id,score,verified,created_at",[req.user.id,req.params.slug,p.data.score]);res.status(201).json({result:r.rows[0],note:"Результат сохранён как непроверенный; в рейтингах и наградах не учитывается."})}catch(e){next(e)}});
+router.get("/admin/reports",adminOnly,async(req,res,next)=>{try{const r=await pool.query("SELECT rp.*,u.username AS reporter_username,t.username AS target_username FROM reports rp JOIN users u ON u.id=rp.reporter_id JOIN users t ON t.id=rp.target_user_id ORDER BY rp.created_at DESC LIMIT 200");res.json({reports:r.rows})}catch(e){next(e)}});
+router.post("/admin/reports/:id/resolve",adminOnly,async(req,res,next)=>{const p=z.object({status:z.enum(["reviewing","resolved","dismissed"])}).strict().safeParse(req.body);if(!p.success||!uuid.safeParse(req.params.id).success)return res.status(400).json({error:"Некорректное решение."});const client=await pool.connect();try{await client.query("BEGIN");const r=await client.query("UPDATE reports SET status=$2 WHERE id=$1 RETURNING id,target_user_id",[req.params.id,p.data.status]);if(!r.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Жалоба не найдена."})}await client.query("INSERT INTO admin_logs(admin_user_id,action,target_type,target_id,details) VALUES($1,'report_status','report',$2,$3::jsonb)",[req.user.id,r.rows[0].id,JSON.stringify({status:p.data.status})]);await client.query("COMMIT");res.json({success:true})}catch(e){await client.query("ROLLBACK");next(e)}finally{client.release()}});
+router.post("/admin/users/:userId/punish",adminOnly,async(req,res,next)=>{const p=z.object({kind:z.enum(["mute","suspend"]),reason:z.string().trim().min(3).max(500),minutes:z.number().int().positive().max(525600).optional()}).strict().safeParse(req.body);if(!p.success||!uuid.safeParse(req.params.userId).success)return res.status(400).json({error:"Некорректная санкция."});if(req.user.role==="moderator"&&p.data.kind==="suspend")return res.status(403).json({error:"Модератор не может приостанавливать аккаунты."});const client=await pool.connect();try{await client.query("BEGIN");const ends=p.data.minutes||null;const r=await client.query("INSERT INTO punishments(user_id,moderator_id,kind,reason,ends_at) VALUES($1,$2,$3,$4,CASE WHEN $5::int IS NULL THEN NULL ELSE NOW()+($5::text||' minutes')::interval END) RETURNING id,kind,ends_at",[req.params.userId,req.user.id,p.data.kind,p.data.reason,ends]);await client.query("INSERT INTO moderation_actions(moderator_id,target_user_id,action,reason,ends_at) VALUES($1,$2,$3,$4,$5)",[req.user.id,req.params.userId,p.data.kind,p.data.reason,r.rows[0].ends_at]);await client.query("INSERT INTO admin_logs(admin_user_id,action,target_type,target_id,details) VALUES($1,'punishment','user',$2,$3::jsonb)",[req.user.id,req.params.userId,JSON.stringify({kind:p.data.kind,reason:p.data.reason,endsAt:r.rows[0].ends_at})]);if(p.data.kind==="suspend")await client.query("UPDATE users SET status='suspended',updated_at=NOW() WHERE id=$1",[req.params.userId]);await client.query("COMMIT");res.status(201).json({punishment:r.rows[0]})}catch(e){await client.query("ROLLBACK");next(e)}finally{client.release()}});
+router.get("/admin/logs",ownerOrAdmin,async(_req,res,next)=>{try{const r=await pool.query("SELECT l.*,u.username FROM admin_logs l JOIN users u ON u.id=l.admin_user_id ORDER BY l.created_at DESC LIMIT 300");res.json({logs:r.rows})}catch(e){next(e)}});
+
+module.exports=router;
