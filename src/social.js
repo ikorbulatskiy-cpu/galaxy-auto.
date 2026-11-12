@@ -98,6 +98,14 @@ router.post("/friends/:userId", requireSession, async (req, res, next) => {
       "INSERT INTO friendships (requester_id,addressee_id,status) VALUES ($1,$2,'pending') RETURNING id,status,created_at",
       [req.user.id, targetId]
     );
+    try {
+      await pool.query(
+        "INSERT INTO notifications (user_id,actor_user_id,kind,title,body,data) VALUES ($1,$2,'friend_request','Новая заявка в друзья',$3,$4::jsonb)",
+        [targetId, req.user.id, "@" + req.user.username + " отправил(а) вам заявку в друзья.", JSON.stringify({ userId: req.user.id })]
+      );
+    } catch (notificationError) {
+      console.error("Friend request notification failed:", notificationError.message);
+    }
     res.status(201).json({ request: created.rows[0] });
   } catch (error) {
     if (error.code === "23505") return res.status(409).json({ error: "Запрос дружбы уже существует." });
@@ -115,6 +123,16 @@ router.patch("/friends/:userId", requireSession, async (req, res, next) => {
       [targetId, req.user.id, parsed.data.decision === "accept" ? "accepted" : "rejected"]
     );
     if (!result.rowCount) return res.status(404).json({ error: "Входящий запрос не найден." });
+    if (parsed.data.decision === "accept") {
+      try {
+        await pool.query(
+          "INSERT INTO notifications (user_id,actor_user_id,kind,title,body,data) VALUES ($1,$2,'friend_accepted','Заявка принята',$3,$4::jsonb)",
+          [targetId, req.user.id, "@" + req.user.username + " принял(а) вашу заявку в друзья.", JSON.stringify({ userId: req.user.id })]
+        );
+      } catch (notificationError) {
+        console.error("Friend accepted notification failed:", notificationError.message);
+      }
+    }
     res.json({ request: result.rows[0] });
   } catch (error) { next(error); }
 });
@@ -250,6 +268,14 @@ router.post("/conversations/:conversationId/messages", requireSession, async (re
       "INSERT INTO messages (conversation_id,sender_id,body) VALUES ($1,$2,$3) RETURNING id,conversation_id,sender_id,body,created_at",
       [conversationId, req.user.id, parsed.data.body]
     );
+    try {
+      await pool.query(
+        "INSERT INTO notifications (user_id,actor_user_id,kind,title,body,data) VALUES ($1,$2,'direct_message','Новое личное сообщение',$3,$4::jsonb)",
+        [otherId, req.user.id, "@" + req.user.username + " отправил(а) вам сообщение.", JSON.stringify({ conversationId })]
+      );
+    } catch (notificationError) {
+      console.error("Direct message notification failed:", notificationError.message);
+    }
     res.status(201).json({ message: result.rows[0] });
   } catch (error) { next(error); }
 });
