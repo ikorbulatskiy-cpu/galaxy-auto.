@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const path = require("path");
+const http = require("http");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const { rateLimit } = require("express-rate-limit");
@@ -9,8 +10,11 @@ const { pool } = require("./src/db");
 const { router: authRouter } = require("./src/auth");
 const worldRouter = require("./src/world");
 const socialRouter = require("./src/social");
+const gameRouter = require("./src/game");
+const { attachRealtime } = require("./src/realtime");
 
 const app = express();
+const server = http.createServer(app);
 const PORT = Number(process.env.PORT || 3000);
 
 app.disable("x-powered-by");
@@ -19,7 +23,6 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: "32kb" }));
 app.use(cookieParser());
 
-// Reject cross-origin state-changing browser requests. SameSite cookies provide an additional layer.
 app.use((req, res, next) => {
   if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
     const origin = req.get("origin");
@@ -47,6 +50,7 @@ const authLimiter = rateLimit({
 app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/world", worldRouter);
 app.use("/api/social", socialRouter);
+app.use("/api/game", gameRouter);
 
 app.get("/api/status", async (_req, res) => {
   let database = "unavailable";
@@ -57,21 +61,21 @@ app.get("/api/status", async (_req, res) => {
   res.status(database === "connected" ? 200 : 503).json({
     online: true,
     app: "NEXORA",
-    version: "0.3.0",
-    stage: "social-api",
+    version: "0.4.0",
+    stage: "game-world-foundation",
     database,
     message: database === "connected" ? "NEXORA API is ready" : "Database connection is not configured"
   });
 });
 
 app.use(express.static(path.join(__dirname, "public")));
-
 app.use((err, _req, res, _next) => {
   console.error("Request failed:", err.message);
   if (res.headersSent) return;
   res.status(500).json({ error: "Внутренняя ошибка сервера." });
 });
 
-app.listen(PORT, "0.0.0.0", () => {
+attachRealtime(server);
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`NEXORA запущен на порту ${PORT}`);
 });
