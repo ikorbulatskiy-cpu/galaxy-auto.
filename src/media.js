@@ -11,6 +11,7 @@ const router = express.Router();
 router.use(requireSession);
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxBytes = 8 * 1024 * 1024;
+let cachedStorage = null;
 const uploadLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 30, standardHeaders: "draft-7", legacyHeaders: false, message: { error: "Слишком много загрузок. Попробуйте позже." } });
 
 async function readPrefix(body, limit = 16) {
@@ -34,13 +35,14 @@ function matchesImageSignature(type, bytes) {
 }
 
 function storageConfig() {
+  if (cachedStorage) return cachedStorage;
   const { S3_BUCKET, S3_ENDPOINT, S3_REGION, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY } = process.env;
   if (!S3_BUCKET || !S3_ENDPOINT || !S3_ACCESS_KEY_ID || !S3_SECRET_ACCESS_KEY) return null;
   let endpointUrl;
   try { endpointUrl = new URL(S3_ENDPOINT); } catch { return null; }
   if (!["http:", "https:"].includes(endpointUrl.protocol)) return null;
   if (process.env.NODE_ENV === "production" && endpointUrl.protocol !== "https:") return null;
-  return {
+  cachedStorage = {
     bucket: S3_BUCKET,
     client: new S3Client({
       region: S3_REGION || "auto",
@@ -49,6 +51,7 @@ function storageConfig() {
       credentials: { accessKeyId: S3_ACCESS_KEY_ID, secretAccessKey: S3_SECRET_ACCESS_KEY }
     })
   };
+  return cachedStorage;
 }
 
 router.post("/presign", uploadLimiter, async (req, res, next) => {
