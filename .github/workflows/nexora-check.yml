@@ -38,3 +38,5 @@ jobs:
           Path("/tmp/nexora-client.js").write_text("\n".join(scripts), encoding="utf-8")
           PY
           node --check /tmp/nexora-client.js
+      - name: Run structural tests
+        run: npm test
