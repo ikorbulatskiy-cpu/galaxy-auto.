@@ -8,6 +8,7 @@ const { rateLimit } = require("express-rate-limit");
 const { pool } = require("./src/db");
 const { router: authRouter } = require("./src/auth");
 const worldRouter = require("./src/world");
+const socialRouter = require("./src/social");
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -45,6 +46,7 @@ const authLimiter = rateLimit({
 
 app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/world", worldRouter);
+app.use("/api/social", socialRouter);
 
 app.get("/api/status", async (_req, res) => {
   let database = "unavailable";
@@ -55,8 +57,8 @@ app.get("/api/status", async (_req, res) => {
   res.status(database === "connected" ? 200 : 503).json({
     online: true,
     app: "NEXORA",
-    version: "0.2.0",
-    stage: "backend-foundation",
+    version: "0.3.0",
+    stage: "social-api",
     database,
     message: database === "connected" ? "NEXORA API is ready" : "Database connection is not configured"
   });
