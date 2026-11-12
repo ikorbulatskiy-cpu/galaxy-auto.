@@ -64,7 +64,7 @@ $("#auth-form").addEventListener("submit",async e=>{
   payload.username=String(f.get("username")||"").trim();
   payload.birthDate=String(f.get("birthDate")||"");
   if(!payload.username||!payload.birthDate)return toast("Заполни ник и дату рождения.");
-  const match=/^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(payload.birthDate);
+  const match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(payload.birthDate);
   if(!match)return toast("Укажи корректную дату рождения.");
   const [,yearText,monthText,dayText]=match;
   const year=Number(yearText),month=Number(monthText),day=Number(dayText);
