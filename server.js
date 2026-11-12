@@ -20,11 +20,11 @@ const server = http.createServer(app);
 const PORT = Number(process.env.PORT || 3000);
 
 app.disable("x-powered-by");
-const proxyHops = process.env.TRUST_PROXY_HOPS;
-if (proxyHops !== undefined && !/^\\d+$/.test(proxyHops)) {
+const proxyHops = process.env.TRUST_PROXY_HOPS?.trim();
+if (proxyHops && !/^\\d+$/.test(proxyHops)) {
   throw new Error("TRUST_PROXY_HOPS must be a non-negative integer.");
 }
-app.set("trust proxy", proxyHops === undefined ? false : Number(proxyHops));
+app.set("trust proxy", proxyHops ? Number(proxyHops) : false);
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
