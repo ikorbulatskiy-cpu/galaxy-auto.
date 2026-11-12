@@ -33,6 +33,11 @@ dbTest("PostgreSQL migrations create all game and social subsystems", async () =
     const seeded = await pool.query("SELECT COUNT(*)::int AS count FROM avatar_items WHERE slug LIKE 'nexora-%'");
     assert.ok(seeded.rows[0].count >= 20, "visual catalog seed is incomplete");
 
+    const weddingRing = await pool.query("SELECT COUNT(*)::int AS count FROM avatar_items WHERE slug='nexora-wedding-ring'");
+    assert.equal(weddingRing.rows[0].count,1,"wedding ring reward item must be seeded");
+    const bankIndex = await pool.query("SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname='clan_transactions_idempotency_idx'");
+    assert.equal(bankIndex.rowCount,1,"clan bank idempotency index must exist");
+
     const planets = await pool.query(
       "SELECT COUNT(*)::int AS count FROM planets WHERE slug IN ('nexora-prime','love-planet','neon-city','paradise','mystery-planet','vip-world')"
     );
