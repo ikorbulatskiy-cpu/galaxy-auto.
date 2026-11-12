@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - love-galaxy-redesign
+      - nexora-stage1-game-screen
 
 jobs:
   syntax:
@@ -48,6 +49,7 @@ jobs:
         run: |
           node --check public/avatar-motion.js
           node --check public/nexora-world.js
+          node --check public/nexora-movement.js
           python3 - <<'PY'
           import re
           from pathlib import Path
