@@ -52,6 +52,7 @@ test("migration runner records each version before future runs", () => {
   assert.match(runner, /schema_migrations/);
   assert.match(runner, /002_game_world\.sql/);
   assert.match(runner, /003_social_game_systems\.sql/);
+  assert.match(runner, /004_media_assets\.sql/);
   assert.match(runner, /Already applied:/);
 });
 
