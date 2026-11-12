@@ -30,6 +30,8 @@ router.get("/rooms/:roomId/positions", requireSession, async (req, res, next) =>
               c.appearance AS character_appearance,c.aura AS character_aura,
               p.x,p.y,p.updated_at
        FROM room_player_positions p
+       JOIN room_presence rp ON rp.room_id=p.room_id AND rp.user_id=p.user_id
+         AND rp.connected_at>NOW()-INTERVAL '2 minutes'
        JOIN users u ON u.id=p.user_id AND u.status='active'
        JOIN rooms r ON r.id=p.room_id AND r.is_active=TRUE
        JOIN user_locations l ON l.user_id=$2 AND l.planet_id=r.planet_id
@@ -69,7 +71,7 @@ function attachMovement(server) {
     client.on("notification", message => {
       try {
         const event = JSON.parse(message.payload);
-        if (event.source !== instanceId && event.type === "player_moved") broadcast(event);
+        if (event.source !== instanceId && (event.type === "player_moved" || event.type === "player_joined")) broadcast(event);
       } catch {}
     });
     client.on("error", () => {
@@ -149,7 +151,9 @@ function attachMovement(server) {
           const access = await pool.query(
             `SELECT r.id FROM rooms r
              JOIN user_locations l ON l.planet_id=r.planet_id AND l.user_id=$2
-             WHERE r.id=$1 AND r.is_active=TRUE`,
+             WHERE r.id=$1 AND r.is_active=TRUE
+               AND EXISTS(SELECT 1 FROM room_presence rp WHERE rp.room_id=r.id AND rp.user_id=$2
+                 AND rp.connected_at>NOW()-INTERVAL '2 minutes')`,
             [packet.roomId, user.id]
           );
           if (!access.rowCount) {
@@ -174,11 +178,23 @@ function attachMovement(server) {
           if (!peers.has(joinedRoom)) peers.set(joinedRoom, new Set());
           peers.get(joinedRoom).add(socket);
           const current = await pool.query(
-            "SELECT p.user_id,u.username,p.x,p.y FROM room_player_positions p JOIN users u ON u.id=p.user_id WHERE p.room_id=$1",
+            `SELECT DISTINCT ON (p.user_id) p.user_id,u.username,p.x,p.y
+             FROM room_player_positions p
+             JOIN room_presence rp ON rp.room_id=p.room_id AND rp.user_id=p.user_id
+               AND rp.connected_at>NOW()-INTERVAL '2 minutes'
+             JOIN users u ON u.id=p.user_id AND u.status='active'
+             WHERE p.room_id=$1
+             ORDER BY p.user_id,rp.connected_at DESC`,
             [joinedRoom]
           );
           socket.send(JSON.stringify({ type: "joined_room", roomId: joinedRoom, x: lastX, y: lastY }));
           socket.send(JSON.stringify({ type: "position_list", roomId: joinedRoom, positions: current.rows }));
+          const joinedEvent = {
+            type: "player_joined", roomId: joinedRoom, userId: user.id,
+            username: user.username, x: lastX, y: lastY, source: instanceId
+          };
+          broadcast(joinedEvent);
+          await pool.query("SELECT pg_notify('nexora_movement_events',$1)", [JSON.stringify(joinedEvent)]);
         } catch {
           socket.send(JSON.stringify({ type: "error", message: "Не удалось загрузить позиции игроков." }));
         }
@@ -203,7 +219,9 @@ function attachMovement(server) {
            WHERE p.room_id=$1 AND p.user_id=$2
              AND EXISTS(SELECT 1 FROM rooms r JOIN user_locations l
                ON l.planet_id=r.planet_id AND l.user_id=$2
-               WHERE r.id=$1 AND r.is_active=TRUE)
+               WHERE r.id=$1 AND r.is_active=TRUE
+                 AND EXISTS(SELECT 1 FROM room_presence rp WHERE rp.room_id=r.id AND rp.user_id=$2
+                   AND rp.connected_at>NOW()-INTERVAL '2 minutes'))
            RETURNING p.x,p.y,p.updated_at`,
           [joinedRoom, user.id, x, y]
         );
