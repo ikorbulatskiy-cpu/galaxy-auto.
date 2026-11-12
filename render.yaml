@@ -25,6 +25,6 @@ databases:
   - name: nexora-postgres
     plan: free
     region: frankfurt
-    databaseName: nexora
+    databaseName: nexora_tvn1
     postgresMajorVersion: "17"
     ipAllowList: []
