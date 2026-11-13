@@ -278,8 +278,11 @@
       if (!response.ok) throw new Error(data.error || "Ошибка авторизации.");
       if (data.recoveryCode) {
         const box = $("#recovery-result");
-        box.textContent = "ТВОЙ КОД ВОССТАНОВЛЕНИЯ: " + data.recoveryCode + "  Сохрани его. Это твой личный код из 10 символов.";
+        box.textContent = "АККАУНТ СОЗДАН. ТВОЙ КОД: " + data.recoveryCode + ". Сохрани его, затем введи этот код в поле выше и нажми «Войти по коду». В комнату ты попадёшь только после проверки кода.";
         box.classList.remove("hidden");
+        $("#recovery-code").value = "";
+        $("#recovery-code").focus();
+        return;
       }
       await enterWorld();
     } catch (error) {
@@ -288,10 +291,6 @@
   }
   $("#register-button").addEventListener("click", () => submitAuth("/api/auth/register"));
   $("#login-button").addEventListener("click", () => submitAuth("/api/auth/login"));
-
-  fetch("/api/me").then(response => {
-    if (response.ok) enterWorld();
-  }).catch(() => {});
 
   socket.on("planet:state", (data) => {
     state.planet = data.planet;
