@@ -48,3 +48,5 @@
 
 .embedded-back{border:1px solid #527fc4;background:#17243d;color:#edf5ff;border-radius:9px;padding:8px 11px;font-size:12px;font-weight:800;white-space:nowrap}
 .embedded-back[hidden]{display:none!important}
+
+.planet-search{flex:1 1 190px;min-width:150px;border:1px solid #7889c355;border-radius:20px;padding:8px 13px;background:#ffffff0a;color:#f4f6ff;font:inherit;font-size:11px;outline:none}.planet-search:focus{border-color:#a89cff;box-shadow:0 0 0 3px #a89cff22}.planet-search::placeholder{color:#aab8d8}
