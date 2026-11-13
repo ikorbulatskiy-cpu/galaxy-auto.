@@ -201,6 +201,9 @@
     }
     ctx.stroke();
 
+    // Detailed, planet-specific world geometry is rendered beneath player avatars.
+    window.NexoraWorldScene?.draw(ctx, w, h, state.planet, Date.now());
+
     const ordered = [...state.players.values()].sort((a, b) => a.x - b.x);
     ordered.forEach((player) => {
       const x = player.x * w;
