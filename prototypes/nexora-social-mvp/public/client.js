@@ -724,6 +724,7 @@
       developerPermissions = data.permissions || [];
       $("#developer-open").classList.toggle("hidden", !data.allowed);
       $("#developer-roles-tab").classList.toggle("hidden", !developerPermissions.includes("roles.manage"));
+      $("#developer-authority-tab").classList.toggle("hidden", !developerPermissions.some(permission => permission.startsWith("authority.")));
     } catch (_error) { $("#developer-open").classList.add("hidden"); }
   }
   function developerRender(title, rows) {
@@ -800,6 +801,71 @@
       } else if (tab === "world") {
         const d = await developerRequest("/world");
         developerRender("Планеты и комнаты", d.world.map(p => ({ title: p.title, detail: p.online + " онлайн · " + p.rooms + " комнат" })));
+
+      } else if (tab === "authority") {
+        if (!developerPermissions.some(permission => permission.startsWith("authority."))) throw new Error("Недостаточно прав.");
+        const data=await authorityApi("/");
+        content.replaceChildren();
+        const heading=document.createElement("h3");heading.textContent="Выдача авторитетов и аур";content.append(heading);
+        const form=document.createElement("form");form.className="developer-authority-form";
+        const account=document.createElement("input");account.type="text";account.inputMode="numeric";account.required=true;account.placeholder="ID аккаунта игрока";
+        const title=document.createElement("select");
+        data.titles.forEach(item=>{const option=document.createElement("option");option.value=item.title_key;option.textContent=item.title_label;title.append(option);});
+        const reason=document.createElement("input");reason.maxLength=500;reason.required=true;reason.placeholder="Причина выдачи / изменения";
+        const auraLabel=document.createElement("label");const aura=document.createElement("input");aura.type="checkbox";aura.checked=true;auraLabel.append(aura,document.createTextNode("Включить ауру"));
+        const submit=document.createElement("button");submit.type="submit";submit.textContent="Выдать звание";
+        form.append(account,title,reason,auraLabel,submit);content.append(form);
+        if(!developerPermissions.includes("authority.assign"))form.classList.add("hidden");
+        form.addEventListener("submit",async event=>{
+          event.preventDefault();submit.disabled=true;
+          try{
+            const response=await fetch("/api/authority/admin/assign",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({accountId:account.value,titleKey:title.value,reason:reason.value,auraEnabled:aura.checked})});
+            const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||"Не удалось выдать звание.");
+            showToast("Звание обновлено для аккаунта "+result.accountId);reason.value="";
+          }catch(error){showToast(error.message);}finally{submit.disabled=false;}
+        });
+        if(developerPermissions.includes("authority.configure")){
+          const configTitle=document.createElement("h3");configTitle.textContent="Стоимость и требования";content.append(configTitle);
+          const response=await fetch("/api/authority/admin/config",{credentials:"same-origin"}),config=await response.json();
+          if(!response.ok)throw new Error(config.error||"Не удалось загрузить настройки.");
+          (config.titles||[]).forEach(item=>{
+            const row=document.createElement("div");row.className="authority-config-row";
+            const name=document.createElement("strong");name.textContent=item.title_label;
+            const priceLabel=document.createElement("label");priceLabel.textContent="Цена Koins";
+            const price=document.createElement("input");price.type="number";price.min="0";price.value=item.koins_price;
+            const minLabel=document.createElement("label");minLabel.textContent="Требуемый авторитет";
+            const minimum=document.createElement("input");minimum.type="number";minimum.min="0";minimum.value=item.min_authority;
+            const enabledLabel=document.createElement("label");const enabled=document.createElement("input");enabled.type="checkbox";enabled.checked=item.enabled;enabledLabel.append(enabled,document.createTextNode("Доступно"));
+            const save=document.createElement("button");save.type="button";save.textContent="Сохранить";
+            save.addEventListener("click",async()=>{
+              save.disabled=true;
+              try{
+                const result=await fetch("/api/authority/admin/config/"+item.title_key,{method:"PUT",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({koinsPrice:Number(price.value),minAuthority:Number(minimum.value),enabled:enabled.checked})}).then(r=>r.json());
+                if(!result.ok)throw new Error(result.error||"Ошибка сохранения");showToast("Настройки "+item.title_label+" сохранены.");
+              }catch(error){showToast(error.message);}finally{save.disabled=false;}
+            });
+            row.append(name,priceLabel,price,minLabel,minimum,enabledLabel,save);content.append(row);
+          });
+        }
+        if(developerPermissions.includes("authority.history")){
+          const historyHeading=document.createElement("h3");historyHeading.textContent="История игрока";content.append(historyHeading);
+          const historyId=document.createElement("input");historyId.placeholder="ID аккаунта";historyId.inputMode="numeric";content.append(historyId);
+          const historyButton=document.createElement("button");historyButton.type="button";historyButton.textContent="Загрузить историю";content.append(historyButton);
+          historyButton.addEventListener("click",async()=>{
+            try{
+              const response=await fetch("/api/authority/admin/history/"+encodeURIComponent(historyId.value),{credentials:"same-origin"}),result=await response.json();
+              if(!response.ok)throw new Error(result.error||"Ошибка истории");
+              const box=document.createElement("div");
+              (result.history||[]).forEach(entry=>{
+                const row=document.createElement("div");row.className="developer-row";
+                const strong=document.createElement("strong");strong.textContent=entry.old_title+" → "+entry.new_title;
+                const detail=document.createElement("span");detail.textContent=entry.source+" · "+(entry.actor_nickname||"Система")+" · "+(entry.reason||"")+" · "+new Date(entry.created_at).toLocaleString("ru-RU");
+                row.append(strong,detail);box.append(row);
+              });
+              content.append(box);
+            }catch(error){showToast(error.message);}
+          });
+        }
       } else if (tab === "roles") {
         if (!developerPermissions.includes("roles.manage")) throw new Error("Недостаточно прав.");
         const d = await developerRequest("/roles");
@@ -819,7 +885,7 @@
         reason.maxLength = 500; reason.placeholder = "Причина назначения";
         const permissionWrap = document.createElement("div");
         permissionWrap.className = "developer-permission-grid";
-        const available = ["players.view","players.ban","players.unban","players.warn","moderation.view","world.view","world.manage","economy.view","economy.manage","items.view","items.manage","system.view","logs.view"];
+        const available = ["players.view","players.ban","players.unban","players.warn","moderation.view","world.view","world.manage","economy.view","economy.manage","items.view","items.manage","system.view","logs.view","authority.view","authority.assign","authority.remove","authority.configure","authority.history"];
         available.forEach(value => {
           const label = document.createElement("label");
           const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.value = value;
