@@ -14,7 +14,7 @@
   const socket=io("/galaxy",{autoConnect:false});
   const me={id:null,nickname:""};
   let roomPlanet="starter",selected=null,moveTarget=null,moveMode=false,players=[],chatCollapsed=false;
-  let planetCatalog=[],selectedPlanet=null,planetFilter="all";
+  let planetCatalog=[],selectedPlanet=null,planetFilter="all",planetSearch="";
   const basePlanets=[
     {key:"starter",name:"Стартовая",description:"Главная точка встречи путешественников NEXORA.",theme:"nebula",color:"#536ed0",light:"#b9c9ff",glow:"#617dff",x:50,y:48,onlineCount:0},
     {key:"club",name:"Клуб",description:"Музыка, танцы и ночная жизнь галактики.",theme:"violet",color:"#a344c4",light:"#f1a7ff",glow:"#bd59e8",x:76,y:29,onlineCount:0},
@@ -58,7 +58,7 @@
   function openPlanetMap(){renderPlanetMap();$("#planet-map").hidden=false}
   function closePlanetMap(){$("#planet-map").hidden=true}
   function renderPlanetMap(){
-    const map=$("#planet-orbit-map"),items=planetCatalog.filter(p=>planetFilter==="favorites"?p.favorite:planetFilter==="popular"?Number(p.totalVisits||p.onlineCount||0)>0:true);
+    const map=$("#planet-orbit-map"),needle=planetSearch.trim().toLocaleLowerCase("ru-RU"),items=planetCatalog.filter(p=>(planetFilter==="favorites"?p.favorite:planetFilter==="popular"?Number(p.totalVisits||p.onlineCount||0)>0:true)&&(!needle||(p.name+" "+(p.description||"")).toLocaleLowerCase("ru-RU").includes(needle)));
     map.replaceChildren();
     for(let i=0;i<42;i++){const star=document.createElement("i");star.className="star";star.style.left=((i*47+13)%97)+"%";star.style.top=((i*71+9)%93)+"%";star.style.opacity=String(.25+(i%5)*.14);map.append(star)}
     items.forEach((p,i)=>{const node=document.createElement("button");node.type="button";node.className="planet-node"+(selectedPlanet?.key===p.key?" selected":"");node.style.left=(p.x||((i*19+18)%85+7))+"%";node.style.top=(p.y||((i*31+17)%78+10))+"%";node.style.setProperty("--planet-color",p.color);node.style.setProperty("--planet-light",p.light);node.style.setProperty("--planet-glow",p.glow);node.innerHTML='<span class="planet-globe"></span><strong></strong><small></small>';node.querySelector("strong").textContent=p.name;node.querySelector("small").textContent=(p.onlineCount||0)+" онлайн";node.addEventListener("click",()=>selectPlanet(p));map.append(node)});
@@ -117,6 +117,7 @@
   document.addEventListener("click",e=>{if(!e.target.closest("#context-menu")&&!e.target.closest("#scene-viewport"))closeContext()});
   $("#profile-modal").addEventListener("click",e=>{if(e.target===e.currentTarget||e.target.closest("[data-close]"))$("#profile-modal").hidden=true});
   $("#planet-list").addEventListener("click",openPlanetMap);
+  $("#planet-search").addEventListener("input",e=>{planetSearch=e.target.value;renderPlanetMap()});
   $("#planet-map").addEventListener("click",e=>{if(e.target===e.currentTarget||e.target.closest("[data-map-close]"))closePlanetMap();const filter=e.target.closest("[data-map-filter]");if(filter){planetFilter=filter.dataset.mapFilter;document.querySelectorAll("[data-map-filter]").forEach(b=>b.classList.toggle("active",b===filter));renderPlanetMap()}});
   $("#planet-visit").addEventListener("click",()=>travelToPlanet(selectedPlanet));
   async function start(){
