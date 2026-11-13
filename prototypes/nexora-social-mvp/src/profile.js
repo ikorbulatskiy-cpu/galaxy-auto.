@@ -8,10 +8,10 @@ const HAIR = ["short", "long", "spiky"];
 const GENDERS = ["male", "female"];
 
 function cleanText(value, max) {
-  return String(value ?? "").replace(/[<>\\u0000-\\u001f]/g, "").trim().slice(0, max);
+  return String(value ?? "").replace(/[<>\u0000-\u001f]/g, "").trim().slice(0, max);
 }
 function normalizeNickname(value) {
-  return String(value ?? "").trim().replace(/[^\\p{L}\\p{N}_-]/gu, "").slice(0, 18);
+  return String(value ?? "").trim().replace(/[^\p{L}\p{N}_-]/gu, "").slice(0, 18);
 }
 function normalizeAvatar(input) {
   return {
