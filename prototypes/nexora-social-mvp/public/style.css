@@ -2355,3 +2355,5 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 .integrated-galaxy-back{position:absolute;z-index:5;top:max(70px,calc(env(safe-area-inset-top) + 66px));left:12px;min-height:36px;padding:7px 12px;border:1px solid rgba(165,190,255,.42);border-radius:11px;background:rgba(12,20,42,.88);color:#f3f6ff;font-size:12px;font-weight:750;backdrop-filter:blur(12px);box-shadow:0 6px 20px #0007}
 .integrated-galaxy-back:active{transform:scale(.98)}
 @media(max-width:600px){.integrated-galaxy-back{top:calc(env(safe-area-inset-top) + 66px);left:8px;padding:7px 10px;font-size:11px}}
+
+.public-profile-planet{font-size:12px;color:#b9c9ff;margin:9px 0;padding:8px 10px;border:1px solid #8095d633;border-radius:10px;background:#ffffff08}
