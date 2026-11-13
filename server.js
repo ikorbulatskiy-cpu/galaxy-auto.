@@ -30,7 +30,7 @@ const proxyHops = process.env.TRUST_PROXY_HOPS?.trim();
 if (proxyHops && !/^\d+$/.test(proxyHops)) {
   throw new Error("TRUST_PROXY_HOPS must be a non-negative integer.");
 }
-app.set("trust proxy", proxyHops ? Number(proxyHops) : false);
+app.set("trust proxy", proxyHops ? Number(proxyHops) : 1);
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
