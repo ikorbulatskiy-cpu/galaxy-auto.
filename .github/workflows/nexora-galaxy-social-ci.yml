@@ -10,6 +10,7 @@ on:
       - "database/migrations/**"
       - "scripts/migrate.js"
       - "server.js"
+      - "test/**"
       - "package.json"
       - ".github/workflows/nexora-galaxy-social-ci.yml"
   pull_request:
