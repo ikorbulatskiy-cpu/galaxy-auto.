@@ -3,7 +3,7 @@
   class GalaxyScene {
     constructor(viewport, canvas, onSelect, onFloor) {
       this.viewport=viewport;this.canvas=canvas;this.ctx=canvas.getContext("2d");
-      this.width=2400;this.height=480;this.camera=0;this.players=new Map();this.onSelect=onSelect;this.onFloor=onFloor;this.cursor=null;this.drag=null;
+      this.width=2400;this.height=480;this.camera=0;this.players=new Map();this.onSelect=onSelect;this.onFloor=onFloor;this.cursor=null;this.drag=null;this.moveMode=false;
       this.resize();window.addEventListener("resize",()=>this.resize());
       viewport.addEventListener("pointerdown",e=>this.down(e));
       viewport.addEventListener("pointermove",e=>this.move(e));
@@ -12,15 +12,17 @@
       this.frame=requestAnimationFrame(t=>this.draw(t));
     }
     resize(){this.height=Math.max(320,this.viewport.clientHeight);this.canvas.width=this.width;this.canvas.height=this.height;this.canvas.style.width=this.width+"px";this.canvas.style.height=this.height+"px";this.canvas.style.transform="translateX("+(-this.camera)+"px)";}
-    down(e){this.drag={x:e.clientX,camera:this.camera,moved:false,id:e.pointerId};this.viewport.setPointerCapture?.(e.pointerId)}
-    move(e){if(!this.drag)return;const dx=e.clientX-this.drag.x;if(Math.abs(dx)>4)this.drag.moved=true;this.camera=Math.max(0,Math.min(this.width-this.viewport.clientWidth,this.drag.camera-dx));this.canvas.style.transform="translateX("+(-this.camera)+"px)";}
-    up(e){if(!this.drag)return;const moved=this.drag.moved;this.drag=null;if(moved)return;const rect=this.viewport.getBoundingClientRect();const x=(e.clientX-rect.left+this.camera)/this.width;const hit=[...this.players.values()].find(p=>Math.abs(p.x-x)<.035);if(hit){this.onSelect?.(hit,e.clientX,e.clientY);return;}this.onFloor?.(Math.max(.04,Math.min(.96,x)));}
+    down(e){this.drag={x:e.clientX,camera:this.camera,moved:false,id:e.pointerId};this.viewport.setPointerCapture?.(e.pointerId);if(this.moveMode)this.pickFloor(e)}
+    move(e){if(!this.drag)return;const dx=e.clientX-this.drag.x;if(this.moveMode){if(Math.abs(dx)>2)this.drag.moved=true;this.pickFloor(e);return;}if(Math.abs(dx)>4)this.drag.moved=true;this.camera=Math.max(0,Math.min(this.width-this.viewport.clientWidth,this.drag.camera-dx));this.canvas.style.transform="translateX("+(-this.camera)+"px)";}
+    up(e){if(!this.drag)return;const moved=this.drag.moved;this.drag=null;if(this.moveMode){this.pickFloor(e);return;}if(moved)return;const rect=this.viewport.getBoundingClientRect();const x=(e.clientX-rect.left+this.camera)/this.width;const hit=[...this.players.values()].find(p=>Math.abs(p.x-x)<.035);if(hit){this.onSelect?.(hit,e.clientX,e.clientY);return;}this.onFloor?.(Math.max(.04,Math.min(.96,x)))}
+    pickFloor(e){const rect=this.viewport.getBoundingClientRect();const x=(e.clientX-rect.left+this.camera)/this.width;this.onFloor?.(Math.max(.04,Math.min(.96,x)))}
     setPlayers(rows){const keep=new Set();for(const raw of rows||[]){const id=String(raw.id);keep.add(id);const p=this.players.get(id)||{id,bubbles:[]};Object.assign(p,raw,{x:Number(raw.x??.5),y:Number(raw.y??.82)});this.players.set(id,p)}for(const [id] of this.players)if(!keep.has(id))this.players.delete(id)}
     centerOn(id){const p=this.players.get(String(id));if(!p)return;this.camera=Math.max(0,Math.min(this.width-this.viewport.clientWidth,p.x*this.width-this.viewport.clientWidth/2));this.canvas.style.transform="translateX("+(-this.camera)+"px)"}
     upsert(p){if(!p?.id)return;const current=this.players.get(String(p.id))||{bubbles:[]};Object.assign(current,p,{id:String(p.id)});this.players.set(String(p.id),current)}
     remove(id){this.players.delete(String(id))}
     movePlayer(id,x,y,duration=140){const p=this.players.get(String(id));if(p){const from=p.renderX??p.x;p.move={from,to:x,started:performance.now(),duration};p.x=x;p.y=y;p.direction=x<from?"left":"right";p.moving=true;clearTimeout(p.moveTimer);p.moveTimer=setTimeout(()=>{p.moving=false;p.move=null;p.renderX=p.x},duration+40)}}
     bubble(id,text){const p=this.players.get(String(id));if(!p)return;p.bubbles.unshift({text,until:Date.now()+7000});if(p.bubbles.length>3)p.bubbles.pop()}
+    setMoveMode(enabled){this.moveMode=Boolean(enabled);this.drag=null;this.viewport.style.cursor=this.moveMode?"crosshair":"grab"}
     setCursor(x){this.cursor=x}
     drawBackground(ctx,t){
       const sky=ctx.createLinearGradient(0,0,0,this.height);sky.addColorStop(0,"#07132d");sky.addColorStop(.62,"#182b50");sky.addColorStop(1,"#3b4a67");ctx.fillStyle=sky;ctx.fillRect(0,0,this.width,this.height);
