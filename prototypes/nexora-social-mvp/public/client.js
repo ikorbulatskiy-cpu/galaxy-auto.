@@ -146,8 +146,14 @@
     state.chat.forEach((message) => {
       const row = document.createElement("div");
       row.className = "history-message";
-      const name = document.createElement("strong");
+      const name = document.createElement("button");
+      name.type = "button";
+      name.className = "history-author";
       name.textContent = message.whisper ? "Шёпот" : message.nickname;
+      if (!message.whisper) name.addEventListener("click", () => {
+        const player = [...state.players.values()].find(item => item.nickname === message.nickname);
+        if (player) openProfile(player);
+      });
       const text = document.createElement("span");
       text.textContent = message.text;
       const time = document.createElement("time");
@@ -286,6 +292,7 @@
         requestAnimationFrame(drawScene);
         refreshSocial();
         refreshDeveloperAccess();
+        renderRoomPlayers();
       });
     });
     socket.once("connect_error", () => {
@@ -418,7 +425,6 @@
     const y = event.clientY - rect.top;
     let nearest = null, nearestDistance = Infinity;
     for (const player of state.players.values()) {
-      if (player.id === state.me?.id) continue;
       const px = player.x * state.width;
       const py = surfaceY(px) - 24;
       const distance = Math.hypot(px - x, py - y);
@@ -446,20 +452,101 @@
     }
   });
 
-  function updateOnline() { $("#online-count").textContent = String(state.players.size); }
+  function updateOnline() {
+    $("#online-count").textContent = String(state.players.size);
+    renderRoomPlayers();
+  }
+
+  function renderRoomPlayers() {
+    const box = $("#room-player-list");
+    if (!box) return;
+    const players = [...state.players.values()].sort((a,b) => {
+      if (String(a.id) === String(state.me?.id)) return -1;
+      if (String(b.id) === String(state.me?.id)) return 1;
+      return String(a.nickname).localeCompare(String(b.nickname),"ru");
+    });
+    $("#room-player-count").textContent = String(players.length);
+    box.replaceChildren();
+    if (!players.length) {
+      const empty = document.createElement("p"); empty.className = "developer-muted"; empty.textContent = "В комнате пока никого нет."; box.append(empty); return;
+    }
+    players.forEach(player => {
+      const row = document.createElement("button"); row.type = "button";
+      row.className = "room-player-row" + (String(state.selected) === String(player.id) ? " selected" : "");
+      const avatar = document.createElement("span"); avatar.className = "room-player-avatar"; avatar.textContent = String(player.id) === String(state.me?.id) ? "✦" : "●";
+      const meta = document.createElement("span"); meta.className = "room-player-meta";
+      const name = document.createElement("strong"); name.textContent = player.nickname + (String(player.id) === String(state.me?.id) ? " · Вы" : "");
+      const rank = document.createElement("small"); rank.textContent = (player.title || "Новичок") + (player.auraEnabled ? " · Аура активна" : "");
+      meta.append(name,rank);
+      const status = document.createElement("i"); status.className = "room-player-status";
+      row.append(avatar,meta,status); row.addEventListener("click",() => { openProfile(player); closeRoomFlyouts("players"); });
+      box.append(row);
+    });
+  }
+
+  function closeRoomFlyouts(except = "") {
+    const panels = {menu:"#room-main-menu",emotions:"#room-emotions-panel",players:"#room-players-panel"};
+    Object.entries(panels).forEach(([key,selector]) => {
+      if (key !== except) $(selector).classList.add("hidden");
+      const button = document.querySelector('[data-room-toggle="'+key+'"]');
+      if (button) button.classList.toggle("active",key === except);
+    });
+  }
+  function toggleRoomFlyout(name) {
+    const panels = {menu:"#room-main-menu",emotions:"#room-emotions-panel",players:"#room-players-panel"};
+    const panel = $(panels[name]); const shouldOpen = panel.classList.contains("hidden");
+    closeRoomFlyouts(shouldOpen ? name : "");
+    panel.classList.toggle("hidden",!shouldOpen);
+    const button = document.querySelector('[data-room-toggle="'+name+'"]');
+    if (button) button.setAttribute("aria-expanded",String(shouldOpen));
+  }
+  document.querySelectorAll("[data-room-toggle]").forEach(button => button.addEventListener("click",() => {
+    const name = button.dataset.roomToggle;
+    if (name === "chat") { $("#chat-input").focus(); $("#chat-drawer").classList.toggle("hidden"); closeRoomFlyouts(); return; }
+    toggleRoomFlyout(name);
+  }));
+  document.querySelectorAll("[data-room-close]").forEach(button => button.addEventListener("click",() => closeRoomFlyouts()));
+  document.querySelectorAll("[data-room-action]").forEach(button => button.addEventListener("click",() => {
+    const action = button.dataset.roomAction;
+    closeRoomFlyouts();
+    if (action === "profile") openMyProfile();
+    else if (action === "chat") $("#chat-input").focus();
+    else if (action === "friends") openSocialTab("friends");
+    else if (action === "messages") openSocialTab("messages");
+    else if (action === "gifts") { if (state.selected && String(state.selected) !== String(state.me?.id)) { $("#gift-options").classList.remove("hidden"); $("#profile-menu").classList.remove("hidden"); } else showToast("Выбери игрока в комнате, чтобы отправить подарок."); }
+    else if (action === "shop") openShop();
+    else if (action === "authority") openAuthorityPanel();
+    else if (action === "planets") $("#planets-button").click();
+    else if (action === "developer") $("#developer-open").click();
+    else if (action === "exit") $("#exit-room").click();
+  }));
+  document.querySelectorAll("[data-room-emotion]").forEach(button => button.addEventListener("click",() => {
+    socket.emit("emotion:play",{emotion:button.dataset.roomEmotion});
+    closeRoomFlyouts();
+  }));
+  $("#room-developer-action").classList.toggle("hidden",$("#developer-open").classList.contains("hidden"));
+
 
   function openProfile(player) {
     state.selected = player.id;
     $("#profile-name").textContent = player.nickname;
     $("#profile-rank").textContent = (player.title || "Новичок") + " · Авторитет " + player.authority;
+    const ownProfile = String(player.id) === String(state.me?.id);
+    ["#dm-open-button","#whisper-button","#gift-button","#friend-button"].forEach(selector => $(selector).classList.toggle("hidden", ownProfile));
+    $("#my-profile-context").classList.toggle("hidden", !ownProfile);
     $("#profile-menu").classList.remove("hidden");
     $("#gift-options").classList.add("hidden");
+    renderRoomPlayers();
   }
   function closeProfile() {
     state.selected = null;
     $("#profile-menu").classList.add("hidden");
+    $("#my-profile-context").classList.add("hidden");
+    ["#dm-open-button","#whisper-button","#gift-button","#friend-button"].forEach(selector => $(selector).classList.remove("hidden"));
+    renderRoomPlayers();
   }
   $("#close-profile").addEventListener("click", closeProfile);
+  $("#my-profile-context").addEventListener("click", () => { closeProfile(); openMyProfile(); });
   $("#gift-button").addEventListener("click", () => $("#gift-options").classList.toggle("hidden"));
   $("#dm-open-button").addEventListener("click", async () => {
     const peerId = state.selected;
@@ -730,6 +817,7 @@
       const data = await developerRequest("/access");
       developerPermissions = data.permissions || [];
       $("#developer-open").classList.toggle("hidden", !data.allowed);
+    $("#room-developer-action").classList.toggle("hidden", !data.allowed);
       $("#developer-roles-tab").classList.toggle("hidden", !developerPermissions.includes("roles.manage"));
       $("#developer-authority-tab").classList.toggle("hidden", !developerPermissions.some(permission => permission.startsWith("authority.")));
     } catch (_error) { $("#developer-open").classList.add("hidden"); }
