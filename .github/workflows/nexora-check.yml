@@ -52,6 +52,7 @@ jobs:
           node --check public/avatar-motion.js
           node --check public/nexora-world.js
           node --check public/nexora-movement.js
+          node --check public/nexora-galaxy-social.js
           python3 - <<'PY'
           import re
           from pathlib import Path
