@@ -2,7 +2,6 @@ const express = require("express");
 const cookie = require("cookie");
 
 const COOKIE_NAME = "nexora_session";
-const router = express.Router();
 
 function clean(value, max) {
   return String(value ?? "").replace(/[<>\u0000-\u001f]/g, "").trim().slice(0, max);
@@ -11,6 +10,7 @@ function asyncRoute(fn) {
   return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 }
 function createSocialRouter({ pool, auth, io }) {
+  const router = express.Router();
   router.use(asyncRoute(async (req, res, next) => {
     const token = cookie.parse(req.headers.cookie || "")[COOKIE_NAME];
     const account = await auth.authenticateToken(token);
@@ -59,8 +59,27 @@ function createSocialRouter({ pool, auth, io }) {
     if (pending.rowCount) return res.status(409).json({ error: "Заявка уже отправлена." });
     const reverse = await pool.query("SELECT id FROM nexora_social_world.friend_requests WHERE from_account_id=$1 AND to_account_id=$2 AND status='pending'", [targetId,req.account.id]);
     if (reverse.rowCount) return res.status(409).json({ error: "Этот пользователь уже отправил вам заявку. Примите её во входящих." });
-    const saved = await pool.query("INSERT INTO nexora_social_world.friend_requests(from_account_id,to_account_id) VALUES($1,$2) RETURNING id", [req.account.id,targetId]);
-    const notice = await pool.query("INSERT INTO nexora_social_world.notifications(account_id,actor_account_id,type,payload) VALUES($1,$2,'friend_request',jsonb_build_object('requestId',$3::text)) RETURNING id,created_at", [targetId,req.account.id,saved.rows[0].id]);
+    const client = await pool.connect();
+    let saved;
+    let notice;
+    try {
+      await client.query("BEGIN");
+      saved = await client.query(
+        "INSERT INTO nexora_social_world.friend_requests(from_account_id,to_account_id) VALUES($1,$2) RETURNING id",
+        [req.account.id,targetId]
+      );
+      notice = await client.query(
+        "INSERT INTO nexora_social_world.notifications(account_id,actor_account_id,type,payload) VALUES($1,$2,'friend_request',jsonb_build_object('requestId',$3::text)) RETURNING id,created_at",
+        [targetId,req.account.id,saved.rows[0].id]
+      );
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      if (error.code === "23505") return res.status(409).json({ error: "Заявка уже отправлена." });
+      throw error;
+    } finally {
+      client.release();
+    }
     io.to("account:" + targetId).emit("social:notification", { id: notice.rows[0].id, type: "friend_request", actor: { id: req.account.id, nickname: req.account.nickname }, createdAt: notice.rows[0].created_at });
     res.status(201).json({ ok: true, requestId: saved.rows[0].id, nickname: target.rows[0].nickname });
   }));
@@ -105,6 +124,8 @@ function createSocialRouter({ pool, auth, io }) {
   router.post("/blocks/:id", asyncRoute(async (req, res) => {
     const otherId = Number(req.params.id);
     if (!Number.isSafeInteger(otherId) || otherId <= 0 || otherId === Number(req.account.id)) return res.status(400).json({ error: "Некорректный пользователь." });
+    const target = await pool.query("SELECT 1 FROM nexora_social_world.accounts WHERE id=$1", [otherId]);
+    if (!target.rowCount) return res.status(404).json({ error: "Пользователь не найден." });
     await pool.query("INSERT INTO nexora_social_world.user_blocks(account_id,blocked_account_id) VALUES($1,$2) ON CONFLICT DO NOTHING", [req.account.id,otherId]);
     await pool.query("DELETE FROM nexora_social_world.friends WHERE (account_id=$1 AND friend_account_id=$2) OR (account_id=$2 AND friend_account_id=$1)", [req.account.id,otherId]);
     await pool.query("UPDATE nexora_social_world.friend_requests SET status='cancelled',updated_at=NOW() WHERE status='pending' AND ((from_account_id=$1 AND to_account_id=$2) OR (from_account_id=$2 AND to_account_id=$1))", [req.account.id,otherId]);
