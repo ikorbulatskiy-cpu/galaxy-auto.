@@ -95,7 +95,7 @@
     previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
     drawAvatar(previewCtx, 90, 130, 2.5, avatarSettings(), 1, null);
   }
-  ["gender", "skin", "hair", "suit"].forEach((id) => $("#" + id).addEventListener("change", preview));
+  ["gender","skin","hair","suit","hair-color","shoes","accessory"].forEach(id=>$("#"+id).addEventListener("change",preview));
   preview();
 
   function showToast(message) {
