@@ -79,7 +79,7 @@
       <header class="topbar">
         <div class="top-brand"><span>✦</span> NEXORA</div>
         <div class="online-pill"><i></i><span id="online-count">1</span> онлайн</div>
-        <div class="topbar-actions"><button id="social-open" class="glass-button" type="button" aria-label="Друзья, сообщения и уведомления" title="Социальное меню">👥</button><button id="planets-button" class="glass-button">🪐 Планеты</button><button id="exit-room" class="glass-button" type="button">Выход</button></div>
+        <div class="topbar-actions"><button id="my-profile" class="glass-button" type="button">👤 Профиль</button><button id="social-open" class="glass-button" type="button" aria-label="Друзья, сообщения и уведомления" title="Социальное меню">👥</button><button id="planets-button" class="glass-button">🪐 Планеты</button><button id="exit-room" class="glass-button" type="button">Выход</button></div>
       </header>
 
       <div class="planet-picker hidden" id="planet-picker">
@@ -151,6 +151,32 @@
           <form id="social-message-form" class="social-message-form"><input id="social-message-input" maxlength="2000" placeholder="Личное сообщение..." autocomplete="off"><button type="submit">➤</button></form>
         </section>
         <section id="social-notifications-view" class="social-view hidden"><div id="social-notifications" class="social-list"></div></section>
+      </aside>
+      
+      <aside id="profile-editor" class="profile-editor hidden" aria-label="Мой профиль">
+        <div class="profile-editor-head"><div><span class="profile-kicker">NEXORA ID</span><strong>Мой профиль</strong></div><button id="profile-editor-close" type="button" aria-label="Закрыть">×</button></div>
+        <div class="profile-editor-summary">
+          <canvas id="profile-preview" width="180" height="150" aria-label="Предпросмотр персонажа"></canvas>
+          <div><strong id="profile-editor-nickname">Игрок</strong><span id="profile-editor-meta">Уровень 1</span><span id="profile-editor-created"></span></div>
+        </div>
+        <div class="profile-stats">
+          <div><strong id="profile-friends-count">0</strong><span>Друзья</span></div>
+          <div><strong id="profile-gifts-count">0</strong><span>Подарки</span></div>
+          <div><strong id="profile-authority">0</strong><span>Авторитет</span></div>
+          <div><strong id="profile-koins">0</strong><span>Koins</span></div>
+        </div>
+        <label class="profile-field">Никнейм<input id="profile-nickname" maxlength="18" autocomplete="nickname"></label>
+        <label class="profile-field">Статус<input id="profile-status" maxlength="80" placeholder="Чем занят?"></label>
+        <label class="profile-field">О себе<textarea id="profile-bio" maxlength="240" rows="3" placeholder="Расскажи немного о себе"></textarea></label>
+        <div class="profile-section-title">Внешность персонажа</div>
+        <div class="profile-editor-grid">
+          <label>Пол<select id="edit-gender"><option value="male">Мужской</option><option value="female">Женский</option></select></label>
+          <label>Кожа<select id="edit-skin"><option value="#f4c7a1">Светлая</option><option value="#c9875b">Смуглая</option><option value="#75452f">Тёмная</option></select></label>
+          <label>Причёска<select id="edit-hair"><option value="short">Короткая</option><option value="long">Длинная</option><option value="spiky">Взъерошенная</option></select></label>
+          <label>Костюм<select id="edit-suit"><option value="#6d7cff">Синий</option><option value="#ef6c9b">Розовый</option><option value="#35bca5">Бирюзовый</option></select></label>
+        </div>
+        <p id="profile-editor-error" class="profile-editor-error" role="status"></p>
+        <button id="profile-save" class="profile-save-button" type="button">Сохранить изменения</button>
       </aside>
       <div id="toast" class="toast hidden" role="status"></div>
     </section>

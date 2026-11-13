@@ -296,3 +296,38 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
   .topbar-actions .glass-button { padding:7px 8px; font-size:10px; }
   .online-pill { padding:7px 8px; font-size:9px; }
 }
+
+
+/* NEXORA profile editor */
+.profile-editor {
+  position: absolute; z-index: 35; left: 12px; right: 12px; top: 62px; bottom: max(12px, env(safe-area-inset-bottom));
+  width: min(440px, calc(100% - 24px)); margin: 0 auto; padding: 16px;
+  overflow-y: auto; overscroll-behavior: contain; border: 1px solid rgba(190,183,255,.25);
+  border-radius: 23px; background: rgba(12,17,43,.98); box-shadow: 0 22px 70px #000b;
+}
+.profile-editor-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.profile-editor-head > div { display:grid; gap:3px; }
+.profile-editor-head strong { font-size:19px; }
+.profile-kicker,.profile-section-title { color:#aaa4ed; font-size:10px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+.profile-editor-head button { border:0; background:transparent; color:#fff; font-size:27px; }
+.profile-editor-summary { display:flex; align-items:center; gap:10px; padding:9px; border-radius:16px; background:#ffffff09; }
+#profile-preview { width:104px; height:112px; flex:0 0 104px; }
+.profile-editor-summary > div { min-width:0; display:grid; gap:6px; }
+.profile-editor-summary > div strong { overflow-wrap:anywhere; font-size:17px; }
+.profile-editor-summary > div span { color:#aeb7df; font-size:11px; }
+.profile-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; margin:10px 0; }
+.profile-stats > div { min-width:0; padding:9px 3px; display:grid; gap:3px; text-align:center; border-radius:12px; background:#ffffff0a; }
+.profile-stats strong { font-size:16px; }
+.profile-stats span { color:#aeb7df; font-size:9px; }
+.profile-field { display:grid; gap:5px; margin:9px 0; color:#cbd2f2; font-size:11px; }
+.profile-field input,.profile-field textarea,.profile-editor-grid select {
+  width:100%; min-width:0; padding:10px; color:#fff; border:1px solid var(--line); border-radius:11px; background:#080e2a; font:inherit;
+}
+.profile-field textarea { resize:vertical; }
+.profile-section-title { margin:14px 0 8px; }
+.profile-editor-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.profile-editor-grid label { display:grid; gap:5px; color:#cbd2f2; font-size:11px; }
+.profile-editor-error { min-height:16px; color:#ff9d9d; font-size:11px; }
+.profile-save-button { width:100%; min-height:44px; border:0; border-radius:13px; color:#fff; font-weight:750; background:linear-gradient(110deg,#686cf0,#9672ef 58%,#bd78dc); }
+.profile-save-button:disabled { opacity:.55; }
+@media (max-width:390px) { .profile-editor { left:8px; right:8px; width:calc(100% - 16px); padding:13px; } .profile-stats span { font-size:8px; } }

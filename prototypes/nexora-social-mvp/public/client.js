@@ -371,7 +371,11 @@
       showToast(event.from + " подарил " + event.icon + " игроку " + event.to);
     }
   });
-  socket.on("profile:updated", (player) => state.players.set(player.id, { ...player, renderX: player.x }));
+  socket.on("profile:updated", (player) => {
+    const previous = state.players.get(player.id);
+    state.players.set(player.id, { ...previous, ...player, renderX: previous?.renderX ?? player.x });
+    if (String(player.id) === String(state.me?.id)) state.me = { ...state.me, ...player };
+  });
   socket.on("friend:result", ({ nickname, already }) => showToast(already ? nickname + " уже в друзьях" : nickname + " добавлен в друзья"));
   socket.on("friend:notice", ({ nickname }) => showToast(nickname + " добавил вас в друзья"));
 
@@ -521,6 +525,89 @@
     if (!gameScreen.classList.contains("hidden")) showToast("Соединение прервано. Перезагрузите страницу для входа снова.");
   });
 
+
+
+  const profileCanvas = $("#profile-preview");
+  const profileCtx = profileCanvas.getContext("2d");
+  function editorAvatarSettings() {
+    return {
+      gender: $("#edit-gender").value,
+      skin: $("#edit-skin").value,
+      hair: $("#edit-hair").value,
+      suit: $("#edit-suit").value
+    };
+  }
+  function drawProfilePreview() {
+    profileCtx.clearRect(0, 0, profileCanvas.width, profileCanvas.height);
+    drawAvatar(profileCtx, 90, 96, 1.8, editorAvatarSettings(), 1, null);
+  }
+  ["edit-gender", "edit-skin", "edit-hair", "edit-suit"].forEach(id => $("#" + id).addEventListener("change", drawProfilePreview));
+
+  async function openMyProfile() {
+    const panel = $("#profile-editor");
+    const save = $("#profile-save");
+    const errorBox = $("#profile-editor-error");
+    errorBox.textContent = "";
+    panel.classList.remove("hidden");
+    save.disabled = true;
+    try {
+      const response = await fetch("/api/profile", { credentials: "same-origin" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Не удалось загрузить профиль.");
+      const p = data.profile;
+      $("#profile-editor-nickname").textContent = p.nickname;
+      $("#profile-editor-meta").textContent = "Уровень " + p.level + " · " + p.experience + " XP";
+      $("#profile-editor-created").textContent = "В NEXORA с " + new Date(p.createdAt).toLocaleDateString("ru-RU");
+      $("#profile-friends-count").textContent = p.friendsCount;
+      $("#profile-gifts-count").textContent = p.giftsReceived;
+      $("#profile-authority").textContent = p.authority;
+      $("#profile-koins").textContent = p.koins;
+      $("#profile-nickname").value = p.nickname;
+      $("#profile-status").value = p.status || "";
+      $("#profile-bio").value = p.bio || "";
+      const avatar = p.avatar || {};
+      $("#edit-gender").value = avatar.gender || "male";
+      $("#edit-skin").value = avatar.skin || skins[0];
+      $("#edit-hair").value = avatar.hair || "short";
+      $("#edit-suit").value = avatar.suit || suits[0];
+      drawProfilePreview();
+      save.disabled = false;
+    } catch (error) {
+      errorBox.textContent = error.message;
+      save.disabled = true;
+    }
+  }
+  $("#my-profile").addEventListener("click", openMyProfile);
+  $("#profile-editor-close").addEventListener("click", () => $("#profile-editor").classList.add("hidden"));
+  $("#profile-save").addEventListener("click", async () => {
+    const button = $("#profile-save");
+    const errorBox = $("#profile-editor-error");
+    button.disabled = true;
+    errorBox.textContent = "";
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nickname: $("#profile-nickname").value,
+          status: $("#profile-status").value,
+          bio: $("#profile-bio").value,
+          avatar: editorAvatarSettings()
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Не удалось сохранить профиль.");
+      $("#profile-editor-nickname").textContent = data.profile.nickname;
+      if (state.me) state.me.nickname = data.profile.nickname;
+      showToast("Профиль сохранён.");
+      $("#profile-editor").classList.add("hidden");
+    } catch (error) {
+      errorBox.textContent = error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
 
   let activeConversationId = null;
   let socialUnread = 0;
