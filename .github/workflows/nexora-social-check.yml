@@ -67,4 +67,4 @@ jobs:
           console.log("Additive moderation migration verified.");
           NODE
       - name: Verify social and developer modules load
-        run: node -e "require('./src/social'); require('./src/profile'); require('./src/developer'); require('./src/auth')"
+        run: DATABASE_URL=postgres://nexora:ci-placeholder@127.0.0.1:5432/nexora node -e "require('./src/social'); require('./src/profile'); require('./src/developer'); require('./src/auth')"
