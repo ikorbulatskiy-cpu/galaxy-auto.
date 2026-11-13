@@ -31,10 +31,9 @@ export class GalaxyScene {
       let el=this.players.get(id);
       if(!el){
         el=document.createElement("div");el.className="galaxy-player";
-        const bubble=document.createElement("div");bubble.className="speech-bubble";bubble.hidden=true;
         const label=document.createElement("div");label.className="player-label";
         const avatar=document.createElement("div");avatar.className="player-avatar";avatar.innerHTML='<span class="player-aura"></span>🧑';
-        el.append(bubble,label,avatar);el.addEventListener("click",event=>{event.stopPropagation();this.onSelect?.(id,row,el)});
+        el.append(label,avatar);el.addEventListener("click",event=>{event.stopPropagation();this.onSelect?.(id,row,el)});
         this.layer.append(el);this.players.set(id,el);
       }
       const name=row.character_name||row.username||row.characterName||"Игрок";
@@ -52,8 +51,10 @@ export class GalaxyScene {
   }
   bubble(id,text) {
     const el=this.players.get(String(id));if(!el)return;
-    const bubble=el.querySelector(".speech-bubble");bubble.textContent=text;bubble.hidden=false;
-    clearTimeout(bubble._hideTimer);bubble._hideTimer=setTimeout(()=>bubble.hidden=true,7000);
+    const existing=[...el.querySelectorAll(".speech-bubble")];
+    existing.forEach((node,index)=>{node.style.bottom=(126+(index+1)*34)+"px"});
+    const bubble=document.createElement("div");bubble.className="speech-bubble";bubble.textContent=text;bubble.style.bottom="126px";el.append(bubble);
+    bubble._hideTimer=setTimeout(()=>{bubble.remove();[...el.querySelectorAll(".speech-bubble")].forEach((node,index)=>node.style.bottom=(126+index*34)+"px")},7000);
   }
   getPlayer(id){return this.players.get(String(id))}
 }
