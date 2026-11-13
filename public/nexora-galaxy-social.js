@@ -26,7 +26,7 @@
     panel.innerHTML = `
       <div class="nx-gsp-card">
         <header><div><small>NEXORA GALAXY</small><h2>Социальный центр</h2></div><button type="button" data-gsp-close aria-label="Закрыть">×</button></header>
-        <nav class="nx-gsp-tabs"><button type="button" data-gsp-tab="friends" class="active">Друзья</button><button type="button" data-gsp-tab="blocks">Чёрный список</button><button type="button" data-gsp-tab="settings">Настройки</button></nav>
+        <nav class="nx-gsp-tabs"><button type="button" data-gsp-tab="friends" class="active">Друзья</button><button type="button" data-gsp-tab="discover">Найти людей</button><button type="button" data-gsp-tab="blocks">Чёрный список</button><button type="button" data-gsp-tab="settings">Настройки</button></nav>
         <div class="nx-gsp-content" id="nx-gsp-content"><p>Загрузка…</p></div>
       </div>`;
     document.body.append(panel);
@@ -54,7 +54,28 @@
     const content = $("#nx-gsp-content", panel);
     content.innerHTML = "<p>Загрузка…</p>";
     try {
-      if (tab === "friends") {
+      if (tab === "discover") {
+        content.innerHTML = '<form class="nx-gsp-search" id="nx-gsp-search"><input name="q" maxlength="40" placeholder="Ник, имя или город"><button type="submit">Найти</button></form><div id="nx-gsp-results"><p class="nx-gsp-empty">Введи запрос для поиска людей.</p></div>';
+        $("#nx-gsp-search", content).addEventListener("submit", async event => {
+          event.preventDefault();
+          const results = $("#nx-gsp-results", content); results.textContent = "Поиск…";
+          try {
+            const query = new URLSearchParams({ q: event.currentTarget.elements.q.value.trim() });
+            const data = await request("/api/social/discover?" + query.toString());
+            results.replaceChildren();
+            (data.users || []).forEach(user => {
+              const row = document.createElement("article"); row.className = "nx-gsp-row";
+              const info = document.createElement("div"); const title = document.createElement("b"); title.textContent = user.display_name || user.username;
+              const sub = document.createElement("small"); sub.textContent = "@" + user.username + (user.city ? " · " + user.city : ""); info.append(title, sub); row.append(info);
+              const actions = document.createElement("div"); actions.className = "nx-gsp-actions";
+              if (!user.has_relation) { const add = document.createElement("button"); add.textContent = "В друзья"; add.dataset.gspAction = "add-friend"; add.dataset.user = user.user_id; actions.append(add); }
+              const block = document.createElement("button"); block.textContent = "Заблокировать"; block.dataset.gspAction = "block"; block.dataset.user = user.user_id; actions.append(block);
+              row.append(actions); results.append(row);
+            });
+            if (!results.children.length) results.innerHTML = '<p class="nx-gsp-empty">Никого не найдено.</p>';
+          } catch (error) { results.textContent = error.message || "Поиск не выполнен."; }
+        });
+      } else if (tab === "friends") {
         const data = await request("/api/social/friends");
         const friends = data.friends || [];
         content.innerHTML = friends.length ? friends.map(friend => {
@@ -73,7 +94,8 @@
           ["chat_bubbles","Облачка сообщений","Показывать текст над персонажами."],
           ["sound_enabled","Звуковые эффекты","Разрешить звуки интерфейса."],
           ["friends_only_messages","Сообщения только от друзей","Ограничивать личное общение знакомыми."],
-          ["system_messages","Системные сообщения","Показывать события входа и выхода."]
+          ["system_messages","Системные сообщения","Показывать события входа и выхода."],
+          ["invisible","Режим невидимки","Скрывать присутствие там, где это поддерживается сервером."]
         ];
         content.innerHTML = '<div class="nx-gsp-settings">' + labels.map(([key,title,desc]) => `<label class="nx-gsp-setting"><span><b>${title}</b><small>${desc}</small></span><input type="checkbox" data-gsp-setting="${key}" ${settings[key] ? "checked" : ""}></label>`).join("") + '</div><p class="nx-gsp-note">Настройки сохраняются в аккаунте и доступны на других устройствах.</p>';
       }
@@ -90,6 +112,13 @@
         window.switchTab?.("messages");
         window.dispatchEvent(new CustomEvent("nexora:open-conversation", { detail:{ conversationId:result.conversation?.id || result.conversationId, userId:id } }));
         toast("Диалог открыт.");
+      } else if (action === "add-friend") {
+        await request("/api/social/friends/" + encodeURIComponent(id), { method:"POST", body:"{}" });
+        await showTab("discover"); toast("Заявка в друзья отправлена.");
+      } else if (action === "block") {
+        if (!confirm("Заблокировать пользователя? Он исчезнет из поиска и списка друзей.")) return;
+        await request("/api/social/blocks/" + encodeURIComponent(id), { method:"POST", body:"{}" });
+        await showTab("discover"); toast("Пользователь заблокирован.");
       } else if (action === "unblock") {
         await request("/api/social/blocks/" + encodeURIComponent(id), { method:"DELETE" });
         await showTab("blocks"); toast("Пользователь разблокирован.");
