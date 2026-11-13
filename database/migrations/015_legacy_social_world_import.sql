@@ -309,7 +309,8 @@ BEGIN
     WHERE fr.status IN ('pending','declined','cancelled')
       AND NOT EXISTS (
         SELECT 1 FROM friendships existing
-        WHERE existing.requester_id=u1.id AND existing.addressee_id=u2.id
+        WHERE (existing.requester_id=u1.id AND existing.addressee_id=u2.id)
+           OR (existing.requester_id=u2.id AND existing.addressee_id=u1.id)
       )
     ON CONFLICT (requester_id,addressee_id) DO NOTHING
   $q$;
