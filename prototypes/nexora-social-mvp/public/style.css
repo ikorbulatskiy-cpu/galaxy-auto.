@@ -1279,3 +1279,32 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 @media(prefers-reduced-motion:reduce) {
   .chat-tabs button,.chat-form button[type="submit"] { transition:none; }
 }
+
+
+/* Simple developer authority controls */
+.developer-authority-quick { gap:9px; }
+.developer-authority-quick > input[type="search"],
+.developer-authority-quick > select {
+  width:100%; min-height:43px; padding:11px 13px; border:1px solid rgba(174,163,255,.2);
+  border-radius:12px; background:#101735; color:#f4f2ff; font-size:13px;
+}
+.developer-authority-quick > input:focus,
+.developer-authority-quick > select:focus { outline:2px solid rgba(161,143,255,.3); border-color:#a99aff; }
+.developer-authority-quick > button {
+  min-height:42px; border:0; border-radius:12px; padding:10px 13px;
+  color:#fff; font-size:12px; font-weight:800;
+  background:linear-gradient(110deg,#6e6ce8,#9675eb);
+}
+.developer-authority-quick > button:disabled { opacity:.45; cursor:not-allowed; }
+.developer-authority-quick .developer-search-results { max-height:180px; }
+.developer-authority-quick .developer-search-results button { min-height:38px; font-size:11px; }
+.developer-selected-player {
+  display:grid; gap:5px; padding:13px; border:1px solid rgba(154,139,255,.36);
+  border-radius:13px; background:linear-gradient(120deg,rgba(130,113,238,.16),rgba(255,255,255,.035));
+}
+.developer-selected-player strong { color:#fff; font-size:13px; }
+.developer-selected-player span { color:#bfc8ee; font-size:11px; }
+.developer-aura-toggle { display:flex; align-items:center; gap:9px; min-height:40px; padding:0 5px; color:#dce2ff; font-size:12px; }
+.developer-aura-toggle input { width:18px; height:18px; accent-color:#9b86ff; }
+.developer-authority-quick .developer-remove-rank { border:1px solid rgba(255,125,157,.3); background:rgba(183,72,105,.18); color:#ffc3d0; }
+.developer-authority-quick .developer-aura-action { border:1px solid rgba(117,224,177,.28); background:rgba(65,166,125,.17); color:#aaf0d0; }
