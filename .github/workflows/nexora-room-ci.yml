@@ -29,8 +29,6 @@ jobs:
           node --check prototypes/nexora-social-mvp/src/avatar.js
           node --check prototypes/nexora-social-mvp/src/auth.js
           node --check prototypes/nexora-social-mvp/src/profile.js
-          node --check prototypes/nexora-social-mvp/src/avatar.js
-          node --check prototypes/nexora-social-mvp/src/auth.js
           node --check prototypes/nexora-social-mvp/src/economy.js
           node --check prototypes/nexora-social-mvp/src/planets.js
           node --check prototypes/nexora-social-mvp/src/social.js
