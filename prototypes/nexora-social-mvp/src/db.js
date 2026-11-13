@@ -21,6 +21,8 @@ async function migrate() {
   );
   await pool.query(sql);
   await pool.query("DELETE FROM nexora_social_world.sessions WHERE expires_at < NOW()");
+  const check = await pool.query("SELECT current_schema() AS schema");
+  console.log("NEXORA PostgreSQL connected; social schema migration completed.");
 }
 
 module.exports = { pool, migrate };
