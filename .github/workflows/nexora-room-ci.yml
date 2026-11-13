@@ -84,3 +84,33 @@ jobs:
           for (const [ok, label] of checks) console.log((ok ? "PASS " : "FAIL ") + label);
           if (checks.some(([ok]) => !ok)) process.exit(1);
           NODE
+
+  migration-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: nexora_test
+          POSTGRES_USER: nexora
+          POSTGRES_PASSWORD: nexora_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nexora -d nexora_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply all migrations to a clean temporary PostgreSQL
+        env:
+          PGPASSWORD: nexora_test_password
+        run: |
+          set -euo pipefail
+          for file in prototypes/nexora-social-mvp/migrations/*.sql; do
+            echo "Applying $file"
+            psql -h 127.0.0.1 -U nexora -d nexora_test -v ON_ERROR_STOP=1 -f "$file"
+          done
+          psql -h 127.0.0.1 -U nexora -d nexora_test -v ON_ERROR_STOP=1 -c "SELECT item_code, price FROM nexora_social_world.shop_catalog ORDER BY item_code"
+          psql -h 127.0.0.1 -U nexora -d nexora_test -v ON_ERROR_STOP=1 -c "SELECT to_regclass('nexora_social_world.custom_planet_objects'), to_regclass('nexora_social_world.player_reports'), to_regclass('nexora_social_world.wallet_transactions')"
