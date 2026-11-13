@@ -540,12 +540,29 @@
       if(opening)setTimeout(()=>$("#chat-input").focus(),80);
       return;
     }
+    const chatDrawer = $("#chat-drawer");
+    if (!chatDrawer.classList.contains("hidden")) {
+      chatDrawer.classList.add("hidden");
+      gameScreen.classList.remove("chat-open");
+      const chatButton = $("#room-toolbar [data-room-toggle="chat"]");
+      if (chatButton) {
+        chatButton.classList.remove("active");
+        chatButton.setAttribute("aria-expanded", "false");
+      }
+    }
     toggleRoomFlyout(name);
   }));
   document.querySelectorAll("[data-room-close]").forEach(button => button.addEventListener("click",() => closeRoomFlyouts()));
   document.querySelectorAll("[data-room-action]").forEach(button => button.addEventListener("click",() => {
     const action = button.dataset.roomAction;
     closeRoomFlyouts();
+    $("#chat-drawer").classList.add("hidden");
+    gameScreen.classList.remove("chat-open");
+    const chatButton = $("#room-toolbar [data-room-toggle="chat"]");
+    if (chatButton) {
+      chatButton.classList.remove("active");
+      chatButton.setAttribute("aria-expanded", "false");
+    }
     if (action === "profile") openMyProfile();
     else if (action === "chat") { $("#room-toolbar [data-room-toggle=\"chat\"]").click(); }
     else if (action === "friends") openSocialTab("friends");
