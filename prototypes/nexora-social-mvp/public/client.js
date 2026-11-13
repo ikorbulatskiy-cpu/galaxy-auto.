@@ -1077,6 +1077,13 @@
     renderDeveloperPlayerActions(player, ownProfile);
   }
 
+  window.addEventListener("message",event=>{
+    if(event.origin!==location.origin||event.source!==$("#integrated-galaxy-frame")?.contentWindow)return;
+    if(event.data?.type!=="NEXORA_GALAXY_PLAYER_SELECTED")return;
+    const player=state.players.get(String(event.data.playerId));
+    if(player){openProfile(player);$("#integrated-galaxy-frame")?.contentWindow?.postMessage({type:"NEXORA_GALAXY_CLOSE_CONTEXT"},location.origin);}
+  });
+
   $("#profile-info-button").addEventListener("click",()=>{const id=state.selected;$("#profile-menu").classList.add("hidden");if(id!=null)openPublicProfile(id);});
 
   async function renderDeveloperPlayerActions(player, ownProfile) {
