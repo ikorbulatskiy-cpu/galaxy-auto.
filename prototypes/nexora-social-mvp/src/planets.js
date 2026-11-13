@@ -70,7 +70,7 @@ function createPlanetsRouter({ pool, auth, players, io }) {
     const access=["public","invite","private"].includes(req.body?.accessMode)?req.body.accessMode:"public";
     const capacity=Math.max(2,Math.min(100,Math.floor(Number(req.body?.capacity)||30)));
     const welcome=clean(req.body?.welcomeMessage,180);
-    if(name.length<3) return res.status(400).json({error:"Название должно содержать от 3 символов."});
+    if(!name.length) return res.status(400).json({error:"Укажи название планеты."});
     const client=await pool.connect();
     try{
       await client.query("BEGIN");
