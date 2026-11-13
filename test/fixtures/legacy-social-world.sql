@@ -24,9 +24,11 @@ INSERT INTO nexora_social_world.friends(account_id,friend_account_id,created_at)
 VALUES (900001,900002,NOW()-INTERVAL '5 days');
 
 INSERT INTO nexora_social_world.conversations(id,participant_a,participant_b,created_at,updated_at)
+OVERRIDING SYSTEM VALUE
 VALUES (70001,900001,900002,NOW()-INTERVAL '4 days',NOW()-INTERVAL '1 hour');
 
 INSERT INTO nexora_social_world.direct_messages(id,conversation_id,sender_account_id,body,created_at,read_at)
+OVERRIDING SYSTEM VALUE
 VALUES (71001,70001,900001,'Старое личное сообщение',NOW()-INTERVAL '1 hour',NULL);
 
 INSERT INTO nexora_social_world.notifications(account_id,actor_account_id,type,payload,created_at)
