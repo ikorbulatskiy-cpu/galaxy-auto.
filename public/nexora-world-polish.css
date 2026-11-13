@@ -35,7 +35,7 @@
   order:0;max-width:120px;margin:0 0 4px;padding:4px 9px;
   font-size:11px;background:#17112deF;border:1px solid #bca2e6;
 }
-.nx-classic .nx-avatar-card .nx-fav-toggle{position:absolute;right:2px;top:26px;z-index:5}
+.nx-classic .nx-avatar-card .nx-fav-toggle{position:static;z-index:5;order:2;align-self:center;display:grid;place-items:center;width:30px;height:22px;margin:2px 0 0;padding:0;border:1px solid #8e8b98;border-radius:4px;background:#171b20;color:#c8c4d0;font-size:15px;line-height:1}
 .nx-classic .nx-avatar-card .nx-sprite-canvas,
 .nx-classic .nx-avatar-card svg{
   display:block!important;order:1;width:clamp(82px,8vw,108px)!important;
