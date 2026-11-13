@@ -18,13 +18,19 @@
         <h1>NEXORA</h1>
         <p class="muted">Знакомься. Общайся. Исследуй планеты.</p>
 
-        <label class="field-label" for="nickname">Твой ник</label>
-        <input id="nickname" maxlength="18" autocomplete="nickname" placeholder="Например, КосмоКот">
-        <label class="field-label" for="recovery-code">Код восстановления</label>
-        <input id="recovery-code" maxlength="10" autocapitalize="none" spellcheck="false" autocomplete="one-time-code" placeholder="Введите код восстановления">
-        <div class="auth-actions">
-          <button id="register-button" class="primary-button" type="button">Создать аккаунт</button>
-          <button id="login-button" class="glass-button" type="button">Войти по коду</button>
+        <div class="auth-mode" id="login-mode">
+          <p class="auth-caption">ВОЗВРАЩЕНИЕ ВО ВСЕЛЕННУЮ</p>
+          <label class="field-label" for="recovery-code">Код восстановления</label>
+          <input id="recovery-code" maxlength="10" autocapitalize="none" spellcheck="false" autocomplete="one-time-code" placeholder="10 символов вашего кода">
+          <button id="login-button" class="primary-button" type="button">Войти в NEXORA <span>→</span></button>
+          <button id="show-register" class="text-button" type="button">Нет аккаунта? Создать</button>
+        </div>
+        <div class="auth-mode hidden" id="register-mode">
+          <p class="auth-caption">СОЗДАНИЕ НОВОГО АККАУНТА</p>
+          <label class="field-label" for="nickname">Придумай ник</label>
+          <input id="nickname" maxlength="18" autocomplete="nickname" placeholder="Например, КосмоКот">
+          <button id="register-button" class="primary-button" type="button">Создать аккаунт <span>✦</span></button>
+          <button id="show-login" class="text-button" type="button">Уже есть аккаунт? Войти по коду</button>
         </div>
         <p id="recovery-result" class="recovery-result hidden" role="status"></p>
 
