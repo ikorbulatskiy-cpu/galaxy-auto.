@@ -4,7 +4,7 @@
 ALTER TABLE users ADD COLUMN IF NOT EXISTS legacy_social_account_id BIGINT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS legacy_recovery_code_hash TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS users_legacy_social_account_uidx
-  ON users(legacy_social_account_id) WHERE legacy_social_account_id IS NOT NULL;
+  ON users(legacy_social_account_id);
 
 CREATE TABLE IF NOT EXISTS planet_access (
   planet_id UUID NOT NULL REFERENCES planets(id) ON DELETE CASCADE,
