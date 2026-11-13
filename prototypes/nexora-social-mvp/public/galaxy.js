@@ -5,11 +5,11 @@
   const socket=io("/galaxy",{autoConnect:false});
   const me={id:null,nickname:""};
   let roomPlanet="starter",selected=null,moveTarget=null,moveMode=false,players=[],chatCollapsed=false;
-  let planetCatalog=[],selectedPlanet=null,planetFilter="all";
+  let planetCatalog=[],selectedPlanet=null,planetFilter="all",planetSearch="";
   const basePlanets=[
-    {key:"starter",name:"Стартовая",description:"Главная точка встречи путешественников NEXORA.",theme:"nebula",color:"#536ed0",light:"#b9c9ff",glow:"#617dff",x:50,y:48,onlineCount:0},
-    {key:"club",name:"Клуб",description:"Музыка, танцы и ночная жизнь галактики.",theme:"violet",color:"#a344c4",light:"#f1a7ff",glow:"#bd59e8",x:76,y:29,onlineCount:0},
-    {key:"beach",name:"Пляж",description:"Тёплая планета для отдыха и общения.",theme:"ocean",color:"#168da8",light:"#9cf4ff",glow:"#38d9f2",x:23,y:72,onlineCount:0}
+    {key:"starter",name:"Стартовая",category:"social",description:"Главная точка встречи путешественников NEXORA.",theme:"nebula",color:"#536ed0",light:"#b9c9ff",glow:"#617dff",x:50,y:48,onlineCount:0},
+    {key:"club",name:"Клуб",category:"music",description:"Музыка, танцы и ночная жизнь галактики.",theme:"violet",color:"#a344c4",light:"#f1a7ff",glow:"#bd59e8",x:76,y:29,onlineCount:0},
+    {key:"beach",name:"Пляж",category:"romantic",description:"Тёплая планета для отдыха и общения.",theme:"ocean",color:"#168da8",light:"#9cf4ff",glow:"#38d9f2",x:23,y:72,onlineCount:0}
   ];
   const defaults=[{key:"starter",name:"Стартовая"},{key:"club",name:"Клуб"},{key:"beach",name:"Пляж"}];
   const toast=message=>{const el=$("#galaxy-toast");el.textContent=message;el.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),2600)};
@@ -30,8 +30,8 @@
   function closeContext(){$("#context-menu").hidden=true}
   function openInfo(){if(!selected)return;$("#profile-title").textContent=selected.nickname||"Персонаж";$("#profile-content").textContent=(selected.title||"Новичок")+" · "+(selected.authority||0)+" очков авторитета"+(selected.auraEnabled?" · Аура активна":"");$("#profile-modal").hidden=false;closeContext()}
   function setMoveTarget(x){if(!moveMode)return;moveTarget=x;scene.setCursor(x);$("#move-confirm-bar").hidden=false}
-  function beginMove(){moveMode=true;moveTarget=null;scene.setCursor(.5);$("#move-confirm-bar").hidden=false;$("#move-hint").textContent="Выберите место и нажмите ОК"}
-  function cancelMove(){moveMode=false;moveTarget=null;scene.setCursor(null);$("#move-confirm-bar").hidden=true}
+  function beginMove(){moveMode=true;moveTarget=null;scene.setMoveMode(true);scene.setCursor(.5);$("#move-confirm-bar").hidden=false;$("#move-hint").textContent="Проведите пальцем по линии, выберите место и нажмите ОК"}
+  function cancelMove(){moveMode=false;moveTarget=null;scene.setMoveMode(false);scene.setCursor(null);$("#move-confirm-bar").hidden=true}
   function confirmMove(){
     if(moveTarget===null)return toast("Сначала выбери место на полу.");
     const target=moveTarget,mePlayer=players.find(p=>String(p.id)===String(me.id));if(!mePlayer)return;
@@ -42,14 +42,18 @@
     const select=$("#planet-select");select.replaceChildren();
     let builtInFavorites=[];try{builtInFavorites=JSON.parse(localStorage.getItem("nexora.favoritePlanets")||"[]")}catch{}
     planetCatalog=basePlanets.map(p=>({...p,favorite:builtInFavorites.includes(p.key)}));
-    try{const d=await api("/api/planets");(d.worlds||[]).forEach(w=>{const base=planetCatalog.find(p=>p.key===w.key);if(base)base.onlineCount=Number(w.onlineCount||0)});(d.planets||[]).forEach((p,i)=>planetCatalog.push({key:"custom-"+p.id,id:String(p.id),name:p.name,description:p.description||"Планета сообщества NEXORA.",theme:p.theme||"nebula",color:p.accent_color||"#8068d8",light:"#e1d7ff",glow:p.accent_color||"#8068d8",onlineCount:Number(p.onlineCount||0),memberCount:Number(p.memberCount||0),totalVisits:Number(p.total_visits||0),favorite:Boolean(p.favorite),x:[18,43,72,86,34,61][i%6],y:[28,77,63,48,20,84][i%6]}))}catch(error){console.warn("Planet catalog:",error)}
+    try{const d=await api("/api/planets");(d.worlds||[]).forEach(w=>{const base=planetCatalog.find(p=>p.key===w.key);if(base)base.onlineCount=Number(w.onlineCount||0)});(d.planets||[]).forEach((p,i)=>planetCatalog.push({key:"custom-"+p.id,id:String(p.id),name:p.name,description:p.description||"Планета сообщества NEXORA.",theme:p.theme||"nebula",category:p.category||"social",isCustom:true,color:p.accent_color||"#8068d8",light:"#e1d7ff",glow:p.accent_color||"#8068d8",onlineCount:Number(p.onlineCount||0),memberCount:Number(p.memberCount||0),totalVisits:Number(p.total_visits||0),favorite:Boolean(p.favorite),x:[18,43,72,86,34,61][i%6],y:[28,77,63,48,20,84][i%6]}))}catch(error){console.warn("Planet catalog:",error)}
     planetCatalog.forEach(p=>{const o=document.createElement("option");o.value=p.key;o.textContent=p.name;select.append(o)});
     select.value=roomPlanet;
   }
   function openPlanetMap(){renderPlanetMap();$("#planet-map").hidden=false}
   function closePlanetMap(){$("#planet-map").hidden=true}
   function renderPlanetMap(){
-    const map=$("#planet-orbit-map"),items=planetCatalog.filter(p=>planetFilter==="favorites"?p.favorite:planetFilter==="popular"?Number(p.totalVisits||p.onlineCount||0)>0:true);
+    const map=$("#planet-orbit-map"),needle=planetSearch.trim().toLocaleLowerCase("ru-RU"),items=planetCatalog.filter(p=>{
+      const categoryMatch=planetFilter.startsWith("category:")?(planetFilter==="category:created"?Boolean(p.isCustom):p.category===planetFilter.slice(9)):true;
+      const baseMatch=planetFilter==="favorites"?p.favorite:planetFilter==="popular"?Number(p.totalVisits||p.onlineCount||0)>0:true;
+      return categoryMatch&&baseMatch&&(!needle||(p.name+" "+(p.description||"")).toLocaleLowerCase("ru-RU").includes(needle));
+    });
     map.replaceChildren();
     for(let i=0;i<42;i++){const star=document.createElement("i");star.className="star";star.style.left=((i*47+13)%97)+"%";star.style.top=((i*71+9)%93)+"%";star.style.opacity=String(.25+(i%5)*.14);map.append(star)}
     items.forEach((p,i)=>{const node=document.createElement("button");node.type="button";node.className="planet-node"+(selectedPlanet?.key===p.key?" selected":"");node.style.left=(p.x||((i*19+18)%85+7))+"%";node.style.top=(p.y||((i*31+17)%78+10))+"%";node.style.setProperty("--planet-color",p.color);node.style.setProperty("--planet-light",p.light);node.style.setProperty("--planet-glow",p.glow);node.innerHTML='<span class="planet-globe"></span><strong></strong><small></small>';node.querySelector("strong").textContent=p.name;node.querySelector("small").textContent=(p.onlineCount||0)+" онлайн";node.addEventListener("click",()=>selectPlanet(p));map.append(node)});
@@ -108,11 +112,29 @@
   document.addEventListener("click",e=>{if(!e.target.closest("#context-menu")&&!e.target.closest("#scene-viewport"))closeContext()});
   $("#profile-modal").addEventListener("click",e=>{if(e.target===e.currentTarget||e.target.closest("[data-close]"))$("#profile-modal").hidden=true});
   $("#planet-list").addEventListener("click",openPlanetMap);
+  $("#planet-search").addEventListener("input",e=>{planetSearch=e.target.value;renderPlanetMap()});
   $("#planet-map").addEventListener("click",e=>{if(e.target===e.currentTarget||e.target.closest("[data-map-close]"))closePlanetMap();const filter=e.target.closest("[data-map-filter]");if(filter){planetFilter=filter.dataset.mapFilter;document.querySelectorAll("[data-map-filter]").forEach(b=>b.classList.toggle("active",b===filter));renderPlanetMap()}});
   $("#planet-visit").addEventListener("click",()=>travelToPlanet(selectedPlanet));
   async function start(){
-    try{const d=await api("/api/me");me.id=String(d.account.id);me.nickname=d.account.nickname;roomPlanet=d.character.planet||"starter";await loadPlanets();$("#planet-select").value=roomPlanet;socket.connect();$("#connection-state").textContent="Подключение…"}
-    catch(error){toast(error.message);$("#connection-state").textContent="Нужен вход";setTimeout(()=>location.href="/",1200)}
+    try{
+      const d=await api("/api/me");me.id=String(d.account.id);me.nickname=d.account.nickname;roomPlanet=d.character.planet||"starter";
+      await loadPlanets();$("#planet-select").value=roomPlanet;
+      socket.once("planet:state",async()=>{const targetId=new URLSearchParams(location.search).get("travelTo");if(targetId)await travelToFriend(targetId)});
+      socket.connect();$("#connection-state").textContent="Подключение…";
+    }catch(error){toast(error.message);$("#connection-state").textContent="Нужен вход";setTimeout(()=>location.href="/",1200)}
+  }
+  async function travelToFriend(accountId){
+    try{
+      const data=await api("/api/profile/"+encodeURIComponent(accountId)),friend=data.profile;
+      if(!friend.isFriend||!friend.online||!friend.planetKey)throw new Error("Друг не в сети или его планета недоступна.");
+      const key=friend.planetKey;
+      let planet=planetCatalog.find(item=>item.key===key);
+      if(!planet&&key.startsWith("custom-")){const id=key.slice(7);planet={key,id:String(id),name:friend.planetName||"Планета друга",description:"Комната друга",theme:"nebula",category:"social",isCustom:true,color:"#8068d8",light:"#e1d7ff",glow:"#8068d8"}}
+      if(!planet)planet=basePlanets.find(item=>item.key===key);
+      if(!planet)throw new Error("Планета друга не найдена.");
+      await travelToPlanet(planet);
+      if(roomPlanet===key)toast("Ты прилетел к другу: "+friend.nickname);
+    }catch(error){toast(error.message)}
   }
   start();
 })();
