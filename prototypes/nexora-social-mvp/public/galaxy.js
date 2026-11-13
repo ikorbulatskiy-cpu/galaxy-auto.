@@ -53,8 +53,8 @@
     for(let i=0;i<42;i++){const star=document.createElement("i");star.className="star";star.style.left=((i*47+13)%97)+"%";star.style.top=((i*71+9)%93)+"%";star.style.opacity=String(.25+(i%5)*.14);map.append(star)}
     items.forEach((p,i)=>{const node=document.createElement("button");node.type="button";node.className="planet-node"+(selectedPlanet?.key===p.key?" selected":"");node.style.left=(p.x||((i*19+18)%85+7))+"%";node.style.top=(p.y||((i*31+17)%78+10))+"%";node.style.setProperty("--planet-color",p.color);node.style.setProperty("--planet-light",p.light);node.style.setProperty("--planet-glow",p.glow);node.innerHTML='<span class="planet-globe"></span><strong></strong><small></small>';node.querySelector("strong").textContent=p.name;node.querySelector("small").textContent=(p.onlineCount||0)+" онлайн";node.addEventListener("click",()=>selectPlanet(p));map.append(node)});
     $("#planet-map-count").textContent=items.length+" планет · "+planetCatalog.reduce((n,p)=>n+Number(p.onlineCount||0),0)+" онлайн";
-    if(!selectedPlanet&&items.length)selectedPlanet=items[0];
-    if(selectedPlanet&&items.some(p=>p.key===selectedPlanet.key))showPlanetDetails(selectedPlanet);else{$("#planet-detail").innerHTML="<small>НЕТ ПЛАНЕТ</small><h3>Пока пусто</h3><p>В этой категории планет пока нет.</p>";$("#planet-visit").disabled=true}
+    if(!items.some(p=>p.key===selectedPlanet?.key))selectedPlanet=items[0]||null;
+    if(selectedPlanet)showPlanetDetails(selectedPlanet);else{$("#planet-detail").innerHTML="<small>НЕТ ПЛАНЕТ</small><h3>Пока пусто</h3><p>В этой категории планет пока нет.</p>";$("#planet-visit").disabled=true}
   }
   function selectPlanet(p){selectedPlanet=p;renderPlanetMap()}
   function showPlanetDetails(p){
