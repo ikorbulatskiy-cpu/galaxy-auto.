@@ -11,8 +11,8 @@ function hashToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 function generateRecoveryCode() {
-  const raw = crypto.randomBytes(8).toString("hex").toUpperCase();
-  return raw.match(/.{1,4}/g).join("-");
+  const alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
+  return Array.from({ length: 10 }, () => alphabet[crypto.randomInt(alphabet.length)]).join("");
 }
 async function issueSession(accountId) {
   const token = crypto.randomBytes(32).toString("base64url");
@@ -54,14 +54,15 @@ async function register(req, res) {
 }
 async function login(req, res) {
   const nickname = normalizeNickname(req.body?.nickname);
-  const code = String(req.body?.recoveryCode || "").trim().toUpperCase();
+  const code = String(req.body?.recoveryCode || "").trim();
   if (!nickname || !code) return res.status(400).json({ error: "Укажите ник и код восстановления." });
   const result = await pool.query(
     "SELECT id,nickname,recovery_code_hash FROM nexora_social_world.accounts WHERE nickname_normalized=$1",
     [nickname.toLocaleLowerCase("ru-RU")]
   );
   const account = result.rows[0];
-  if (!account || !(await bcrypt.compare(code, account.recovery_code_hash))) {
+  const validCode = account && (await bcrypt.compare(code.toLowerCase(), account.recovery_code_hash) || await bcrypt.compare(code.toUpperCase(), account.recovery_code_hash));
+  if (!validCode) {
     return res.status(401).json({ error: "Неверный ник или код восстановления." });
   }
   await pool.query("UPDATE nexora_social_world.accounts SET last_login_at=NOW() WHERE id=$1", [account.id]);
