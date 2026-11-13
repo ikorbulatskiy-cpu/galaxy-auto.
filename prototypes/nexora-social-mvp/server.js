@@ -63,7 +63,7 @@ app.get("/api/me", async (req, res, next) => {
     const account = await auth.authenticateToken(readToken(req));
     if (!account) return res.status(401).json({ error: "Требуется вход." });
     res.json({ ok: true, account: { id: account.id, nickname: account.nickname }, character: {
-      avatar: account.avatar || {}, planet: account.planet || "starter", x: Number(account.position_x ?? 0.5)
+      avatar: account.avatar || {}, planet: account.planet || "starter", x: Number(account.position_x ?? 0.5), y: Number(account.position_y ?? 0.82)
     }});
   } catch (error) { next(error); }
 });
@@ -105,7 +105,7 @@ function normalizeAvatar(input) {
 function publicPlayer(player) {
   return {
     id: player.id, nickname: player.nickname, avatar: player.avatar, planet: player.planet,
-    x: player.x, authority: player.authority,
+    x: player.x, y: player.y ?? .82, authority: player.authority,
     title: ({ NOVICE: "Новичок", BEDA: "Беда", PAPA: "Папа", ANGEL: "Ангел", CREATOR: "Создатель" })[player.authorityTitle] || "Новичок",
     authorityTitle: player.authorityTitle || "NOVICE",
     auraType: ({ NOVICE: "NONE", BEDA: "GOLD_SOFT", PAPA: "GOLD_PREMIUM", ANGEL: "GREEN", CREATOR: "FIRE_RED" })[player.authorityTitle] || "NONE",
@@ -140,7 +140,7 @@ io.on("connection", (socket) => {
     try {
       const account = socket.data.account;
       const result = await pool.query(
-        "SELECT nickname,avatar,planet,position_x,authority,authority_title,aura_enabled FROM nexora_social_world.characters WHERE account_id=$1",
+        "SELECT nickname,avatar,planet,position_x,position_y,authority,authority_title,aura_enabled FROM nexora_social_world.characters WHERE account_id=$1",
         [account.id]
       );
       const saved = result.rows[0];
@@ -150,7 +150,8 @@ io.on("connection", (socket) => {
       const player = {
         id: String(account.id), socketId: socket.id, accountId: account.id,
         nickname: saved.nickname, avatar: normalizeAvatar(saved.avatar), planet,
-        x: Math.max(0.04, Math.min(0.96, Number(saved.position_x))), authority: saved.authority,
+        x: Math.max(0.04, Math.min(0.96, Number(saved.position_x))),
+        y: Math.max(0.60, Math.min(0.94, Number(saved.position_y ?? .82))), authority: saved.authority,
         authorityTitle: saved.authority_title || "NOVICE", auraEnabled: Boolean(saved.aura_enabled),
         bubble: null, emotion: null, friendsCount: friendCount.rows[0].count
       };
@@ -163,14 +164,28 @@ io.on("connection", (socket) => {
     } catch (error) { console.error("join failed:", error); ack({ ok: false, error: "Не удалось загрузить персонажа." }); }
   });
 
-  socket.on("player:move", async (payload) => {
-    const player = players.get(socket.id);
-    if (!player) return;
-    const x = Number(payload?.x);
-    if (!Number.isFinite(x)) return;
-    player.x = Math.max(0.04, Math.min(0.96, x));
-    socket.to(roomName(player.planet)).emit("player:moved", { id: player.id, x: player.x });
-    pool.query("UPDATE nexora_social_world.characters SET position_x=$1,updated_at=NOW() WHERE account_id=$2", [player.x, player.accountId]).catch(console.error);
+  socket.on("player:move",async(payload,ack=()=>{})=>{
+    const player=players.get(socket.id);
+    if(!player)return ack({ok:false,error:"Персонаж не подключён."});
+    const now=Date.now();
+    if(now-(player.lastMoveAt||0)<85)return ack({ok:false,error:"Слишком быстро. Попробуй ещё раз."});
+    const requestedX=Number(payload?.x),requestedY=Number(payload?.y);
+    if(!Number.isFinite(requestedX)||!Number.isFinite(requestedY))return ack({ok:false,error:"Некорректная точка перемещения."});
+    let x=Math.max(.04,Math.min(.96,requestedX)),y=Math.max(.60,Math.min(.94,requestedY));
+    // Keep a small personal space between avatars at their destination.
+    for(const other of players.values()){
+      if(other.id===player.id||other.planet!==player.planet)continue;
+      const dx=x-other.x,dy=y-(other.y??.82),distance=Math.hypot(dx,dy);
+      if(distance<.045){
+        const angle=distance>.0001?Math.atan2(dy,dx):(Number(player.id)%2?0:Math.PI);
+        x=Math.max(.04,Math.min(.96,other.x+Math.cos(angle)*.047));
+        y=Math.max(.60,Math.min(.94,(other.y??.82)+Math.sin(angle)*.047));
+      }
+    }
+    player.x=x;player.y=y;player.lastMoveAt=now;
+    io.to(roomName(player.planet)).emit("player:moved",{id:player.id,x,y,serverTime:now});
+    pool.query("UPDATE nexora_social_world.characters SET position_x=$1,position_y=$2,updated_at=NOW() WHERE account_id=$3",[x,y,player.accountId]).catch(console.error);
+    ack({ok:true,x,y});
   });
 
   socket.on("chat:send", async (payload, ack = () => {}) => {
