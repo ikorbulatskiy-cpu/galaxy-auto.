@@ -2,6 +2,9 @@ const crypto = require("crypto");
 const express = require("express");
 const { z } = require("zod");
 const { pool } = require("./db");
+const bcrypt = require("bcryptjs");
+const emailRegisterSchema = z.object({email:z.string().trim().email().max(254),password:z.string().min(10).max(128),username:z.string().trim().min(3).max(24).regex(/^[\p{L}\p{N}_-]+$/u),gender:z.enum(["female","male"]).optional(),body:z.enum(["slim","regular","athletic"]).optional(),adultConfirmed:z.literal(true)});
+const emailLoginSchema = z.object({email:z.string().trim().email().max(254),password:z.string().min(1).max(128)});
 
 const router = express.Router();
 const COOKIE_NAME = "nexora_session";
@@ -113,6 +116,51 @@ router.post("/register", async (req, res, next) => {
   } finally {
     if (client) client.release();
   }
+});
+
+
+router.post("/register-email", async (req,res,next) => {
+ const parsed=emailRegisterSchema.safeParse(req.body);
+ if(!parsed.success) return res.status(400).json({error:"Проверьте email, пароль, ник и подтверждение возраста 18+."});
+ const email=parsed.data.email.toLowerCase(), username=parsed.data.username, gender=parsed.data.gender||"male";
+ let client;
+ try {
+  client=await pool.connect();
+  const passwordHash=await bcrypt.hash(parsed.data.password,12);
+  const characterCode=createCharacterCode(), sessionToken=randomToken();
+  await client.query("BEGIN");
+  const inserted=await client.query("INSERT INTO users (email,username,password_hash,character_code_hash) VALUES ($1,$2,$3,$4) RETURNING id,username",[email,username,passwordHash,hashToken(normalizeCharacterCode(characterCode))]);
+  const user=inserted.rows[0];
+  await client.query("INSERT INTO profiles (user_id,display_name) VALUES ($1,$2)",[user.id,username]);
+  await client.query("INSERT INTO reputation (user_id) VALUES ($1)",[user.id]);
+  await client.query("INSERT INTO wallet_balances (user_id,coins) VALUES ($1,500)",[user.id]);
+  await client.query("INSERT INTO wallet_ledger (user_id,currency,amount,reason) VALUES ($1,'coins',500,'Стартовый бонус NEXORA')",[user.id]);
+  const appearance={spriteGender:gender,body:parsed.data.body||"regular",head:"classic",skinTone:"medium",hair:"short",hairColor:"brown",eyes:"brown",outfit:gender==="female"?"pink":"blue",shoes:"sneakers",adultConfirmed:true,privacyConsentAt:new Date().toISOString()};
+  await client.query("INSERT INTO characters (user_id,name,gender,appearance,is_active) VALUES ($1,$2,$3,$4::jsonb,TRUE)",[user.id,username,gender,JSON.stringify(appearance)]);
+  await client.query("INSERT INTO user_locations (user_id,planet_id) SELECT $1,id FROM planets WHERE slug='newbies-1' ON CONFLICT (user_id) DO NOTHING",[user.id]);
+  await client.query("INSERT INTO sessions (user_id,token_hash,expires_at) VALUES ($1,$2,NOW()+INTERVAL '14 days')",[user.id,hashToken(sessionToken)]);
+  await client.query("COMMIT"); setSessionCookie(res,sessionToken);
+  return res.status(201).json({message:"Аккаунт создан.",characterCode,user:{id:user.id,username:user.username}});
+ } catch(error) {
+  if(client){try{await client.query("ROLLBACK")}catch{}}
+  if(error.code==="23505") return res.status(409).json({error:String(error.constraint||"").includes("email")?"Этот email уже зарегистрирован.":"Этот ник уже занят."});
+  return next(error);
+ } finally {if(client)client.release()}
+});
+
+router.post("/login-email", async (req,res,next) => {
+ const parsed=emailLoginSchema.safeParse(req.body);
+ if(!parsed.success) return res.status(400).json({error:"Введите корректный email и пароль."});
+ try {
+  const result=await pool.query("SELECT id,username,password_hash,role,status FROM users WHERE LOWER(email)=LOWER($1) LIMIT 1",[parsed.data.email]);
+  const user=result.rows[0];
+  const valid=Boolean(user && user.password_hash && user.status==="active" && await bcrypt.compare(parsed.data.password,user.password_hash));
+  if(!valid) return res.status(401).json({error:"Неверный email или пароль."});
+  const token=randomToken();
+  await pool.query("INSERT INTO sessions (user_id,token_hash,expires_at) VALUES ($1,$2,NOW()+INTERVAL '14 days')",[user.id,hashToken(token)]);
+  setSessionCookie(res,token);
+  return res.json({user:{id:user.id,username:user.username,role:user.role}});
+ } catch(error){return next(error)}
 });
 
 router.post("/login", async (req, res, next) => {
