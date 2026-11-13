@@ -158,6 +158,8 @@ function createDeveloperRouter({ pool, auth, players, planets, io }) {
       let changed;
       try {
         await client.query("BEGIN");
+        const target = await client.query("SELECT id FROM nexora_social_world.accounts WHERE id=$1 FOR UPDATE", [targetId]);
+        if (!target.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ error: "Персонаж не найден." }); }
         changed = await client.query("UPDATE nexora_social_world.moderation_actions SET revoked_at=NOW(),revoked_by=$2,revocation_reason=$3 WHERE target_account_id=$1 AND action_type='BAN' AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at>NOW()) RETURNING id", [targetId,current.account.id,reason]);
         if (changed.rowCount) await audit(client,current,targetId,"player.unban",reason,{ moderationIds: changed.rows.map(row=>row.id) });
         await client.query("COMMIT");
