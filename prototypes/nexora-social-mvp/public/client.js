@@ -874,9 +874,12 @@
       detail.textContent = "Магазин · " + item.category + " · " + Number(item.price || 0).toLocaleString("ru-RU") + " Koins";
       meta.append(name, detail);
       button.append(icon, meta);
-      button.addEventListener("click", () => {
+      button.addEventListener("click", async () => {
         closeRoomFlyouts();
-        openShop();
+        await openShop();
+        document.querySelector('[data-shop-tab="store"]')?.click();
+        const card = [...$("#shop-items").children].find(node => node.querySelector(".shop-item-body strong")?.textContent === item.name);
+        card?.scrollIntoView({ behavior:"smooth", block:"center" });
       });
       return button;
     };
