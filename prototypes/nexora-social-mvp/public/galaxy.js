@@ -39,8 +39,8 @@
   function closeContext(){$("#context-menu").hidden=true}
   function openInfo(){if(!selected)return;$("#profile-title").textContent=selected.nickname||"Персонаж";$("#profile-content").textContent=(selected.title||"Новичок")+" · "+(selected.authority||0)+" очков авторитета"+(selected.auraEnabled?" · Аура активна":"");$("#profile-modal").hidden=false;closeContext()}
   function setMoveTarget(x){if(!moveMode)return;moveTarget=x;scene.setCursor(x);$("#move-confirm-bar").hidden=false}
-  function beginMove(){moveMode=true;moveTarget=null;scene.setCursor(.5);$("#move-confirm-bar").hidden=false;$("#move-hint").textContent="Выберите место и нажмите ОК"}
-  function cancelMove(){moveMode=false;moveTarget=null;scene.setCursor(null);$("#move-confirm-bar").hidden=true}
+  function beginMove(){moveMode=true;moveTarget=null;scene.setMoveMode(true);scene.setCursor(.5);$("#move-confirm-bar").hidden=false;$("#move-hint").textContent="Проведите пальцем по линии, выберите место и нажмите ОК"}
+  function cancelMove(){moveMode=false;moveTarget=null;scene.setMoveMode(false);scene.setCursor(null);$("#move-confirm-bar").hidden=true}
   function confirmMove(){
     if(moveTarget===null)return toast("Сначала выбери место на полу.");
     const target=moveTarget,mePlayer=players.find(p=>String(p.id)===String(me.id));if(!mePlayer)return;
@@ -93,7 +93,7 @@
   socket.on("connect",join);
   socket.on("connect_error",error=>{toast(error.message==="AUTH_REQUIRED"?"Войди в NEXORA, чтобы открыть Galaxy.":"Не удалось подключиться к комнате.");$("#connection-state").textContent="Нет соединения"});
   socket.on("disconnect",()=>{$("#connection-state").textContent="Отключено"});
-  socket.on("planet:state",data=>{roomPlanet=data.planet;$("#planet-select").value=roomPlanet;$("#planet-name").textContent=planetName(roomPlanet);$("#online-room-name").textContent=planetName(roomPlanet);setPlayers(data.players||[]);addChat({system:true,text:"* Ты прилетел на планету "+planetName(roomPlanet)})});
+  socket.on("planet:state",data=>{roomPlanet=data.planet;$("#planet-select").value=roomPlanet;$("#planet-name").textContent=planetName(roomPlanet);$("#online-room-name").textContent=planetName(roomPlanet);setPlayers(data.players||[]);(data.history||[]).forEach(message=>addChat(message));addChat({system:true,text:"* Ты прилетел на планету "+planetName(roomPlanet)})});
   socket.on("player:joined",p=>{if(!players.some(x=>String(x.id)===String(p.id))){players.push(p);scene.upsert(p);updateOnline()}addChat({system:true,text:"* "+p.nickname+" прилетел на планету"})});
   socket.on("player:left",event=>{const p=players.find(x=>String(x.id)===String(event.id));players=players.filter(x=>String(x.id)!==String(event.id));scene.remove(event.id);updateOnline();if(p)addChat({system:true,text:"* "+p.nickname+" улетел с планеты"})});
   socket.on("player:moved",event=>{const p=players.find(x=>String(x.id)===String(event.id));if(p){p.x=event.x;p.y=event.y;scene.movePlayer(event.id,event.x,event.y)}});
