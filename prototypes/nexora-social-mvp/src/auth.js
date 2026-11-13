@@ -31,8 +31,8 @@ async function register(req, res) {
   try {
     await client.query("BEGIN");
     const result = await client.query(
-      "INSERT INTO nexora_social_world.accounts(nickname,nickname_normalized,recovery_code_hash) VALUES($1,$2,$3) RETURNING id,nickname",
-      [nickname, nickname.toLocaleLowerCase("ru-RU"), await bcrypt.hash(code, 12)]
+      "INSERT INTO nexora_social_world.accounts(nickname,nickname_normalized,recovery_code_hash,recovery_code_lookup_hash) VALUES($1,$2,$3,$4) RETURNING id,nickname",
+      [nickname, nickname.toLocaleLowerCase("ru-RU"), await bcrypt.hash(code, 12), hashToken(code)]
     );
     const account = result.rows[0];
     await client.query(
@@ -52,18 +52,31 @@ async function register(req, res) {
   }
 }
 async function login(req, res) {
-  const nickname = normalizeNickname(req.body?.nickname);
-  const code = String(req.body?.recoveryCode || "").trim();
-  if (!nickname || !code) return res.status(400).json({ error: "Укажите ник и код восстановления." });
-  const result = await pool.query(
-    "SELECT id,nickname,recovery_code_hash FROM nexora_social_world.accounts WHERE nickname_normalized=$1",
-    [nickname.toLocaleLowerCase("ru-RU")]
-  );
-  const account = result.rows[0];
-  const validCode = account && (await bcrypt.compare(code.toLowerCase(), account.recovery_code_hash) || await bcrypt.compare(code.toUpperCase(), account.recovery_code_hash));
-  if (!validCode) {
-    return res.status(401).json({ error: "Неверный ник или код восстановления." });
+  const code = String(req.body?.recoveryCode || "").trim().toLowerCase();
+  if (!/^[a-z0-9]{10}$/.test(code)) {
+    return res.status(400).json({ error: "Введите корректный 10-символьный код восстановления." });
   }
+  const result = await pool.query(
+    "SELECT id,nickname,recovery_code_hash FROM nexora_social_world.accounts WHERE recovery_code_lookup_hash=$1",
+    [hashToken(code)]
+  );
+  let account = result.rows[0] || null;
+  if (!account) {
+    const legacy = await pool.query(
+      "SELECT id,nickname,recovery_code_hash FROM nexora_social_world.accounts WHERE recovery_code_lookup_hash IS NULL"
+    );
+    for (const candidate of legacy.rows) {
+      if (await bcrypt.compare(code, candidate.recovery_code_hash)) {
+        account = candidate;
+        await pool.query(
+          "UPDATE nexora_social_world.accounts SET recovery_code_lookup_hash=$1 WHERE id=$2 AND recovery_code_lookup_hash IS NULL",
+          [hashToken(code), candidate.id]
+        );
+        break;
+      }
+    }
+  }
+  if (!account) return res.status(401).json({ error: "Неверный код восстановления." });
   await pool.query("UPDATE nexora_social_world.accounts SET last_login_at=NOW() WHERE id=$1", [account.id]);
   const token = await issueSession(account.id);
   res.cookie("nexora_session", token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: SESSION_DAYS * 86400000 });
