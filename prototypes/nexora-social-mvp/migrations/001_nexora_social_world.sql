@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS nexora_social_world.accounts (
   nickname VARCHAR(18) NOT NULL,
   nickname_normalized VARCHAR(18) NOT NULL UNIQUE,
   recovery_code_hash TEXT NOT NULL,
+  recovery_code_lookup_hash CHAR(64) UNIQUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   last_login_at TIMESTAMPTZ
 );
@@ -102,3 +103,10 @@ CREATE TABLE IF NOT EXISTS nexora_social_world.furniture (
 );
 
 CREATE INDEX IF NOT EXISTS furniture_planet_idx ON nexora_social_world.furniture(planet_id);
+
+-- Additive upgrade for existing social-world databases.
+ALTER TABLE nexora_social_world.accounts
+  ADD COLUMN IF NOT EXISTS recovery_code_lookup_hash CHAR(64);
+CREATE UNIQUE INDEX IF NOT EXISTS accounts_recovery_lookup_idx
+  ON nexora_social_world.accounts(recovery_code_lookup_hash)
+  WHERE recovery_code_lookup_hash IS NOT NULL;
