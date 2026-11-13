@@ -900,30 +900,6 @@
       });
       return button;
     };
-    const itemRow = item => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "room-global-search-row";
-      const icon = document.createElement("span");
-      icon.className = "room-global-search-icon";
-      icon.textContent = item.icon || "✦";
-      const meta = document.createElement("span");
-      meta.className = "room-global-search-meta";
-      const name = document.createElement("strong");
-      name.textContent = item.name;
-      const detail = document.createElement("small");
-      detail.textContent = "Магазин · " + item.category + " · " + Number(item.price || 0).toLocaleString("ru-RU") + " Koins";
-      meta.append(name, detail);
-      button.append(icon, meta);
-      button.addEventListener("click", async () => {
-        closeRoomFlyouts();
-        await openShop();
-        document.querySelector('[data-shop-tab="store"]')?.click();
-        const card = [...$("#shop-items").children].find(node => node.querySelector(".shop-item-body strong")?.textContent === item.name);
-        card?.scrollIntoView({ behavior:"smooth", block:"center" });
-      });
-      return button;
-    };
     const planetRow = planet => {
       const button = document.createElement("button");
       button.type = "button";
@@ -952,7 +928,6 @@
     ].filter(planet => planet.name.toLocaleLowerCase("ru-RU").includes(query.toLocaleLowerCase("ru-RU")));
     addSection("ПЕРСОНАЖИ", data.characters || [], characterRow);
     addSection("ПЛАНЕТЫ", [...builtin, ...(data.planets || []).map(planet => ({...planet,key:"custom-"+planet.id,builtin:false}))], planetRow);
-    addSection("МАГАЗИН", data.items || [], itemRow);
     if (!box.children.length) {
       const empty = document.createElement("p");
       empty.textContent = "Ничего не найдено. Попробуй другой запрос.";
@@ -1016,6 +991,12 @@
     toggleRoomFlyout(button.dataset.roomToggle);
   }));
   document.querySelectorAll("[data-room-close]").forEach(button => button.addEventListener("click",() => closeRoomFlyouts()));
+  document.querySelector("[data-room-search-back]")?.addEventListener("click", () => {
+    $("#room-global-search")?.classList.add("hidden");
+    $("#room-main-menu .room-menu-grid")?.classList.remove("hidden");
+    $("#room-global-search-input").value = "";
+    $("#room-global-search-results").innerHTML = "<p>Введи имя персонажа или название планеты.</p>";
+  });
   document.querySelectorAll("[data-room-action]").forEach(button => button.addEventListener("click",() => {
     const action = button.dataset.roomAction;
     closeRoomFlyouts();
@@ -1024,6 +1005,11 @@
     else if (action === "friends") openMyProfile("friends");
     else if (action === "messages") openMyProfile("messages");
     else if (action === "gifts") { if (state.selected && String(state.selected) !== String(state.me?.id)) { $("#gift-options").classList.remove("hidden"); $("#profile-menu").classList.remove("hidden"); } else showToast("Выбери игрока в комнате, чтобы отправить подарок."); }
+    else if (action === "search") {
+      $("#room-main-menu .room-menu-grid")?.classList.add("hidden");
+      $("#room-global-search")?.classList.remove("hidden");
+      $("#room-global-search-input")?.focus();
+    }
     else if (action === "shop") openShop();
     else if (action === "planets") $("#planets-button").click();
     else if (action === "developer") $("#developer-open").click();
