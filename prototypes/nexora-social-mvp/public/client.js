@@ -808,13 +808,28 @@
         content.replaceChildren();
         const heading=document.createElement("h3");heading.textContent="Выдача авторитетов и аур";content.append(heading);
         const form=document.createElement("form");form.className="developer-authority-form";
+        const searchInput=document.createElement("input");searchInput.type="search";searchInput.maxLength=18;searchInput.placeholder="Найти игрока по ID или никнейму";
+        const searchResults=document.createElement("div");searchResults.className="developer-search-results";
         const account=document.createElement("input");account.type="text";account.inputMode="numeric";account.required=true;account.placeholder="ID аккаунта игрока";
+        const searchButton=document.createElement("button");searchButton.type="button";searchButton.textContent="Найти игрока";
+        searchButton.addEventListener("click",async()=>{
+          searchButton.disabled=true;searchResults.replaceChildren();
+          try{
+            const found=await developerRequest("/players?q="+encodeURIComponent(searchInput.value.trim()));
+            if(!found.players.length){const empty=document.createElement("p");empty.textContent="Игроки не найдены.";searchResults.append(empty);}
+            found.players.forEach(player=>{
+              const pick=document.createElement("button");pick.type="button";pick.textContent=player.nickname+" · ID "+player.id;
+              pick.addEventListener("click",()=>{account.value=player.id;showToast("Выбран игрок "+player.nickname);});
+              searchResults.append(pick);
+            });
+          }catch(error){showToast(error.message);}finally{searchButton.disabled=false;}
+        });
         const title=document.createElement("select");
         data.titles.forEach(item=>{const option=document.createElement("option");option.value=item.title_key;option.textContent=item.title_label;title.append(option);});
         const reason=document.createElement("input");reason.maxLength=500;reason.required=true;reason.placeholder="Причина выдачи / изменения";
         const auraLabel=document.createElement("label");const aura=document.createElement("input");aura.type="checkbox";aura.checked=true;auraLabel.append(aura,document.createTextNode("Включить ауру"));
         const submit=document.createElement("button");submit.type="submit";submit.textContent="Выдать звание";
-        form.append(account,title,reason,auraLabel,submit);content.append(form);
+        form.append(searchInput,searchButton,searchResults,account,title,reason,auraLabel,submit);content.append(form);
         if(!developerPermissions.includes("authority.assign"))form.classList.add("hidden");
         if(developerPermissions.includes("authority.remove")){
           const removeButton=document.createElement("button");removeButton.type="button";removeButton.textContent="Снять звание · вернуть Новичка";
