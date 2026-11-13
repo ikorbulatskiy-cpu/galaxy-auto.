@@ -177,7 +177,7 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
       const result=await pool.query(`SELECT p.id,p.name,p.status,p.access_mode,p.capacity,p.total_visits,p.created_at,
         a.nickname AS owner_nickname,p.owner_account_id,
         (SELECT COUNT(*)::int FROM nexora_social_world.planet_members m WHERE m.planet_id=p.id) AS members
-        FROM nexora_social_world.planets p JOIN nexora_social_world.accounts a ON a.id=p.owner_account_id
+        FROM nexora_social_world.custom_planets p JOIN nexora_social_world.accounts a ON a.id=p.owner_account_id
         ORDER BY p.created_at DESC LIMIT 200`);
       const online={};for(const player of players.values())if(String(player.planet).startsWith("custom-"))online[player.planet]=(online[player.planet]||0)+1;
       res.json({ok:true,planets:result.rows.map(p=>({...p,id:String(p.id),online:online["custom-"+p.id]||0}))});
@@ -188,22 +188,22 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
       const current=await requirePermission(req,res,"planets.manage");if(!current)return;
       const id=String(req.params.id),action=String(req.body?.action||""),reason=String(req.body?.reason||"").trim().slice(0,300);
       if(!/^\\d+$/.test(id)||!["hide","block","restore","transfer","delete"].includes(action))return res.status(400).json({error:"Некорректное действие."});
-      const planet=await pool.query("SELECT id,owner_account_id FROM nexora_social_world.planets WHERE id=$1",[id]);
+      const planet=await pool.query("SELECT id,owner_account_id FROM nexora_social_world.custom_planets WHERE id=$1",[id]);
       if(!planet.rowCount)return res.status(404).json({error:"Планета не найдена."});
       if(["transfer","delete"].includes(action)&&current.role!=="OWNER")return res.status(403).json({error:"Это действие доступно только владельцу NEXORA."});
       const client=await pool.connect();
       try{
         await client.query("BEGIN");
-        if(action==="hide")await client.query("UPDATE nexora_social_world.planets SET status='hidden',updated_at=NOW() WHERE id=$1",[id]);
-        if(action==="block")await client.query("UPDATE nexora_social_world.planets SET status='blocked',updated_at=NOW() WHERE id=$1",[id]);
-        if(action==="restore")await client.query("UPDATE nexora_social_world.planets SET status='active',updated_at=NOW() WHERE id=$1",[id]);
+        if(action==="hide")await client.query("UPDATE nexora_social_world.custom_planets SET status='hidden',updated_at=NOW() WHERE id=$1",[id]);
+        if(action==="block")await client.query("UPDATE nexora_social_world.custom_planets SET status='blocked',updated_at=NOW() WHERE id=$1",[id]);
+        if(action==="restore")await client.query("UPDATE nexora_social_world.custom_planets SET status='active',updated_at=NOW() WHERE id=$1",[id]);
         if(action==="transfer"){
           const target=String(req.body?.accountId||"");
           if(!/^\\d+$/.test(target)||!(await client.query("SELECT 1 FROM nexora_social_world.accounts WHERE id=$1",[target])).rowCount)throw new Error("Новый владелец не найден.");
-          await client.query("UPDATE nexora_social_world.planets SET owner_account_id=$2,updated_at=NOW() WHERE id=$1",[id,target]);
+          await client.query("UPDATE nexora_social_world.custom_planets SET owner_account_id=$2,updated_at=NOW() WHERE id=$1",[id,target]);
           await client.query("DELETE FROM nexora_social_world.planet_staff WHERE planet_id=$1 AND account_id=$2",[id,target]);
         }
-        if(action==="delete")await client.query("DELETE FROM nexora_social_world.planets WHERE id=$1",[id]);
+        if(action==="delete")await client.query("DELETE FROM nexora_social_world.custom_planets WHERE id=$1",[id]);
         await client.query("INSERT INTO nexora_social_world.planet_audit_logs(planet_id,actor_account_id,action,details) VALUES($1,$2,$3,$4::jsonb)",[action==="delete"?null:id,current.account.id,"developer."+action,JSON.stringify({reason,accountId:req.body?.accountId||null})]);
         await audit(client,current,planet.rows[0].owner_account_id,"planet."+action,reason,{planetId:id});
         await client.query("COMMIT");
