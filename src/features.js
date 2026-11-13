@@ -77,7 +77,7 @@ router.post("/transfer", async (req,res,next) => {
     const wallets=await client.query("SELECT user_id,coins,diamonds FROM wallet_balances WHERE user_id=ANY($1::uuid[]) ORDER BY user_id FOR UPDATE",[ids]);
     if(wallets.rowCount!==2){await client.query("ROLLBACK");return res.status(404).json({error:"Получатель не найден."})}
     const sender=wallets.rows.find(x=>x.user_id===req.user.id);
-    if(BigInt(sender[p.data.currency])<BigInt(p.data.amount)){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно средств."})}
+    if(p.data.currency==="coins"?Number(sender.coins)<p.data.amount:BigInt(sender.diamonds)<BigInt(p.data.amount)){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно средств."})}
     const col=p.data.currency;
     await client.query(`UPDATE wallet_balances SET ${col}=${col}-$2,updated_at=NOW() WHERE user_id=$1`,[req.user.id,p.data.amount]);
     await client.query(`UPDATE wallet_balances SET ${col}=${col}+$2,updated_at=NOW() WHERE user_id=$1`,[p.data.toUserId,p.data.amount]);
@@ -103,7 +103,7 @@ router.post("/shop/buy", async (req,res,next) => {
     if(alreadyOwned.rowCount){await client.query("ROLLBACK");return res.status(409).json({error:"Этот предмет уже есть у персонажа."})}
     const amount=BigInt(item.rows[0][p.data.currency==="coins"?"price_coins":"price_diamonds"]);const otherCurrency=BigInt(item.rows[0][p.data.currency==="coins"?"price_diamonds":"price_coins"]);if(amount===0n&&otherCurrency>0n){await client.query("ROLLBACK");return res.status(400).json({error:"Этот предмет нельзя купить за выбранную валюту."})}
     const wallet=await client.query("SELECT coins,diamonds FROM wallet_balances WHERE user_id=$1 FOR UPDATE",[req.user.id]);
-    if(!wallet.rowCount||BigInt(wallet.rows[0][p.data.currency])<amount){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно средств."})}
+    if(!wallet.rowCount||(p.data.currency==="coins"?Number(wallet.rows[0].coins)<Number(amount):BigInt(wallet.rows[0].diamonds)<amount)){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно средств."})}
     const col=p.data.currency;
     await client.query(`UPDATE wallet_balances SET ${col}=${col}-$2,updated_at=NOW() WHERE user_id=$1`,[req.user.id,amount.toString()]);
     const purchase=await client.query("INSERT INTO purchases(user_id,item_id,character_id,currency,amount,idempotency_key) VALUES($1,$2,$3,$4,$5,$6) RETURNING id",[req.user.id,p.data.itemId,p.data.characterId,col,amount.toString(),p.data.idempotencyKey]);
@@ -127,7 +127,7 @@ router.post("/shop/gift", async (req,res,next) => {
     if(!item.rowCount||!receiver.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Предмет или получатель не найден."})}
     const wallet=await client.query("SELECT coins FROM wallet_balances WHERE user_id=$1 FOR UPDATE",[req.user.id]);
     const amount=BigInt(item.rows[0].price_coins);if(amount===0n&&BigInt(item.rows[0].price_diamonds)>0n){await client.query("ROLLBACK");return res.status(400).json({error:"Этот предмет можно подарить только после покупки за Diamonds."})}
-    if(!wallet.rowCount||BigInt(wallet.rows[0].coins)<amount){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно Coins."})}
+    if(!wallet.rowCount||Number(wallet.rows[0].coins)<Number(amount)){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно Coins."})}
     await client.query("UPDATE wallet_balances SET coins=coins-$2,updated_at=NOW() WHERE user_id=$1",[req.user.id,amount.toString()]);
     const gift=await client.query("INSERT INTO gifts(sender_user_id,receiver_user_id,item_id,message,idempotency_key) VALUES($1,$2,$3,$4,$5) RETURNING id",[req.user.id,p.data.toUserId,p.data.itemId,p.data.message,p.data.idempotencyKey]);
     if(amount>0n)await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id) VALUES($1,'coins',$2,'Подарок отправлен',$3)",[req.user.id,(-amount).toString(),gift.rows[0].id]);
@@ -197,7 +197,7 @@ router.post("/clans/:clanId/bank", async (req,res,next)=>{
  const wallet=await client.query("SELECT coins FROM wallet_balances WHERE user_id=$1 FOR UPDATE",[req.user.id]);
  const amount=BigInt(p.data.amount);
  if(p.data.direction==="deposit"){
-  if(!wallet.rowCount||BigInt(wallet.rows[0].coins)<amount){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно Coins."})}
+  if(!wallet.rowCount||Number(wallet.rows[0].coins)<Number(amount)){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно Coins."})}
   await client.query("UPDATE wallet_balances SET coins=coins-$2,updated_at=NOW() WHERE user_id=$1",[req.user.id,amount.toString()]);
   await client.query("UPDATE clans SET treasury_coins=treasury_coins+$2 WHERE id=$1",[req.params.clanId,amount.toString()]);
  }else{
