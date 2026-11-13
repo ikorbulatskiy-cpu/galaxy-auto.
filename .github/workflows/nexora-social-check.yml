@@ -1,0 +1,28 @@
+name: NEXORA Social World checks
+
+on:
+  push:
+    branches:
+      - nexora-social-persistence
+    paths:
+      - "prototypes/nexora-social-mvp/**"
+      - ".github/workflows/nexora-social-check.yml"
+  pull_request:
+    branches:
+      - nexora-social-persistence
+      - nexora-social-mvp
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check JavaScript syntax
+        run: |
+          node --check prototypes/nexora-social-mvp/server.js
+          node --check prototypes/nexora-social-mvp/src/db.js
+          node --check prototypes/nexora-social-mvp/src/auth.js
+          node --check prototypes/nexora-social-mvp/public/client.js
