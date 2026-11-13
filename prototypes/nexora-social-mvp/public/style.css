@@ -612,3 +612,37 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 .history-author.system-author{color:#73dcd1}.room-emotion-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media(max-width:430px){.connection-pill{padding:6px 8px;font-size:9px}.room-toolbar{width:calc(100% - 16px);bottom:max(6px,env(safe-area-inset-bottom))}.room-toolbar button{min-height:45px}.room-toolbar button span{font-size:8px}.room-event-count{right:calc(50% - 17px)}.room-events-panel,.room-flyout{max-height:min(58dvh,470px)}}
 @media(max-height:560px){.room-toolbar button{min-height:39px}.room-flyout{max-height:48dvh}}
+
+
+/* NEXORA WORLD 4.0 — expanded scene layout */
+@media (min-width: 700px) {
+  .game-screen {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    border: 0;
+  }
+  .game-controls {
+    left: max(24px, calc((100% - 920px) / 2));
+    right: max(24px, calc((100% - 920px) / 2));
+  }
+  .topbar {
+    left: 24px;
+    right: 24px;
+  }
+}
+.scene-caption {
+  width: max-content;
+  max-width: calc(100% - 32px);
+  margin: 0 auto;
+  padding: 9px 18px;
+  border: 1px solid rgba(220, 221, 255, .16);
+  border-radius: 16px;
+  background: rgba(11, 16, 42, .42);
+  backdrop-filter: blur(12px);
+}
+.scene-caption small { letter-spacing: .025em; }
+@media (max-width: 520px) {
+  .scene-caption { padding: 7px 13px; }
+  .scene-caption span { font-size: 14px; }
+}
