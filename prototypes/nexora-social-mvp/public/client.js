@@ -1074,6 +1074,10 @@
     showToast(event?.message||"Доступ к планете закрыт.");
     socket.emit("planet:change",{planet:"starter"},()=>{});
   });
+  socket.on("planet:objects-updated",objects=>{
+    state.customPlanetObjects=Array.isArray(objects)?objects:[];
+    drawScene();
+  });
   socket.on("planet:state",async data=>{
     state.customPlanetObjects=[];
     if(!String(data.planet).startsWith("custom-")){drawScene();return;}
