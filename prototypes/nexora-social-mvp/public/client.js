@@ -1349,6 +1349,24 @@
       } else if (tab === "moderation") {
         const d = await developerRequest("/moderation");
         developerRender("История модерации", d.entries.map(e => ({title: e.action_type + " · " + e.target_nickname + " · ID " + e.target_account_id, detail: e.reason + " · " + e.actor_nickname + " · " + new Date(e.created_at).toLocaleString("ru-RU") + (e.expires_at ? " · до " + new Date(e.expires_at).toLocaleString("ru-RU") : "") + (e.revoked_at ? " · отменено" : "")})));
+        const reportsTitle=document.createElement("h3");reportsTitle.textContent="Жалобы игроков";content.append(reportsTitle);
+        (d.reports||[]).forEach(report=>{
+          const row=document.createElement("div");row.className="developer-row";
+          const title=document.createElement("strong");title.textContent="#"+report.id+" · "+report.category+" · "+report.target_nickname+" (ID "+report.target_account_id+")";
+          const detail=document.createElement("span");detail.textContent="От: "+report.reporter_nickname+" · "+report.details+" · "+report.status+" · "+new Date(report.created_at).toLocaleString("ru-RU");
+          row.append(title,detail);
+          if(developerPermissions.includes("reports.manage")&&report.status!=="resolved"&&report.status!=="dismissed"){
+            const actions=document.createElement("div");actions.className="developer-actions";
+            [["reviewing","В работу"],["resolved","Закрыть"],["dismissed","Отклонить"]].forEach(([status,label])=>{
+              const button=document.createElement("button");button.type="button";button.textContent=label;
+              button.addEventListener("click",async()=>{button.disabled=true;try{await developerRequest("/reports/"+report.id,{method:"PATCH",body:JSON.stringify({status})});showToast("Статус жалобы обновлён.");loadDeveloperTab("moderation");}catch(error){showToast(error.message);button.disabled=false;}});
+              actions.append(button);
+            });
+            row.append(actions);
+          }
+          content.append(row);
+        });
+        if(!(d.reports||[]).length){const empty=document.createElement("p");empty.className="developer-muted";empty.textContent="Новых жалоб нет.";content.append(empty);}
       } else if (tab === "world") {
         const d = await developerRequest("/world");
         developerRender("Планеты и комнаты", d.world.map(p => ({ title: p.title, detail: p.online + " онлайн · " + p.rooms + " комнат" })));
