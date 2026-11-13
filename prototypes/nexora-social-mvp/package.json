@@ -1,21 +1,31 @@
 {
   "name": "nexora-social-mvp",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "A real-time mobile 2D social world prototype built with Express and Socket.IO",
-  "main": "server.js",
+  "description": "NEXORA production launcher. Runs the unified Galaxy-first full application from the repository root.",
+  "main": "../../server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "prestart": "NODE_PATH=$(pwd)/node_modules node ../../scripts/migrate.js",
+    "start": "NODE_PATH=$(pwd)/node_modules node ../../server.js",
+    "dev": "NODE_PATH=$(pwd)/node_modules node --watch ../../server.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "dependencies": {
-    "express": "^4.21.2",
-    "socket.io": "^4.8.1",
-    "pg": "^8.13.1",
+    "@aws-sdk/client-s3": "^3.850.0",
+    "@aws-sdk/s3-request-presigner": "^3.850.0",
     "bcryptjs": "^2.4.3",
-    "cookie": "^0.7.2"
+    "cookie": "^0.7.2",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "nodemailer": "^10.5.0",
+    "pg": "^8.13.1",
+    "socket.io": "^4.8.1",
+    "ws": "^8.18.0",
+    "zod": "^3.24.1"
   }
 }

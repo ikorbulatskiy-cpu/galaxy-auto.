@@ -87,14 +87,46 @@
   const sheet=make("section","nx-planet-sheet");sheet.setAttribute("role","dialog");sheet.setAttribute("aria-modal","true");sheet.setAttribute("aria-label","Сменить планету");
   sheet.append(make("div","nx-planet-sheet-handle"),make("h2","","◎ Сменить планету"));
   const cats=make("div","nx-planet-categories");
-  [["◷","Последние"],["★","Избранные"],["🔥","Популярные"],["⌖","Планеты города"],["♛","Мои планеты"],["♟","Планеты с друзьями"],["⌕","Поиск планет"]].forEach(([icon,label],i)=>{
-   const b=make("button","",icon+"  "+label);b.type="button";if(i===6)b.classList.add("active");
-   b.addEventListener("click",()=>{cats.querySelectorAll("button").forEach(x=>x.classList.remove("active"));b.classList.add("active");const input=$("#nx-planet-search",sheet);if(input){input.focus();input.placeholder=label==="Поиск планет"?"Название планеты для поиска":"Планета: "+label}});
+  const planetList=make("div","nx-planet-sheet-list");
+  const categories=[["recent","◷","Последние"],["favorites","★","Избранные"],["popular","🔥","Популярные"],["city","⌖","Планеты города"],["mine","♛","Мои планеты"],["friends","♟","Планеты с друзьями"],["search","⌕","Поиск планет"]];
+  let activeCategory="search";
+  const renderPlanetCards=(category=activeCategory)=>{
+   activeCategory=category;
+   let items=window.nexoraWorldGetPlanets?.()||[];
+   if(category==="favorites")items=items.filter(p=>p.is_favorite);
+   if(category==="mine")items=items.filter(p=>p.is_owner);
+   if(category==="friends")items=items.filter(p=>Number(p.friends_online||0)>0);
+   if(category==="city")items=items.filter(p=>p.settings?.theme==="city"||/city|город/i.test(p.slug+" "+p.name));
+   if(category==="popular")items=items.slice().sort((a,b)=>Number(b.online||0)-Number(a.online||0));
+   if(category==="recent"){
+    let recent=[];try{recent=JSON.parse(localStorage.getItem("nexora_recent_planets")||"[]")}catch{}
+    const rank=new Map(recent.map((slug,index)=>[slug,index]));
+    items=items.slice().sort((a,b)=>(rank.get(a.slug)??999)-(rank.get(b.slug)??999));
+   }
+   const query=category==="search"?($("#nx-planet-search",sheet)?.value||"").trim().toLocaleLowerCase("ru"):"";
+   if(query)items=items.filter(p=>String(p.name||"").toLocaleLowerCase("ru").includes(query)||String(p.slug||"").toLowerCase().includes(query));
+   planetList.replaceChildren();
+   if(!items.length){planetList.append(make("p","nx-planet-sheet-empty",category==="favorites"?"Пока нет избранных планет.":category==="mine"?"У тебя пока нет собственных планет.":"Подходящих планет пока нет."));return}
+   items.slice(0,80).forEach(p=>{
+    const card=make("article","nx-planet-sheet-card"),info=make("div","nx-planet-sheet-card-info");
+    info.append(make("b","",p.name||p.slug),make("small","",Number(p.online||0)+" онлайн · "+Number(p.rooms||0)+" комнат"));
+    const actions=make("div","nx-planet-sheet-card-actions");
+    const fav=make("button","nx-planet-sheet-favorite",p.is_favorite?"★":"☆");fav.type="button";fav.title=p.is_favorite?"Убрать из избранного":"В избранное";
+    fav.addEventListener("click",async()=>{try{await window.nexoraWorldTogglePlanetFavorite?.(p.slug);renderPlanetCards(category)}catch(e){toast(e.message)}});
+    const go=make("button","btn","Войти");go.type="button";go.addEventListener("click",async()=>{try{await window.nexoraTravelTo?.(p.slug);closePlanetSheet(backdrop)}catch(e){toast(e.message)}});
+    actions.append(fav,go);card.append(info,actions);planetList.append(card);
+   });
+  };
+  categories.forEach(([key,icon,label],i)=>{
+   const b=make("button","",icon+"  "+label);b.type="button";b.dataset.category=key;if(i===6)b.classList.add("active");
+   b.addEventListener("click",()=>{cats.querySelectorAll("button").forEach(x=>x.classList.remove("active"));b.classList.add("active");const input=$("#nx-planet-search",sheet);if(input){input.placeholder=key==="search"?"Название планеты для поиска":"Планета: "+label;if(key==="search")input.focus()}renderPlanetCards(key)});
    cats.append(b);
   });
-  sheet.append(cats,tools);
+  sheet.append(cats,tools,planetList);
+  $("#nx-planet-search",sheet)?.addEventListener("input",()=>{if(activeCategory==="search")renderPlanetCards("search")});
+  renderPlanetCards("search");
   const close=make("button","btn","Закрыть");close.type="button";close.style.width="100%";close.style.marginTop="10px";close.addEventListener("click",()=>closePlanetSheet(backdrop));sheet.append(close);backdrop.append(sheet);document.body.append(backdrop);
-  const open=()=>openPlanetSheet(backdrop);
+  const open=()=>{renderPlanetCards(activeCategory);openPlanetSheet(backdrop)};
   planet.addEventListener("click",open);planet.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}});
   backdrop.addEventListener("click",e=>{if(e.target===backdrop)closePlanetSheet(backdrop)});
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&backdrop.classList.contains("open"))closePlanetSheet(backdrop)});

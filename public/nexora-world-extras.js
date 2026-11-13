@@ -15,10 +15,39 @@
     const form=box.querySelector("[data-planet-form]");
     form.addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(form),payload={name:String(f.get("name")||"").trim(),description:String(f.get("description")||""),theme:String(f.get("theme")||"sunset"),weather:String(f.get("weather")||"Ясно"),interior:String(f.get("interior")||"Центральный зал"),modules:f.getAll("modules")};const button=form.querySelector('[type="submit"]');button.disabled=true;button.textContent="Создаём…";try{await create(payload);box.hidden=true}catch(error){const note=document.createElement("p");note.className="nx-planet-module-note";note.textContent=error.message||"Не удалось создать планету.";form.append(note);button.disabled=false;button.textContent="Повторить"}});
   }
+  const planetObjectChoices=[
+    ["tree","Дерево"],["bench","Скамейка"],["fountain","Фонтан"],["lamp","Фонарь"],
+    ["flowerbed","Клумба"],["kiosk","Киоск"],["palm","Пальма"],["beach_chair","Шезлонг"],
+    ["club_table","Столик клуба"],["dj_booth","DJ-пульт"],["sofa","Диван"],["plant","Растение"]
+  ];
+  async function openPlanetDecorations(planet){
+    let objects=[];
+    try{const data=await window.NexoraAPI.request("/api/game/planets/"+encodeURIComponent(planet.slug)+"/objects");objects=data.objects||[]}
+    catch(error){showModal("Декорации планеты",'<p class="muted">'+safe(error.message)+'</p>');return}
+    const rows=objects.length?objects.map((o,index)=>'<div class="nx-planet-object-row"><span><b>'+safe(planetObjectChoices.find(x=>x[0]===o.code)?.[1]||o.code)+'</b><small class="muted">X '+Math.round(Number(o.x)*100)+'% · Y '+Math.round(Number(o.y)*100)+'% · масштаб '+Number(o.scale||1).toFixed(2)+'</small></span><button type="button" data-remove-object="'+index+'">Убрать</button></div>').join(""):'<p class="muted">На планете пока нет декораций.</p>';
+    const options=planetObjectChoices.map(([code,label])=>'<option value="'+code+'">'+label+'</option>').join("");
+    const box=showModal("Декорации: "+planet.name,
+      '<form data-object-form><label>Объект</label><select name="code">'+options+'</select><div class="nx-object-coordinates"><label>X, %<input name="x" type="number" min="0" max="100" value="50" required></label><label>Y, %<input name="y" type="number" min="0" max="100" value="82" required></label></div><div class="nx-object-coordinates"><label>Поворот<input name="rotation" type="number" min="-360" max="360" value="0"></label><label>Масштаб<input name="scale" type="number" min="0.5" max="2" step="0.05" value="1"></label></div><div class="nx-dialog-actions"><button type="submit" class="primary">Добавить объект</button></div></form><div class="nx-planet-object-list">'+rows+'</div><div class="nx-dialog-actions"><button type="button" data-close>Готово</button></div>');
+    const save=async next=>{
+      await window.NexoraAPI.request("/api/game/planets/"+encodeURIComponent(planet.slug)+"/objects",{method:"PUT",body:JSON.stringify({objects:next})});
+      if(window.nexoraWorldRefresh)await window.nexoraWorldRefresh();
+      await openPlanetDecorations(planet);
+    };
+    box.querySelector("[data-object-form]").addEventListener("submit",async event=>{
+      event.preventDefault();const form=new FormData(event.currentTarget);
+      const item={code:String(form.get("code")),x:Number(form.get("x"))/100,y:Number(form.get("y"))/100,rotation:Number(form.get("rotation")||0),scale:Number(form.get("scale")||1)};
+      try{await save(objects.concat([item]))}catch(error){const note=document.createElement("p");note.className="nx-planet-module-note";note.textContent=error.message;event.currentTarget.append(note)}
+    });
+    box.querySelectorAll("[data-remove-object]").forEach(button=>button.addEventListener("click",async()=>{
+      const next=objects.filter((_,index)=>index!==Number(button.dataset.removeObject));
+      try{await save(next)}catch(error){const note=document.createElement("p");note.className="nx-planet-module-note";note.textContent=error.message;box.append(note)}
+    }));
+  }
   async function openMyPlanets(){
     let planets=[];try{const d=await window.NexoraAPI.request("/api/game/planets");planets=(d.planets||[]).filter(p=>p.is_owner)}catch(e){showModal("Мои планеты",'<div class="nx-my-planets-empty"><div class="crown">♛</div><b>Не удалось загрузить планеты</b><p>'+safe(e.message)+'</p></div>');return}
-    const list=planets.length?planets.map(p=>'<div class="nx-my-planet-row"><span><b>'+safe(p.name)+'</b><small class="muted"> · '+Number(p.rooms||0)+' комнат · '+Number(p.online||0)+' онлайн</small></span><span>♛</span></div>').join(""):'<div class="nx-my-planets-empty"><div class="crown">♛</div><b>Здесь будут твои планеты</b><span class="muted">Создай собственную комнату и выбери её оформление.</span></div>';
+    const list=planets.length?planets.map(p=>'<div class="nx-my-planet-row"><span><b>'+safe(p.name)+'</b><small class="muted"> · '+Number(p.rooms||0)+' комнат · '+Number(p.online||0)+' онлайн</small></span><span><button type="button" data-decorate-planet="'+safe(p.slug)+'">Декор</button> ♛</span></div>').join(""):'<div class="nx-my-planets-empty"><div class="crown">♛</div><b>Здесь будут твои планеты</b><span class="muted">Создай собственную комнату и выбери её оформление.</span></div>';
     const box=showModal("Мои планеты",list+'<div class="nx-dialog-actions"><button type="button" data-close>Закрыть</button><button type="button" class="primary" data-buy>Купить планету</button></div>');
+    box.querySelectorAll("[data-decorate-planet]").forEach(button=>button.addEventListener("click",()=>{const planet=planets.find(p=>p.slug===button.dataset.decoratePlanet);if(planet)openPlanetDecorations(planet)}));
     box.querySelector("[data-buy]").addEventListener("click",()=>openPlanetModal(async payload=>{const d=await window.NexoraAPI.request("/api/game/planets",{method:"POST",body:JSON.stringify(payload)});if(window.nexoraWorldRefresh)await window.nexoraWorldRefresh();if(d.planet?.slug){const search=$("#nx-planet-search");if(search)search.value=d.planet.name;if(window.nexoraTravelTo)await window.nexoraTravelTo(d.planet.slug)}await openMyPlanets()}));
   }
   function installChat(){

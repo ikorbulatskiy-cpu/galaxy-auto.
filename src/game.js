@@ -139,9 +139,100 @@ router.delete("/characters/:characterId", requireSession, async (req, res, next)
 
 router.get("/planets", requireSession, async (req,res,next)=>{
  try{
-  const r=await pool.query("SELECT p.id,p.slug,p.name,p.description,p.access_type,p.ticket_price,p.settings,p.owner_user_id,COALESCE(u.username,'') AS owner_name,(p.owner_user_id=$1) AS is_owner,EXISTS(SELECT 1 FROM user_locations ul WHERE ul.user_id=$1 AND ul.planet_id=p.id) AS is_current,(SELECT COUNT(*)::int FROM rooms rm WHERE rm.planet_id=p.id AND rm.is_active=TRUE) AS rooms,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp JOIN rooms rm ON rm.id=rp.room_id WHERE rm.planet_id=p.id AND rp.connected_at>NOW()-INTERVAL '2 minutes' AND NOT EXISTS(SELECT 1 FROM galaxy_preferences gp WHERE gp.user_id=rp.user_id AND gp.invisible=TRUE)) AS online FROM planets p LEFT JOIN users u ON u.id=p.owner_user_id WHERE p.is_active=TRUE ORDER BY (p.slug='newbies-1') DESC,p.name",[req.user.id]);
+  const r=await pool.query("SELECT p.id,p.slug,p.name,p.description,p.access_type,p.ticket_price,p.settings,p.owner_user_id,COALESCE(u.username,'') AS owner_name,(p.owner_user_id=$1) AS is_owner,EXISTS(SELECT 1 FROM planet_favorites pf WHERE pf.user_id=$1 AND pf.planet_id=p.id) AS is_favorite,EXISTS(SELECT 1 FROM user_locations ul WHERE ul.user_id=$1 AND ul.planet_id=p.id) AS is_current,(SELECT COUNT(*)::int FROM rooms rm WHERE rm.planet_id=p.id AND rm.is_active=TRUE) AS rooms,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp JOIN rooms rm ON rm.id=rp.room_id WHERE rm.planet_id=p.id AND rp.connected_at>NOW()-INTERVAL '2 minutes' AND NOT EXISTS(SELECT 1 FROM galaxy_preferences gp WHERE gp.user_id=rp.user_id AND gp.invisible=TRUE)) AS online,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp JOIN rooms rm ON rm.id=rp.room_id JOIN friendships f ON f.status='accepted' AND ((f.requester_id=$1 AND f.addressee_id=rp.user_id) OR (f.addressee_id=$1 AND f.requester_id=rp.user_id)) WHERE rm.planet_id=p.id AND rp.connected_at>NOW()-INTERVAL '2 minutes') AS friends_online FROM planets p LEFT JOIN users u ON u.id=p.owner_user_id WHERE p.is_active=TRUE AND NOT EXISTS(SELECT 1 FROM planet_bans pb WHERE pb.planet_id=p.id AND pb.user_id=$1 AND (pb.expires_at IS NULL OR pb.expires_at>NOW())) AND (p.access_type<>'vip' OR p.owner_user_id=$1 OR EXISTS(SELECT 1 FROM planet_access pa WHERE pa.planet_id=p.id AND pa.user_id=$1 AND (pa.expires_at IS NULL OR pa.expires_at>NOW()) AND (COALESCE(p.settings->>'legacy_access_mode','')<>'private' OR pa.access_level='staff'))) ORDER BY (p.slug='newbies-1') DESC,p.name",[req.user.id]);
   res.json({planets:r.rows});
  }catch(e){next(e)}
+});
+
+const LEGACY_PLANET_OBJECT_CODES=["tree","bench","fountain","lamp","flowerbed","kiosk","palm","beach_chair","club_table","dj_booth","sofa","plant"];
+
+router.get("/planet-favorites",requireSession,async(req,res,next)=>{
+ try{
+  const r=await pool.query(`SELECT p.id,p.slug,p.name,p.description,p.access_type,p.settings,pf.created_at
+    FROM planet_favorites pf JOIN planets p ON p.id=pf.planet_id
+    WHERE pf.user_id=$1 AND p.is_active=TRUE
+      AND NOT EXISTS(SELECT 1 FROM planet_bans pb WHERE pb.planet_id=p.id AND pb.user_id=$1 AND (pb.expires_at IS NULL OR pb.expires_at>NOW()))
+      AND (p.access_type<>'vip' OR p.owner_user_id=$1 OR EXISTS(
+        SELECT 1 FROM planet_access pa WHERE pa.planet_id=p.id AND pa.user_id=$1
+          AND (pa.expires_at IS NULL OR pa.expires_at>NOW())
+          AND (COALESCE(p.settings->>'legacy_access_mode','')<>'private' OR pa.access_level='staff')))
+    ORDER BY pf.created_at DESC`,[req.user.id]);
+  res.json({favorites:r.rows});
+ }catch(e){next(e)}
+});
+router.post("/planet-favorites/:planetSlug",requireSession,async(req,res,next)=>{
+ const slug=String(req.params.planetSlug||"");
+ if(!/^[a-z0-9-]{2,48}$/.test(slug))return res.status(400).json({error:"Некорректная планета."});
+ try{
+  const r=await pool.query(`INSERT INTO planet_favorites(user_id,planet_id)
+    SELECT $1,p.id FROM planets p
+    WHERE p.slug=$2 AND p.is_active=TRUE
+      AND NOT EXISTS(SELECT 1 FROM planet_bans pb WHERE pb.planet_id=p.id AND pb.user_id=$1 AND (pb.expires_at IS NULL OR pb.expires_at>NOW()))
+      AND (p.access_type<>'vip' OR p.owner_user_id=$1 OR EXISTS(
+        SELECT 1 FROM planet_access pa WHERE pa.planet_id=p.id AND pa.user_id=$1
+          AND (pa.expires_at IS NULL OR pa.expires_at>NOW())
+          AND (COALESCE(p.settings->>'legacy_access_mode','')<>'private' OR pa.access_level='staff')))
+    ON CONFLICT(user_id,planet_id) DO NOTHING RETURNING planet_id`,[req.user.id,slug]);
+  if(!r.rowCount){
+   const exists=await pool.query(`SELECT 1 FROM planet_favorites pf JOIN planets p ON p.id=pf.planet_id
+    WHERE pf.user_id=$1 AND p.slug=$2 AND NOT EXISTS(SELECT 1 FROM planet_bans pb WHERE pb.planet_id=p.id AND pb.user_id=$1 AND (pb.expires_at IS NULL OR pb.expires_at>NOW()))
+      AND (p.access_type<>'vip' OR p.owner_user_id=$1 OR EXISTS(SELECT 1 FROM planet_access pa WHERE pa.planet_id=p.id AND pa.user_id=$1
+        AND (pa.expires_at IS NULL OR pa.expires_at>NOW()) AND (COALESCE(p.settings->>'legacy_access_mode','')<>'private' OR pa.access_level='staff')))`,[req.user.id,slug]);
+   if(!exists.rowCount)return res.status(404).json({error:"Планета не найдена или недоступна."});
+  }
+  res.json({success:true});
+ }catch(e){next(e)}
+});
+router.delete("/planet-favorites/:planetSlug",requireSession,async(req,res,next)=>{
+ try{await pool.query("DELETE FROM planet_favorites pf USING planets p WHERE pf.planet_id=p.id AND pf.user_id=$1 AND p.slug=$2",[req.user.id,req.params.planetSlug]);res.json({success:true})}
+ catch(e){next(e)}
+});
+
+router.get("/planets/:planetSlug/objects",requireSession,async(req,res,next)=>{
+ try{
+  const p=await pool.query(`SELECT p.id,p.access_type,p.owner_user_id,
+    (p.owner_user_id=$2 OR EXISTS(SELECT 1 FROM planet_access pa WHERE pa.planet_id=p.id AND pa.user_id=$2
+      AND (pa.expires_at IS NULL OR pa.expires_at>NOW())
+      AND (COALESCE(p.settings->>'legacy_access_mode','')<>'private' OR pa.access_level='staff'))) AS can_access,
+    EXISTS(SELECT 1 FROM planet_bans pb WHERE pb.planet_id=p.id AND pb.user_id=$2
+      AND (pb.expires_at IS NULL OR pb.expires_at>NOW())) AS is_banned
+    FROM planets p WHERE p.slug=$1 AND p.is_active=TRUE`,[req.params.planetSlug,req.user.id]);
+  if(!p.rowCount)return res.status(404).json({error:"Планета не найдена."});
+  if(p.rows[0].is_banned)return res.status(403).json({error:"Доступ к планете закрыт."});
+  if(p.rows[0].access_type==="vip"&&!p.rows[0].can_access)return res.status(403).json({error:"Нет доступа к этой планете."});
+  const objects=await pool.query("SELECT id,object_code AS code,x,y,rotation,scale,properties FROM planet_objects WHERE planet_id=$1 ORDER BY y,id",[p.rows[0].id]);
+  res.json({objects:objects.rows});
+ }catch(e){next(e)}
+});
+router.put("/planets/:planetSlug/objects",requireSession,async(req,res,next)=>{
+ const parsed=z.object({objects:z.array(z.object({
+  code:z.enum(LEGACY_PLANET_OBJECT_CODES),
+  x:z.number().min(0).max(1),y:z.number().min(0).max(1),
+  rotation:z.number().min(-360).max(360).default(0),
+  scale:z.number().min(0.5).max(2).default(1),
+  properties:z.record(z.unknown()).optional()
+ })).max(100)}).strict().safeParse(req.body);
+ if(!parsed.success)return res.status(400).json({error:"Проверьте объекты и их координаты. Лимит: 100 объектов."});
+ const client=await pool.connect();
+ try{
+  await client.query("BEGIN");
+  const p=await client.query("SELECT id,owner_user_id,EXISTS(SELECT 1 FROM planet_bans pb WHERE pb.planet_id=planets.id AND pb.user_id=$2 AND (pb.expires_at IS NULL OR pb.expires_at>NOW())) AS is_banned FROM planets WHERE slug=$1 AND is_active=TRUE FOR UPDATE",[req.params.planetSlug,req.user.id]);
+  if(!p.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Планета не найдена."})}
+  if(p.rows[0].is_banned){await client.query("ROLLBACK");return res.status(403).json({error:"Доступ к планете закрыт."})}
+  const staff=await client.query("SELECT 1 FROM planet_access WHERE planet_id=$1 AND user_id=$2 AND access_level='staff' AND (expires_at IS NULL OR expires_at>NOW())",[p.rows[0].id,req.user.id]);
+  if(String(p.rows[0].owner_user_id)!==String(req.user.id)&&!staff.rowCount&&!["admin","developer"].includes(req.user.role)){
+   await client.query("ROLLBACK");return res.status(403).json({error:"Нет прав редактировать декорации этой планеты."});
+  }
+  await client.query("DELETE FROM planet_objects WHERE planet_id=$1",[p.rows[0].id]);
+  for(const item of parsed.data.objects)await client.query(
+   "INSERT INTO planet_objects(planet_id,object_code,x,y,rotation,scale,properties) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb)",
+   [p.rows[0].id,item.code,item.x,item.y,item.rotation,item.scale,JSON.stringify(item.properties||{})]
+  );
+  await client.query("INSERT INTO admin_logs(admin_user_id,action,target_type,target_id,details) VALUES($1,'planet_objects_updated','planet',$2,$3::jsonb)",
+   [req.user.id,p.rows[0].id,JSON.stringify({count:parsed.data.objects.length})]);
+  await client.query("COMMIT");
+  res.json({success:true,count:parsed.data.objects.length});
+ }catch(e){await client.query("ROLLBACK");next(e)}finally{client.release()}
 });
 
 router.post("/planets", requireSession, async (req,res,next)=>{

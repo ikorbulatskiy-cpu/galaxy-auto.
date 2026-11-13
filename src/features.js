@@ -28,14 +28,35 @@ router.get("/recipients",async(req,res,next)=>{
  }catch(e){next(e)}
 });
 router.get("/catalog", async (_req,res,next) => {
-  try { const r=await pool.query("SELECT id,slug,name,description,category,rarity,price_coins,price_diamonds,asset_url FROM avatar_items WHERE is_active=TRUE ORDER BY category,price_coins"); res.json({items:r.rows}); }
+  try { const r=await pool.query("SELECT id,slug,name,description,category,rarity,price_coins,price_diamonds,asset_url,metadata FROM avatar_items WHERE is_active=TRUE ORDER BY category,price_coins"); res.json({items:r.rows}); }
   catch(e){next(e)}
 });
 router.get("/inventory", async (req,res,next) => {
   try {
-    const r=await pool.query(`SELECT ci.id,ci.character_id,ci.equipped,ci.acquired_at,i.id AS item_id,i.slug,i.name,i.category,i.rarity,i.asset_url
+    const r=await pool.query(`SELECT ci.id,ci.character_id,ci.equipped,ci.acquired_at,i.id AS item_id,i.slug,i.name,i.category,i.rarity,i.asset_url,
+        COALESCE(li.quantity,1)::int AS quantity,(i.slug LIKE 'legacy-shop-%') AS legacy,TRUE AS equippable
       FROM character_inventory ci JOIN avatar_items i ON i.id=ci.item_id JOIN characters c ON c.id=ci.character_id
-      WHERE c.user_id=$1 ORDER BY ci.acquired_at DESC`,[req.user.id]);
+      LEFT JOIN legacy_social_inventory li ON li.user_id=c.user_id AND i.slug='legacy-shop-'||SUBSTRING(md5(li.item_code),1,20)
+      WHERE c.user_id=$1
+      UNION ALL
+      SELECT md5('nexora-legacy-inventory-row:'||li.legacy_account_id::text||':'||li.item_code)::uuid AS id,
+        cm.character_id,FALSE AS equipped,li.created_at AS acquired_at,
+        md5('nexora-legacy-inventory-item:'||li.legacy_account_id::text||':'||li.item_code)::uuid AS item_id,
+        'legacy-'||SUBSTRING(md5(li.item_code),1,16) AS slug,li.item_code AS name,
+        CASE
+          WHEN li.item_code ~* 'hair' THEN 'hair'
+          WHEN li.item_code ~* 'shoe' THEN 'shoes'
+          WHEN li.item_code ~* 'outfit|clothes' THEN 'outfit'
+          WHEN li.item_code ~* 'head|hat|cap' THEN 'head'
+          WHEN li.item_code ~* 'body' THEN 'body'
+          ELSE 'accessory'
+        END AS category,
+        'common' AS rarity,NULL::text AS asset_url,li.quantity,TRUE AS legacy,FALSE AS equippable
+      FROM legacy_social_inventory li
+      JOIN legacy_social_character_map cm ON cm.legacy_account_id=li.legacy_account_id
+      WHERE li.user_id=$1
+        AND NOT EXISTS (SELECT 1 FROM avatar_items ai WHERE ai.slug='legacy-shop-'||SUBSTRING(md5(li.item_code),1,20))
+      ORDER BY acquired_at DESC`,[req.user.id]);
     res.json({items:r.rows});
   } catch(e){next(e)}
 });
