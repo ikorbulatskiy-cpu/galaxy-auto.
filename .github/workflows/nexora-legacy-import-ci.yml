@@ -103,6 +103,18 @@ jobs:
               assert.equal(roomMessages.rows[0].count, 1, "planet chat history must be retained");
               const gifts = await pool.query("SELECT COUNT(*)::int AS count FROM gifts g JOIN users u ON u.id=g.receiver_user_id WHERE u.legacy_social_account_id=900002");
               assert.equal(gifts.rows[0].count, 1, "gift history must be retained");
+              const objects = await pool.query("SELECT COUNT(*)::int AS count FROM planet_objects o JOIN planets p ON p.id=o.planet_id WHERE p.slug='custom-90001' AND o.object_code='tree'");
+              assert.equal(objects.rows[0].count, 1, "custom planet decorations must be retained");
+              const favorites = await pool.query("SELECT COUNT(*)::int AS count FROM planet_favorites pf JOIN users u ON u.id=pf.user_id JOIN planets p ON p.id=pf.planet_id WHERE u.legacy_social_account_id=900001 AND p.slug='custom-90001'");
+              assert.equal(favorites.rows[0].count, 1, "planet favorites must be retained");
+              const visits = await pool.query("SELECT COUNT(*)::int AS count FROM planet_visits v JOIN users u ON u.id=v.user_id WHERE u.legacy_social_account_id=900001");
+              assert.equal(visits.rows[0].count, 1, "planet visit history must be retained");
+              const reports = await pool.query("SELECT COUNT(*)::int AS count FROM reports r JOIN users u ON u.id=r.reporter_id WHERE u.legacy_social_account_id=900001");
+              assert.equal(reports.rows[0].count, 1, "player reports must be retained");
+              const catalog = await pool.query("SELECT COUNT(*)::int AS count FROM avatar_items WHERE name='Старая корона' AND is_active=TRUE");
+              assert.equal(catalog.rows[0].count, 1, "legacy shop catalog must be retained");
+              const purchases = await pool.query("SELECT COUNT(*)::int AS count FROM purchases p JOIN users u ON u.id=p.user_id WHERE u.legacy_social_account_id=900001");
+              assert.equal(purchases.rows[0].count, 1, "purchase history must be retained");
               const oldRows = await pool.query("SELECT COUNT(*)::int AS count FROM nexora_social_world.accounts");
               assert.equal(oldRows.rows[0].count, 2, "the original account table must remain intact");
               console.log("Legacy import data assertions passed.");
@@ -149,6 +161,28 @@ jobs:
             const profileData = await profile.json();
             assert.equal(Number(profileData.profile.coins), 1234);
             assert.equal(profileData.profile.planet_slug, "custom-90001");
+
+            const ownerPlanetsResponse = await fetch(base + "/api/game/planets", { headers: { cookie: ownerCookie } });
+            const ownerPlanets = await ownerPlanetsResponse.json();
+            assert.ok(ownerPlanets.planets.some(planet => planet.slug === "custom-90001" && planet.is_favorite), "saved planet favorite must load");
+            const favoritesResponse = await fetch(base + "/api/game/planet-favorites", { headers: { cookie: ownerCookie } });
+            const favoritesData = await favoritesResponse.json();
+            assert.ok(favoritesData.favorites.some(planet => planet.slug === "custom-90001"));
+            const objectsResponse = await fetch(base + "/api/game/planets/custom-90001/objects", { headers: { cookie: ownerCookie } });
+            const objectsData = await objectsResponse.json();
+            assert.ok(objectsData.objects.some(object => object.code === "tree"), "custom planet decorations must load");
+            const editObjects = await fetch(base + "/api/game/planets/custom-90001/objects", {
+              method: "PUT", headers: { "content-type": "application/json", cookie: ownerCookie },
+              body: JSON.stringify({ objects: [{ code: "bench", x: 0.25, y: 0.84, rotation: 0, scale: 1 }] })
+            });
+            assert.equal(editObjects.status, 200, "planet owner must be able to edit decorations");
+            const inventoryResponse = await fetch(base + "/api/features/inventory", { headers: { cookie: ownerCookie } });
+            const inventoryData = await inventoryResponse.json();
+            const oldCrown = inventoryData.items.find(item => item.name === "legacy_crown");
+            assert.ok(oldCrown && Number(oldCrown.quantity) === 3 && oldCrown.equippable, "old shop inventory and quantity must remain usable");
+            const reportResponse = await fetch(base + "/api/features/admin/reports", { headers: { cookie: ownerCookie } });
+            const reportData = await reportResponse.json();
+            assert.ok(reportData.reports.some(report => report.target_username === "LegacyStaff"), "old player reports must appear in moderation");
 
             const staffCookie = await login("legacy5678");
             const planetsResponse = await fetch(base + "/api/game/planets", { headers: { cookie: staffCookie } });
