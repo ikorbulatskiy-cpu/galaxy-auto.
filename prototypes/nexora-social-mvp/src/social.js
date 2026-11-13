@@ -23,7 +23,8 @@ function createSocialRouter({ pool, auth, io }) {
     const q = clean(req.query.q, 18);
     if (q.length < 2) return res.json({ users: [] });
     const result = await pool.query(
-      `SELECT a.id,a.nickname,c.avatar,c.planet,c.profile_status,c.authority,c.authority_title,c.aura_enabled,c.level,c.experience
+      `SELECT a.id,a.nickname,c.avatar,c.planet,c.profile_status,c.authority,c.authority_title,c.aura_enabled,c.level,c.experience,
+              EXISTS(SELECT 1 FROM nexora_social_world.friends f WHERE f.account_id=$1 AND f.friend_account_id=a.id) AS is_friend
          FROM nexora_social_world.accounts a
          LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
         WHERE a.id<>$1 AND a.nickname ILIKE $2
@@ -35,7 +36,7 @@ function createSocialRouter({ pool, auth, io }) {
       ...row,id:String(row.id),online:Boolean(io.sockets.adapter.rooms.get("account:"+row.id)?.size),
       authority:Number(row.authority||0),level:Number(row.level||1),
       title:({NOVICE:"Новичок",BEDA:"Беда",PAPA:"Папа",ANGEL:"Ангел",CREATOR:"Создатель"})[row.authority_title]||"Новичок",
-      auraEnabled:Boolean(row.aura_enabled)
+      auraEnabled:Boolean(row.aura_enabled),isFriend:Boolean(row.is_friend)
     }));
     res.json({ users });
   }));
