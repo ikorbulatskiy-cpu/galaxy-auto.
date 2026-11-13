@@ -34,7 +34,8 @@ function createSocialRouter({ pool, auth, io }) {
       "SELECT a.id,a.nickname,c.planet,c.profile_status FROM nexora_social_world.friends f JOIN nexora_social_world.accounts a ON a.id=f.friend_account_id LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id WHERE f.account_id=$1 ORDER BY a.nickname",
       [req.account.id]
     );
-    res.json({ friends: result.rows });
+    const friends = result.rows.map(row => ({ ...row, online: Boolean(io.sockets.adapter.rooms.get("account:" + row.id)?.size) }));
+    res.json({ friends });
   }));
 
   router.get("/requests", asyncRoute(async (req, res) => {
@@ -81,6 +82,12 @@ function createSocialRouter({ pool, auth, io }) {
       res.json({ ok: true });
     } catch (error) { await client.query("ROLLBACK"); throw error; }
     finally { client.release(); }
+  }));
+
+  router.delete("/requests/:id", asyncRoute(async (req, res) => {
+    const result = await pool.query("UPDATE nexora_social_world.friend_requests SET status='cancelled',updated_at=NOW() WHERE id=$1 AND from_account_id=$2 AND status='pending'", [req.params.id,req.account.id]);
+    if (!result.rowCount) return res.status(404).json({ error: "Заявка не найдена." });
+    res.json({ ok: true });
   }));
 
   router.post("/requests/:id/decline", asyncRoute(async (req, res) => {
