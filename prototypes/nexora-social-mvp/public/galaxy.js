@@ -40,7 +40,8 @@
   }
   async function loadPlanets(){
     const select=$("#planet-select");select.replaceChildren();
-    let builtInFavorites=[];try{builtInFavorites=JSON.parse(localStorage.getItem("nexora.favoritePlanets")||"[]")}catch{}\n    planetCatalog=basePlanets.map(p=>({...p,favorite:builtInFavorites.includes(p.key)}));
+    let builtInFavorites=[];try{builtInFavorites=JSON.parse(localStorage.getItem("nexora.favoritePlanets")||"[]")}catch{}
+    planetCatalog=basePlanets.map(p=>({...p,favorite:builtInFavorites.includes(p.key)}));
     try{const d=await api("/api/planets");(d.worlds||[]).forEach(w=>{const base=planetCatalog.find(p=>p.key===w.key);if(base)base.onlineCount=Number(w.onlineCount||0)});(d.planets||[]).forEach((p,i)=>planetCatalog.push({key:"custom-"+p.id,id:String(p.id),name:p.name,description:p.description||"Планета сообщества NEXORA.",theme:p.theme||"nebula",color:p.accent_color||"#8068d8",light:"#e1d7ff",glow:p.accent_color||"#8068d8",onlineCount:Number(p.onlineCount||0),memberCount:Number(p.memberCount||0),totalVisits:Number(p.total_visits||0),favorite:Boolean(p.favorite),x:[18,43,72,86,34,61][i%6],y:[28,77,63,48,20,84][i%6]}))}catch(error){console.warn("Planet catalog:",error)}
     planetCatalog.forEach(p=>{const o=document.createElement("option");o.value=p.key;o.textContent=p.name;select.append(o)});
     select.value=roomPlanet;
