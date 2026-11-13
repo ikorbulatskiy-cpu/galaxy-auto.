@@ -30,7 +30,6 @@
   <nav class="actionbar">
     <button id="my-character" type="button">♙ Мой персонаж</button>
     <button id="move-mode" type="button">⇢ Переместиться</button>
-    <button id="emote" type="button">☺ Действия / эмоции</button>
     <button id="planet-list" type="button">✦ Планеты</button>
   </nav>
 </main>
@@ -39,7 +38,15 @@
   <div class="context-title" id="context-title">Персонаж</div>
   <button id="context-info" data-action="info" type="button">Инфо</button>
   <button id="context-move" data-action="move" type="button">Переместиться</button>
-  <button id="context-wave" data-action="wave" type="button">Действия / Эмоции · 👋</button>
+  <button id="context-actions-toggle" data-action="actions" type="button">✦ Действие <span class="context-chevron">›</span></button>
+  <div id="context-actions" class="context-actions" hidden>
+    <button type="button" data-action-choice="wave">👋 Помахать</button>
+    <button type="button" data-action-choice="smile">😊 Улыбнуться</button>
+    <button type="button" data-action-choice="hug">🤗 Обнять</button>
+    <button type="button" data-action-choice="kiss">💋 Воздушный поцелуй</button>
+    <button type="button" data-action-choice="dance">💃 Танцевать</button>
+    <button type="button" data-action-choice="flower">🌹 Подарить цветок</button>
+  </div>
   <button data-action="rejoin" type="button">Перезалететь</button>
 </div>
 <div id="profile-modal" class="modal" hidden><section class="modal-card"><header><b id="profile-title">Информация персонажа</b><button data-close="profile" type="button">×</button></header><p id="profile-content"></p></section></div>
