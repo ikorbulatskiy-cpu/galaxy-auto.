@@ -92,7 +92,6 @@
 
       <aside id="room-players-panel" class="room-flyout room-players-panel hidden" aria-label="Игроки комнаты">
         <div class="room-flyout-head"><div><small>ROOM MEMBERS</small><strong>Игроки комнаты <span id="room-player-count">0</span></strong></div><button type="button" data-room-close="players" aria-label="Закрыть">×</button></div>
-        <label class="room-player-search"><span>⌕</span><input id="room-player-search" type="search" maxlength="18" placeholder="Найти игрока"></label>
         <div id="room-player-list" class="room-player-list"></div>
       </aside>
 
@@ -169,6 +168,10 @@
           <button id="public-profile-friend" type="button">Добавить в друзья</button>
           <button id="public-profile-message" type="button">Написать</button>
         </div>
+        <section id="public-profile-owner-tools" class="public-profile-owner-tools hidden" aria-label="Инструменты главного разработчика">
+          <button id="public-profile-owner-toggle" type="button">🛠️ Инструменты главного разработчика</button>
+          <div id="public-profile-owner-content" class="public-profile-owner-content hidden"></div>
+        </section>
       </aside>
       <aside id="profile-editor" class="profile-editor hidden" aria-label="Мой профиль">
         <div class="profile-editor-head"><div><span class="profile-kicker">NEXORA ID</span><strong>Мой профиль</strong></div><button id="profile-editor-close" type="button" aria-label="Закрыть">×</button></div>
