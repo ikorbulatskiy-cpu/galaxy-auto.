@@ -2348,10 +2348,7 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 .room-search-title button{width:31px;height:31px;display:grid;place-items:center;border:1px solid rgba(174,163,255,.25);border-radius:9px;background:rgba(143,128,245,.13);color:#fff;font-size:22px;line-height:1}
 .room-global-search:not(.hidden){display:grid}
 
+
 /* Galaxy runs as an in-app world view, without leaving the signed-in NEXORA profile. */
 .integrated-galaxy-view{position:fixed;inset:0;z-index:120;overflow:hidden;background:#080e1c}
-.integrated-galaxy-frame{display:block;width:100%;height:100%;border:0;background:#080e1c}
 #integrated-galaxy-frame{display:block;width:100%;height:100%;border:0;background:#080e1c}
-.integrated-galaxy-back{position:absolute;z-index:5;top:max(70px,calc(env(safe-area-inset-top) + 66px));left:12px;min-height:36px;padding:7px 12px;border:1px solid rgba(165,190,255,.42);border-radius:11px;background:rgba(12,20,42,.88);color:#f3f6ff;font-size:12px;font-weight:750;backdrop-filter:blur(12px);box-shadow:0 6px 20px #0007}
-.integrated-galaxy-back:active{transform:scale(.98)}
-@media(max-width:600px){.integrated-galaxy-back{top:calc(env(safe-area-inset-top) + 66px);left:8px;padding:7px 10px;font-size:11px}}
