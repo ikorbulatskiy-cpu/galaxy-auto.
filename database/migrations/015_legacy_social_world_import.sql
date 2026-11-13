@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS planet_bans (
 );
 
 ALTER TABLE avatar_items ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS status_message VARCHAR(80) NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS planet_objects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -173,12 +174,13 @@ BEGIN
   $q$;
 
   EXECUTE $q$
-    INSERT INTO profiles(user_id,display_name,bio)
-    SELECT u.id,LEFT(COALESCE(c.nickname,a.nickname),32),LEFT(COALESCE(c.profile_bio,''),500)
+    INSERT INTO profiles(user_id,display_name,bio,status_message)
+    SELECT u.id,LEFT(COALESCE(c.nickname,a.nickname),32),LEFT(COALESCE(c.profile_bio,''),500),LEFT(COALESCE(c.profile_status,''),80)
     FROM nexora_social_world.accounts a
     JOIN users u ON u.legacy_social_account_id=a.id
     LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
-    ON CONFLICT (user_id) DO NOTHING
+    ON CONFLICT (user_id) DO UPDATE SET
+      display_name=EXCLUDED.display_name,bio=EXCLUDED.bio,status_message=EXCLUDED.status_message,updated_at=NOW()
   $q$;
 
   EXECUTE $q$
@@ -188,7 +190,9 @@ BEGIN
     FROM nexora_social_world.accounts a
     JOIN users u ON u.legacy_social_account_id=a.id
     LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
-    ON CONFLICT (user_id) DO NOTHING
+    ON CONFLICT (user_id) DO UPDATE SET
+      authority=EXCLUDED.authority,reputation_score=EXCLUDED.reputation_score,
+      experience=EXCLUDED.experience,level=EXCLUDED.level,updated_at=NOW()
   $q$;
 
   EXECUTE $q$
