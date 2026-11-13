@@ -209,7 +209,7 @@ router.put("/planets/:planetSlug/objects",requireSession,async(req,res,next)=>{
   code:z.enum(LEGACY_PLANET_OBJECT_CODES),
   x:z.number().min(0).max(1),y:z.number().min(0).max(1),
   rotation:z.number().min(-360).max(360).default(0),
-  scale:z.number().min(0.45).max(1.6).default(1),
+  scale:z.number().min(0.5).max(2).default(1),
   properties:z.record(z.unknown()).optional()
  }).strict()).max(100)}).strict().safeParse(req.body);
  if(!parsed.success)return res.status(400).json({error:"Проверьте объекты и их координаты. Лимит: 100 объектов."});
