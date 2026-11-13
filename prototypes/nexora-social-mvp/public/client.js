@@ -513,18 +513,16 @@
     ctx.save();ctx.strokeStyle="rgba(220,225,255,.24)";ctx.lineWidth=1.5;ctx.setLineDash([7,6]);
     ctx.beginPath();ctx.moveTo(w*.025,h*.615);ctx.lineTo(w*.975,h*.615);ctx.lineTo(w*.992,h*.91);ctx.lineTo(w*.008,h*.91);ctx.closePath();ctx.stroke();
     ctx.setLineDash([]);ctx.restore();
+    // All world props are rendered first. Avatars are always on the foreground layer,
+    // so trees, lamps, benches and custom decorations can never cover a character.
     const props = window.NexoraWorldObjects?.get(state.planet,w,h,Date.now()) || [];
     const customProps=String(state.planet).startsWith("custom-")?state.customPlanetObjects.map(object=>({depth:Number(object.y),custom:object})):[];
-    const ordered = [
-      ...[...state.players.values()].map((player)=>({kind:"player",player,depth:player.renderY??player.y??.82})),
-      ...props.map((object)=>({kind:"object",object,depth:object.depth})),
-      ...customProps.map(item=>({kind:"custom-object",object:item.custom,depth:item.depth}))
-    ].sort((a,b)=>a.depth-b.depth);
+    props.slice().sort((a,b)=>(a.depth??0)-(b.depth??0)).forEach(object=>window.NexoraWorldObjects?.render(ctx,[object]));
+    customProps.sort((a,b)=>a.depth-b.depth).forEach(item=>drawCustomPlanetObject(ctx,item.custom,w,h));
+
     const now = performance.now();
-    ordered.forEach((item) => {
-      if(item.kind==="object"){window.NexoraWorldObjects?.render(ctx,[item.object]);return;}
-      if(item.kind==="custom-object"){drawCustomPlanetObject(ctx,item.object,w,h);return;}
-      const player=item.player;
+    const orderedPlayers=[...state.players.values()].sort((a,b)=>(a.renderY??a.y??.82)-(b.renderY??b.y??.82));
+    orderedPlayers.forEach((player) => {
       advancePlayerMovement(player, now);
       const drawX = (player.renderX ?? player.x) * w;
       const depth = Math.max(.60,Math.min(.86,player.renderY ?? player.y ?? .82));
@@ -536,22 +534,21 @@
         const bubbleText=player.bubble.text;ctx.font="11px sans-serif";
         const bubbleWidth=Math.min(w-24,Math.max(70,ctx.measureText(bubbleText).width+20));
         const bubbleX=Math.max(8,Math.min(w-bubbleWidth-8,drawX-bubbleWidth/2));
-        const bubbleY=y-91*scale;ctx.fillStyle="rgba(255,255,255,.94)";
-        roundRect(ctx,bubbleX,bubbleY,bubbleWidth,27,10);ctx.fill();
-        ctx.fillStyle="#1a2146";ctx.textAlign="center";ctx.fillText(bubbleText,bubbleX+bubbleWidth/2,bubbleY+17,bubbleWidth-12);ctx.textAlign="start";
+        const bubbleY=Math.max(8,y-119*scale);ctx.fillStyle="rgba(255,255,255,.96)";
+        roundRect(ctx,bubbleX,bubbleY,bubbleWidth,29,10);ctx.fill();
+        ctx.fillStyle="#1a2146";ctx.textAlign="center";ctx.fillText(bubbleText,bubbleX+bubbleWidth/2,bubbleY+18,bubbleWidth-12);ctx.textAlign="start";
       }
       if(String(state.selected)===String(player.id)){
         ctx.save();ctx.strokeStyle="#e7dcff";ctx.lineWidth=2;ctx.shadowColor="#a58cff";ctx.shadowBlur=16;
         ctx.beginPath();ctx.ellipse(drawX,y+2,25*scale,46*scale,0,0,Math.PI*2);ctx.stroke();ctx.restore();
       }
-      const auraCenterY=y-28*scale; // sprite origin is at the feet; aura is centered on the body.
+      const auraCenterY=y-28*scale;
       drawAura(ctx,drawX,auraCenterY,scale,player.auraType,player.auraEnabled,state.auraQuality);
       const spriteDirection=player.direction||"down";
       const spriteDrawn=window.NexoraSpriteEngine?.draw(ctx,drawX,y,scale,player.avatar,spriteDirection,Boolean(player.moving),emotion);
       if(!spriteDrawn)drawAvatar(ctx,drawX,y,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
       drawAuraHalo(ctx,drawX,auraCenterY,scale,player.auraType,player.auraEnabled,state.auraQuality);
       if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20*scale,y-58*scale-Math.sin(Date.now()/120)*3);ctx.restore();}
-      // Nickname anchored below the feet and centered on the avatar position.
       ctx.save();ctx.textAlign="center";ctx.font=(isMe?"750 ":"650 ")+Math.max(10,11*scale)+"px Inter,sans-serif";
       ctx.fillStyle=isMe?"#fff1b8":"#fff";ctx.shadowColor="#080b20";ctx.shadowBlur=7;
       ctx.lineWidth=3;ctx.strokeStyle="rgba(5,9,27,.82)";ctx.strokeText(player.nickname,drawX,y+53*scale,136);ctx.fillText(player.nickname,drawX,y+53*scale,136);ctx.restore();
@@ -834,6 +831,9 @@
     else if (action === "planets") $("#planets-button").click();
     else if (action === "developer") $("#developer-open").click();
     else if (action === "exit") $("#exit-room").click();
+    else if (action === "emotions") toggleRoomFlyout("emotions");
+    else if (action === "players") toggleRoomFlyout("players");
+    else if (action === "events") toggleRoomFlyout("events");
     else if (action === "aura-quality") {
       state.auraQuality = state.auraQuality === "high" ? "low" : "high";
       localStorage.setItem("nexora-aura-quality", state.auraQuality);
@@ -865,12 +865,65 @@
     $("#gift-options").classList.add("hidden");
     $("#report-user-button").classList.toggle("hidden",ownProfile);
     renderRoomPlayers();
+    renderDeveloperPlayerActions(player, ownProfile);
   }
+
+  async function renderDeveloperPlayerActions(player, ownProfile) {
+    let panel=$("#developer-player-actions");
+    if(!panel){panel=document.createElement("section");panel.id="developer-player-actions";panel.className="developer-player-actions hidden";panel.setAttribute("aria-label","Действия разработчика");$("#profile-menu").append(panel);}
+    panel.replaceChildren();
+    const canAssign=developerPermissions.includes("authority.assign");
+    const canRemove=developerPermissions.includes("authority.remove");
+    if(ownProfile||(!canAssign&&!canRemove)){panel.classList.add("hidden");return;}
+    panel.classList.remove("hidden");
+    const heading=document.createElement("strong");heading.textContent="Управление игроком";panel.append(heading);
+    try{
+      const data=await authorityApi("/");
+      if(String(state.selected)!==String(player.id))return;
+      const select=document.createElement("select");
+      data.titles.filter(item=>item.title_key!=="NOVICE").forEach(item=>{const option=document.createElement("option");option.value=item.title_key;option.textContent=item.title_label;select.append(option);});
+      const currentKey=player.authorityTitle||player.authority_title||"NOVICE";
+      if([...select.options].some(option=>option.value===currentKey))select.value=currentKey;
+      const rankLine=document.createElement("small");rankLine.textContent="Сейчас: "+(player.title||"Новичок")+" · "+(player.auraEnabled?"Аура включена":"Аура выключена");panel.append(rankLine);
+      if(canAssign){
+        const assign=document.createElement("button");assign.type="button";assign.textContent="Выдать звание";
+        assign.addEventListener("click",async()=>{assign.disabled=true;try{
+          const response=await fetch("/api/authority/admin/assign",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({accountId:player.id,titleKey:select.value,auraEnabled:true})});
+          const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||"Не удалось выдать звание.");
+          Object.assign(player,{authorityTitle:result.titleKey,auraType:result.auraType||player.auraType,auraEnabled:Boolean(result.auraEnabled),title:data.titles.find(item=>item.title_key===result.titleKey)?.title_label||"Новичок"});
+          $("#profile-rank").textContent=player.title+" · Авторитет "+(player.authority??0);$("#profile-aura").textContent=player.auraEnabled?"Аура активна":"Аура выключена";
+          showToast("Звание выдано игроку "+player.nickname);renderDeveloperPlayerActions(player,false);
+        }catch(error){showToast(error.message);}finally{assign.disabled=false;}});
+        panel.append(select,assign);
+        const aura=document.createElement("button");aura.type="button";aura.textContent=player.auraEnabled?"Выключить ауру":"Включить ауру";
+        aura.disabled=currentKey==="NOVICE";
+        aura.addEventListener("click",async()=>{aura.disabled=true;try{
+          const response=await fetch("/api/authority/admin/assign",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({accountId:player.id,titleKey:currentKey,auraEnabled:!player.auraEnabled})});
+          const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||"Не удалось изменить ауру.");
+          player.auraEnabled=Boolean(result.auraEnabled);$("#profile-aura").textContent=player.auraEnabled?"Аура активна":"Аура выключена";showToast(player.auraEnabled?"Аура включена":"Аура выключена");renderDeveloperPlayerActions(player,false);
+        }catch(error){showToast(error.message);}finally{aura.disabled=false;}});
+        panel.append(aura);
+      }
+      if(canRemove){
+        const remove=document.createElement("button");remove.type="button";remove.textContent="Снять звание · Новичок";
+        remove.disabled=currentKey==="NOVICE";
+        remove.addEventListener("click",async()=>{remove.disabled=true;try{
+          const response=await fetch("/api/authority/admin/remove/"+encodeURIComponent(player.id),{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({})});
+          const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||"Не удалось снять звание.");
+          Object.assign(player,{authorityTitle:"NOVICE",authority_title:"NOVICE",auraEnabled:false,aura_enabled:false,auraType:null,title:"Новичок"});
+          $("#profile-rank").textContent="Новичок · Авторитет 0";$("#profile-aura").textContent="Аура выключена";showToast("Звание снято. Игрок возвращён в Новички.");renderDeveloperPlayerActions(player,false);
+        }catch(error){showToast(error.message);}finally{remove.disabled=false;}});
+        panel.append(remove);
+      }
+    }catch(error){panel.classList.add("hidden");showToast(error.message);}
+  }
+
   function closeProfile() {
     state.selected = null;
     $("#profile-menu").classList.add("hidden");
     $("#character-action-list").classList.add("hidden");
     $("#my-profile-context").classList.add("hidden");
+    $("#developer-player-actions")?.classList.add("hidden");
     ["#dm-open-button","#whisper-button","#gift-button","#friend-button","#report-user-button"].forEach(selector => $(selector).classList.remove("hidden"));
     renderRoomPlayers();
   }
