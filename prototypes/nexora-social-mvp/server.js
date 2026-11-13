@@ -11,6 +11,7 @@ const { createDeveloperRouter } = require("./src/developer");
 const { createAuthorityRouter } = require("./src/authority");
 const { createPlanetsRouter } = require("./src/planets");
 const { createEconomyRouter } = require("./src/economy");
+const { normalizeAvatar } = require("./src/avatar");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -88,23 +89,6 @@ app.use((error, _req, res, _next) => {
 
 function cleanText(value, maxLength) {
   return String(value ?? "").replace(/[<>\u0000-\u001f]/g, "").trim().slice(0, maxLength);
-}
-function normalizeAvatar(input) {
-  const allowed = {
-    gender: ["male", "female"], skin: ["#f4c7a1", "#c9875b", "#75452f"],
-    hair: ["short", "long", "spiky"], suit: ["#6d7cff", "#ef6c9b", "#35bca5"],
-    hairColor: ["#30233d", "#6b432c", "#e5c07b", "#e9eef8", "#bd5de5"],
-    shoes: ["sneakers", "boots", "heels"], accessory: ["none", "glasses", "headphones", "crown"]
-  };
-  return {
-    gender: allowed.gender.includes(input?.gender) ? input.gender : "male",
-    skin: allowed.skin.includes(input?.skin) ? input.skin : allowed.skin[0],
-    hair: allowed.hair.includes(input?.hair) ? input.hair : "short",
-    suit: allowed.suit.includes(input?.suit) ? input.suit : allowed.suit[0],
-    hairColor: allowed.hairColor.includes(input?.hairColor) ? input.hairColor : allowed.hairColor[0],
-    shoes: allowed.shoes.includes(input?.shoes) ? input.shoes : "sneakers",
-    accessory: allowed.accessory.includes(input?.accessory) ? input.accessory : "none"
-  };
 }
 function publicPlayer(player) {
   return {
