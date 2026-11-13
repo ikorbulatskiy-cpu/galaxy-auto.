@@ -1,0 +1,7 @@
+/* Planet owner crown and compact create button. */
+.nx-create-planet-button{white-space:nowrap;font-size:11px;font-weight:800;border-color:#d4b56c;color:#ffe8a7;background:linear-gradient(#72552b,#3d2c18)}
+.nx-avatar-card.me:after{content:none!important}
+.nx-avatar-card.planet-owner:after{content:"👑";position:absolute;z-index:8;top:-20px;left:50%;transform:translateX(-50%);font-size:19px;line-height:1;text-shadow:0 0 7px #ffd86b;pointer-events:none}
+.nx-avatar-card.planet-owner .nx-avatar-name{border-color:#ffd46c;color:#ffe3a2;box-shadow:0 0 8px #ffd46b55}
+.nx-scene-meta{max-width:min(520px,calc(100% - 32px));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:700px){.nx-create-planet-button{font-size:9px;padding:5px 6px;flex:0 0 auto}.nx-planet-tools{flex-wrap:wrap}.nx-planet-select{flex:1 1 42%;min-width:120px}.nx-room-select{flex:1 1 25%}.nx-scene-meta{max-width:calc(100% - 20px);font-size:9px}}
