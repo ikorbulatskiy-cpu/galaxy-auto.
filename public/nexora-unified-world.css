@@ -18,7 +18,7 @@
 #dashboard>#tab-world .nx-eventbar{min-width:0;overflow:hidden;padding:4px 9px;font-size:10px}
 #dashboard>#tab-world .nx-event-system{display:none}
 #dashboard>#tab-world .nx-scene{min-height:0;height:auto;max-height:none;position:relative;overflow:hidden}
-#dashboard>#tab-world .nx-avatars{inset:0!important}
+#dashboard>#tab-world .nx-avatars{inset:auto 0 39px 0!important;height:116px!important;min-height:0!important;align-items:flex-end!important;justify-content:center!important;overflow:visible!important}
 #dashboard>#tab-world .nx-action-bar{z-index:8}
 #dashboard>#tab-world .nx-player-list{max-height:42%;overflow:auto}
 #dashboard>#tab-world .nx-bottom-nav{height:54px;min-height:54px;display:flex;justify-content:space-around;align-items:center}
@@ -61,3 +61,8 @@
 #dashboard>#tab-world.nx-no-avatar-animations .nx-avatars *{animation:none!important;transition:none!important}
 #dashboard>#tab-world.nx-compact .nx-chat-panel{padding-top:3px;padding-bottom:3px}
 #dashboard>#tab-world.nx-compact .nx-eventbar{font-size:9px}
+
+/* Avatar stage geometry: anchor the sprite to the room floor, not the full scene. */
+#dashboard>#tab-world .nx-avatars{top:auto!important;bottom:39px!important;left:0!important;right:0!important;height:116px!important;min-height:0!important;display:flex!important;align-items:flex-end!important;justify-content:center!important;overflow:visible!important;}
+#dashboard>#tab-world .nx-avatar-card.me{position:absolute!important;left:50%!important;right:auto!important;top:auto!important;bottom:0!important;transform:translateX(-50%)!important;margin:0!important;z-index:6!important;}
+#dashboard>#tab-world .nx-avatar-card.me canvas[data-nexora-sprite],#dashboard>#tab-world .nx-avatar-card.me canvas,#dashboard>#tab-world .nx-avatar-card.me svg,#dashboard>#tab-world .nx-avatar-card.me img{display:block!important;object-fit:contain!important;object-position:center bottom!important;}
