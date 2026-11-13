@@ -33,7 +33,7 @@ function createProfileRouter({ pool, auth, io }) {
 
   async function loadProfile(accountId) {
     const result = await pool.query(
-      `SELECT a.id,a.nickname,a.created_at,c.profile_status,c.profile_bio,c.avatar,c.authority,
+      `SELECT a.id,a.nickname,a.created_at,c.profile_status,c.profile_bio,c.avatar,c.authority,c.authority_title,c.aura_enabled,
               c.level,c.experience,w.balance,
               (SELECT COUNT(*)::int FROM nexora_social_world.friends f WHERE f.account_id=a.id) AS friends_count,
               (SELECT COUNT(*)::int FROM nexora_social_world.gifts g WHERE g.to_account_id=a.id) AS gifts_received
@@ -48,7 +48,8 @@ function createProfileRouter({ pool, auth, io }) {
     return {
       id: String(row.id), nickname: row.nickname, createdAt: row.created_at,
       status: row.profile_status, bio: row.profile_bio, avatar: normalizeAvatar(row.avatar),
-      authority: row.authority, authorityTitle: row.authority_title || "NOVICE",\n      auraEnabled: Boolean(row.aura_enabled), level: row.level, experience: row.experience,
+      authority: row.authority, authorityTitle: row.authority_title || "NOVICE",
+      auraEnabled: Boolean(row.aura_enabled), level: row.level, experience: row.experience,
       friendsCount: row.friends_count, giftsReceived: row.gifts_received,
       koins: row.balance ?? 0
     };
@@ -84,7 +85,10 @@ function createProfileRouter({ pool, auth, io }) {
         io.to("planet:" + player.planet).emit("profile:updated", {
           id: String(player.accountId), nickname: player.nickname, avatar: player.avatar,
           planet: player.planet, x: player.x, authority: player.authority,
-          title: player.authority >= 50 ? "Звезда" : player.authority >= 20 ? "Знакомый" : "Новичок",
+          title: ({ NOVICE: "Новичок", BEDA: "Беда", PAPA: "Папа", ANGEL: "Ангел", CREATOR: "Создатель" })[player.authorityTitle] || "Новичок",
+          authorityTitle: player.authorityTitle || "NOVICE",
+          auraType: ({ NOVICE: "NONE", BEDA: "GOLD_SOFT", PAPA: "GOLD_PREMIUM", ANGEL: "GREEN", CREATOR: "FIRE_RED" })[player.authorityTitle] || "NONE",
+          auraEnabled: Boolean(player.auraEnabled),
           bubble: player.bubble, emotion: player.emotion, friendsCount: player.friendsCount
         });
       }
