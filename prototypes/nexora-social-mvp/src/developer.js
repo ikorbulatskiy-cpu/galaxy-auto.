@@ -136,7 +136,7 @@ function createDeveloperRouter({ pool, auth, players, planets, io }) {
       if (!current) return;
       if (current.role !== "OWNER") return res.status(403).json({ error: "Сброс кода доступен только главному разработчику." });
       const targetId = String(req.params.id);
-      if (!/^\\d+$/.test(targetId)) return res.status(400).json({ error: "Некорректный ID персонажа." });
+      if (!/^\d+$/.test(targetId)) return res.status(400).json({ error: "Некорректный ID персонажа." });
       if (ownerId() && targetId === ownerId()) return res.status(403).json({ error: "Нельзя сбрасывать собственный код владельца." });
       const code = crypto.randomBytes(8).toString("hex").slice(0, 10);
       const codeHash = await bcrypt.hash(code, 12);
