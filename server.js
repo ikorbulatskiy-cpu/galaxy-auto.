@@ -15,6 +15,7 @@ const featuresRouter = require("./src/features");
 const { attachRealtime } = require("./src/realtime");
 const movement = require("./src/movement");
 const mediaRouter = require("./src/media");
+const galaxyPageRouter = require("./src/galaxy-page");
 
 const app = express();
 const server = http.createServer(app);
@@ -84,6 +85,7 @@ app.use("/api/game", gameRouter);
 app.use("/api/movement", movement.router);
 app.use("/api/features", featuresRouter);
 app.use("/api/media", mediaRouter);
+app.use("/galaxy", galaxyPageRouter);
 
 app.get("/api/status", async (_req, res) => {
   try {
