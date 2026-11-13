@@ -96,10 +96,11 @@ function createProfileRouter({ pool, auth, io }) {
     if (!profile) return res.status(404).json({error:"Игрок не найден."});
     const [friend,request] = await Promise.all([
       pool.query("SELECT 1 FROM nexora_social_world.friends WHERE account_id=$1 AND friend_account_id=$2",[req.account.id,targetId]),
-      pool.query("SELECT from_account_id FROM nexora_social_world.friend_requests WHERE status='pending' AND ((from_account_id=$1 AND to_account_id=$2) OR (from_account_id=$2 AND to_account_id=$1)) LIMIT 1",[req.account.id,targetId])
+      pool.query("SELECT id,from_account_id FROM nexora_social_world.friend_requests WHERE status='pending' AND ((from_account_id=$1 AND to_account_id=$2) OR (from_account_id=$2 AND to_account_id=$1)) LIMIT 1",[req.account.id,targetId])
     ]);
     const live = io.sockets.adapter.rooms.get("account:"+targetId);
-    res.json({ok:true,profile:{...profile,online:Boolean(live?.size),isMe:String(req.account.id)===targetId,isFriend:Boolean(friend.rowCount),requestPending:Boolean(request.rowCount),requestIncoming:request.rowCount && String(request.rows[0].from_account_id)===targetId}});
+    const {koins:_privateBalance,...publicProfile}=profile;
+    res.json({ok:true,profile:{...publicProfile,online:Boolean(live?.size),isMe:String(req.account.id)===targetId,isFriend:Boolean(friend.rowCount),requestPending:Boolean(request.rowCount),requestIncoming:Boolean(request.rowCount && String(request.rows[0].from_account_id)===targetId),requestId:request.rows[0]?.id||null}});
   }));
 
   router.patch("/", asyncRoute(async (req, res) => {
