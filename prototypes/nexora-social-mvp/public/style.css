@@ -588,3 +588,27 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
   .room-menu-grid button { min-height:60px; }
   .chat-drawer { bottom:calc(max(122px,env(safe-area-inset-bottom) + 116px)); max-height:38%; }
 }
+
+
+/* NEXORA 4.0 — immersive room layer */
+@media (min-width:700px){.game-screen{width:100%;max-width:none;margin:0;border:0;}body{background:#080c1e}.topbar{left:22px;right:22px}.scene-caption{top:calc(max(72px,env(safe-area-inset-top) + 64px))}.game-controls{left:22px;right:22px;max-width:720px;margin:0 auto}.room-toolbar{width:min(520px,calc(100% - 32px))}}
+.connection-pill{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid var(--line);border-radius:999px;background:rgba(17,22,52,.72);color:#dbe1ff;font-size:10px;white-space:nowrap;backdrop-filter:blur(12px)}
+.connection-pill i{width:7px;height:7px;border-radius:50%;background:#e7bd58;box-shadow:0 0 9px currentColor}
+.connection-pill[data-state="online"] i{background:#4ce0a2;color:#4ce0a2}.connection-pill[data-state="reconnecting"] i{background:#e7bd58;color:#e7bd58;animation:connection-pulse 1s ease-in-out infinite}.connection-pill[data-state="offline"] i{background:#ff647f;color:#ff647f}
+@keyframes connection-pulse{50%{opacity:.35}}
+.room-toolbar{width:min(480px,calc(100% - 20px));grid-template-columns:repeat(5,minmax(0,1fr))}.room-toolbar button{position:relative}
+.room-event-count{position:absolute;top:2px;right:calc(50% - 20px);min-width:15px;height:15px;padding:0 4px;display:grid;place-items:center;border-radius:999px;background:#ff668c;color:#fff;font-size:8px;font-style:normal;font-weight:900}
+.room-events-panel{width:min(430px,calc(100% - 20px))}.room-event-list{display:grid;gap:7px;max-height:min(48dvh,390px);overflow:auto}
+.room-event-row{display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid #ffffff12;border-radius:13px;background:linear-gradient(135deg,#ffffff0c,#ffffff04)}
+.room-event-icon{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:11px;background:#9284f522;font-size:17px}
+.room-event-row strong{display:block;font-size:11px}.room-event-row p{margin:3px 0;color:#c5cdec;font-size:10px;line-height:1.4;overflow-wrap:anywhere}.room-event-row time{color:#8995bd;font-size:9px}
+.room-event-empty{padding:18px 8px;color:#9ba8d2;text-align:center;font-size:11px}
+.room-player-search{display:flex;align-items:center;gap:8px;margin-bottom:9px;padding:0 10px;border:1px solid #ffffff18;border-radius:12px;background:#ffffff08;color:#aeb8df}
+.room-player-search input{width:100%;min-width:0;padding:10px 0;border:0;outline:0;background:transparent;color:#fff;font-size:11px}
+.room-player-avatar{width:42px;height:48px;flex:0 0 42px;display:block;border-radius:9px;background:linear-gradient(180deg,#252b60,#111936)}
+.character-action-list{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin:10px 0 8px}
+.character-action-list button{min-width:0;display:grid;justify-items:center;gap:3px;padding:8px 2px;border:1px solid #ffffff16;border-radius:10px;background:#ffffff0a;font-size:16px}
+.character-action-list button span{font-size:8px;color:#c5cdec}.profile-menu{width:min(310px,calc(100vw - 28px))}
+.history-author.system-author{color:#73dcd1}.room-emotion-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:430px){.connection-pill{padding:6px 8px;font-size:9px}.room-toolbar{width:calc(100% - 16px);bottom:max(6px,env(safe-area-inset-bottom))}.room-toolbar button{min-height:45px}.room-toolbar button span{font-size:8px}.room-event-count{right:calc(50% - 17px)}.room-events-panel,.room-flyout{max-height:min(58dvh,470px)}}
+@media(max-height:560px){.room-toolbar button{min-height:39px}.room-flyout{max-height:48dvh}}
