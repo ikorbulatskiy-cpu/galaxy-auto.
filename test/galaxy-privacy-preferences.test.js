@@ -13,6 +13,8 @@ test("invisible preference is applied to room presence snapshots and online coun
   assert.match(realtime, /socket\.isInvisible = Boolean\(user\.invisible\)/);
   assert.match(realtime, /if \(!socket\.isInvisible\) publish\(\{ type: "presence", action: "joined"/);
   assert.match(realtime, /if \(removed\.rowCount && !socket\.isInvisible\) publish\(\{ type: "presence", action: "left"/);
+  assert.match(realtime, /socket\.isInvisible = Boolean\(freshPreference\.rows\[0\]\?\.invisible\)/);
+  assert.match(realtime, /if\(row\.announce\) publish\(\{ type: "presence", action: "left"/);
 });
 
 test("changing Galaxy preferences reconnects the room using fresh server-side settings", () => {
