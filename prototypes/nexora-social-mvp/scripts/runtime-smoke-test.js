@@ -155,7 +155,7 @@ async function run() {
 
   result = await json(await request("/api/profile", owner.token));
   assert.equal(result.status, 200, "profile endpoint responds");
-  assert.equal(result.body.profile.koins, 880, "profile reflects the current Koins balance");
+  assert.equal(result.body.profile.koins, "880", "profile reflects the current Koins balance");
 
   result = await json(await request("/api/profile", owner.token, {
     method: "PATCH",
