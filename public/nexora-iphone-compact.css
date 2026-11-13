@@ -336,9 +336,16 @@
 }
 
 
-/* NEXORA FIX (mobile): собственный персонаж всегда стоит по центру сцены.
-   left:50% + translateX(-50%) центрируют спрайт независимо от ширины экрана.
-   Абсолютное позиционирование выводит его из прокручиваемого flex-списка. */
+/* NEXORA FIX (mobile): контейнер аватаров заканчивается ровно у верхней
+   кромки пола. Unified CSS ранее задавал inset:0!important, из-за чего
+   персонажи привязывались к нижнему краю всей сцены, а не к площадке. */
+#dashboard > #tab-world .nx-avatars{
+  inset:auto 0 39px 0!important;
+  height:116px!important;
+  min-height:0!important;
+  overflow:visible!important;
+}
+/* Собственный персонаж находится по центру сцены и стоит на линии пола. */
 #dashboard > #tab-world .nx-avatars > .nx-avatar-card.me{
   position:absolute!important;
   left:50%!important;
@@ -350,4 +357,7 @@
   transform:translateX(-50%)!important;
   z-index:5!important;
   scroll-snap-align:none!important;
+}
+@media (max-height:740px) and (max-width:600px){
+  #dashboard > #tab-world .nx-avatars{height:108px!important;bottom:39px!important}
 }
