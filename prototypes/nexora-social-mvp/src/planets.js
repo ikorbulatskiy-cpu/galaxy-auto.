@@ -15,14 +15,15 @@ function createPlanetsRouter({ pool, auth, players, io }) {
       `SELECT p.*, (SELECT COUNT(*)::int FROM nexora_social_world.planet_members m WHERE m.planet_id=p.id) AS members,
         EXISTS(SELECT 1 FROM nexora_social_world.planet_staff s WHERE s.planet_id=p.id AND s.account_id=$2) AS staff,
         EXISTS(SELECT 1 FROM nexora_social_world.planet_bans b WHERE b.planet_id=p.id AND b.account_id=$2 AND (b.expires_at IS NULL OR b.expires_at>NOW())) AS banned,
-        EXISTS(SELECT 1 FROM nexora_social_world.planet_invites i WHERE i.planet_id=p.id AND i.invited_account_id=$2 AND i.used_at IS NULL AND i.expires_at>NOW() AND ($3::bigint IS NULL OR i.id=$3)) AS invited
+        EXISTS(SELECT 1 FROM nexora_social_world.planet_invites i WHERE i.planet_id=p.id AND i.invited_account_id=$2 AND i.used_at IS NULL AND i.expires_at>NOW() AND ($3::bigint IS NULL OR i.id=$3)) AS invited,
+        EXISTS(SELECT 1 FROM nexora_social_world.planet_members m WHERE m.planet_id=p.id AND m.account_id=$2) AS member
        FROM nexora_social_world.planets p WHERE p.id=$1 AND p.status='active'`, [planetId, accountId, inviteId || null]
     );
     const p = found.rows[0];
     if (!p) return { error: "Планета недоступна.", status: 404 };
     if (p.banned) return { error: "Владелец планеты ограничил вам доступ.", status: 403 };
     if (p.access_mode === "private" && String(p.owner_account_id) !== String(accountId) && !p.staff) return { error: "Планета закрыта для посещения.", status: 403 };
-    if (p.access_mode === "invite" && String(p.owner_account_id) !== String(accountId) && !p.staff && !p.invited) return { error: "Для входа требуется приглашение.", status: 403 };
+    if (p.access_mode === "invite" && String(p.owner_account_id) !== String(accountId) && !p.staff && !p.invited && !p.member) return { error: "Для входа требуется приглашение.", status: 403 };
     const onlineCount = [...players.values()].filter(x => x.planet === "custom-" + String(planetId)).length;
     if (onlineCount >= p.capacity && String(p.owner_account_id) !== String(accountId)) return { error: "На планете нет свободных мест.", status: 409 };
     return { planet: p };
@@ -40,7 +41,7 @@ function createPlanetsRouter({ pool, auth, players, io }) {
          FROM nexora_social_world.planets p
          JOIN nexora_social_world.accounts a ON a.id=p.owner_account_id
          LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
-         WHERE p.status='active' AND ($1='' OR p.name ILIKE '%'||$1||'%') AND ($2='' OR p.category=$2)
+         WHERE p.status='active' AND (p.access_mode='public' OR p.owner_account_id=$3 OR EXISTS(SELECT 1 FROM nexora_social_world.planet_staff s WHERE s.planet_id=p.id AND s.account_id=$3) OR EXISTS(SELECT 1 FROM nexora_social_world.planet_members m WHERE m.planet_id=p.id AND m.account_id=$3)) AND ($1='' OR p.name ILIKE '%'||$1||'%') AND ($2='' OR p.category=$2)
          ORDER BY p.total_visits DESC,p.created_at DESC LIMIT 100`, [q,category,me.id]
       );
       const onlineCounts = new Map();
