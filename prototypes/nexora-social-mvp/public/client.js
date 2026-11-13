@@ -1919,8 +1919,13 @@
         result.users.forEach(user=>{
           box.append(makeSocialRow(user.nickname,(user.online?"● В сети":"○ Не в сети")+" · "+(user.title||"Новичок"),[
             {text:"Профиль",run:()=>openPublicProfile(user.id)},
-            {text:"Написать",run:async()=>{
+            {text:user.isFriend?"Написать":"Добавить",run:async()=>{
               try{
+                if(!user.isFriend){
+                  await socialApi("/requests",{method:"POST",body:JSON.stringify({targetId:user.id})});
+                  showToast("Заявка отправлена. После принятия можно будет переписываться.");
+                  return;
+                }
                 const conversation=await socialApi("/conversations",{method:"POST",body:JSON.stringify({peerId:user.id})});
                 $("#message-player-search").value="";
                 box.replaceChildren();
