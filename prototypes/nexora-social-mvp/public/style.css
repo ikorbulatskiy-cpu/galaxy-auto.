@@ -2260,3 +2260,28 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 .chat-drawer .chat-footer-tools .chat-clear-button{min-width:0;width:auto;min-height:23px;padding:0 9px;border-radius:7px;font-size:9px;}
 .chat-drawer .chat-head-actions .chat-clear-button{display:none!important;}
 @media(max-width:600px){.chat-drawer .chat-footer-tools{min-height:20px;margin-top:-4px}.chat-drawer .chat-footer-tools .chat-clear-button{min-height:21px;font-size:8px;padding:0 8px}}
+
+
+/* NEXORA 29.0: balanced room header and compact appearance selection */
+#chat-online-label { pointer-events:none; cursor:default; user-select:none; }
+.chat-drawer .drawer-head { align-items:center; }
+.chat-drawer .chat-title { display:flex; align-items:center; flex-wrap:wrap; gap:7px 9px; }
+.chat-drawer .chat-title > strong { flex:0 0 auto; }
+#chat-online-label { max-width:100%; }
+.chat-drawer .chat-head-actions { margin-left:auto; }
+.appearance-builder { margin:12px 0 15px; padding:12px; border:1px solid rgba(151,164,235,.2); border-radius:17px; background:linear-gradient(145deg,rgba(125,111,238,.11),rgba(53,188,165,.06)); }
+.appearance-builder .appearance-preview { display:flex; justify-content:center; height:142px; overflow:hidden; }
+.appearance-builder .appearance-preview canvas { width:150px; height:142px; object-fit:contain; }
+.appearance-picker-row { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.appearance-picker { min-width:0; padding:9px 7px; border:1px solid rgba(174,169,255,.17); border-radius:12px; background:rgba(5,11,32,.35); text-align:center; }
+.appearance-picker>span { display:block; margin-bottom:7px; color:#9eacd8; font-size:9px; font-weight:900; letter-spacing:.14em; }
+.appearance-picker>div { display:grid; grid-template-columns:30px minmax(0,1fr) 30px; align-items:center; gap:3px; }
+.appearance-picker button { width:30px; height:30px; border:1px solid rgba(174,169,255,.25); border-radius:9px; background:rgba(145,130,255,.15); color:#fff; font-size:21px; line-height:1; }
+.appearance-picker strong { overflow:hidden; color:#f1f2ff; font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
+.appearance-note { margin:9px 2px 0; color:#9eacd8; font-size:10px; line-height:1.45; text-align:center; }
+#register-step-one .gender-choice-grid { margin-bottom:8px; }
+@media(max-width:520px) {
+  .appearance-builder { margin:9px 0 12px; padding:9px; }
+  .appearance-builder .appearance-preview { height:124px; }
+  .appearance-builder .appearance-preview canvas { height:124px; }
+}
