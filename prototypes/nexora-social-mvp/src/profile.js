@@ -86,7 +86,7 @@ function createProfileRouter({ pool, auth, io }) {
 
   router.get("/:id", asyncRoute(async (req, res) => {
     const targetId = String(req.params.id || "");
-    if (!/^\\d{1,20}$/.test(targetId)) return res.status(400).json({error:"Некорректный игрок."});
+    if (!/^[0-9]{1,20}$/.test(targetId)) return res.status(400).json({error:"Некорректный игрок."});
     const blocked = await pool.query(
       "SELECT 1 FROM nexora_social_world.user_blocks WHERE (account_id=$1 AND blocked_account_id=$2) OR (account_id=$2 AND blocked_account_id=$1)",
       [req.account.id,targetId]
