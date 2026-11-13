@@ -1,5 +1,5 @@
 (() => {
-  const socket = io();
+  const socket = io({ autoConnect: false });
   const $ = (selector) => document.querySelector(selector);
   const loginScreen = $("#login-screen");
   const gameScreen = $("#game-screen");
@@ -190,7 +190,7 @@
     ordered.forEach((player) => {
       const x = player.x * w;
       const baseY = surfaceY(x);
-      const isMe = player.id === socket.id;
+      const isMe = player.id === state.me?.id;
       const render = player.renderX ?? player.x;
       player.renderX = render + (player.x - render) * .18;
       const drawX = player.renderX * w;
@@ -235,25 +235,63 @@
     context.closePath();
   }
 
-  function joinGame() {
-    const nickname = nicknameInput.value.trim();
+  async function enterWorld() {
     loginError.textContent = "";
-    socket.emit("player:join", { nickname, avatar: avatarSettings(), planet: "starter" }, (result) => {
-      if (!result?.ok) {
-        loginError.textContent = result?.error || "Не удалось войти.";
-        return;
-      }
-      state.me = result.player;
-      state.planet = result.player.planet;
-      loginScreen.classList.add("hidden");
-      gameScreen.classList.remove("hidden");
-      $("#planet-title").textContent = PLANETS[state.planet].name;
-      resize();
-      requestAnimationFrame(drawScene);
+    const meResponse = await fetch("/api/me");
+    if (!meResponse.ok) {
+      loginError.textContent = "Сначала создай аккаунт или войди по коду восстановления.";
+      return;
+    }
+    socket.connect();
+    socket.once("connect", () => {
+      socket.emit("player:join", {}, (result) => {
+        if (!result?.ok) {
+          loginError.textContent = result?.error || "Не удалось загрузить персонажа.";
+          return;
+        }
+        state.me = result.player;
+        state.planet = result.player.planet;
+        loginScreen.classList.add("hidden");
+        gameScreen.classList.remove("hidden");
+        $("#planet-title").textContent = PLANETS[state.planet].name;
+        resize();
+        requestAnimationFrame(drawScene);
+      });
+    });
+    socket.once("connect_error", () => {
+      loginError.textContent = "Не удалось подключиться. Проверь авторизацию и сервер.";
     });
   }
-  $("#enter-button").addEventListener("click", joinGame);
-  nicknameInput.addEventListener("keydown", (event) => { if (event.key === "Enter") joinGame(); });
+
+  async function submitAuth(endpoint) {
+    loginError.textContent = "";
+    $("#recovery-result").classList.add("hidden");
+    const payload = { nickname: nicknameInput.value.trim(), avatar: avatarSettings(), recoveryCode: $("#recovery-code").value.trim() };
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Ошибка авторизации.");
+      if (data.recoveryCode) {
+        const box = $("#recovery-result");
+        box.textContent = "ТВОЙ КОД ВОССТАНОВЛЕНИЯ: " + data.recoveryCode + "  Сохрани его. Повторно показать код нельзя.";
+        box.classList.remove("hidden");
+      }
+      await enterWorld();
+    } catch (error) {
+      loginError.textContent = error.message || "Не удалось выполнить запрос.";
+    }
+  }
+  $("#register-button").addEventListener("click", () => submitAuth("/api/auth/register"));
+  $("#login-button").addEventListener("click", () => submitAuth("/api/auth/login"));
+
+  fetch("/api/me").then(response => {
+    if (response.ok) enterWorld();
+  }).catch(() => {});
 
   socket.on("planet:state", (data) => {
     state.planet = data.planet;
@@ -307,8 +345,8 @@
     el.style.setProperty("--dx", (Math.random() * 100 - 50) + "px");
     $("#gift-layer").append(el);
     setTimeout(() => el.remove(), 1300);
-    if (event.toId === socket.id) {
-      const me = state.players.get(socket.id);
+    if (event.toId === state.me?.id) {
+      const me = state.players.get(state.me?.id);
       if (me) me.authority += event.authorityAdded;
       showToast(event.icon + " " + event.from + " подарил вам подарок! +" + event.authorityAdded + " авторитета");
     } else {
@@ -325,7 +363,7 @@
     const y = event.clientY - rect.top;
     let nearest = null, nearestDistance = Infinity;
     for (const player of state.players.values()) {
-      if (player.id === socket.id) continue;
+      if (player.id === state.me?.id) continue;
       const px = player.x * state.width;
       const py = surfaceY(px) - 24;
       const distance = Math.hypot(px - x, py - y);
@@ -339,7 +377,7 @@
     }
     if (y > state.height * .48) {
       const targetX = Math.max(.04, Math.min(.96, x / state.width));
-      const me = state.players.get(socket.id);
+      const me = state.players.get(state.me?.id);
       if (me) {
         me.facing = targetX >= me.x ? 1 : -1;
         me.x = targetX;
