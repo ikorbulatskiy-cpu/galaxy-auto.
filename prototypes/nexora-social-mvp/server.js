@@ -38,19 +38,12 @@ app.use((req, _res, next) => {
 });
 app.post("/api/auth/register", async (req, res, next) => {
   try {
-    const result = await auth.register(req, {
-      status: (code) => ({ json: (body) => res.status(code).json(body) }),
-      json: (body) => res.json(body)
-    });
-    if (result?.token) res.cookie(COOKIE_NAME, result.token, cookieOptions());
+    await auth.register(req, res);
   } catch (error) { next(error); }
 });
 app.post("/api/auth/login", async (req, res, next) => {
   try {
-    const result = await auth.login(req, {
-      status: (code) => ({ json: (body) => res.status(code).json(body) }),
-      json: (body) => { if (body.token) res.cookie(COOKIE_NAME, body.token, cookieOptions()); res.json(body); }
-    });
+    await auth.login(req, res);
   } catch (error) { next(error); }
 });
 app.post("/api/auth/logout", async (req, res, next) => {
@@ -202,16 +195,23 @@ io.on("connection", (socket) => {
     const gift = GIFTS[payload?.gift];
     if (!sender || !target || !gift || sender.id === target.id || sender.planet !== target.planet) return ack({ ok: false, error: "Подарок отправить не удалось." });
     try {
-      await pool.query("BEGIN");
-      await pool.query("INSERT INTO nexora_social_world.gifts(from_account_id,to_account_id,gift_type,authority_added) VALUES($1,$2,$3,$4)", [sender.accountId,target.accountId,payload.gift,gift.authority]);
-      const updated = await pool.query("UPDATE nexora_social_world.characters SET authority=authority+$1,updated_at=NOW() WHERE account_id=$2 RETURNING authority", [gift.authority,target.accountId]);
-      await pool.query("COMMIT");
+      const client = await pool.connect();
+      let updated;
+      try {
+        await client.query("BEGIN");
+        await client.query("INSERT INTO nexora_social_world.gifts(from_account_id,to_account_id,gift_type,authority_added) VALUES($1,$2,$3,$4)", [sender.accountId,target.accountId,payload.gift,gift.authority]);
+        updated = await client.query("UPDATE nexora_social_world.characters SET authority=authority+$1,updated_at=NOW() WHERE account_id=$2 RETURNING authority", [gift.authority,target.accountId]);
+        await client.query("COMMIT");
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally { client.release(); }
       target.authority = updated.rows[0].authority;
       const event = { fromId: sender.id, from: sender.nickname, toId: target.id, to: target.nickname, gift: payload.gift, icon: gift.icon, authorityAdded: gift.authority };
       io.to(roomName(sender.planet)).emit("gift:received", event);
       io.to(target.socketId).emit("profile:updated", publicPlayer(target));
       ack({ ok: true, event });
-    } catch (error) { await pool.query("ROLLBACK").catch(() => {}); console.error("gift save failed:", error); ack({ ok: false, error: "Не удалось сохранить подарок." }); }
+    } catch (error) { console.error("gift save failed:", error); ack({ ok: false, error: "Не удалось сохранить подарок." }); }
   });
 
   socket.on("friend:add", async (payload, ack = () => {}) => {
