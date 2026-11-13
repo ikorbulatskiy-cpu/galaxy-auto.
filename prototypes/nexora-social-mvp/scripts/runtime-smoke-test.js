@@ -170,11 +170,14 @@ async function run() {
     body: JSON.stringify({
       status: "NEXORA CI",
       bio: "Profile integration test",
-      avatar: { gender: "female", skin: "#c9875b", hair: "long", suit: "#ef6c9b", hairColor: "#e5c07b", shoes: "boots", accessory: "crown" }
+      avatar: { gender: "female", skin: "#c9875b", hair: "curly", suit: "#ef6c9b", outfit: "dress", hairColor: "#e5c07b", shoes: "sandals", accessory: "flower" }
     })
   }));
   assert.equal(result.status, 200, "profile and appearance can be updated");
-  assert.equal(result.body.profile.avatar.accessory, "crown", "validated avatar appearance is persisted");
+  assert.equal(result.body.profile.avatar.accessory, "flower", "new accessory selection is persisted");
+  assert.equal(result.body.profile.avatar.outfit, "dress", "outfit style is validated and persisted");
+  assert.equal(result.body.profile.avatar.hair, "curly", "new hairstyle is validated and persisted");
+  assert.equal(result.body.profile.avatar.shoes, "sandals", "new shoe style is validated and persisted");
 
   result = await json(await request("/api/social/requests", owner.token, {
     method: "POST",
