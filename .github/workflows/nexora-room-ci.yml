@@ -70,8 +70,8 @@ jobs:
           const atlas = fs.readFileSync(root + "public/assets/sprites/characters/nexora-avatar-atlas.svg", "utf8");
           const props = fs.readFileSync(root + "public/world-objects.js", "utf8");
           const checks = [
-            [galaxyHtml.includes('id="planet-new-name"') && galaxyHtml.includes('id="planet-create-submit"') && !galaxyHtml.includes('id="planet-new-category"') && !galaxyHtml.includes('id="planet-owner-tools"'), "planet creation UI only asks for a name"],
-            [galaxyClient.includes('planetRequest("/api/planets",{method:"POST",body:JSON.stringify({name})})') && !galaxyClient.includes('function openPlanetOwnerTools'), "planet creation submits a name-only payload without removed management UI"],
+            [html.includes('id="planet-new-name"') && html.includes('id="planet-create-submit"') && !html.includes('id="planet-new-category"') && !html.includes('id="planet-owner-tools"'), "planet creation UI only asks for a name"],
+            [client.includes('planetRequest("/api/planets",{method:"POST",body:JSON.stringify({name})})') && !client.includes('function openPlanetOwnerTools'), "planet creation submits a name-only payload without removed management UI"],
             [planets.includes('if(!name.length)') && !planets.includes('name.length<3'), "custom planet names accept any non-empty length including one character"],
             [html.includes('id="edit-hair"') && ['value="bob"','value="ponytail"','value="curly"'].every(value=>html.includes(value)), "avatar editor exposes hairstyle options"],
             [html.includes('id="edit-shoes"') && ['value="sneakers"','value="boots"','value="sandals"'].every(value=>html.includes(value)), "avatar editor exposes footwear options"],
