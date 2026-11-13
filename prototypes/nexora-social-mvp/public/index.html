@@ -171,28 +171,8 @@
         </div>
       </div>
 
-      <aside id="social-panel" class="social-panel hidden" aria-label="Социальное меню">
-        <div class="social-head"><strong id="social-title">Друзья</strong><button id="social-close" aria-label="Закрыть">×</button></div>
-        <div class="social-tabs">
-          <button data-social-tab="friends" class="active">👥 Друзья и социальное</button>
-          <button data-social-tab="messages">💬 Личные сообщения</button>
-        </div>
-        <section id="social-friends-view" class="social-view">
-          <input id="social-search" type="search" maxlength="18" placeholder="Найти игрока по нику">
-          <div id="social-search-results" class="social-list"></div>
-          <h4>Входящие заявки</h4><div id="social-requests" class="social-list"></div>
-          <h4>Отправленные заявки</h4><div id="social-outgoing" class="social-list"></div>
-          <h4>Мои друзья</h4><div id="social-friends" class="social-list"></div>
-          <h4>Уведомления <span id="notification-count"></span></h4><div id="social-notifications" class="social-list"></div>
-        </section>
-        <section id="social-messages-view" class="social-view hidden">
-          <input id="message-player-search" type="search" maxlength="18" placeholder="Найти персонажа и начать переписку">
-          <div id="message-player-results" class="social-list"></div>
-          <h4>Мои диалоги</h4><div id="social-conversations" class="social-list"></div>
-          <div id="social-thread" class="social-thread"><p class="social-empty">Выберите диалог или откройте профиль друга.</p></div>
-          <form id="social-message-form" class="social-message-form"><input id="social-message-input" maxlength="2000" placeholder="Личное сообщение..." autocomplete="off"><button type="submit">➤</button></form>
-        </section>
-        <section id="social-notifications-view" class="social-view hidden"></section>
+      <aside id="social-panel" class="social-panel hidden" aria-label="Рейтинг игроков">
+        <div class="social-head"><strong id="social-title">Рейтинг игроков</strong><button id="social-close" aria-label="Закрыть">×</button></div>
         <section id="social-rating-view" class="social-view hidden">
           <button id="authority-open" class="rating-authority-link" type="button">✦ Каталог званий и аур</button>
           <div class="rating-categories" role="group" aria-label="Категория рейтинга">
@@ -203,6 +183,7 @@
           <div id="social-rating-list" class="social-list"></div>
           <p id="social-rating-me" class="rating-me"></p>
         </section>
+
       </aside>
       
       <aside id="public-profile" class="public-profile hidden" aria-label="Информация об игроке">
@@ -230,6 +211,37 @@
           <canvas id="profile-preview" width="180" height="150" aria-label="Предпросмотр персонажа"></canvas>
           <div><strong id="profile-editor-nickname">Игрок</strong><span id="profile-editor-developer" class="developer-profile-badge hidden">✦ РАЗРАБОТЧИК</span><span id="profile-editor-meta">Новичок · Авторитет 0</span><span id="profile-editor-created"></span></div>
         </div>
+        <section class="profile-social-hub" aria-label="Общение в профиле">
+          <div class="profile-social-home">
+            <div class="profile-section-title">Общение и контакты</div>
+            <button type="button" data-profile-social-tab="friends">👥 Друзья и социальное</button>
+            <button type="button" data-profile-social-tab="messages">💬 Личные сообщения</button>
+          </div>
+          <div class="profile-social-content">
+            <div class="profile-social-toolbar"><strong id="profile-social-title">Друзья и социальное</strong><button id="profile-social-back" type="button">← В профиль</button></div>
+            <div class="profile-social-switch">
+              <button type="button" data-profile-social-tab="friends">👥 Друзья</button>
+              <button type="button" data-profile-social-tab="messages">💬 Сообщения</button>
+            </div>
+        <section id="social-friends-view" class="social-view hidden">
+          <input id="social-search" type="search" maxlength="18" placeholder="Найти игрока по нику">
+          <div id="social-search-results" class="social-list"></div>
+          <h4>Входящие заявки</h4><div id="social-requests" class="social-list"></div>
+          <h4>Отправленные заявки</h4><div id="social-outgoing" class="social-list"></div>
+          <h4>Мои друзья</h4><div id="social-friends" class="social-list"></div>
+          <h4>Уведомления <span id="notification-count"></span></h4><div id="social-notifications" class="social-list"></div>
+        </section>
+        <section id="social-messages-view" class="social-view hidden">
+          <input id="message-player-search" type="search" maxlength="18" placeholder="Найти персонажа и начать переписку">
+          <div id="message-player-results" class="social-list"></div>
+          <h4>Мои диалоги</h4><div id="social-conversations" class="social-list"></div>
+          <div id="social-thread" class="social-thread"><p class="social-empty">Выберите диалог или откройте профиль друга.</p></div>
+          <form id="social-message-form" class="social-message-form"><input id="social-message-input" maxlength="2000" placeholder="Личное сообщение..." autocomplete="off"><button type="submit">➤</button></form>
+        </section>
+        <section id="social-notifications-view" class="social-view hidden"></section>
+
+          </div>
+        </section>
         <div class="profile-stats">
           <div><strong id="profile-friends-count">0</strong><span>Друзья</span></div>
           <div><strong id="profile-gifts-count">0</strong><span>Подарки</span></div>
