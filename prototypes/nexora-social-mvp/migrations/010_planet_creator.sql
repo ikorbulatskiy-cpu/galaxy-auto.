@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS nexora_social_world.planets (
+CREATE TABLE IF NOT EXISTS nexora_social_world.custom_planets (
   id BIGSERIAL PRIMARY KEY,
   owner_account_id BIGINT NOT NULL REFERENCES nexora_social_world.accounts(id) ON DELETE CASCADE,
   name VARCHAR(32) NOT NULL,
@@ -14,16 +14,16 @@ CREATE TABLE IF NOT EXISTS nexora_social_world.planets (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS planets_catalog_idx ON nexora_social_world.planets(status, created_at DESC);
-CREATE INDEX IF NOT EXISTS planets_owner_idx ON nexora_social_world.planets(owner_account_id);
+CREATE INDEX IF NOT EXISTS planets_catalog_idx ON nexora_social_world.custom_planets(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS planets_owner_idx ON nexora_social_world.custom_planets(owner_account_id);
 CREATE TABLE IF NOT EXISTS nexora_social_world.planet_members (
-  planet_id BIGINT NOT NULL REFERENCES nexora_social_world.planets(id) ON DELETE CASCADE,
+  planet_id BIGINT NOT NULL REFERENCES nexora_social_world.custom_planets(id) ON DELETE CASCADE,
   account_id BIGINT NOT NULL REFERENCES nexora_social_world.accounts(id) ON DELETE CASCADE,
   joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (planet_id, account_id)
 );
 CREATE TABLE IF NOT EXISTS nexora_social_world.planet_staff (
-  planet_id BIGINT NOT NULL REFERENCES nexora_social_world.planets(id) ON DELETE CASCADE,
+  planet_id BIGINT NOT NULL REFERENCES nexora_social_world.custom_planets(id) ON DELETE CASCADE,
   account_id BIGINT NOT NULL REFERENCES nexora_social_world.accounts(id) ON DELETE CASCADE,
   role VARCHAR(12) NOT NULL CHECK (role IN ('ADMIN','MODERATOR')),
   permissions JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS nexora_social_world.planet_staff (
   PRIMARY KEY (planet_id, account_id)
 );
 CREATE TABLE IF NOT EXISTS nexora_social_world.planet_bans (
-  planet_id BIGINT NOT NULL REFERENCES nexora_social_world.planets(id) ON DELETE CASCADE,
+  planet_id BIGINT NOT NULL REFERENCES nexora_social_world.custom_planets(id) ON DELETE CASCADE,
   account_id BIGINT NOT NULL REFERENCES nexora_social_world.accounts(id) ON DELETE CASCADE,
   actor_account_id BIGINT NOT NULL REFERENCES nexora_social_world.accounts(id),
   reason VARCHAR(300) NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS nexora_social_world.planet_bans (
 );
 CREATE TABLE IF NOT EXISTS nexora_social_world.planet_invites (
   id BIGSERIAL PRIMARY KEY,
-  planet_id BIGINT NOT NULL REFERENCES nexora_social_world.planets(id) ON DELETE CASCADE,
+  planet_id BIGINT NOT NULL REFERENCES nexora_social_world.custom_planets(id) ON DELETE CASCADE,
   invited_account_id BIGINT NOT NULL REFERENCES nexora_social_world.accounts(id) ON DELETE CASCADE,
   invited_by BIGINT NOT NULL REFERENCES nexora_social_world.accounts(id),
   expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '7 days',
@@ -51,25 +51,25 @@ CREATE TABLE IF NOT EXISTS nexora_social_world.planet_invites (
 );
 CREATE TABLE IF NOT EXISTS nexora_social_world.planet_visits (
   id BIGSERIAL PRIMARY KEY,
-  planet_id BIGINT NOT NULL REFERENCES nexora_social_world.planets(id) ON DELETE CASCADE,
+  planet_id BIGINT NOT NULL REFERENCES nexora_social_world.custom_planets(id) ON DELETE CASCADE,
   account_id BIGINT NOT NULL REFERENCES nexora_social_world.accounts(id) ON DELETE CASCADE,
   visited_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS planet_visits_lookup_idx ON nexora_social_world.planet_visits(planet_id, visited_at DESC);
 CREATE TABLE IF NOT EXISTS nexora_social_world.planet_favorites (
-  planet_id BIGINT NOT NULL REFERENCES nexora_social_world.planets(id) ON DELETE CASCADE,
+  planet_id BIGINT NOT NULL REFERENCES nexora_social_world.custom_planets(id) ON DELETE CASCADE,
   account_id BIGINT NOT NULL REFERENCES nexora_social_world.accounts(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (planet_id, account_id)
 );
 CREATE TABLE IF NOT EXISTS nexora_social_world.planet_settings (
-  planet_id BIGINT PRIMARY KEY REFERENCES nexora_social_world.planets(id) ON DELETE CASCADE,
+  planet_id BIGINT PRIMARY KEY REFERENCES nexora_social_world.custom_planets(id) ON DELETE CASCADE,
   settings JSONB NOT NULL DEFAULT '{}'::jsonb,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE TABLE IF NOT EXISTS nexora_social_world.planet_audit_logs (
   id BIGSERIAL PRIMARY KEY,
-  planet_id BIGINT REFERENCES nexora_social_world.planets(id) ON DELETE SET NULL,
+  planet_id BIGINT REFERENCES nexora_social_world.custom_planets(id) ON DELETE SET NULL,
   actor_account_id BIGINT REFERENCES nexora_social_world.accounts(id) ON DELETE SET NULL,
   target_account_id BIGINT REFERENCES nexora_social_world.accounts(id) ON DELETE SET NULL,
   action VARCHAR(40) NOT NULL,

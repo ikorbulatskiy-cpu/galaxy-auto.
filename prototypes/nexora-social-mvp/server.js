@@ -156,7 +156,7 @@ io.on("connection", (socket) => {
             EXISTS(SELECT 1 FROM nexora_social_world.planet_bans b WHERE b.planet_id=p.id AND b.account_id=$2 AND (b.expires_at IS NULL OR b.expires_at>NOW())) AS banned,
             EXISTS(SELECT 1 FROM nexora_social_world.planet_invites i WHERE i.planet_id=p.id AND i.invited_account_id=$2 AND i.expires_at>NOW()) AS invited,
             EXISTS(SELECT 1 FROM nexora_social_world.planet_members m WHERE m.planet_id=p.id AND m.account_id=$2) AS member
-           FROM nexora_social_world.planets p WHERE p.id=$1`, [customId[1],account.id]
+           FROM nexora_social_world.custom_planets p WHERE p.id=$1`, [customId[1],account.id]
         );
         const p = custom.rows[0];
         if (!p || p.status !== "active" || p.banned ||
@@ -298,7 +298,7 @@ io.on("connection", (socket) => {
             EXISTS(SELECT 1 FROM nexora_social_world.planet_staff s WHERE s.planet_id=p.id AND s.account_id=$2) AS staff,
             EXISTS(SELECT 1 FROM nexora_social_world.planet_invites i WHERE i.planet_id=p.id AND i.invited_account_id=$2 AND i.expires_at>NOW()) AS invited,
             EXISTS(SELECT 1 FROM nexora_social_world.planet_members m WHERE m.planet_id=p.id AND m.account_id=$2) AS member
-           FROM nexora_social_world.planets p WHERE p.id=$1`, [match[1],player.accountId]
+           FROM nexora_social_world.custom_planets p WHERE p.id=$1`, [match[1],player.accountId]
         );
         const p = check.rows[0];
         if (p && p.status === "active" && !p.banned &&

@@ -28,7 +28,7 @@ jobs:
         working-directory: prototypes/nexora-social-mvp
         run: |
           test -f migrations/010_planet_creator.sql
-          grep -q "CREATE TABLE IF NOT EXISTS nexora_social_world.planets" migrations/010_planet_creator.sql
+          grep -q "CREATE TABLE IF NOT EXISTS nexora_social_world.custom_planets" migrations/010_planet_creator.sql
           grep -q "CREATE TABLE IF NOT EXISTS nexora_social_world.planet_staff" migrations/010_planet_creator.sql
           grep -q "CREATE TABLE IF NOT EXISTS nexora_social_world.planet_bans" migrations/010_planet_creator.sql
           grep -q "CREATE TABLE IF NOT EXISTS nexora_social_world.planet_invites" migrations/010_planet_creator.sql
