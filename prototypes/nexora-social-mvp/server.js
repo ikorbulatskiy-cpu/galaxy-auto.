@@ -224,7 +224,7 @@ io.on("connection", (socket) => {
       target.authority = updated.rows[0].authority;
       const event = { fromId: sender.id, from: sender.nickname, toId: target.id, to: target.nickname, gift: payload.gift, icon: gift.icon, authorityAdded: gift.authority };
       io.to(roomName(sender.planet)).emit("gift:received", event);
-      io.to(target.socketId).emit("profile:updated", publicPlayer(target));
+      io.to(roomName(target.planet)).emit("profile:updated", publicPlayer(target));
       ack({ ok: true, event });
     } catch (error) { console.error("gift save failed:", error); ack({ ok: false, error: "Не удалось сохранить подарок." }); }
   });
