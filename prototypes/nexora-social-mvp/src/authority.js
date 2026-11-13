@@ -120,6 +120,11 @@ function createAuthorityRouter({ pool, auth, io, players }) {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
+      const character = await client.query(
+        "SELECT authority_title,aura_enabled,authority,level,experience FROM nexora_social_world.characters WHERE account_id=$1 FOR UPDATE",
+        [account.id]
+      );
+      if (!character.rowCount) throw Object.assign(new Error("Персонаж не найден."), { status: 404 });
       const prior = await client.query(
         "SELECT id,title_key,koins_spent FROM nexora_social_world.authority_purchases WHERE account_id=$1 AND idempotency_key=$2",
         [account.id, requestId]
@@ -132,11 +137,6 @@ function createAuthorityRouter({ pool, auth, io, players }) {
         await client.query("COMMIT");
         return res.json({ ok: true, duplicate: true, current: publicAuthority(current.rows[0]) });
       }
-      const character = await client.query(
-        "SELECT authority_title,aura_enabled,authority,level,experience FROM nexora_social_world.characters WHERE account_id=$1 FOR UPDATE",
-        [account.id]
-      );
-      if (!character.rowCount) throw Object.assign(new Error("Персонаж не найден."), { status: 404 });
       const currentKey = TITLES.includes(character.rows[0].authority_title) ? character.rows[0].authority_title : "NOVICE";
       const nextIndex = TITLES.indexOf(currentKey) + 1;
       if (nextIndex >= TITLES.length || TITLES[nextIndex] !== titleKey) {
