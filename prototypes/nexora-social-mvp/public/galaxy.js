@@ -91,7 +91,7 @@
   socket.on("chat:message",message=>addChat(message));
   socket.on("player:bubble",event=>scene.bubble(event.id,event.text||event.bubble?.text||""));
   socket.on("emotion:played",event=>{const p=players.find(x=>String(x.id)===String(event.id));if(p){p.emotion={type:event.emotion};scene.upsert(p)}});
-  socket.on("player:action:played",event=>{const actor=players.find(p=>String(p.id)===String(event.fromId)),target=players.find(p=>String(p.id)===String(event.toId));if(actor)scene.bubble(actor.id,event.label);if(target)scene.bubble(target.id,event.label+" тебе");toast(event.from+" "+event.label+" "+event.to)});
+  socket.on("player:action:played",event=>{const actor=players.find(p=>String(p.id)===String(event.fromId)),target=players.find(p=>String(p.id)===String(event.toId));const motion=({wave:"wave",smile:"smile",hug:"love",kiss:"kiss",dance:"dance",flower:"love"})[event.action]||"smile";if(actor){actor.emotion={type:motion,until:Date.now()+1800};scene.upsert(actor);scene.bubble(actor.id,event.label)}if(target){target.emotion={type:"smile",until:Date.now()+1300};scene.upsert(target);scene.bubble(target.id,event.label+" тебе")}toast(event.from+" "+event.label+" "+event.to)});
   socket.on("profile:updated",p=>{const i=players.findIndex(x=>String(x.id)===String(p.id));if(i>=0)players[i]=p;setPlayers(players)});
 
   $("#chat-form").addEventListener("submit",e=>{e.preventDefault();const input=$("#chat-input"),text=input.value.trim();if(!text)return;socket.emit("chat:send",{text},result=>{if(!result?.ok)toast(result?.error||"Не удалось отправить сообщение")});input.value=""});
