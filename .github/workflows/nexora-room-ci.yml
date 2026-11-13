@@ -98,7 +98,7 @@ jobs:
             [developer.includes("/^" + String.fromCharCode(92) + "d+$/.test") && !developer.includes("/^" + String.fromCharCode(92,92) + "d+$/.test"), "developer moderation and planet IDs use decimal-only validation"],
             [developer.includes('router.post("/roles/admin"') && developer.includes('current.role !== "OWNER"') && developer.includes('"admin.grant"') && developer.includes('"admin.revoke"'), "only the owner can grant or revoke ordinary admin access"],
             [client.includes('if (ownProfile)') && client.includes('Открыть панель разработчика') && client.includes('Выдать админку себе'), "developer controls are available from the owner's own character"],
-            [client.includes('data-developer-tab="admins"') && client.includes('developerRequest("/roles/admin"'), "developer admin tab supports simple search and grant/revoke actions"],
+            [html.includes('data-developer-tab="admins"') && client.includes('developerRequest("/roles/admin"'), "developer admin tab supports simple search and grant/revoke actions"],
             [client.includes('async function developerRequest(path, options = {})'), "developer requests support protected actions"]
           ];
           for (const [ok, label] of checks) console.log((ok ? "PASS " : "FAIL ") + label);
