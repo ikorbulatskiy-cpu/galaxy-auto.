@@ -1728,3 +1728,8 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
   #profile-menu .profile-rank, #profile-menu .profile-aura, #profile-menu .profile-online-status { margin:1px 0 3px; }
   #profile-menu > button:not(.menu-close) { min-height:30px; margin-top:3px; padding:5px 7px; }
 }
+
+/* Keep notifications and two-tab social navigation inside narrow screens */
+.toast { width:max-content; max-width:calc(100vw - 28px); white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.35; }
+.social-tabs { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.social-tabs button { min-width:0; white-space:normal; overflow-wrap:anywhere; }
