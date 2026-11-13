@@ -36,6 +36,7 @@ jobs:
           node --check prototypes/nexora-social-mvp/public/world-objects.js
           node --check prototypes/nexora-social-mvp/public/world-scene.js
           python3 -c "import xml.etree.ElementTree as ET; ET.parse('prototypes/nexora-social-mvp/public/assets/sprites/characters/nexora-avatar-atlas.svg')"
+          python3 -c "import xml.etree.ElementTree as ET; ET.parse('prototypes/nexora-social-mvp/public/assets/sprites/props/nexora-world-props-atlas.svg')"
           python3 -c "import xml.etree.ElementTree as ET; [ET.parse('prototypes/nexora-social-mvp/public/assets/sprites/planets/' + name + '.svg') for name in ('starter','club','beach')]"
           node -e "JSON.parse(require('fs').readFileSync('prototypes/nexora-social-mvp/public/assets/sprites/characters/atlas.json','utf8'))"
       - name: Verify room features and server validation
@@ -69,6 +70,7 @@ jobs:
             [profile.includes("HAIR_COLORS.includes") && profile.includes("ACCESSORIES.includes"), "profile validates persisted appearance"],
             [css.includes("grid-template-columns:repeat(5") && css.includes("room-events-panel"), "five-control toolbar and event styles exist"],
             [html.includes('/sprite-engine.js') && html.includes('/world-objects.js'), "sprite and world-object engines are loaded"],
+            [client.includes("nexora-world-props-atlas.svg") && client.includes("ctx.drawImage(customObjectAtlas") && client.includes("customObjectTiles"), "custom planet decorations use the original illustrated sprite atlas"],
             [html.includes('/sprite-overhaul.css'), "mobile-first visual stylesheet is loaded"],
             [spriteCss.includes("prefers-reduced-motion") && spriteCss.includes("env(safe-area-inset-bottom)"), "mobile safe-area and reduced-motion styles exist"],
             [worldScene.includes("sceneAssets") && worldScene.includes("drawImage(art"), "illustrated planet backgrounds are loaded by scene renderer"],

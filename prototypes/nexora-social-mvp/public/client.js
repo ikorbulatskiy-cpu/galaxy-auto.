@@ -23,6 +23,16 @@
     auraQuality: localStorage.getItem("nexora-aura-quality") === "low" ? "low" : "high"
   };
 
+  const customObjectAtlas = new Image();
+  const customObjectTiles = Object.freeze({
+    tree:[0,0], bench:[1,0], fountain:[2,0], lamp:[3,0],
+    flowerbed:[0,1], kiosk:[1,1], palm:[2,1], beach_chair:[3,1],
+    club_table:[0,2], dj_booth:[1,2], sofa:[2,2], plant:[3,2]
+  });
+  customObjectAtlas.decoding = "async";
+  customObjectAtlas.onload = () => { if (state.customPlanetObjects.length) drawScene(); };
+  customObjectAtlas.src = "/assets/sprites/props/nexora-world-props-atlas.svg";
+
   function avatarSettings() {
     return {
       gender: $("#gender").value,
@@ -400,11 +410,19 @@
   }
 
   function drawCustomPlanetObject(ctx,item,w,h){
-    const icons={tree:"🌳",bench:"🪑",fountain:"⛲",lamp:"💡",flowerbed:"🌼",kiosk:"🏪",palm:"🌴",beach_chair:"🏖️",club_table:"🍸",dj_booth:"🎛️",sofa:"🛋️",plant:"🪴"};
-    const x=Number(item.x)*w,y=Number(item.y)*h,icon=icons[item.code]||"✦";
+    const tile=customObjectTiles[item.code];
+    const x=Number(item.x)*w,y=Number(item.y)*h;
+    const scale=Math.max(.45,Math.min(1.6,Number(item.scale)||1));
+    const size=78*scale;
     ctx.save();ctx.translate(x,y);ctx.rotate((Number(item.rotation)||0)*Math.PI/180);
-    ctx.globalAlpha=.28;ctx.fillStyle="#080d25";ctx.beginPath();ctx.ellipse(0,5,20*(item.scale||1),6,0,0,Math.PI*2);ctx.fill();
-    ctx.globalAlpha=1;ctx.font=(30*(item.scale||1))+"px Apple Color Emoji, Segoe UI Emoji, sans-serif";ctx.textAlign="center";ctx.textBaseline="bottom";ctx.fillText(icon,0,0);ctx.restore();
+    ctx.fillStyle="rgba(5,10,28,.24)";ctx.beginPath();ctx.ellipse(0,2,size*.39,size*.09,0,0,Math.PI*2);ctx.fill();
+    if(tile&&customObjectAtlas.complete&&customObjectAtlas.naturalWidth){
+      ctx.drawImage(customObjectAtlas,tile[0]*256,tile[1]*256,256,256,-size*.5,-size*.91,size,size);
+    }else{
+      ctx.fillStyle="#8c8bd8";ctx.strokeStyle="#e1dcff";ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(0,-size*.38,size*.22,0,Math.PI*2);ctx.fill();ctx.stroke();
+    }
+    ctx.restore();
   }
 
   function drawScene() {
