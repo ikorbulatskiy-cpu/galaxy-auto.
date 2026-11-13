@@ -63,10 +63,26 @@ async function migrate() {
       }
     }
 
+    const requiredTables = [
+      "accounts", "sessions", "characters", "friends", "messages", "gifts",
+      "wallets", "inventory", "friend_requests", "user_blocks",
+      "conversations", "direct_messages", "notifications"
+    ];
+    const verification = await client.query(
+      `SELECT table_name
+         FROM unnest($1::text[]) AS expected(table_name)
+        WHERE to_regclass(format('%I.%I', 'nexora_social_world', table_name)) IS NULL`,
+      [requiredTables]
+    );
+    if (verification.rowCount) {
+      throw new Error("Required NEXORA tables are missing: " +
+        verification.rows.map(row => row.table_name).join(", "));
+    }
+
     await client.query(
       "DELETE FROM nexora_social_world.sessions WHERE expires_at < NOW()"
     );
-    console.log("NEXORA PostgreSQL connected; social schema migrations completed.");
+    console.log("NEXORA PostgreSQL connected; social schema migrations and verification completed.");
   } finally {
     if (lockAcquired) {
       try { await client.query("SELECT pg_advisory_unlock($1)", [731904221]); }
