@@ -149,9 +149,7 @@
       if(!planet){
         if(key.startsWith("custom-")){
           const id=key.slice(7);
-          const visit=await api("/api/planets/"+encodeURIComponent(id)+"/visit",{method:"POST",body:JSON.stringify({})});
-          const p=visit.planet||{};
-          planet={key,id:String(id),name:p.name||friend.planetName||"Планета друга",description:p.description||"",theme:p.theme||"nebula",category:p.category||"social",isCustom:true,color:p.accent_color||"#8068d8",light:"#e1d7ff",glow:p.accent_color||"#8068d8"};
+          planet={key,id:String(id),name:friend.planetName||"Планета друга",description:"Комната друга",theme:"nebula",category:"social",isCustom:true,color:"#8068d8",light:"#e1d7ff",glow:"#8068d8"};
         }else{
           const base=basePlanets.find(item=>item.key===key);
           if(!base)throw new Error("Планета друга не найдена.");
