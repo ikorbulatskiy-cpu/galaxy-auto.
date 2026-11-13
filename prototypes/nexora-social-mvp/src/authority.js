@@ -186,6 +186,26 @@ function createAuthorityRouter({ pool, auth, io, players }) {
     } finally { client.release(); }
   });
 
+  router.get("/admin/players", async (req,res,next) => {
+    try {
+      const current = await requireAuthorityPermission(req,res,"authority.view");
+      if (!current) return;
+      const query = String(req.query.q || "").trim().slice(0,18);
+      const result = await pool.query(
+        `SELECT a.id,a.nickname,COALESCE(c.authority,0)::int AS authority,
+                COALESCE(c.authority_title,'NOVICE') AS authority_title,
+                COALESCE(w.balance,0)::text AS koins
+           FROM nexora_social_world.accounts a
+           LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
+           LEFT JOIN nexora_social_world.wallets w ON w.account_id=a.id
+          WHERE ($1='' OR a.nickname ILIKE $2 OR a.id::text=$1)
+          ORDER BY a.created_at DESC LIMIT 30`,
+        [query,"%"+query.replace(/[\\%_]/g,"\\\\  router.get("/admin/config", async (req, res, next) => {")+"%"]
+      );
+      res.json({ok:true,players:result.rows.map(row=>({...row,id:String(row.id)}))});
+    } catch(error) { next(error); }
+  });
+
   router.get("/admin/config", async (req, res, next) => {
     try {
       const current = await requireAuthorityPermission(req,res,"authority.configure"); if (!current) return;
@@ -202,10 +222,22 @@ function createAuthorityRouter({ pool, auth, io, players }) {
       if (!TITLES.includes(key) || !Number.isSafeInteger(price) || price < 0 || !Number.isSafeInteger(minimum) || minimum < 0) {
         return res.status(400).json({error:"Проверьте цену и требования."});
       }
-      await pool.query(
-        "UPDATE nexora_social_world.authority_title_config SET koins_price=$1,min_authority=$2,enabled=$3,updated_at=NOW() WHERE title_key=$4",
-        [price,minimum,enabled,key]
-      );
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+        const before = await client.query("SELECT koins_price,min_authority,enabled FROM nexora_social_world.authority_title_config WHERE title_key=$1 FOR UPDATE",[key]);
+        if (!before.rowCount) throw Object.assign(new Error("Звание не найдено."),{status:404});
+        await client.query(
+          "UPDATE nexora_social_world.authority_title_config SET koins_price=$1,min_authority=$2,enabled=$3,updated_at=NOW() WHERE title_key=$4",
+          [price,minimum,enabled,key]
+        );
+        await audit(client,current.account.id,null,"authority.configure","Изменены настройки звания "+key,{titleKey:key,before:before.rows[0],after:{koins_price:price,min_authority:minimum,enabled}});
+        await client.query("COMMIT");
+      } catch(error) {
+        try { await client.query("ROLLBACK"); } catch(_rollbackError) {}
+        if(error.status) return res.status(error.status).json({error:error.message});
+        throw error;
+      } finally { client.release(); }
       res.json({ok:true});
     } catch(error){next(error);}
   });
@@ -282,7 +314,17 @@ function createAuthorityRouter({ pool, auth, io, players }) {
       const current=await requireAuthorityPermission(req,res,"authority.history");if(!current)return;
       if(!/^\d+$/.test(String(req.params.id)))return res.status(400).json({error:"Некорректный ID."});
       const result=await pool.query(
-        "SELECT h.old_title,h.new_title,h.source,h.reason,h.created_at,COALESCE(a.nickname,'Система') AS actor_nickname FROM nexora_social_world.authority_history h LEFT JOIN nexora_social_world.accounts a ON a.id=h.actor_account_id WHERE h.account_id=$1 ORDER BY h.created_at DESC LIMIT 100",
+        `SELECT h.old_title,h.new_title,h.source,h.reason,h.created_at,
+                COALESCE(a.nickname,'Система') AS actor_nickname,NULL::text AS koins_spent
+           FROM nexora_social_world.authority_history h
+           LEFT JOIN nexora_social_world.accounts a ON a.id=h.actor_account_id
+          WHERE h.account_id=$1 AND h.source<>'PURCHASE'
+         UNION ALL
+         SELECT '—'::text,p.title_key,'PURCHASE','Покупка звания за Koins',
+                p.created_at,'Игрок'::text,p.koins_spent::text
+           FROM nexora_social_world.authority_purchases p
+          WHERE p.account_id=$1
+          ORDER BY created_at DESC LIMIT 100`,
         [req.params.id]
       );
       res.json({ok:true,history:result.rows});
