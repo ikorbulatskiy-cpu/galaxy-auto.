@@ -179,3 +179,9 @@ body:has(#dashboard:not(.hidden)){background:#171c24;color:#f4f6f8}
  #dashboard>#tab-world .nx-bottom-nav button{font-size:11px!important}
  #dashboard>#tab-world .nx-bottom-nav button span{font-size:19px!important}
 }
+
+.nx-planet-sheet-list{display:grid;gap:8px;max-height:min(38vh,360px);overflow:auto;margin-top:12px;padding-right:3px}
+.nx-planet-sheet-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid #ffffff22;border-radius:13px;background:linear-gradient(135deg,#241a3d,#171426)}
+.nx-planet-sheet-card-info{display:grid;gap:4px;min-width:0}.nx-planet-sheet-card-info b{overflow-wrap:anywhere;color:#fff}.nx-planet-sheet-card-info small{color:#b7a9d4;font-size:11px}
+.nx-planet-sheet-card-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto}.nx-planet-sheet-card-actions button{min-height:34px;padding:6px 10px;border-radius:9px;border:1px solid #9572df;background:#39265b;color:#fff;font-weight:800}
+.nx-planet-sheet-card-actions .nx-planet-sheet-favorite{min-width:36px;font-size:18px;color:#ffd879}.nx-planet-sheet-empty{margin:8px 0;padding:12px;color:#c9bddf;text-align:center;border:1px dashed #ffffff30;border-radius:12px}
