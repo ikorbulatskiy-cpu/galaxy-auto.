@@ -136,7 +136,6 @@ router.post("/travel", requireSession, async (req, res, next) => {
           AND (pb.expires_at IS NULL OR pb.expires_at>NOW())) AS is_planet_banned
        FROM planets p WHERE p.slug=$1 AND p.is_active=TRUE`,
       [parsed.data.planetSlug,req.user.id]
-      [parsed.data.planetSlug]
     );
     if (!destination.rowCount) {
       await client.query("ROLLBACK");
