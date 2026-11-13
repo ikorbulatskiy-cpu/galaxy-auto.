@@ -98,7 +98,7 @@ async function login(req, res) {
     "SELECT locked_until FROM nexora_social_world.auth_login_attempts WHERE ip_hash=$1",
     [ipHash]
   );
-  const lockedUntil = existing.rows[0]?.locked_until;
+  const lockedUntil = current.rows[0]?.locked_until;
   if (lockedUntil && new Date(lockedUntil).getTime() > Date.now()) {
     return respondLoginFailure(res, 429, "", lockedUntil);
   }
