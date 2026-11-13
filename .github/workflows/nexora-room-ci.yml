@@ -28,6 +28,8 @@ jobs:
           node --check prototypes/nexora-social-mvp/public/client.js
           node --check prototypes/nexora-social-mvp/public/sprite-engine.js
           node --check prototypes/nexora-social-mvp/public/world-objects.js
+          python3 -c "import xml.etree.ElementTree as ET; ET.parse('prototypes/nexora-social-mvp/public/assets/sprites/characters/nexora-avatar-atlas.svg')"
+          node -e "JSON.parse(require('fs').readFileSync('prototypes/nexora-social-mvp/public/assets/sprites/characters/atlas.json','utf8'))"
       - name: Verify room features and server validation
         run: |
           node <<'NODE'
