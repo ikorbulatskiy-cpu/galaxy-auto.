@@ -576,7 +576,7 @@
     friendsBox.replaceChildren();
     if (!friends.friends.length) emptySocial(friendsBox, "Пока нет друзей.");
     friends.friends.forEach(friend => {
-      friendsBox.append(makeSocialRow(friend.nickname, friend.profile_status || "Друг NEXORA", [
+      friendsBox.append(makeSocialRow(friend.nickname, (friend.online ? "В сети" : "Не в сети") + (friend.planet ? " · " + friend.planet : "") + (friend.profile_status ? " · " + friend.profile_status : ""), [
         { text: "Написать", run: async () => {
           try {
             const result = await socialApi("/conversations", { method: "POST", body: JSON.stringify({ peerId: friend.id }) });
@@ -589,6 +589,15 @@
         }}
       ]));
     });
+    const outgoingBox = $("#social-outgoing");
+    outgoingBox.replaceChildren();
+    if (!requests.outgoing.length) emptySocial(outgoingBox, "Нет отправленных заявок.");
+    requests.outgoing.forEach(request => outgoingBox.append(makeSocialRow(request.nickname, "Ожидает ответа", [
+      { text: "Отменить", run: async () => {
+        try { await socialApi("/requests/" + request.id, { method: "DELETE" }); await loadFriends(); }
+        catch (error) { showToast(error.message); }
+      }}
+    ])));
     const requestBox = $("#social-requests");
     requestBox.replaceChildren();
     if (!requests.incoming.length) emptySocial(requestBox, "Новых заявок нет.");
