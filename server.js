@@ -133,9 +133,9 @@ app.get("/api/status", async (_req, res) => {
   }
 });
 
-// Do not let mobile browsers keep an old HTML shell with stale click handlers.
+// Prevent mobile browsers and intermediary caches from reusing stale frontend assets.
 app.use((req, res, next) => {
-  if (req.path === "/" || req.path.endsWith(".html")) {
+  if (req.path === "/" || req.path.endsWith(".html") || /\\.(?:css|js)$/.test(req.path)) {
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
