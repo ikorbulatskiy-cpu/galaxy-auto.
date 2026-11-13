@@ -23,7 +23,9 @@ function createProfileRouter({ pool, auth, io }) {
   async function loadProfile(accountId) {
     const result = await pool.query(
       `SELECT a.id,a.nickname,a.created_at,c.profile_status,c.profile_bio,c.avatar,c.authority,c.authority_title,c.aura_enabled,
-              c.level,c.experience,w.balance,dr.role AS developer_role,
+              c.level,c.experience,c.planet,
+              (SELECT cp.name FROM nexora_social_world.custom_planets cp WHERE cp.id = CASE WHEN c.planet LIKE 'custom-%' THEN substring(c.planet from 8)::bigint ELSE NULL END) AS planet_name,
+              w.balance,dr.role AS developer_role,
               (SELECT COUNT(*)::int FROM nexora_social_world.friends f WHERE f.account_id=a.id) AS friends_count,
               (SELECT COUNT(*)::int FROM nexora_social_world.gifts g WHERE g.to_account_id=a.id) AS gifts_received
          FROM nexora_social_world.accounts a
@@ -37,6 +39,7 @@ function createProfileRouter({ pool, auth, io }) {
     const row = result.rows[0];
     return {
       id: String(row.id), nickname: row.nickname, createdAt: row.created_at,
+      planetKey: row.planet, planetName: row.planet_name || ({starter:"Стартовая",club:"Клуб",beach:"Пляж"})[row.planet] || null,
       status: row.profile_status, bio: row.profile_bio, avatar: normalizeAvatar(row.avatar),
       authority: row.authority, authorityTitle: row.authority_title || "NOVICE",
       auraEnabled: Boolean(row.aura_enabled), level: row.level, experience: row.experience,
@@ -101,7 +104,8 @@ function createProfileRouter({ pool, auth, io }) {
     ]);
     const live = io.sockets.adapter.rooms.get("account:"+targetId);
     const {koins:_privateBalance,...publicProfile}=profile;
-    res.json({ok:true,profile:{...publicProfile,online:Boolean(live?.size),isMe:String(req.account.id)===targetId,isFriend:Boolean(friend.rowCount),requestPending:Boolean(request.rowCount),requestIncoming:Boolean(request.rowCount && String(request.rows[0].from_account_id)===targetId),requestId:request.rows[0]?.id||null}});
+    const isFriend=Boolean(friend.rowCount);
+    res.json({ok:true,profile:{...publicProfile,planetKey:isFriend?publicProfile.planetKey:null,planetName:isFriend?publicProfile.planetName:null,online:Boolean(live?.size),isMe:String(req.account.id)===targetId,isFriend,requestPending:Boolean(request.rowCount),requestIncoming:Boolean(request.rowCount && String(request.rows[0].from_account_id)===targetId),requestId:request.rows[0]?.id||null}});
   }));
 
   router.patch("/", asyncRoute(async (req, res) => {

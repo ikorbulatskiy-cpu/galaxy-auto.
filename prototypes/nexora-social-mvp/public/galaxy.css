@@ -45,3 +45,5 @@
 .context-actions button{min-height:35px;padding:8px 10px}
 @keyframes context-open{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:600px){.context-menu{min-width:205px;max-width:calc(100vw - 16px)}.context-menu button{min-height:42px;font-size:13px}}
+
+.planet-search{flex:1 1 190px;min-width:150px;border:1px solid #7889c355;border-radius:20px;padding:8px 13px;background:#ffffff0a;color:#f4f6ff;font:inherit;font-size:11px;outline:none}.planet-search:focus{border-color:#a89cff;box-shadow:0 0 0 3px #a89cff22}.planet-search::placeholder{color:#aab8d8}.planet-category-toolbar{display:flex;gap:7px;overflow-x:auto;padding:0 2px 9px;scrollbar-width:thin}.planet-category-toolbar .map-filter{white-space:nowrap;flex:0 0 auto}
