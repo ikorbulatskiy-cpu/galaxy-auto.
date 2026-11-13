@@ -33,9 +33,28 @@ router.get("/catalog", async (_req,res,next) => {
 });
 router.get("/inventory", async (req,res,next) => {
   try {
-    const r=await pool.query(`SELECT ci.id,ci.character_id,ci.equipped,ci.acquired_at,i.id AS item_id,i.slug,i.name,i.category,i.rarity,i.asset_url
+    const r=await pool.query(`SELECT ci.id,ci.character_id,ci.equipped,ci.acquired_at,i.id AS item_id,i.slug,i.name,i.category,i.rarity,i.asset_url,
+        1::int AS quantity,FALSE AS legacy
       FROM character_inventory ci JOIN avatar_items i ON i.id=ci.item_id JOIN characters c ON c.id=ci.character_id
-      WHERE c.user_id=$1 ORDER BY ci.acquired_at DESC`,[req.user.id]);
+      WHERE c.user_id=$1
+      UNION ALL
+      SELECT md5('nexora-legacy-inventory-row:'||li.legacy_account_id::text||':'||li.item_code)::uuid AS id,
+        cm.character_id,FALSE AS equipped,li.created_at AS acquired_at,
+        md5('nexora-legacy-inventory-item:'||li.legacy_account_id::text||':'||li.item_code)::uuid AS item_id,
+        'legacy-'||SUBSTRING(md5(li.item_code),1,16) AS slug,li.item_code AS name,
+        CASE
+          WHEN li.item_code ~* 'hair' THEN 'hair'
+          WHEN li.item_code ~* 'shoe' THEN 'shoes'
+          WHEN li.item_code ~* 'outfit|clothes' THEN 'outfit'
+          WHEN li.item_code ~* 'head|hat|cap' THEN 'head'
+          WHEN li.item_code ~* 'body' THEN 'body'
+          ELSE 'accessory'
+        END AS category,
+        'common' AS rarity,NULL::text AS asset_url,li.quantity,TRUE AS legacy
+      FROM legacy_social_inventory li
+      JOIN legacy_social_character_map cm ON cm.legacy_account_id=li.legacy_account_id
+      WHERE li.user_id=$1
+      ORDER BY acquired_at DESC`,[req.user.id]);
     res.json({items:r.rows});
   } catch(e){next(e)}
 });
