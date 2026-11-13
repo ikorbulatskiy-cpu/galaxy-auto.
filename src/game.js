@@ -145,21 +145,22 @@ router.get("/planets", requireSession, async (req,res,next)=>{
 });
 
 router.post("/planets", requireSession, async (req,res,next)=>{
- const parsed=z.object({name:z.string().trim().min(3).max(48).regex(/^[\p{L}\p{N} _*.-]+$/u),description:z.string().trim().max(300).default(""),weather:z.string().trim().max(40).default("Ясно"),interior:z.string().trim().max(60).default("Космический зал"),theme:z.enum(["sunset","space","forest","city","underwater"]).default("sunset"),modules:z.array(z.enum(["magic","defender","games","horoscope","love"])).max(5).default(["magic","games"])}).strict().safeParse(req.body);
- if(!parsed.success)return res.status(400).json({error:"Проверьте название, описание и оформление планеты."});
+ const parsed=z.object({name:z.string().trim().min(3).max(48).regex(/^[\p{L}\p{N} _*.-]+$/u)}).strict().safeParse(req.body);
+ if(!parsed.success)return res.status(400).json({error:"Название планеты должно содержать от 3 до 48 допустимых символов."});
  const client=await pool.connect();
  try{
   await client.query("BEGIN");
   const wallet=await client.query("SELECT coins FROM wallet_balances WHERE user_id=$1 FOR UPDATE",[req.user.id]);
-  if(!wallet.rowCount||Number(wallet.rows[0].coins)<3){await client.query("ROLLBACK");return res.status(402).json({error:"Создание планеты стоит 3 Nexora Coins."});}
-  const slug="player-"+require("crypto").randomBytes(6).toString("hex");
-  const settings={theme:parsed.data.theme,weather:parsed.data.weather,interior:parsed.data.interior,modules:parsed.data.modules,king_label:"Король планеты"};
-  const created=await client.query("INSERT INTO planets(slug,name,description,access_type,ticket_price,settings,owner_user_id) VALUES($1,$2,$3,'public',0,$4::jsonb,$5) RETURNING id,slug,name,description,settings,owner_user_id",[slug,parsed.data.name,parsed.data.description,JSON.stringify(settings),req.user.id]);
-  await client.query("UPDATE wallet_balances SET coins=coins-3,updated_at=NOW() WHERE user_id=$1",[req.user.id]);
-  await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id) VALUES($1,'coins',-3,'Создание планеты',$2)",[req.user.id,created.rows[0].id]);
+  if(!wallet.rowCount||Number(wallet.rows[0].coins)<2.99){await client.query("ROLLBACK");return res.status(402).json({error:"Для создания планеты нужно 2.99 Nexora Coins."});}
+  const slug="player-"+require("crypto").randomBytes(8).toString("hex");
+  const settings={theme:"sunset",weather:"Ясно",interior:"Центральный зал",modules:["magic","games"],king_label:"Король планеты"};
+  const created=await client.query("INSERT INTO planets(slug,name,description,access_type,ticket_price,settings,owner_user_id) VALUES($1,$2,'Личная планета игрока','public',0,$3::jsonb,$4) RETURNING id,slug,name,description,settings,owner_user_id",[slug,parsed.data.name,JSON.stringify(settings),req.user.id]);
+  await client.query("UPDATE wallet_balances SET coins=coins-2.99,updated_at=NOW() WHERE user_id=$1",[req.user.id]);
+  await client.query("INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id) VALUES($1,'coins',-2.99,'Создание личной планеты',$2)",[req.user.id,created.rows[0].id]);
   await client.query("INSERT INTO rooms(planet_id,slug,name,description,capacity) VALUES($1,'central-hall','Центральный зал','Главная комната вашей планеты.',100)",[created.rows[0].id]);
+  await client.query("INSERT INTO user_locations(user_id,planet_id,arrived_at) VALUES($1,$2,NOW()) ON CONFLICT(user_id) DO UPDATE SET planet_id=EXCLUDED.planet_id,arrived_at=NOW()",[req.user.id,created.rows[0].id]);
   await client.query("COMMIT");
-  res.status(201).json({planet:created.rows[0],message:"Планета создана. Вы её король.",cost:3});
+  res.status(201).json({planet:created.rows[0],message:"Планета создана. Вы её король.",cost:2.99});
  }catch(e){await client.query("ROLLBACK");if(e.code==="23505")return res.status(409).json({error:"Не удалось создать уникальную планету. Повторите попытку."});next(e)}
  finally{client.release()}
 });
@@ -210,7 +211,7 @@ router.get("/rooms/:roomId/presence", requireSession, async (req,res,next)=>{
   if (!/^[0-9a-f-]{36}$/i.test(req.params.roomId)) return res.status(400).json({error:"Некорректная комната."});
   try {
     const result=await pool.query(
-      "SELECT rp.user_id,u.username,(rp.user_id=$2) AS is_me,COALESCE(c.name,u.username) AS character_name,c.appearance AS character_appearance,c.aura AS character_aura,MAX(rp.connected_at) AS connected_at " +
+      "SELECT rp.user_id,u.username,(rp.user_id=$2) AS is_me,(rp.user_id=p.owner_user_id) AS is_planet_owner,COALESCE(c.name,u.username) AS character_name,c.appearance AS character_appearance,c.aura AS character_aura,MAX(rp.connected_at) AS connected_at " +
       "FROM room_presence rp JOIN users u ON u.id=rp.user_id " +
       "JOIN rooms r ON r.id=rp.room_id AND r.is_active=TRUE JOIN planets p ON p.id=r.planet_id AND p.is_active=TRUE JOIN user_locations l ON l.planet_id=r.planet_id AND l.user_id=$2 " +
       "LEFT JOIN characters c ON c.user_id=u.id AND c.is_active=TRUE " +
