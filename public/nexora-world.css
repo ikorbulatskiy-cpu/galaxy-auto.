@@ -237,3 +237,12 @@
 /* Custom decorations imported from the previous Galaxy planet editor. */
 .nx-custom-objects-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
 .nx-avatars{z-index:4!important}
+
+.nx-planet-object-list{display:grid;gap:7px;margin-top:12px;max-height:240px;overflow:auto}
+.nx-planet-object-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid #ffffff20;border-radius:10px;background:#17142a}
+.nx-planet-object-row span{display:grid;gap:3px}.nx-planet-object-row small{font-size:11px}
+.nx-planet-object-row button,.nx-my-planet-row button{border:1px solid #9c7be3;border-radius:8px;padding:6px 10px;background:#2c2146;color:#fff;font-weight:800}
+.nx-object-coordinates{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nx-object-coordinates label{display:grid;gap:4px}
+.nx-object-coordinates input,.nx-world-dialog select{width:100%;min-width:0}
+.nx-my-planet-row{gap:8px}
