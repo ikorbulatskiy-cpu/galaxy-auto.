@@ -23,9 +23,6 @@ VALUES (900001,encode(digest('old-session-token','sha256'),'hex'),NOW()+INTERVAL
 INSERT INTO nexora_social_world.friends(account_id,friend_account_id,created_at)
 VALUES (900001,900002,NOW()-INTERVAL '5 days');
 
-INSERT INTO nexora_social_world.friend_requests(from_account_id,to_account_id,status,created_at,updated_at)
-VALUES (900002,900001,'pending',NOW()-INTERVAL '3 days',NOW()-INTERVAL '3 days');
-
 INSERT INTO nexora_social_world.conversations(id,participant_a,participant_b,created_at,updated_at)
 VALUES (70001,900001,900002,NOW()-INTERVAL '4 days',NOW()-INTERVAL '1 hour');
 
