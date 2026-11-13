@@ -591,14 +591,14 @@ BEGIN
     USING users u,achievements a
     WHERE ua.user_id=u.id AND ua.achievement_id=a.id
       AND u.legacy_social_account_id IS NOT NULL
-      AND a.slug IN ('first-steps','social-butterfly')
+      AND a.slug IN ('first-steps','social-butterfly','first-purchase')
   $q$;
 
   EXECUTE $q$
     DELETE FROM wallet_ledger l
     USING users u
     WHERE l.user_id=u.id AND u.legacy_social_account_id IS NOT NULL
-      AND l.reason IN ('Награда: first-steps','Награда: social-butterfly')
+      AND l.reason IN ('Награда: first-steps','Награда: social-butterfly','Награда: first-purchase')
   $q$;
 
   -- Restore the exact legacy balance after import-trigger side effects.
