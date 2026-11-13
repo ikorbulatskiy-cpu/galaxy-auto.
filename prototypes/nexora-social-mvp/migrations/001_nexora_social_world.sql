@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS nexora_social_world.characters (
   avatar JSONB NOT NULL DEFAULT '{}'::jsonb,
   planet VARCHAR(32) NOT NULL DEFAULT 'starter',
   position_x REAL NOT NULL DEFAULT 0.5 CHECK (position_x >= 0 AND position_x <= 1),
+  authority INTEGER NOT NULL DEFAULT 0 CHECK (authority >= 0),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
