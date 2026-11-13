@@ -110,7 +110,8 @@ function createAuthorityRouter({ pool, auth, io, players }) {
   });
 
   router.post("/purchase", async (req, res, next) => {
-    const account = await accountFor(req);
+    let account;
+    try { account = await accountFor(req); } catch (error) { return next(error); }
     if (!account) return res.status(401).json({ error: "Требуется вход." });
     const titleKey = String(req.body?.titleKey || "").toUpperCase();
     const requestId = String(req.body?.requestId || "");
@@ -209,7 +210,9 @@ function createAuthorityRouter({ pool, auth, io, players }) {
     } catch(error){next(error);}
   });
   router.post("/admin/assign", async (req,res,next) => {
-    const current = await requireAuthorityPermission(req,res,"authority.assign"); if (!current) return;
+    let current;
+    try { current = await requireAuthorityPermission(req,res,"authority.assign"); } catch (error) { return next(error); }
+    if (!current) return;
     const targetId = String(req.body?.accountId || "");
     const key = String(req.body?.titleKey || "").toUpperCase();
     const reason = String(req.body?.reason || "").trim().slice(0,500);
@@ -252,7 +255,9 @@ function createAuthorityRouter({ pool, auth, io, players }) {
     }finally{client.release();}
   });
   router.post("/admin/remove/:id", async (req,res,next) => {
-    const current=await requireAuthorityPermission(req,res,"authority.remove");if(!current)return;
+    let current;
+    try { current=await requireAuthorityPermission(req,res,"authority.remove"); } catch(error) { return next(error); }
+    if(!current)return;
     const targetId=String(req.params.id),reason=String(req.body?.reason||"").trim().slice(0,500);
     if(!/^\d+$/.test(targetId)||!reason)return res.status(400).json({error:"Укажите ID игрока и причину снятия звания."});
     if(ownerId()&&targetId===ownerId()&&current.role!=="OWNER")return res.status(403).json({error:"Снимать звание владельца может только OWNER."});
