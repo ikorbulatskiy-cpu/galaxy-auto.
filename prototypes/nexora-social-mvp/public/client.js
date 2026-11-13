@@ -1012,11 +1012,28 @@
     }
     else if (action === "shop") openShop();
     else if (action === "planets") $("#planets-button").click();
+    else if (action === "galaxy") openIntegratedGalaxy();
     else if (action === "developer") $("#developer-open").click();
     else if (action === "exit") $("#exit-room").click();
     else if (action === "players") toggleRoomFlyout("players");
     else if (action === "events") toggleRoomFlyout("events");
   }));
+  function openIntegratedGalaxy() {
+    const view = $("#integrated-galaxy-view");
+    const frame = $("#integrated-galaxy-frame");
+    if (!view || !frame) return;
+    closeCompetingPanels();
+    view.classList.remove("hidden");
+    if (!frame.getAttribute("src") || frame.getAttribute("src") === "about:blank") {
+      frame.src = "/galaxy?embedded=1";
+    }
+  }
+  $("#integrated-galaxy-back")?.addEventListener("click", () => {
+    const view = $("#integrated-galaxy-view");
+    const frame = $("#integrated-galaxy-frame");
+    if (frame) frame.src = "about:blank";
+    view?.classList.add("hidden");
+  });
   document.querySelectorAll("[data-room-emotion]").forEach(button => button.addEventListener("click",() => {
     socket.emit("emotion:play",{emotion:button.dataset.roomEmotion});
     closeRoomFlyouts();
