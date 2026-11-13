@@ -256,6 +256,7 @@
         $("#planet-title").textContent = PLANETS[state.planet].name;
         resize();
         requestAnimationFrame(drawScene);
+        refreshSocial();
       });
     });
     socket.once("connect_error", () => {
@@ -423,6 +424,17 @@
   }
   $("#close-profile").addEventListener("click", closeProfile);
   $("#gift-button").addEventListener("click", () => $("#gift-options").classList.toggle("hidden"));
+  $("#dm-open-button").addEventListener("click", async () => {
+    const peerId = state.selected;
+    if (!peerId) return;
+    try {
+      const result = await socialApi("/conversations", { method: "POST", body: JSON.stringify({ peerId }) });
+      closeProfile();
+      openSocialTab("messages");
+      await loadConversations();
+      await openConversation(result.conversationId);
+    } catch (error) { showToast(error.message); }
+  });
   $("#whisper-button").addEventListener("click", () => {
     const text = prompt("Текст приватного сообщения:");
     if (text?.trim()) socket.emit("whisper:send", { targetId: state.selected, text }, (result) => {
@@ -430,8 +442,12 @@
     });
     closeProfile();
   });
-  $("#friend-button").addEventListener("click", () => {
-    if (state.selected) socket.emit("friend:add", { targetId: state.selected });
+  $("#friend-button").addEventListener("click", async () => {
+    if (!state.selected) return closeProfile();
+    try {
+      const result = await socialApi("/requests", { method: "POST", body: JSON.stringify({ targetId: state.selected }) });
+      showToast("Заявка отправлена игроку " + result.nickname);
+    } catch (error) { showToast(error.message); }
     closeProfile();
   });
   document.querySelectorAll("[data-gift]").forEach((button) => {
@@ -503,6 +519,197 @@
   });
   socket.on("disconnect", () => {
     if (!gameScreen.classList.contains("hidden")) showToast("Соединение прервано. Перезагрузите страницу для входа снова.");
+  });
+
+
+  let activeConversationId = null;
+  let socialUnread = 0;
+
+  async function socialApi(path, options = {}) {
+    const response = await fetch("/api/social" + path, {
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+      ...options
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Ошибка социального раздела.");
+    return data;
+  }
+  function makeSocialRow(title, subtitle, actions = []) {
+    const row = document.createElement("div");
+    row.className = "social-row";
+    const label = document.createElement("div");
+    label.className = "social-name";
+    label.textContent = title;
+    if (subtitle) {
+      const small = document.createElement("small");
+      small.textContent = subtitle;
+      label.append(small);
+    }
+    row.append(label);
+    actions.forEach(({ text, run }) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = text;
+      button.addEventListener("click", run);
+      row.append(button);
+    });
+    return row;
+  }
+  function emptySocial(container, text) {
+    const p = document.createElement("p");
+    p.className = "social-empty";
+    p.textContent = text;
+    container.replaceChildren(p);
+  }
+  async function refreshSocial() {
+    try {
+      await Promise.all([loadFriends(), loadNotifications()]);
+      await loadConversations();
+    } catch (error) { console.warn("Social refresh:", error.message); }
+  }
+  async function loadFriends() {
+    const [friends, requests] = await Promise.all([
+      socialApi("/friends"), socialApi("/requests")
+    ]);
+    const friendsBox = $("#social-friends");
+    friendsBox.replaceChildren();
+    if (!friends.friends.length) emptySocial(friendsBox, "Пока нет друзей.");
+    friends.friends.forEach(friend => {
+      friendsBox.append(makeSocialRow(friend.nickname, friend.profile_status || "Друг NEXORA", [
+        { text: "Написать", run: async () => {
+          try {
+            const result = await socialApi("/conversations", { method: "POST", body: JSON.stringify({ peerId: friend.id }) });
+            openSocialTab("messages"); await loadConversations(); await openConversation(result.conversationId);
+          } catch (error) { showToast(error.message); }
+        }},
+        { text: "Удалить", run: async () => {
+          try { await socialApi("/friends/" + friend.id, { method: "DELETE" }); await loadFriends(); showToast("Друг удалён."); }
+          catch (error) { showToast(error.message); }
+        }}
+      ]));
+    });
+    const requestBox = $("#social-requests");
+    requestBox.replaceChildren();
+    if (!requests.incoming.length) emptySocial(requestBox, "Новых заявок нет.");
+    requests.incoming.forEach(request => {
+      requestBox.append(makeSocialRow(request.nickname, "Хочет добавить вас в друзья", [
+        { text: "Принять", run: async () => {
+          try { await socialApi("/requests/" + request.id + "/accept", { method: "POST" }); await loadFriends(); showToast("Теперь вы друзья."); }
+          catch (error) { showToast(error.message); }
+        }},
+        { text: "Отклонить", run: async () => {
+          try { await socialApi("/requests/" + request.id + "/decline", { method: "POST" }); await loadFriends(); }
+          catch (error) { showToast(error.message); }
+        }}
+      ]));
+    });
+  }
+  async function searchSocialUsers(query) {
+    const box = $("#social-search-results");
+    if (query.trim().length < 2) { box.replaceChildren(); return; }
+    try {
+      const result = await socialApi("/users?q=" + encodeURIComponent(query.trim()));
+      box.replaceChildren();
+      if (!result.users.length) return emptySocial(box, "Игроки не найдены.");
+      result.users.forEach(user => box.append(makeSocialRow(user.nickname, "Игрок NEXORA", [
+        { text: "Добавить", run: async () => {
+          try {
+            await socialApi("/requests", { method: "POST", body: JSON.stringify({ targetId: user.id }) });
+            showToast("Заявка отправлена: " + user.nickname);
+            await loadFriends();
+          } catch (error) { showToast(error.message); }
+        }}
+      ])));
+    } catch (error) { showToast(error.message); }
+  }
+  async function loadConversations() {
+    const result = await socialApi("/conversations");
+    const box = $("#social-conversations");
+    box.replaceChildren();
+    if (!result.conversations.length) emptySocial(box, "Личных переписок пока нет. Добавьте друга.");
+    result.conversations.forEach(item => {
+      const subtitle = (item.last_message || "Начните общение") + (Number(item.unread_count) ? " · Новых: " + item.unread_count : "");
+      box.append(makeSocialRow(item.nickname, subtitle, [
+        { text: "Открыть", run: () => openConversation(item.id) }
+      ]));
+    });
+  }
+  async function openConversation(id) {
+    activeConversationId = String(id);
+    const result = await socialApi("/conversations/" + encodeURIComponent(id) + "/messages");
+    const thread = $("#social-thread");
+    thread.replaceChildren();
+    if (!result.messages.length) emptySocial(thread, "Напишите первое сообщение.");
+    result.messages.forEach(message => {
+      const row = document.createElement("div");
+      row.className = "social-message";
+      const author = document.createElement("strong");
+      author.textContent = message.nickname + ":";
+      const body = document.createElement("span");
+      body.textContent = message.body;
+      const time = document.createElement("time");
+      time.textContent = new Date(message.created_at).toLocaleString();
+      row.append(author, body, time);
+      thread.append(row);
+    });
+    thread.scrollTop = thread.scrollHeight;
+    await loadConversations();
+  }
+  async function loadNotifications() {
+    const result = await socialApi("/notifications");
+    const box = $("#social-notifications");
+    box.replaceChildren();
+    const unread = result.notifications.filter(item => !item.read_at).length;
+    $("#notification-count").textContent = unread ? String(unread) : "";
+    if (!result.notifications.length) emptySocial(box, "Уведомлений пока нет.");
+    result.notifications.forEach(item => {
+      const title = item.type === "friend_request" ? "Новая заявка в друзья" :
+        item.type === "friend_accepted" ? "Заявка принята" :
+        item.type === "direct_message" ? "Новое личное сообщение" : "Уведомление";
+      const actor = item.actor_nickname ? "От: " + item.actor_nickname : "";
+      box.append(makeSocialRow(title, actor + (item.read_at ? "" : " · Новое")));
+    });
+  }
+  function openSocialTab(tab) {
+    $("#social-panel").classList.remove("hidden");
+    const labels = { friends: "Друзья", messages: "Сообщения", notifications: "Уведомления" };
+    $("#social-title").textContent = labels[tab] || "Социальное";
+    document.querySelectorAll("[data-social-tab]").forEach(button => button.classList.toggle("active", button.dataset.socialTab === tab));
+    $("#social-friends-view").classList.toggle("hidden", tab !== "friends");
+    $("#social-messages-view").classList.toggle("hidden", tab !== "messages");
+    $("#social-notifications-view").classList.toggle("hidden", tab !== "notifications");
+    if (tab === "friends") loadFriends().catch(error => showToast(error.message));
+    if (tab === "messages") loadConversations().catch(error => showToast(error.message));
+    if (tab === "notifications") {
+      loadNotifications().then(() => socialApi("/notifications/read", { method: "POST" })).then(loadNotifications).catch(error => showToast(error.message));
+    }
+  }
+  $("#social-open").addEventListener("click", () => openSocialTab("friends"));
+  $("#social-close").addEventListener("click", () => $("#social-panel").classList.add("hidden"));
+  document.querySelectorAll("[data-social-tab]").forEach(button => button.addEventListener("click", () => openSocialTab(button.dataset.socialTab)));
+  $("#social-search").addEventListener("input", event => searchSocialUsers(event.target.value));
+  $("#social-message-form").addEventListener("submit", async event => {
+    event.preventDefault();
+    const input = $("#social-message-input");
+    const body = input.value.trim();
+    if (!body || !activeConversationId) return;
+    try {
+      await socialApi("/conversations/" + encodeURIComponent(activeConversationId) + "/messages", { method: "POST", body: JSON.stringify({ body }) });
+      input.value = "";
+      await openConversation(activeConversationId);
+    } catch (error) { showToast(error.message); }
+  });
+  socket.on("dm:message", message => {
+    if (String(message.conversationId) === activeConversationId) openConversation(activeConversationId).catch(() => {});
+    else showToast("💬 Новое сообщение от " + message.nickname);
+    loadConversations().catch(() => {});
+  });
+  socket.on("social:notification", () => {
+    socialUnread += 1;
+    $("#notification-count").textContent = String(socialUnread);
+    showToast("🔔 Новое уведомление");
+    if (!$("#social-panel").classList.contains("hidden")) loadNotifications().catch(() => {});
   });
 
   if (window.Telegram?.WebApp) {
