@@ -220,3 +220,15 @@
 .nx-body-preview svg{display:block;width:46px;height:62px;filter:drop-shadow(0 3px 4px #0008)}
 .nx-classic .nx-avatars .nx-avatar-card{will-change:left,top}
 @media(max-width:700px){.nx-classic .nx-avatar-card svg{width:62px;height:116px}}
+
+
+/* NEXORA FIX: центрируем своего персонажа относительно всей игровой сцены.
+   Карточка собственного игрока исключена из flex-потока, поэтому другие игроки
+   и ширина/прокрутка списка не сдвигают точку появления. */
+.nx-classic .nx-avatars{left:0!important;right:0!important}
+.nx-classic .nx-avatar-card.me{
+  position:absolute!important;
+  left:50%!important;
+  bottom:0!important;
+  margin-left:-32px!important; /* половина ширины карточки на desktop */
+}
