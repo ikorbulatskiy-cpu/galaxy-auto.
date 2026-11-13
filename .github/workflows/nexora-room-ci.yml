@@ -117,3 +117,11 @@ jobs:
           done
           psql -h 127.0.0.1 -U nexora -d nexora_test -v ON_ERROR_STOP=1 -c "SELECT item_code, price FROM nexora_social_world.shop_catalog ORDER BY item_code"
           psql -h 127.0.0.1 -U nexora -d nexora_test -v ON_ERROR_STOP=1 -c "SELECT to_regclass('nexora_social_world.custom_planet_objects'), to_regclass('nexora_social_world.player_reports'), to_regclass('nexora_social_world.wallet_transactions')"
+
+      - name: Install app dependencies for runtime smoke tests
+        run: cd prototypes/nexora-social-mvp && npm install --no-audit --no-fund
+      - name: Run API smoke tests against temporary PostgreSQL
+        working-directory: prototypes/nexora-social-mvp
+        env:
+          DATABASE_URL: postgresql://nexora:nexora_test_password@127.0.0.1:5432/nexora_test
+        run: node scripts/runtime-smoke-test.js
