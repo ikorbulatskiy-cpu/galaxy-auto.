@@ -7,6 +7,12 @@ on:
     paths:
       - "src/**"
       - "public/nexora-galaxy-social.*"
+      - "public/index.html"
+      - "public/nexora-world.js"
+      - "public/nexora-unified-shell.css"
+      - "public/index.html"
+      - "public/nexora-world.js"
+      - "public/nexora-unified-shell.css"
       - "database/migrations/**"
       - "scripts/migrate.js"
       - "server.js"
