@@ -38,6 +38,6 @@ test("room join broadcasts stale presence cleanup and serializes with travel", (
   assert.match(realtime, /DELETE FROM room_presence rp USING expired e/);
   assert.match(realtime, /RETURNING rp\.room_id,rp\.user_id,rp\.connection_id/);
   assert.match(realtime, /if\(row\.announce\) publish\(\{ type: "presence", action: "left"/);
-  assert.match(realtime, /for \(const row of stale\.rows\)\s*publish\(\{ type: "presence", action: "left"/);
+  assert.match(realtime, /for \(const row of stale\.rows\) if\(row\.announce\) publish\(\{ type: "presence", action: "left"/);
   assert.match(realtime, /FOR UPDATE OF l/);
 });
