@@ -278,7 +278,7 @@
       if (!response.ok) throw new Error(data.error || "Ошибка авторизации.");
       if (data.recoveryCode) {
         const box = $("#recovery-result");
-        box.textContent = "ТВОЙ КОД ВОССТАНОВЛЕНИЯ: " + data.recoveryCode + "  Сохрани его. Повторно показать код нельзя.";
+        box.textContent = "ТВОЙ КОД ВОССТАНОВЛЕНИЯ: " + data.recoveryCode + "  Сохрани его. Это твой личный код из 10 символов.";
         box.classList.remove("hidden");
       }
       await enterWorld();
