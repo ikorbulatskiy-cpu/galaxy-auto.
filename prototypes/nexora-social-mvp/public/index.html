@@ -287,6 +287,15 @@
           </div>
           <button id="planet-owner-save" type="button">Сохранить настройки</button>
           <h3>Посетители сейчас</h3><div id="planet-owner-visitors" class="planet-owner-visitors"></div>
+          <h3>Декорации планеты</h3>
+          <div class="planet-form-grid">
+            <label>Объект<select id="planet-object-code"><option value="tree">Дерево</option><option value="bench">Скамейка</option><option value="fountain">Фонтан</option><option value="lamp">Фонарь</option><option value="flowerbed">Клумба</option><option value="kiosk">Магазин</option><option value="palm">Пальма</option><option value="beach_chair">Шезлонг</option><option value="club_table">Столик клуба</option><option value="dj_booth">DJ-пульт</option><option value="sofa">Диван</option><option value="plant">Растение</option></select></label>
+            <label>Положение по X <input id="planet-object-x" type="number" min="0" max="100" value="50"></label>
+            <label>Положение по Y <input id="planet-object-y" type="number" min="0" max="100" value="80"></label>
+          </div>
+          <button id="planet-object-add" type="button">＋ Добавить объект</button>
+          <div id="planet-object-list" class="planet-owner-visitors"></div>
+          <button id="planet-object-save" type="button">Сохранить декорации</button>
           <div class="planet-form-grid">
             <label>ID игрока для приглашения<input id="planet-invite-account" inputmode="numeric"></label>
             <label>ID игрока для блокировки<input id="planet-ban-account" inputmode="numeric"></label>
