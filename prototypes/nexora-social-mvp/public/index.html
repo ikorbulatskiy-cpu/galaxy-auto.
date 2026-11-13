@@ -67,6 +67,7 @@
       <aside id="room-main-menu" class="room-flyout hidden" aria-label="Главное меню">
         <div class="room-flyout-head"><div><small>NEXORA WORLD</small><strong>Главное меню</strong></div><button type="button" data-room-close="menu" aria-label="Закрыть">×</button></div>
         <div class="room-menu-grid">
+          <button type="button" data-room-action="search" aria-label="Поиск">🔍<span>Поиск</span></button>
           <button type="button" data-room-action="shop">🛍️<span>Магазин</span></button>
           <button type="button" data-room-action="planets">🪐<span>Планеты</span></button>
           <button type="button" data-room-action="rating">🏆<span>Рейтинг</span></button>
@@ -74,11 +75,11 @@
           <button type="button" data-room-action="developer" id="room-developer-action" class="hidden">🛠️<span>Разработчик</span></button>
           <button type="button" data-room-action="exit">↪<span>Выйти из комнаты</span></button>
         </div>
-        <section class="room-global-search" aria-label="Поиск по серверу">
-          <label for="room-global-search-input">⌕ Поиск по NEXORA</label>
-          <input id="room-global-search-input" type="search" maxlength="40" autocomplete="off" placeholder="Персонажи, планеты и другое">
+        <section id="room-global-search" class="room-global-search hidden" aria-label="Поиск">
+          <div class="room-search-title"><button type="button" data-room-search-back aria-label="Назад">‹</button><strong>Поиск</strong></div>
+          <input id="room-global-search-input" type="search" maxlength="40" autocomplete="off" placeholder="Поиск" aria-label="Поиск персонажей и планет">
           <div id="room-global-search-results" class="room-global-search-results" aria-live="polite">
-            <p>Начни вводить ник или название планеты.</p>
+            <p>Введи имя персонажа или название планеты.</p>
           </div>
         </section>
       </aside>
