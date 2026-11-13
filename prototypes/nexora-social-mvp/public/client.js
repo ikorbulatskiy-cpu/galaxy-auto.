@@ -508,7 +508,8 @@
         ctx.save();ctx.strokeStyle="#e7dcff";ctx.lineWidth=2;ctx.shadowColor="#a58cff";ctx.shadowBlur=16;
         ctx.beginPath();ctx.ellipse(drawX,y+2,25*scale,46*scale,0,0,Math.PI*2);ctx.stroke();ctx.restore();
       }
-      const auraCenterY=y-28*scale; // sprite origin is at the feet; aura is centered on the body.\n      drawAura(ctx,drawX,auraCenterY,scale,player.auraType,player.auraEnabled,state.auraQuality);
+      const auraCenterY=y-28*scale; // sprite origin is at the feet; aura is centered on the body.
+      drawAura(ctx,drawX,auraCenterY,scale,player.auraType,player.auraEnabled,state.auraQuality);
       const spriteDirection=player.direction||"down";
       const spriteDrawn=window.NexoraSpriteEngine?.draw(ctx,drawX,y,scale,player.avatar,spriteDirection,Boolean(player.moving),emotion);
       if(!spriteDrawn)drawAvatar(ctx,drawX,y,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
