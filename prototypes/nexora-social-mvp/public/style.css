@@ -2253,3 +2253,10 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 @media(max-width:520px) { #login-screen { align-items:center; padding:max(16px,env(safe-area-inset-top)) 13px max(16px,env(safe-area-inset-bottom)); } #login-screen .login-card { width:100%; max-width:440px; padding:24px 18px 22px; border-radius:26px; } #login-screen .brand-mark { width:48px;height:48px; } #login-screen h1 { font-size:36px; } #login-screen .muted { font-size:12px; margin-bottom:20px; } }
 @media(max-height:700px) { #login-screen { align-items:start; padding-top:max(12px,env(safe-area-inset-top)); padding-bottom:max(12px,env(safe-area-inset-bottom)); } #login-screen .login-card { padding-top:19px; padding-bottom:18px; } #login-screen .brand-mark { width:40px;height:40px;margin-bottom:6px;font-size:22px; } #login-screen h1 { font-size:32px; } #login-screen .muted { margin:5px auto 14px; } #login-screen .auth-submit { min-height:46px; margin-top:10px; } }
 @media(max-width:360px) { #login-screen .login-card { padding:20px 14px; } .registration-footer-actions { gap:5px; } .registration-footer-actions .register-cancel { min-width:90px; } }
+
+
+/* NEXORA 28.0: tidy chat footer and explicit character unlock action. */
+.chat-drawer .chat-footer-tools{display:flex;justify-content:flex-end;align-items:center;width:100%;min-height:22px;padding:0 2px;margin-top:-3px;}
+.chat-drawer .chat-footer-tools .chat-clear-button{min-width:0;width:auto;min-height:23px;padding:0 9px;border-radius:7px;font-size:9px;}
+.chat-drawer .chat-head-actions .chat-clear-button{display:none!important;}
+@media(max-width:600px){.chat-drawer .chat-footer-tools{min-height:20px;margin-top:-4px}.chat-drawer .chat-footer-tools .chat-clear-button{min-height:21px;font-size:8px;padding:0 8px}}
