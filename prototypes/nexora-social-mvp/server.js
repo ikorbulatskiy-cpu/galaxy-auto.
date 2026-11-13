@@ -317,6 +317,7 @@ io.on("connection", (socket) => {
     if (nextPlanet.startsWith("custom-")) {
       const id = nextPlanet.slice(7);
       await pool.query("INSERT INTO nexora_social_world.planet_members(planet_id,account_id) VALUES($1,$2) ON CONFLICT DO NOTHING", [id,player.accountId]);
+      await pool.query("UPDATE nexora_social_world.planet_invites SET used_at=NOW() WHERE planet_id=$1 AND invited_account_id=$2 AND used_at IS NULL AND expires_at>NOW()", [id,player.accountId]);
     }
     await sendPlanetState(socket, nextPlanet);
     socket.to(roomName(nextPlanet)).emit("player:joined", publicPlayer(player));
