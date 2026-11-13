@@ -31,6 +31,35 @@
     };
   }
 
+
+  function drawAura(target, x, y, scale, type, enabled) {
+    if (!enabled || !type || type === "NONE") return;
+    const palette = { GOLD_SOFT:["#ffe27a","#ffbd45"], GOLD_PREMIUM:["#fff0a0","#ffb52e"], GREEN:["#a1ffc0","#39d879"], FIRE_RED:["#ff9b65","#ff342d"] };
+    const colors = palette[type]; if (!colors) return;
+    const time = Date.now() / 260;
+    target.save(); target.translate(x,y); target.scale(scale,scale); target.globalCompositeOperation="lighter";
+    target.shadowColor=colors[0]; target.shadowBlur=type==="FIRE_RED"?19:13;
+    target.strokeStyle=colors[0]; target.globalAlpha=.34+Math.sin(time)*.08; target.lineWidth=type==="GOLD_PREMIUM"?3:2;
+    target.beginPath(); target.ellipse(0,3,23+Math.sin(time*.7)*2,43+Math.cos(time*.8)*2,0,0,Math.PI*2); target.stroke();
+    for(let i=0;i<(type==="FIRE_RED"?15:9);i++){
+      const phase=time+i*2.17, angle=i*2.399, rise=((phase*(type==="FIRE_RED"?1.25:.55)+i*7)%54);
+      const px=Math.cos(angle+time*.22)*(13+rise*.16), py=27-rise;
+      target.globalAlpha=.25+(1-rise/54)*.7; target.fillStyle=i%2?colors[0]:colors[1];
+      target.beginPath();target.arc(px,py,type==="FIRE_RED"?1.2+(i%3)*.65:1+(i%2)*.7,0,Math.PI*2);target.fill();
+    }
+    if(type==="FIRE_RED"){
+      for(const side of [-1,1]){
+        const flicker=Math.sin(time*1.8+side)*4;target.globalAlpha=.42;target.fillStyle=colors[1];
+        target.beginPath();target.moveTo(side*17,24);target.quadraticCurveTo(side*(30+flicker),5,side*(20+flicker),-17);target.quadraticCurveTo(side*34,-3,side*25,22);target.closePath();target.fill();
+        target.globalAlpha=.75;target.fillStyle="#ffd2a1";target.beginPath();target.arc(side*(20+flicker),-15+Math.sin(time+side)*3,1.4,0,Math.PI*2);target.fill();
+      }
+    } else if(type==="GOLD_PREMIUM"){
+      target.globalAlpha=.8;target.fillStyle="#fff3bd";
+      for(let i=0;i<4;i++){const a=time+i*Math.PI/2;target.fillRect(Math.cos(a)*27-1,Math.sin(a)*28-3,2,2);}
+    }
+    target.restore();
+  }
+
   function drawAvatar(target, x, y, scale, avatar, facing = 1, emotion = null) {
     target.save();
     target.translate(x, y);
@@ -211,6 +240,7 @@
         ctx.textAlign = "start";
       }
 
+      drawAura(ctx, drawX, y + moveOffset, .95, player.auraType, player.auraEnabled);
       drawAvatar(ctx, drawX, y + moveOffset, .95, player.avatar, player.facing || 1, emotion);
       ctx.textAlign = "center";
       ctx.font = isMe ? "bold 11px sans-serif" : "10px sans-serif";
@@ -218,8 +248,6 @@
       ctx.shadowColor = "#080b20"; ctx.shadowBlur = 5;
       ctx.fillText(player.nickname, drawX, baseY + 13);
       ctx.shadowBlur = 0;
-      ctx.font = "9px sans-serif"; ctx.fillStyle = "#d4d8ff";
-      ctx.fillText(player.title || "Новичок", drawX, baseY + 25);
       ctx.textAlign = "start";
     });
     requestAnimationFrame(drawScene);
@@ -564,6 +592,7 @@
       $("#profile-authority").textContent = p.authority;
       $("#profile-koins").textContent = p.koins;
       $("#profile-nickname-display").textContent = p.nickname;
+      paintAuthorityProfile(p);
       $("#profile-status").value = p.status || "";
       $("#profile-bio").value = p.bio || "";
       const avatar = p.avatar || {};
