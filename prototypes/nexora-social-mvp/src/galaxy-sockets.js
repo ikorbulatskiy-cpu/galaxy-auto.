@@ -69,7 +69,7 @@ function attachGalaxySockets(io, { pool, auth, planets, normalizeAvatar }) {
           id: String(account.id), accountId: account.id, socketId: socket.id, nickname: saved.nickname,
           avatar: normalizeAvatar(saved.avatar), planet,
           x: Math.max(.04, Math.min(.96, Number(saved.position_x ?? .5))),
-          y: Math.max(.60, Math.min(.86, Number(saved.position_y ?? .82))),
+          y: .82,
           authority: saved.authority || 0, authorityTitle: saved.authority_title || "NOVICE",
           auraType: ({ NOVICE:"NONE", BEDA:"GOLD_SOFT", PAPA:"GOLD_PREMIUM", ANGEL:"GREEN", CREATOR:"FIRE_RED" })[saved.authority_title] || "NONE",
           auraEnabled: Boolean(saved.aura_enabled), lastMoveAt: 0, lastActionAt: 0, lastEmotionAt: 0
