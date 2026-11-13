@@ -251,6 +251,27 @@ function createAuthorityRouter({ pool, auth, io, players }) {
       next(error);
     }finally{client.release();}
   });
+  router.post("/admin/remove/:id", async (req,res,next) => {
+    const current=await requireAuthorityPermission(req,res,"authority.remove");if(!current)return;
+    const targetId=String(req.params.id),reason=String(req.body?.reason||"").trim().slice(0,500);
+    if(!/^\\d+$/.test(targetId)||!reason)return res.status(400).json({error:"Укажите ID игрока и причину снятия звания."});
+    if(ownerId()&&targetId===ownerId()&&current.role!=="OWNER")return res.status(403).json({error:"Снимать звание владельца может только OWNER."});
+    const client=await pool.connect();
+    try{
+      await client.query("BEGIN");
+      const target=await client.query("SELECT authority_title FROM nexora_social_world.characters WHERE account_id=$1 FOR UPDATE",[targetId]);
+      if(!target.rowCount)throw Object.assign(new Error("Персонаж не найден."),{status:404});
+      const oldKey=TITLES.includes(target.rows[0].authority_title)?target.rows[0].authority_title:"NOVICE";
+      await client.query("UPDATE nexora_social_world.characters SET authority_title='NOVICE',aura_enabled=FALSE,updated_at=NOW() WHERE account_id=$1",[targetId]);
+      await client.query("INSERT INTO nexora_social_world.authority_history(account_id,old_title,new_title,source,actor_account_id,reason) VALUES($1,$2,'NOVICE','DEVELOPER',$3,$4)",[targetId,oldKey,current.account.id,reason]);
+      await audit(client,current.account.id,targetId,"authority.remove",reason,{oldTitle:oldKey,newTitle:"NOVICE"});
+      await client.query("COMMIT");
+      const fresh=await pool.query("SELECT authority,authority_title,aura_enabled FROM nexora_social_world.characters WHERE account_id=$1",[targetId]);
+      updateOnline(io,players,targetId,{authorityTitle:fresh.rows[0].authority_title,auraEnabled:false,authority:Number(fresh.rows[0].authority)});
+      res.json({ok:true,accountId:targetId,titleKey:"NOVICE"});
+    }catch(error){try{await client.query("ROLLBACK");}catch(_rollbackError){}if(error.status)return res.status(error.status).json({error:error.message});next(error);}
+    finally{client.release();}
+  });
   router.get("/admin/history/:id", async (req,res,next)=>{
     try{
       const current=await requireAuthorityPermission(req,res,"authority.history");if(!current)return;
