@@ -1,4 +1,6 @@
 /* Unified NEXORA shell: Galaxy is the home screen; existing sections stay accessible from the in-world menu. */
+#dashboard{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
+
 #dashboard>#tab-world{width:100%!important;max-width:none!important;min-height:100dvh!important;margin:0!important;padding:0!important}
 #dashboard>#tab-world>.nx-world{
   width:min(1440px,100vw)!important;max-width:1440px!important;height:100dvh!important;min-height:0!important;max-height:100dvh!important;
