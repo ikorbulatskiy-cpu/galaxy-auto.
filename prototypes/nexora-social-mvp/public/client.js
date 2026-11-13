@@ -441,6 +441,34 @@
     input.value = "";
   });
 
+  $("#exit-room").addEventListener("click", async () => {
+    const button = $("#exit-room");
+    button.disabled = true;
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "same-origin"
+      });
+    } catch (error) {
+      console.error("Logout request failed:", error);
+    } finally {
+      socket.disconnect();
+      state.me = null;
+      state.players.clear();
+      state.selected = null;
+      state.chat = [];
+      $("#planet-picker").classList.add("hidden");
+      $("#chat-drawer").classList.add("hidden");
+      $("#profile-menu").classList.add("hidden");
+      $("#gift-options").classList.add("hidden");
+      $("#recovery-result").classList.add("hidden");
+      loginError.textContent = "";
+      gameScreen.classList.add("hidden");
+      loginScreen.classList.remove("hidden");
+      button.disabled = false;
+    }
+  });
+
   $("#planets-button").addEventListener("click", () => $("#planet-picker").classList.toggle("hidden"));
   $("#planet-picker").querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", () => {
