@@ -96,34 +96,25 @@
         <div id="gift-layer" class="gift-layer"></div>
       </div>
 
-      <nav id="room-toolbar" class="room-toolbar" aria-label="Игровое управление">
+      <nav id="room-toolbar" class="room-toolbar" aria-label="Главное управление">
         <button type="button" data-room-toggle="menu" aria-expanded="false">☰<span>Меню</span></button>
         <button type="button" class="active" data-room-toggle="chat" aria-expanded="true">💬<span>Чат</span></button>
-        <button type="button" data-room-toggle="emotions">😊<span>Эмоции</span></button>
-        <button type="button" data-room-toggle="players">👥<span>Игроки</span></button>
-        <button type="button" data-room-action="friends">⭐<span>Друзья</span></button>
-        <button type="button" data-room-action="gifts">🎁<span>Подарки</span></button>
-        <button type="button" data-room-toggle="events">🔔<span>События</span><i id="room-event-count" class="room-event-count hidden">0</i></button>
+        <button type="button" data-room-action="friends">👥<span>Социальное</span></button>
+        <button type="button" data-room-toggle="players">🧑‍🤝‍🧑<span>Игроки</span></button>
         <button type="button" data-room-action="profile">👤<span>Профиль</span></button>
       </nav>
 
       <aside id="room-main-menu" class="room-flyout hidden" aria-label="Главное меню">
         <div class="room-flyout-head"><div><small>NEXORA WORLD</small><strong>Главное меню</strong></div><button type="button" data-room-close="menu" aria-label="Закрыть">×</button></div>
         <div class="room-menu-grid">
-          <button type="button" data-room-action="profile">👤<span>Мой профиль</span></button>
-          <button type="button" data-room-action="chat">💬<span>Сказать в чат</span></button>
-          <button type="button" data-room-action="friends">👥<span>Друзья</span></button>
-          <button type="button" data-room-action="messages">✉️<span>Сообщения</span></button>
-          <button type="button" data-room-action="gifts">🎁<span>Подарки</span></button>
           <button type="button" data-room-action="shop">🛍️<span>Магазин</span></button>
-          <button type="button" data-room-action="emotions">😊<span>Эмоции</span></button>
-          <button type="button" data-room-action="players">👥<span>Игроки комнаты</span></button>
-          <button type="button" data-room-action="events">🔔<span>События</span></button>
-          <button type="button" data-room-action="authority">⭐<span>Звания и ауры</span></button>
           <button type="button" data-room-action="planets">🪐<span>Планеты</span></button>
+          <button type="button" data-room-action="authority">✦<span>Звания и ауры</span></button>
+          <button type="button" data-room-action="emotions">😊<span>Эмоции</span></button>
+          <button type="button" data-room-action="events">🔔<span>События</span></button>
           <button type="button" data-room-action="aura-quality" id="aura-quality-action">✨<span>Качество аур: высокое</span></button>
           <button type="button" data-room-action="developer" id="room-developer-action" class="hidden">🛠️<span>Разработчик</span></button>
-          <button type="button" data-room-action="exit">↪<span>Выйти</span></button>
+          <button type="button" data-room-action="exit">↪<span>Выйти из комнаты</span></button>
         </div>
       </aside>
 
