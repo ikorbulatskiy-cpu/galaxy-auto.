@@ -11,6 +11,6 @@ BEGIN
   ) THEN
     ALTER TABLE nexora_social_world.characters
       ADD CONSTRAINT characters_position_y_range_check
-      CHECK(position_y>=0.60 AND position_y<=0.94);
+      CHECK(position_y>=0.60 AND position_y<=0.86);
   END IF;
 END $$;
