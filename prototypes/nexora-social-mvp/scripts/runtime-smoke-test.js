@@ -1,6 +1,7 @@
 process.env.PGSSLMODE = process.env.PGSSLMODE || "disable";
 
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
 const express = require("express");
 const cookie = require("cookie");
 const { pool } = require("../src/db");
@@ -9,6 +10,8 @@ const { createEconomyRouter } = require("../src/economy");
 const { createPlanetsRouter } = require("../src/planets");
 const { createSocialRouter } = require("../src/social");
 const { createProfileRouter } = require("../src/profile");
+const { createDeveloperRouter } = require("../src/developer");
+const { createAuthorityRouter } = require("../src/authority");
 
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required");
 
@@ -54,6 +57,7 @@ async function run() {
   const ownerId = String(owner.account.id);
   const targetId = String(target.account.id);
   accountIds = [ownerId, targetId];
+  process.env.NEXORA_OWNER_ACCOUNT_ID = ownerId;
 
   await pool.query("UPDATE nexora_social_world.wallets SET balance=1000 WHERE account_id=$1", [ownerId]);
 
@@ -71,6 +75,8 @@ async function run() {
   app.use("/api/planets", createPlanetsRouter({ pool, auth, io, players }));
   app.use("/api/social", createSocialRouter({ pool, auth, io }));
   app.use("/api/profile", createProfileRouter({ pool, auth, io }));
+  app.use("/api/developer", createDeveloperRouter({ pool, auth, players, planets: { starter: { name: "Стартовая" }, club: { name: "Клуб" }, beach: { name: "Пляж" } } }));
+  app.use("/api/authority", createAuthorityRouter({ pool, auth, io, players }));
   app.use((error, _req, res, _next) => {
     console.error("Smoke-test API error:", error);
     res.status(500).json({ error: "Smoke-test API error" });
@@ -130,6 +136,7 @@ async function run() {
     body: JSON.stringify({ targetId: Number(targetId), category: "spam", details: "CI smoke report" })
   }));
   assert.equal(result.status, 201, "player report can be created");
+  const reportId = result.body.report.id;
 
   result = await json(await request("/api/economy/reports", owner.token, {
     method: "POST",
@@ -233,8 +240,150 @@ async function run() {
   assert.equal(result.status, 200, "wallet history responds");
   assert.equal(result.body.transactions.length, 1, "purchase history contains one transaction");
 
+  result = await json(await request("/api/developer/access", owner.token));
+  assert.equal(result.status, 200, "owner developer access responds");
+  assert.equal(result.body.role, "OWNER", "configured owner receives OWNER role");
+
+  result = await json(await request("/api/developer/players", owner.token));
+  assert.equal(result.status, 200, "developer player directory responds");
+  assert.ok(result.body.players.some(player => String(player.id) === targetId), "developer can find a player");
+
+  result = await json(await request("/api/developer/players/" + targetId, owner.token));
+  assert.equal(result.status, 200, "developer can inspect a player");
+
+  result = await json(await request("/api/developer/players/" + targetId + "/warn", owner.token, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ reason: "CI moderation warning" })
+  }));
+  assert.equal(result.status, 201, "developer can issue a warning");
+
+  result = await json(await request("/api/developer/players/" + targetId + "/ban", owner.token, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ reason: "CI temporary ban", hours: 1 })
+  }));
+  assert.equal(result.status, 201, "developer can issue a temporary ban");
+  assert.equal(await auth.authenticateToken(target.token), null, "active ban blocks session authentication");
+
+  result = await json(await request("/api/developer/players/" + targetId + "/ban", owner.token, {
+    method: "DELETE",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ reason: "CI unban test" })
+  }));
+  assert.equal(result.status, 200, "developer can revoke a ban");
+  assert.ok(await auth.authenticateToken(target.token), "unbanned account can authenticate again");
+
+  result = await json(await request("/api/developer/reports/" + reportId, owner.token, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ status: "reviewing" })
+  }));
+  assert.equal(result.status, 200, "developer can update a player report");
+
+  result = await json(await request("/api/developer/moderation", owner.token));
+  assert.equal(result.status, 200, "moderation queue responds");
+  assert.ok(result.body.entries.some(entry => entry.action_type === "WARN"), "moderation queue includes warnings");
+  assert.ok(result.body.reports.some(report => String(report.id) === String(reportId) && report.status === "reviewing"), "moderation queue reflects report status");
+
+  result = await json(await request("/api/developer/audit", owner.token));
+  assert.equal(result.status, 200, "developer audit log responds");
+  assert.ok(result.body.entries.some(entry => entry.action === "player.ban"), "audit log records moderation actions");
+
+  result = await json(await request("/api/developer/planets", owner.token));
+  assert.equal(result.status, 200, "developer planet directory responds");
+  assert.ok(result.body.planets.some(item => String(item.id) === planetId), "developer can find a custom planet");
+
+  result = await json(await request("/api/developer/planets/" + planetId + "/action", owner.token, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ action: "hide", reason: "CI hide test" })
+  }));
+  assert.equal(result.status, 200, "developer can hide a custom planet");
+
+  result = await json(await request("/api/developer/planets/" + planetId + "/action", owner.token, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ action: "restore", reason: "CI restore test" })
+  }));
+  assert.equal(result.status, 200, "developer can restore a custom planet");
+
+  result = await json(await request("/api/authority", owner.token));
+  assert.equal(result.status, 200, "authority status and rank catalog respond");
+  assert.equal(result.body.current.titleKey, "NOVICE", "new account starts at NOVICE");
+
+  result = await json(await request("/api/authority/admin/config", owner.token));
+  assert.equal(result.status, 200, "owner can inspect rank configuration");
+
+  result = await json(await request("/api/authority/admin/config/BEDA", owner.token, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ koinsPrice: 100, minAuthority: 0, enabled: true })
+  }));
+  assert.equal(result.status, 200, "owner can configure rank price and requirements");
+
+  const authorityRequestId = crypto.randomUUID();
+  result = await json(await request("/api/authority/purchase", owner.token, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ titleKey: "BEDA", requestId: authorityRequestId })
+  }));
+  assert.equal(result.status, 200, "player can purchase the next rank with Koins");
+  assert.equal(result.body.current.titleKey, "BEDA", "rank purchase updates the character title");
+  assert.equal(result.body.current.koins, "780", "rank purchase debits Koins");
+
+  result = await json(await request("/api/authority/purchase", owner.token, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ titleKey: "BEDA", requestId: authorityRequestId })
+  }));
+  assert.equal(result.status, 200, "rank purchase retry is idempotent");
+  assert.equal(result.body.duplicate, true, "rank purchase retry does not charge twice");
+
+  result = await json(await request("/api/authority/admin/assign", owner.token, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ accountId: targetId, titleKey: "ANGEL", auraEnabled: true, reason: "CI authority assignment" })
+  }));
+  assert.equal(result.status, 200, "owner can assign a rank and aura");
+
+  result = await json(await request("/api/authority", target.token));
+  assert.equal(result.status, 200, "target can view authority after assignment");
+  assert.equal(result.body.current.titleKey, "ANGEL", "developer rank assignment is visible to the player");
+  assert.equal(result.body.current.auraEnabled, true, "developer rank assignment enables its aura");
+
+  result = await json(await request("/api/authority/admin/history/" + targetId, owner.token));
+  assert.equal(result.status, 200, "owner can inspect authority history");
+  assert.ok(result.body.history.some(entry => entry.new_title === "ANGEL"), "authority history records developer assignment");
+
+  result = await json(await request("/api/authority/admin/remove/" + targetId, owner.token, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ reason: "CI authority removal" })
+  }));
+  assert.equal(result.status, 200, "owner can remove a rank");
+
+  result = await json(await request("/api/authority", target.token));
+  assert.equal(result.status, 200, "target can view authority after removal");
+  assert.equal(result.body.current.titleKey, "NOVICE", "rank removal restores NOVICE");
+  assert.equal(result.body.current.auraEnabled, false, "rank removal disables aura");
+
+  result = await json(await request("/api/developer/roles", owner.token));
+  assert.equal(result.status, 200, "owner can inspect developer roles");
+
+  result = await json(await request("/api/developer/roles", owner.token, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ accountId: targetId, role: "HELPER", permissions: ["players.view"], reason: "CI role assignment" })
+  }));
+  assert.equal(result.status, 200, "owner can assign a developer role");
+
+  result = await json(await request("/api/developer/access", target.token));
+  assert.equal(result.status, 200, "assigned helper can inspect access");
+  assert.equal(result.body.role, "HELPER", "assigned developer role is applied");
+
   const wallet = await pool.query("SELECT balance::text FROM nexora_social_world.wallets WHERE account_id=$1", [ownerId]);
-  assert.equal(wallet.rows[0].balance, "880", "database wallet balance matches purchase history");
+  assert.equal(wallet.rows[0].balance, "780", "database wallet balance matches shop and authority purchases");
   console.log("PASS NEXORA runtime smoke tests: registration, recovery login, profile, shop, idempotency, inventory, reports, planet search/decorations, friends, DMs, notifications, blocking and wallet history");
 }
 
