@@ -806,7 +806,7 @@
     $("#profile-aura").textContent = player.auraEnabled ? "Аура активна" : "Аура выключена";
     $("#profile-online-status").textContent = "● В этой комнате";
     const ownProfile = String(player.id) === String(state.me?.id);
-    ["#dm-open-button","#whisper-button","#gift-button","#friend-button"].forEach(selector => $(selector).classList.toggle("hidden", ownProfile));
+    ["#dm-open-button","#whisper-button","#gift-button","#friend-button","#block-user-button"].forEach(selector => $(selector).classList.toggle("hidden", ownProfile));
     $("#my-profile-context").classList.toggle("hidden", !ownProfile);
     $("#profile-menu").classList.remove("hidden");
     $("#character-action-list").classList.toggle("hidden",ownProfile);
@@ -842,6 +842,15 @@
       if (!result?.ok) showToast(result?.error || "Не удалось отправить.");
     });
     closeProfile();
+  });
+  $("#block-user-button").addEventListener("click",async()=>{
+    const targetId=state.selected;
+    if(!targetId||String(targetId)===String(state.me?.id))return;
+    if(!window.confirm("Заблокировать этого игрока? Он исчезнет из ваших социальных взаимодействий."))return;
+    try{
+      await socialApi("/blocks/"+encodeURIComponent(targetId),{method:"POST"});
+      closeProfile();await refreshSocial();showToast("Игрок заблокирован.");
+    }catch(error){showToast(error.message);}
   });
   $("#friend-button").addEventListener("click", async () => {
     if (!state.selected) return closeProfile();
