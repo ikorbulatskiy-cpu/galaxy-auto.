@@ -151,7 +151,7 @@ function createAuthorityRouter({ pool, auth, io, players }) {
         throw Object.assign(new Error("Недостаточно авторитета для повышения."), { status: 403 });
       }
       const debit = await client.query(
-        "UPDATE nexora_social_world.wallets SET balance=balance-$1,updated_at=NOW() WHERE account_id=$2 AND balance >= $1 RETURNING balance::text AS balance",
+        "UPDATE nexora_social_world.wallets SET balance=balance-$1 WHERE account_id=$2 AND balance >= $1 RETURNING balance::text AS balance",
         [config.rows[0].koins_price, account.id]
       );
       if (!debit.rowCount) throw Object.assign(new Error("Недостаточно Koins."), { status: 402 });
@@ -254,7 +254,7 @@ function createAuthorityRouter({ pool, auth, io, players }) {
   router.post("/admin/remove/:id", async (req,res,next) => {
     const current=await requireAuthorityPermission(req,res,"authority.remove");if(!current)return;
     const targetId=String(req.params.id),reason=String(req.body?.reason||"").trim().slice(0,500);
-    if(!/^\\d+$/.test(targetId)||!reason)return res.status(400).json({error:"Укажите ID игрока и причину снятия звания."});
+    if(!/^\d+$/.test(targetId)||!reason)return res.status(400).json({error:"Укажите ID игрока и причину снятия звания."});
     if(ownerId()&&targetId===ownerId()&&current.role!=="OWNER")return res.status(403).json({error:"Снимать звание владельца может только OWNER."});
     const client=await pool.connect();
     try{
