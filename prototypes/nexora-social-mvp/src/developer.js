@@ -4,7 +4,7 @@ const PERMISSIONS = new Set([
   "players.view", "players.ban", "players.unban", "players.warn",
   "moderation.view", "world.view", "world.manage", "economy.view",
   "economy.manage", "items.view", "items.manage", "system.view",
-  "roles.manage", "logs.view",
+  "roles.manage", "logs.view", "reports.manage",
   "authority.view", "authority.assign", "authority.remove", "authority.configure", "authority.history",
   "planets.view", "planets.manage"
 ]);
@@ -149,7 +149,26 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
         LEFT JOIN nexora_social_world.accounts a ON a.id=m.target_account_id
         LEFT JOIN nexora_social_world.accounts actor ON actor.id=m.actor_account_id
         ORDER BY m.created_at DESC LIMIT 100`);
-      res.json({ok:true,entries:result.rows});
+      const reports=await pool.query(`SELECT r.id,r.category,r.details,r.status,r.created_at,
+         reporter.nickname AS reporter_nickname,r.reporter_account_id,
+         target.nickname AS target_nickname,r.target_account_id
+         FROM nexora_social_world.player_reports r
+         JOIN nexora_social_world.accounts reporter ON reporter.id=r.reporter_account_id
+         JOIN nexora_social_world.accounts target ON target.id=r.target_account_id
+         ORDER BY CASE WHEN r.status='open' THEN 0 ELSE 1 END,r.created_at DESC LIMIT 100`);
+      res.json({ok:true,entries:result.rows,reports:reports.rows});
+    }catch(error){next(error);}
+  });
+  router.patch("/reports/:id",async(req,res,next)=>{
+    try{
+      const current=await requirePermission(req,res,"reports.manage");if(!current)return;
+      if(!/^\\d+$/.test(req.params.id))return res.status(400).json({error:"Некорректный ID жалобы."});
+      const status=["reviewing","resolved","dismissed"].includes(req.body?.status)?req.body.status:"";
+      if(!status)return res.status(400).json({error:"Некорректный статус жалобы."});
+      const updated=await pool.query("UPDATE nexora_social_world.player_reports SET status=$1 WHERE id=$2 RETURNING id,status",[status,req.params.id]);
+      if(!updated.rowCount)return res.status(404).json({error:"Жалоба не найдена."});
+      await pool.query("INSERT INTO nexora_social_world.developer_audit_logs(actor_account_id,action,reason,details) VALUES($1,'report.status','Изменён статус жалобы',$2::jsonb)",[current.account.id,JSON.stringify({reportId:req.params.id,status})]);
+      res.json({ok:true,report:updated.rows[0]});
     }catch(error){next(error);}
   });
   router.get("/world", async (req, res, next) => {
