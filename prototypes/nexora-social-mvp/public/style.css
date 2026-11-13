@@ -2285,3 +2285,32 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
   .appearance-builder .appearance-preview { height:124px; }
   .appearance-builder .appearance-preview canvas { height:124px; }
 }
+
+
+/* NEXORA 30.0: compact room identity + live player count */
+.topbar { gap:clamp(7px,1.5vw,14px); }
+.topbar-status { flex:0 1 auto; min-width:0; margin-left:auto; }
+.online-pill {
+  min-height:25px; min-width:0; max-width:min(34vw,220px);
+  display:inline-flex; align-items:center; justify-content:center; gap:5px;
+  padding:4px 9px; border:1px solid rgba(78,220,145,.24);
+  border-radius:999px; background:rgba(25,145,91,.13);
+  color:#b8f8d3; white-space:nowrap; overflow:hidden;
+  font-size:10px; line-height:1;
+}
+.online-pill i { width:6px; height:6px; flex:0 0 6px; margin:0; }
+#online-room-name {
+  min-width:0; overflow:hidden; text-overflow:ellipsis;
+  font-size:10px; font-weight:750; color:#d4ffe5;
+}
+.online-pill-divider { color:rgba(184,248,211,.5); }
+.online-pill #online-count { font-size:10px; font-weight:850; color:#fff; }
+.online-pill-caption { font-size:9px; color:#a8eac5; }
+@media(max-width:520px) {
+  .topbar { gap:6px; }
+  .topbar-status { flex:0 1 auto; }
+  .online-pill { max-width:31vw; min-height:23px; gap:4px; padding:4px 7px; }
+  #online-room-name { font-size:9px; }
+  .online-pill-caption { font-size:8px; }
+  .online-pill #online-count { font-size:9px; }
+}
