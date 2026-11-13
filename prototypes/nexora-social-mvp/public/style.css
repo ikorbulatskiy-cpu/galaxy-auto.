@@ -1308,3 +1308,17 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 .developer-aura-toggle input { width:18px; height:18px; accent-color:#9b86ff; }
 .developer-authority-quick .developer-remove-rank { border:1px solid rgba(255,125,157,.3); background:rgba(183,72,105,.18); color:#ffc3d0; }
 .developer-authority-quick .developer-aura-action { border:1px solid rgba(117,224,177,.28); background:rgba(65,166,125,.17); color:#aaf0d0; }
+
+
+/* NEXORA room interaction polish */
+#room-toolbar { width:68px; grid-template-columns:minmax(0,1fr); }
+#room-toolbar > button:not([data-room-toggle="menu"]) { display:none !important; }
+#room-toolbar > button[data-room-toggle="menu"] { min-height:48px; }
+#profile-menu { max-height:min(78dvh,680px); overflow-y:auto; overscroll-behavior:contain; }
+.developer-player-actions { display:grid; gap:7px; margin:10px 0; padding:10px; border:1px solid rgba(173,157,255,.32); border-radius:13px; background:rgba(117,95,220,.12); }
+.developer-player-actions > strong { color:#c9bdff; font-size:12px; }
+.developer-player-actions > small { color:#bfc8e8; font-size:10px; }
+.developer-player-actions select,.developer-player-actions button { width:100%; min-height:38px; padding:8px 10px; border:1px solid #ffffff20; border-radius:10px; background:#171d43; color:#fff; font-size:11px; }
+.developer-player-actions button { background:linear-gradient(110deg,#625fe0,#9270df); font-weight:750; }
+.developer-player-actions button:disabled { opacity:.45; }
+@media(max-width:430px) { #room-toolbar { width:64px; } }
