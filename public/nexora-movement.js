@@ -34,7 +34,6 @@
       ".nx-classic .nx-scene{cursor:crosshair}",
       ".nx-classic .nx-avatar-card.nx-moving .nx-sprite-canvas{animation:nx-side-hop .38s ease-in-out infinite alternate;transform-origin:50% 100%}",
       "@keyframes nx-side-hop{from{translate:0 0}to{translate:0 -9px}}",
-      ".nx-movement-hint{position:absolute;z-index:5;left:10px;bottom:10px;padding:5px 8px;background:#10151bdc;border:1px solid #818890;color:#f0dfad;font:10px Tahoma,Arial,sans-serif;pointer-events:none}",
       "@media(max-width:700px){.nx-classic .nx-avatars{overflow:visible!important}.nx-classic .nx-avatars .nx-avatar-card{min-width:48px!important}}"
     ].join("");
     document.head.append(style);
@@ -299,13 +298,7 @@
     if (!world || !stage) return;
     installStyles();
     if (roomId) loadPositions(roomId);
-    let hint = stage.querySelector(".nx-movement-hint");
-    if (!hint) {
-      hint = document.createElement("div");
-      hint.className = "nx-movement-hint";
-      hint.textContent = "Нажми слева или справа, чтобы персонаж подпрыгнул туда";
-      stage.append(hint);
-    }
+    stage.querySelector(".nx-movement-hint")?.remove();
     if (!stage.dataset.movementBound) {
       stage.dataset.movementBound = "true";
       stage.addEventListener("pointerdown", event => {
