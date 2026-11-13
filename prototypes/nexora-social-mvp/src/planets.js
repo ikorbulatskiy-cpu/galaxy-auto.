@@ -45,8 +45,20 @@ function createPlanetsRouter({ pool, auth, players, io }) {
          ORDER BY p.total_visits DESC,p.created_at DESC LIMIT 100`, [q,category,me.id]
       );
       const onlineCounts = new Map();
-      for (const player of players.values()) if (String(player.planet).startsWith("custom-")) onlineCounts.set(String(player.planet).slice(7),(onlineCounts.get(String(player.planet).slice(7))||0)+1);
-      res.json({ok:true,planets:rows.rows.map(p=>({...p,id:String(p.id),ownerId:String(p.ownerId),isOwner:String(p.ownerId)===String(me.id),onlineCount:onlineCounts.get(String(p.id))||0}))});
+      const worldCounts = { starter:0, club:0, beach:0 };
+      for (const player of players.values()) {
+        if (Object.hasOwn(worldCounts, player.planet)) worldCounts[player.planet]++;
+        if (String(player.planet).startsWith("custom-")) onlineCounts.set(String(player.planet).slice(7),(onlineCounts.get(String(player.planet).slice(7))||0)+1);
+      }
+      res.json({
+        ok:true,
+        worlds:[
+          {key:"starter",name:"Стартовая",description:"Главная точка встречи путешественников NEXORA.",onlineCount:worldCounts.starter},
+          {key:"club",name:"Клуб",description:"Музыка, танцы и ночная жизнь галактики.",onlineCount:worldCounts.club},
+          {key:"beach",name:"Пляж",description:"Тёплая планета для отдыха и общения.",onlineCount:worldCounts.beach}
+        ],
+        planets:rows.rows.map(p=>({...p,id:String(p.id),ownerId:String(p.ownerId),isOwner:String(p.ownerId)===String(me.id),onlineCount:onlineCounts.get(String(p.id))||0}))
+      });
     } catch(e){next(e);}
   });
   router.post("/", async (req,res,next) => {
