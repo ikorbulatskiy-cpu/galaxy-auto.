@@ -21,7 +21,7 @@
         <label class="field-label" for="nickname">Твой ник</label>
         <input id="nickname" maxlength="18" autocomplete="nickname" placeholder="Например, КосмоКот">
         <label class="field-label" for="recovery-code">Код восстановления</label>
-        <input id="recovery-code" maxlength="24" autocapitalize="none" spellcheck="false" autocomplete="one-time-code" placeholder="Например, w55gggsilf">
+        <input id="recovery-code" maxlength="10" autocapitalize="none" spellcheck="false" autocomplete="one-time-code" placeholder="Введите код восстановления">
         <div class="auth-actions">
           <button id="register-button" class="primary-button" type="button">Создать аккаунт</button>
           <button id="login-button" class="glass-button" type="button">Войти по коду</button>
@@ -69,7 +69,7 @@
       <header class="topbar">
         <div class="top-brand"><span>✦</span> NEXORA</div>
         <div class="online-pill"><i></i><span id="online-count">1</span> онлайн</div>
-        <button id="planets-button" class="glass-button">🪐 Планеты</button>
+        <div class="topbar-actions"><button id="planets-button" class="glass-button">🪐 Планеты</button><button id="exit-room" class="glass-button" type="button">↩ В меню</button></div>
       </header>
 
       <div class="planet-picker hidden" id="planet-picker">
