@@ -8,6 +8,7 @@ const auth = require("./src/auth");
 const { createSocialRouter } = require("./src/social");
 const { createProfileRouter } = require("./src/profile");
 const { createDeveloperRouter } = require("./src/developer");
+const { createAuthorityRouter } = require("./src/authority");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -75,6 +76,7 @@ app.get("/health", async (_req, res) => {
 app.use("/api/social", createSocialRouter({ pool, auth, io }));
 app.use("/api/profile", createProfileRouter({ pool, auth, io }));
 app.use("/api/developer", createDeveloperRouter({ pool, auth, players, planets: PLANETS }));
+app.use("/api/authority", createAuthorityRouter({ pool, auth, io, players }));
 app.use((error, _req, res, _next) => {
   console.error("API error:", error);
   if (!res.headersSent) res.status(500).json({ error: "Внутренняя ошибка сервера." });
@@ -99,7 +101,10 @@ function publicPlayer(player) {
   return {
     id: player.id, nickname: player.nickname, avatar: player.avatar, planet: player.planet,
     x: player.x, authority: player.authority,
-    title: player.authority >= 50 ? "Звезда" : player.authority >= 20 ? "Знакомый" : "Новичок",
+    title: ({ NOVICE: "Новичок", BEDA: "Беда", PAPA: "Папа", ANGEL: "Ангел", CREATOR: "Создатель" })[player.authorityTitle] || "Новичок",
+    authorityTitle: player.authorityTitle || "NOVICE",
+    auraType: ({ NOVICE: "NONE", BEDA: "GOLD_SOFT", PAPA: "GOLD_PREMIUM", ANGEL: "GREEN", CREATOR: "FIRE_RED" })[player.authorityTitle] || "NONE",
+    auraEnabled: Boolean(player.auraEnabled),
     bubble: player.bubble, emotion: player.emotion, friendsCount: player.friendsCount
   };
 }
@@ -130,7 +135,7 @@ io.on("connection", (socket) => {
     try {
       const account = socket.data.account;
       const result = await pool.query(
-        "SELECT nickname,avatar,planet,position_x,authority FROM nexora_social_world.characters WHERE account_id=$1",
+        "SELECT nickname,avatar,planet,position_x,authority,authority_title,aura_enabled FROM nexora_social_world.characters WHERE account_id=$1",
         [account.id]
       );
       const saved = result.rows[0];
@@ -141,6 +146,7 @@ io.on("connection", (socket) => {
         id: String(account.id), socketId: socket.id, accountId: account.id,
         nickname: saved.nickname, avatar: normalizeAvatar(saved.avatar), planet,
         x: Math.max(0.04, Math.min(0.96, Number(saved.position_x))), authority: saved.authority,
+        authorityTitle: saved.authority_title || "NOVICE", auraEnabled: Boolean(saved.aura_enabled),
         bubble: null, emotion: null, friendsCount: friendCount.rows[0].count
       };
       players.set(socket.id, player);
