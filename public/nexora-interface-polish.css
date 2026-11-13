@@ -103,3 +103,33 @@
 @media(prefers-reduced-motion:reduce){
  #dashboard>#tab-world .nx-avatar-card{animation:none!important}
 }
+
+/* NEXORA room cleanup: remove duplicate room labels and keep the favorite control below the avatar. */
+#dashboard>#tab-world .nx-scene-label,
+#dashboard>#tab-world .nx-scene-meta,
+#dashboard>#tab-world .nx-movement-hint{
+  display:none!important;
+}
+#dashboard>#tab-world .nx-player-list .nx-player span{
+  display:none!important;
+}
+#dashboard>#tab-world .nx-avatar-card{
+  position:relative;
+  overflow:visible!important;
+}
+#dashboard>#tab-world .nx-avatar-card .nx-fav-toggle{
+  top:auto!important;
+  right:50%!important;
+  bottom:-18px!important;
+  transform:translateX(50%)!important;
+  z-index:9!important;
+}
+@media(max-width:700px){
+  #dashboard>#tab-world .nx-avatar-card .nx-fav-toggle{
+    bottom:-17px!important;
+    width:20px!important;
+    height:20px!important;
+    min-width:20px!important;
+    font-size:12px!important;
+  }
+}
