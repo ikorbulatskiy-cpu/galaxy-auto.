@@ -139,7 +139,7 @@ router.delete("/characters/:characterId", requireSession, async (req, res, next)
 
 router.get("/planets", requireSession, async (req,res,next)=>{
  try{
-  const r=await pool.query("SELECT p.id,p.slug,p.name,p.description,p.access_type,p.ticket_price,p.settings,p.owner_user_id,COALESCE(u.username,'') AS owner_name,(p.owner_user_id=$1) AS is_owner,EXISTS(SELECT 1 FROM user_locations ul WHERE ul.user_id=$1 AND ul.planet_id=p.id) AS is_current,(SELECT COUNT(*)::int FROM rooms rm WHERE rm.planet_id=p.id AND rm.is_active=TRUE) AS rooms,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp JOIN rooms rm ON rm.id=rp.room_id WHERE rm.planet_id=p.id AND rp.connected_at>NOW()-INTERVAL '2 minutes') AS online FROM planets p LEFT JOIN users u ON u.id=p.owner_user_id WHERE p.is_active=TRUE ORDER BY (p.slug='newbies-1') DESC,p.name",[req.user.id]);
+  const r=await pool.query("SELECT p.id,p.slug,p.name,p.description,p.access_type,p.ticket_price,p.settings,p.owner_user_id,COALESCE(u.username,'') AS owner_name,(p.owner_user_id=$1) AS is_owner,EXISTS(SELECT 1 FROM user_locations ul WHERE ul.user_id=$1 AND ul.planet_id=p.id) AS is_current,(SELECT COUNT(*)::int FROM rooms rm WHERE rm.planet_id=p.id AND rm.is_active=TRUE) AS rooms,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp JOIN rooms rm ON rm.id=rp.room_id WHERE rm.planet_id=p.id AND rp.connected_at>NOW()-INTERVAL '2 minutes' AND NOT EXISTS(SELECT 1 FROM galaxy_preferences gp WHERE gp.user_id=rp.user_id AND gp.invisible=TRUE)) AS online FROM planets p LEFT JOIN users u ON u.id=p.owner_user_id WHERE p.is_active=TRUE ORDER BY (p.slug='newbies-1') DESC,p.name",[req.user.id]);
   res.json({planets:r.rows});
  }catch(e){next(e)}
 });
@@ -202,7 +202,7 @@ router.get("/rooms", requireSession, async (req, res, next) => {
     const location = await pool.query("SELECT p.slug FROM user_locations l JOIN planets p ON p.id=l.planet_id WHERE l.user_id=$1", [req.user.id]);
     if (!location.rowCount) return res.status(409).json({ error: "Сначала выбери планету отправления." });
     if (planetSlug && planetSlug !== location.rows[0].slug) return res.status(409).json({ error: "Сначала перелетите на выбранную планету." });
-    const result = await pool.query("SELECT r.id,r.slug,r.name,r.description,r.capacity,p.slug AS planet_slug,p.name AS planet_name,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp WHERE rp.room_id=r.id AND rp.connected_at>NOW()-INTERVAL '2 minutes') AS online FROM rooms r JOIN planets p ON p.id=r.planet_id WHERE r.is_active=TRUE AND p.is_active=TRUE AND p.slug=$1 ORDER BY r.name",[location.rows[0].slug]);
+    const result = await pool.query("SELECT r.id,r.slug,r.name,r.description,r.capacity,p.slug AS planet_slug,p.name AS planet_name,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp WHERE rp.room_id=r.id AND rp.connected_at>NOW()-INTERVAL '2 minutes' AND NOT EXISTS(SELECT 1 FROM galaxy_preferences gp WHERE gp.user_id=rp.user_id AND gp.invisible=TRUE)) AS online FROM rooms r JOIN planets p ON p.id=r.planet_id WHERE r.is_active=TRUE AND p.is_active=TRUE AND p.slug=$1 ORDER BY r.name",[location.rows[0].slug]);
     res.json({ rooms: result.rows });
   } catch (error) { next(error); }
 });
@@ -214,7 +214,7 @@ router.get("/rooms/:roomId/presence", requireSession, async (req,res,next)=>{
       "FROM room_presence rp JOIN users u ON u.id=rp.user_id " +
       "JOIN rooms r ON r.id=rp.room_id AND r.is_active=TRUE JOIN planets p ON p.id=r.planet_id AND p.is_active=TRUE JOIN user_locations l ON l.planet_id=r.planet_id AND l.user_id=$2 " +
       "LEFT JOIN characters c ON c.user_id=u.id AND c.is_active=TRUE " +
-      "WHERE rp.room_id=$1 AND rp.connected_at>NOW()-INTERVAL '2 minutes' AND u.status='active' " +
+      "WHERE rp.room_id=$1 AND rp.connected_at>NOW()-INTERVAL '2 minutes' AND u.status='active' AND NOT EXISTS(SELECT 1 FROM galaxy_preferences gp WHERE gp.user_id=rp.user_id AND gp.invisible=TRUE) " +
       "AND NOT EXISTS(SELECT 1 FROM blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=rp.user_id) OR (b.blocker_id=rp.user_id AND b.blocked_id=$2)) " +
       "GROUP BY rp.user_id,u.username,c.name,c.appearance,c.aura ORDER BY character_name",
       [req.params.roomId,req.user.id]

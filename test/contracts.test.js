@@ -148,7 +148,10 @@ test("realtime events are distributed through PostgreSQL notifications", () => {
   assert.match(realtime, /LISTEN nexora_room_events/);
   assert.match(realtime, /pg_notify\('nexora_room_events'/);
   assert.match(realtime, /on\("notification", handleNotification\)/);
-  assert.match(realtime, /DELETE FROM room_presence WHERE connected_at < NOW\(\) - INTERVAL '2 minutes'/);
+  assert.match(realtime, /WITH expired AS \(/);
+  assert.match(realtime, /DELETE FROM room_presence rp USING expired e/);
+  assert.match(realtime, /NOT COALESCE\(gp\.invisible,FALSE\) AS announce/);
+  assert.match(realtime, /if\(row\.announce\) publish\(\{ type: "presence", action: "left"/);
   assert.match(realtime, /action: "joined"/);
   assert.match(realtime, /action: "left"/);
 });

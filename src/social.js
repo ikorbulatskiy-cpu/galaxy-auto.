@@ -284,6 +284,13 @@ router.post("/conversations/:conversationId/messages", requireSession, async (re
     }
     const otherId = members.rows.find(row => row.user_id !== req.user.id).user_id;
     if (await isBlocked(pool, req.user.id, otherId)) return res.status(403).json({ error: "Отправка сообщений недоступна." });
+    const recipientPreferences = await pool.query(
+      "SELECT COALESCE((SELECT friends_only_messages FROM galaxy_preferences WHERE user_id=$1),TRUE) AS friends_only_messages",
+      [otherId]
+    );
+    if (recipientPreferences.rows[0].friends_only_messages && !await areFriends(pool, req.user.id, otherId)) {
+      return res.status(403).json({ error: "Пользователь принимает личные сообщения только от друзей." });
+    }
     const muted = await pool.query(
       "SELECT 1 FROM punishments WHERE user_id=$1 AND kind='mute' AND lifted_at IS NULL AND (ends_at IS NULL OR ends_at>NOW()) LIMIT 1",
       [req.user.id]
@@ -377,6 +384,56 @@ router.post("/reports/:userId", requireSession, async (req, res, next) => {
       [req.user.id, targetId, parsed.data.category, parsed.data.details]
     );
     res.status(201).json({ report: result.rows[0] });
+  } catch (error) { next(error); }
+});
+
+const galaxyPreferencesSchema = z.object({
+  chat_bubbles: z.boolean().optional(),
+  sound_enabled: z.boolean().optional(),
+  friends_only_messages: z.boolean().optional(),
+  invisible: z.boolean().optional(),
+  system_messages: z.boolean().optional()
+}).strict();
+
+router.get("/preferences", requireSession, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `INSERT INTO galaxy_preferences (user_id) VALUES ($1)
+       ON CONFLICT (user_id) DO UPDATE SET updated_at=galaxy_preferences.updated_at
+       RETURNING chat_bubbles,sound_enabled,friends_only_messages,invisible,system_messages`,
+      [req.user.id]
+    );
+    res.json({ preferences: result.rows[0] });
+  } catch (error) { next(error); }
+});
+
+router.patch("/preferences", requireSession, async (req, res, next) => {
+  const parsed = galaxyPreferencesSchema.safeParse(req.body);
+  if (!parsed.success || !Object.keys(parsed.data).length) {
+    return res.status(400).json({ error: "Укажи хотя бы одну настройку." });
+  }
+  const columns = {
+    chat_bubbles: "chat_bubbles",
+    sound_enabled: "sound_enabled",
+    friends_only_messages: "friends_only_messages",
+    invisible: "invisible",
+    system_messages: "system_messages"
+  };
+  const values = [req.user.id];
+  const assignments = [];
+  for (const [key, value] of Object.entries(parsed.data)) {
+    values.push(value);
+    assignments.push(columns[key] + "=$" + values.length);
+  }
+  try {
+    const result = await pool.query(
+      `INSERT INTO galaxy_preferences (user_id,${Object.keys(parsed.data).join(",")})
+       VALUES ($1,${values.slice(1).map((_,i)=>"$"+(i+2)).join(",")})
+       ON CONFLICT (user_id) DO UPDATE SET ${assignments.join(",")},updated_at=NOW()
+       RETURNING chat_bubbles,sound_enabled,friends_only_messages,invisible,system_messages`,
+      values
+    );
+    res.json({ preferences: result.rows[0] });
   } catch (error) { next(error); }
 });
 

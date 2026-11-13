@@ -34,7 +34,10 @@ test("disconnect and stale cleanup events identify individual connections", () =
 
 test("room join broadcasts stale presence cleanup and serializes with travel", () => {
   const realtime = read("src/realtime.js");
-  assert.match(realtime, /DELETE FROM room_presence WHERE connected_at < NOW\(\) - INTERVAL '2 minutes' RETURNING room_id,user_id,connection_id/);
-  assert.match(realtime, /for \(const row of stale\.rows\)\s*publish\(\{ type: "presence", action: "left"/);
+  assert.match(realtime, /WITH expired AS \(/);
+  assert.match(realtime, /DELETE FROM room_presence rp USING expired e/);
+  assert.match(realtime, /RETURNING rp\.room_id,rp\.user_id,rp\.connection_id/);
+  assert.match(realtime, /if\(row\.announce\) publish\(\{ type: "presence", action: "left"/);
+  assert.match(realtime, /for \(const row of stale\.rows\) if\(row\.announce\) publish\(\{ type: "presence", action: "left"/);
   assert.match(realtime, /FOR UPDATE OF l/);
 });
