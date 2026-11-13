@@ -162,7 +162,7 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
   router.patch("/reports/:id",async(req,res,next)=>{
     try{
       const current=await requirePermission(req,res,"reports.manage");if(!current)return;
-      if(!/^\\d+$/.test(req.params.id))return res.status(400).json({error:"Некорректный ID жалобы."});
+      if(!/^\d+$/.test(req.params.id))return res.status(400).json({error:"Некорректный ID жалобы."});
       const status=["reviewing","resolved","dismissed"].includes(req.body?.status)?req.body.status:"";
       if(!status)return res.status(400).json({error:"Некорректный статус жалобы."});
       const updated=await pool.query("UPDATE nexora_social_world.player_reports SET status=$1 WHERE id=$2 RETURNING id,status",[status,req.params.id]);
@@ -206,7 +206,7 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
     try{
       const current=await requirePermission(req,res,"planets.manage");if(!current)return;
       const id=String(req.params.id),action=String(req.body?.action||""),reason=String(req.body?.reason||"").trim().slice(0,300);
-      if(!/^\\d+$/.test(id)||!["hide","block","restore","transfer","delete"].includes(action))return res.status(400).json({error:"Некорректное действие."});
+      if(!/^\d+$/.test(id)||!["hide","block","restore","transfer","delete"].includes(action))return res.status(400).json({error:"Некорректное действие."});
       const planet=await pool.query("SELECT id,owner_account_id FROM nexora_social_world.custom_planets WHERE id=$1",[id]);
       if(!planet.rowCount)return res.status(404).json({error:"Планета не найдена."});
       if(["transfer","delete"].includes(action)&&current.role!=="OWNER")return res.status(403).json({error:"Это действие доступно только владельцу NEXORA."});
@@ -218,7 +218,7 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
         if(action==="restore")await client.query("UPDATE nexora_social_world.custom_planets SET status='active',updated_at=NOW() WHERE id=$1",[id]);
         if(action==="transfer"){
           const target=String(req.body?.accountId||"");
-          if(!/^\\d+$/.test(target)||!(await client.query("SELECT 1 FROM nexora_social_world.accounts WHERE id=$1",[target])).rowCount)throw new Error("Новый владелец не найден.");
+          if(!/^\d+$/.test(target)||!(await client.query("SELECT 1 FROM nexora_social_world.accounts WHERE id=$1",[target])).rowCount)throw new Error("Новый владелец не найден.");
           await client.query("UPDATE nexora_social_world.custom_planets SET owner_account_id=$2,updated_at=NOW() WHERE id=$1",[id,target]);
           await client.query("DELETE FROM nexora_social_world.planet_staff WHERE planet_id=$1 AND account_id=$2",[id,target]);
         }
