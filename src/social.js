@@ -284,6 +284,13 @@ router.post("/conversations/:conversationId/messages", requireSession, async (re
     }
     const otherId = members.rows.find(row => row.user_id !== req.user.id).user_id;
     if (await isBlocked(pool, req.user.id, otherId)) return res.status(403).json({ error: "Отправка сообщений недоступна." });
+    const recipientPreferences = await pool.query(
+      "SELECT COALESCE((SELECT friends_only_messages FROM galaxy_preferences WHERE user_id=$1),TRUE) AS friends_only_messages",
+      [otherId]
+    );
+    if (recipientPreferences.rows[0].friends_only_messages && !await areFriends(pool, req.user.id, otherId)) {
+      return res.status(403).json({ error: "Пользователь принимает личные сообщения только от друзей." });
+    }
     const muted = await pool.query(
       "SELECT 1 FROM punishments WHERE user_id=$1 AND kind='mute' AND lifted_at IS NULL AND (ends_at IS NULL OR ends_at>NOW()) LIMIT 1",
       [req.user.id]
