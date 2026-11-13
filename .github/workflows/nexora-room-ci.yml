@@ -82,7 +82,7 @@ jobs:
             [planets.includes('router.put("/:id/objects"') && planets.includes("OBJECT_CODES"), "custom planet object editor validates owner-saved objects"],
             [migration.includes("wallet_transactions") && migration.includes("custom_planet_objects") && migration.includes("player_reports"), "additive 011 economy and world migration exists"],
             [planets.includes("AND ($1='' OR p.name ILIKE '%'||$1||'%')") && !planets.includes("AND ($1=' OR"), "custom planet catalog search uses a valid empty-query predicate"],
-            [developer.split("/^\d+$/.test").length - 1 >= 2 && !developer.includes("/^\\d+$/.test"), "developer moderation and planet IDs use decimal-only validation"]
+            [developer.includes(String.raw\`/^\d+$/.test\`) && !developer.includes(String.raw\`/^\\d+$/.test\`), "developer moderation and planet IDs use decimal-only validation"]
           ];
           for (const [ok, label] of checks) console.log((ok ? "PASS " : "FAIL ") + label);
           if (checks.some(([ok]) => !ok)) process.exit(1);
