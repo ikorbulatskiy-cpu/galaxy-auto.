@@ -18,7 +18,7 @@
     setPlayers(rows){const keep=new Set();for(const raw of rows||[]){const id=String(raw.id);keep.add(id);const p=this.players.get(id)||{id,bubbles:[]};Object.assign(p,raw,{x:Number(raw.x??.5),y:Number(raw.y??.82)});this.players.set(id,p)}for(const [id] of this.players)if(!keep.has(id))this.players.delete(id)}
     upsert(p){if(!p?.id)return;const current=this.players.get(String(p.id))||{bubbles:[]};Object.assign(current,p,{id:String(p.id)});this.players.set(String(p.id),current)}
     remove(id){this.players.delete(String(id))}
-    movePlayer(id,x,y){const p=this.players.get(String(id));if(p){p.x=x;p.y=y}}
+    movePlayer(id,x,y){const p=this.players.get(String(id));if(p){p.x=x;p.y=y;p.moving=true;clearTimeout(p.moveTimer);p.moveTimer=setTimeout(()=>{p.moving=false},650)}}
     bubble(id,text){const p=this.players.get(String(id));if(!p)return;p.bubbles.push({text,until:Date.now()+7000});if(p.bubbles.length>3)p.bubbles.shift()}
     setCursor(x){this.cursor=x}
     drawBackground(ctx,t){
@@ -33,7 +33,7 @@
     drawPlayer(ctx,p,t){
       const x=p.x*this.width,y=p.y*this.height,scale=1.22;
       if(p.auraEnabled&&p.auraType&&p.auraType!=="NONE"){const colors={GREEN:"#65ffad",GOLD_SOFT:"#ffd86d",GOLD_PREMIUM:"#ffc63f",FIRE_RED:"#ff715f",VIOLET:"#c17aff",CYAN:"#61eaff"};ctx.save();ctx.shadowColor=colors[p.auraType]||"#7abfff";ctx.shadowBlur=20;ctx.strokeStyle=colors[p.auraType]||"#7abfff";ctx.globalAlpha=.62;ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(x,y-43,31,54,0,0,Math.PI*2);ctx.stroke();ctx.restore()}
-      if(window.NexoraSpriteEngine?.ready){window.NexoraSpriteEngine.draw(ctx,x,y,scale,p.avatar,"down",false,p.emotion?.type)}
+      if(window.NexoraSpriteEngine?.ready){window.NexoraSpriteEngine.draw(ctx,x,y,scale,p.avatar,p.direction||"down",Boolean(p.moving),p.emotion?.type)}
       else{ctx.font="64px sans-serif";ctx.textAlign="center";ctx.fillText("🧑",x,y)}
       const title=p.title||"Новичок",name=p.nickname||"Игрок";ctx.font="bold 12px Arial";const width=Math.max(ctx.measureText(name).width,ctx.measureText(title).width)+18;
       ctx.fillStyle="rgba(8,15,31,.94)";ctx.strokeStyle=p.isMe?"#e9c86e":"#5c8dc9";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(x-width/2,y-110,width,34,6);ctx.fill();ctx.stroke();
