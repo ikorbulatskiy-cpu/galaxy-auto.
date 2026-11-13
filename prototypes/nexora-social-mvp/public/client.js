@@ -865,7 +865,32 @@
     panel.replaceChildren();
     const canAssign=developerPermissions.includes("authority.assign");
     const canRemove=developerPermissions.includes("authority.remove");
-    if(ownProfile||(!canAssign&&!canRemove)){panel.classList.add("hidden");return;}
+    if (ownProfile) {
+      if (!developerIsOwner && !developerPermissions.length) { panel.classList.add("hidden"); return; }
+      panel.classList.remove("hidden");
+      const heading=document.createElement("strong");heading.textContent="Режим разработчика";panel.append(heading);
+      const open=document.createElement("button");open.type="button";open.textContent="🛠️ Открыть панель разработчика";
+      open.addEventListener("click",()=>{closeProfile();openDeveloperPanel("overview");});
+      panel.append(open);
+      if (developerIsOwner) {
+        const status=document.createElement("small");status.textContent="Ваша админка: "+(developerAdminAssigned?"выдана":"не выдана");panel.append(status);
+        const toggle=document.createElement("button");toggle.type="button";
+        toggle.textContent=developerAdminAssigned?"Снять админку с себя":"Выдать админку себе";
+        toggle.addEventListener("click",async()=>{
+          toggle.disabled=true;
+          try {
+            const result=await developerRequest("/roles/admin",{method:"POST",body:JSON.stringify({accountId:state.me.id,action:developerAdminAssigned?"revoke":"grant"})});
+            developerAdminAssigned=Boolean(result.adminAssigned);
+            showToast(developerAdminAssigned?"Админка выдана вашему аккаунту.":"Админка снята с вашего аккаунта.");
+            renderDeveloperPlayerActions(player,true);
+          } catch(error) { showToast(error.message); }
+          finally { toggle.disabled=false; }
+        });
+        panel.append(toggle);
+      }
+      return;
+    }
+    if(!canAssign&&!canRemove){panel.classList.add("hidden");return;}
     panel.classList.remove("hidden");
     const heading=document.createElement("strong");heading.textContent="Управление игроком";panel.append(heading);
     try{
@@ -1492,8 +1517,15 @@
 
   let developerTab = "overview";
   let developerPermissions = [];
-  async function developerRequest(path) {
-    const response = await fetch("/api/developer" + path, { credentials: "same-origin" });
+  let developerRole = "USER";
+  let developerIsOwner = false;
+  let developerAdminAssigned = false;
+  async function developerRequest(path, options = {}) {
+    const response = await fetch("/api/developer" + path, {
+      credentials: "same-origin",
+      ...options,
+      headers: { "Content-Type": "application/json", ...(options.headers || {}) }
+    });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Нет доступа к панели.");
     return data;
@@ -1502,9 +1534,17 @@
     try {
       const data = await developerRequest("/access");
       developerPermissions = data.permissions || [];
+      developerRole = data.role || "USER";
+      developerIsOwner = Boolean(data.isOwner);
+      developerAdminAssigned = Boolean(data.adminAssigned);
       $("#developer-open").classList.toggle("hidden", !data.allowed);
-    $("#room-developer-action").classList.toggle("hidden", !data.allowed);
+      $("#room-developer-action").classList.toggle("hidden", !data.allowed);
       $("#developer-roles-tab").classList.toggle("hidden", !developerPermissions.includes("roles.manage"));
+      $("#developer-admins-tab").classList.toggle("hidden", !developerIsOwner);
+      if (state.selected && String(state.selected) === String(state.me?.id)) {
+        const own = state.players.get(String(state.me.id)) || state.me;
+        renderDeveloperPlayerActions(own, true);
+      }
       $("#developer-authority-tab").classList.toggle("hidden", !developerPermissions.some(permission => permission.startsWith("authority.")));
       $("#developer-planets-tab").classList.toggle("hidden", !developerPermissions.includes("planets.view"));
     } catch (_error) { $("#developer-open").classList.add("hidden"); }
@@ -1785,6 +1825,59 @@
             }catch(error){showToast(error.message);}
           });
         }
+      } else if (tab === "admins") {
+        if (!developerIsOwner) throw new Error("Управление админкой доступно только главному разработчику.");
+        const assignments = await developerRequest("/roles");
+        content.replaceChildren();
+        const title=document.createElement("h3");title.textContent="Администраторы NEXORA";content.append(title);
+        const hint=document.createElement("p");hint.className="developer-muted";hint.textContent="Найди игрока по нику или ID. Выдавать и снимать админку может только главный разработчик.";content.append(hint);
+        const search=document.createElement("input");search.type="search";search.maxLength=24;search.placeholder="Ник игрока или ID";search.className="developer-admin-search";
+        const results=document.createElement("div");results.className="developer-search-results";
+        const selected=document.createElement("section");selected.className="developer-selected-player hidden";
+        const selectedName=document.createElement("strong"),selectedInfo=document.createElement("span");
+        const grant=document.createElement("button");grant.type="button";grant.textContent="Выдать админку";
+        const revoke=document.createElement("button");revoke.type="button";revoke.className="developer-remove-rank";revoke.textContent="Снять админку";
+        selected.append(selectedName,selectedInfo,grant,revoke);content.append(search,results,selected);
+        let chosen=null,timer=null;
+        const admins=new Set((assignments.assignments||[]).filter(item=>item.role==="ADMIN").map(item=>String(item.id)));
+        const refreshSelected=()=>{
+          if(!chosen){selected.classList.add("hidden");return;}
+          selected.classList.remove("hidden");selectedName.textContent=chosen.nickname+" · ID "+chosen.id;
+          const isAdmin=admins.has(String(chosen.id));
+          selectedInfo.textContent=isAdmin?"Администратор · админка выдана":"Обычный игрок · админки нет";
+          grant.classList.toggle("hidden",isAdmin);revoke.classList.toggle("hidden",!isAdmin);
+        };
+        const renderResults=rows=>{
+          results.replaceChildren();
+          rows.forEach(player=>{
+            const pick=document.createElement("button");pick.type="button";
+            pick.textContent=player.nickname+" · ID "+player.id+(admins.has(String(player.id))?" · АДМИН":"");
+            pick.addEventListener("click",()=>{chosen=player;results.replaceChildren();refreshSelected();});
+            results.append(pick);
+          });
+          if(!rows.length){const empty=document.createElement("p");empty.className="developer-muted";empty.textContent="Игроки не найдены.";results.append(empty);}
+        };
+        const searchPlayers=async()=>{
+          const query=search.value.trim();if(!query){results.replaceChildren();return;}
+          try{const data=await developerRequest("/players?q="+encodeURIComponent(query));renderResults(data.players||[]);}
+          catch(error){showToast(error.message);}
+        };
+        search.addEventListener("input",()=>{clearTimeout(timer);timer=setTimeout(searchPlayers,250);});
+        async function setAdmin(action,button){
+          if(!chosen)return;button.disabled=true;
+          try{
+            const result=await developerRequest("/roles/admin",{method:"POST",body:JSON.stringify({accountId:chosen.id,action})});
+            if(action==="grant")admins.add(String(chosen.id));else admins.delete(String(chosen.id));
+            selectedInfo.textContent=result.adminAssigned?"Администратор · админка выдана":"Обычный игрок · админки нет";
+            refreshSelected();showToast(action==="grant"?"Админка выдана.":"Админка снята.");
+          }catch(error){showToast(error.message);}
+          finally{button.disabled=false;}
+        }
+        grant.addEventListener("click",()=>setAdmin("grant",grant));
+        revoke.addEventListener("click",()=>setAdmin("revoke",revoke));
+        search.value=String(state.me?.nickname||"");searchPlayers();
+        const ownAssignment=(assignments.assignments||[]).find(item=>String(item.id)===String(state.me?.id)&&item.role==="ADMIN");
+        if(ownAssignment){chosen={id:String(ownAssignment.id),nickname:ownAssignment.nickname};refreshSelected();}
       } else if (tab === "roles") {
         if (!developerPermissions.includes("roles.manage")) throw new Error("Недостаточно прав.");
         const d = await developerRequest("/roles");
@@ -1843,12 +1936,13 @@
       }
     } catch (error) { content.textContent = error.message; }
   }
-  $("#developer-open").addEventListener("click", () => {
+  function openDeveloperPanel(tab = "overview") {
     closeCompetingPanels("#developer-panel");
     $("#developer-panel").classList.remove("hidden");
     $("#profile-editor").classList.add("hidden");
-    loadDeveloperTab("overview");
-  });
+    loadDeveloperTab(tab);
+  }
+  $("#developer-open").addEventListener("click", () => openDeveloperPanel("overview"));
   $("#developer-close").addEventListener("click", () => $("#developer-panel").classList.add("hidden"));
   document.querySelectorAll("[data-developer-tab]").forEach(button => button.addEventListener("click", () => loadDeveloperTab(button.dataset.developerTab)));
 
