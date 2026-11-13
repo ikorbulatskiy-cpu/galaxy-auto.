@@ -232,8 +232,8 @@
     ordered.forEach((player) => {
       advancePlayerMovement(player, now);
       const drawX = (player.renderX ?? player.x) * w;
-      const depth = Math.max(.58,Math.min(.94,player.renderY ?? player.y ?? .82));
-      const scale = .78 + ((depth-.58)/.36)*.24;
+      const depth = Math.max(.60,Math.min(.86,player.renderY ?? player.y ?? .82));
+      const scale = .78 + ((depth-.60)/.26)*.24;
       const y = depth*h;
       const isMe = String(player.id) === String(state.me?.id);
       const emotion = player.emotion?.until > Date.now() ? player.emotion.type : null;
@@ -432,7 +432,7 @@
     const relativeY=y/Math.max(1,state.height);
     if(relativeY>=.55&&relativeY<=.97){
       closeProfile();
-      const targetX=Math.max(.04,Math.min(.96,x/state.width)),targetY=Math.max(.60,Math.min(.94,relativeY));
+      const targetX=Math.max(.04,Math.min(.96,x/state.width)),targetY=Math.max(.60,Math.min(.86,relativeY));
       socket.emit("player:move",{x:targetX,y:targetY},result=>{if(!result?.ok)showToast(result?.error||"Не удалось переместить персонажа.");});
     }else closeProfile();
   });
@@ -476,7 +476,7 @@
     const action = button.dataset.roomAction;
     closeRoomFlyouts();
     if (action === "profile") openMyProfile();
-    else if (action === "chat") $("#chat-input").focus();
+    else if (action === "chat") { $("#room-toolbar [data-room-toggle=\"chat\"]").click(); }
     else if (action === "friends") openSocialTab("friends");
     else if (action === "messages") openSocialTab("messages");
     else if (action === "gifts") { if (state.selected && String(state.selected) !== String(state.me?.id)) { $("#gift-options").classList.remove("hidden"); $("#profile-menu").classList.remove("hidden"); } else showToast("Выбери игрока в комнате, чтобы отправить подарок."); }
