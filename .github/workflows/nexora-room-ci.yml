@@ -9,6 +9,8 @@ on:
       - "prototypes/nexora-social-mvp/public/**"
       - "prototypes/nexora-social-mvp/server.js"
       - "prototypes/nexora-social-mvp/src/profile.js"
+      - "prototypes/nexora-social-mvp/src/**"
+      - "prototypes/nexora-social-mvp/migrations/**"
       - ".github/workflows/nexora-room-ci.yml"
 
 jobs:
@@ -25,6 +27,10 @@ jobs:
         run: |
           node --check prototypes/nexora-social-mvp/server.js
           node --check prototypes/nexora-social-mvp/src/profile.js
+          node --check prototypes/nexora-social-mvp/src/economy.js
+          node --check prototypes/nexora-social-mvp/src/planets.js
+          node --check prototypes/nexora-social-mvp/src/social.js
+          node --check prototypes/nexora-social-mvp/src/developer.js
           node --check prototypes/nexora-social-mvp/public/client.js
           node --check prototypes/nexora-social-mvp/public/sprite-engine.js
           node --check prototypes/nexora-social-mvp/public/world-objects.js
@@ -44,6 +50,9 @@ jobs:
           const client = fs.readFileSync(root + "public/client.js", "utf8");
           const server = fs.readFileSync(root + "server.js", "utf8");
           const profile = fs.readFileSync(root + "src/profile.js", "utf8");
+          const economy = fs.readFileSync(root + "src/economy.js", "utf8");
+          const planets = fs.readFileSync(root + "src/planets.js", "utf8");
+          const migration = fs.readFileSync(root + "migrations/011_economy_reports_planet_objects.sql", "utf8");
           const sprites = fs.readFileSync(root + "public/sprite-engine.js", "utf8");
           const atlas = fs.readFileSync(root + "public/assets/sprites/characters/nexora-avatar-atlas.svg", "utf8");
           const props = fs.readFileSync(root + "public/world-objects.js", "utf8");
@@ -65,8 +74,43 @@ jobs:
             [sprites.includes("function animationFrames") && sprites.includes("drawImage(atlas"), "sprite atlas animation renderer exists"],
             [atlas.includes("sprite atlas") && atlas.includes("id=\"front\"") && atlas.includes("id=\"back\""), "original directional SVG sprite atlas exists"],
             [props.includes("function drawFountain") && props.includes("function drawPalm"), "planet prop library exists"],
-            [client.includes("player.direction=") && client.includes("spriteDirection"), "four-direction movement drives sprite rendering"]
+            [client.includes("player.direction=") && client.includes("spriteDirection"), "four-direction movement drives sprite rendering"],
+            [server.includes('app.use("/api/economy"') && economy.includes('router.post("/purchase"'), "transactional economy routes are mounted"],
+            [economy.includes("FOR UPDATE") && economy.includes("wallet_transactions") && economy.includes("requestId"), "purchases lock balances and enforce idempotency"],
+            [economy.includes('router.post("/equip"') && economy.includes('router.post("/reports"'), "inventory equip and player reports endpoints exist"],
+            [planets.includes('router.put("/:id/objects"') && planets.includes("OBJECT_CODES"), "custom planet object editor validates owner-saved objects"],
+            [migration.includes("wallet_transactions") && migration.includes("custom_planet_objects") && migration.includes("player_reports"), "additive 011 economy and world migration exists"]
           ];
           for (const [ok, label] of checks) console.log((ok ? "PASS " : "FAIL ") + label);
           if (checks.some(([ok]) => !ok)) process.exit(1);
           NODE
+
+  migration-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: nexora_test
+          POSTGRES_USER: nexora
+          POSTGRES_PASSWORD: nexora_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nexora -d nexora_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply all migrations to a clean temporary PostgreSQL
+        env:
+          PGPASSWORD: nexora_test_password
+        run: |
+          set -euo pipefail
+          for file in prototypes/nexora-social-mvp/migrations/*.sql; do
+            echo "Applying $file"
+            psql -h 127.0.0.1 -U nexora -d nexora_test -v ON_ERROR_STOP=1 -f "$file"
+          done
+          psql -h 127.0.0.1 -U nexora -d nexora_test -v ON_ERROR_STOP=1 -c "SELECT item_code, price FROM nexora_social_world.shop_catalog ORDER BY item_code"
+          psql -h 127.0.0.1 -U nexora -d nexora_test -v ON_ERROR_STOP=1 -c "SELECT to_regclass('nexora_social_world.custom_planet_objects'), to_regclass('nexora_social_world.player_reports'), to_regclass('nexora_social_world.wallet_transactions')"

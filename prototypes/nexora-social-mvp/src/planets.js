@@ -10,7 +10,7 @@ function createPlanetsRouter({ pool, auth, players, io }) {
   async function account(req) {
     return auth.authenticateToken(req.cookies?.nexora_session);
   }
-  async function planetAccess(planetId, accountId, inviteId) {
+  async function planetAccess(planetId, accountId, inviteId, enforceCapacity = true) {
     const found = await pool.query(
       `SELECT p.*, (SELECT COUNT(*)::int FROM nexora_social_world.planet_members m WHERE m.planet_id=p.id) AS members,
         EXISTS(SELECT 1 FROM nexora_social_world.planet_staff s WHERE s.planet_id=p.id AND s.account_id=$2) AS staff,
@@ -25,7 +25,7 @@ function createPlanetsRouter({ pool, auth, players, io }) {
     if (p.access_mode === "private" && String(p.owner_account_id) !== String(accountId) && !p.staff) return { error: "Планета закрыта для посещения.", status: 403 };
     if (p.access_mode === "invite" && String(p.owner_account_id) !== String(accountId) && !p.staff && !p.invited && !p.member) return { error: "Для входа требуется приглашение.", status: 403 };
     const onlineCount = [...players.values()].filter(x => x.planet === "custom-" + String(planetId)).length;
-    if (onlineCount >= p.capacity && String(p.owner_account_id) !== String(accountId)) return { error: "На планете нет свободных мест.", status: 409 };
+    if (enforceCapacity && onlineCount >= p.capacity && String(p.owner_account_id) !== String(accountId)) return { error: "На планете нет свободных мест.", status: 409 };
     return { planet: p };
   }
   router.get("/", async (req,res,next) => {
@@ -164,6 +164,45 @@ function createPlanetsRouter({ pool, auth, players, io }) {
   });
   router.delete("/:id/staff/:accountId",async(req,res,next)=>{
     try{const me=await account(req);if(!me)return res.status(401).json({error:"Требуется вход."});const p=await pool.query("SELECT owner_account_id FROM nexora_social_world.custom_planets WHERE id=$1",[req.params.id]);if(!p.rowCount||String(p.rows[0].owner_account_id)!==String(me.id))return res.status(403).json({error:"Только владелец может снимать полномочия."});await pool.query("DELETE FROM nexora_social_world.planet_staff WHERE planet_id=$1 AND account_id=$2",[req.params.id,req.params.accountId]);res.json({ok:true});}catch(e){next(e);}
+  });
+  const OBJECT_CODES=new Set(["tree","bench","fountain","lamp","flowerbed","kiosk","palm","beach_chair","club_table","dj_booth","sofa","plant"]);
+  router.get("/:id/objects",async(req,res,next)=>{
+    try{
+      const me=await account(req);if(!me)return res.status(401).json({error:"Требуется вход."});
+      const access=await planetAccess(req.params.id,me.id,null,false);
+      if(access.error)return res.status(access.status).json({error:access.error});
+      const result=await pool.query("SELECT id,object_code AS code,x,y,rotation,scale,properties FROM nexora_social_world.custom_planet_objects WHERE planet_id=$1 ORDER BY y,id",[req.params.id]);
+      res.json({ok:true,objects:result.rows});
+    }catch(e){next(e);}
+  });
+  router.put("/:id/objects",async(req,res,next)=>{
+    const me=await account(req);if(!me)return res.status(401).json({error:"Требуется вход."});
+    const objects=req.body?.objects;
+    if(!Array.isArray(objects)||objects.length>100)return res.status(400).json({error:"Можно разместить не более 100 объектов."});
+    const planet=await pool.query("SELECT owner_account_id FROM nexora_social_world.custom_planets WHERE id=$1",[req.params.id]);
+    const staff=await pool.query("SELECT role FROM nexora_social_world.planet_staff WHERE planet_id=$1 AND account_id=$2",[req.params.id,me.id]);
+    if(!planet.rowCount||String(planet.rows[0].owner_account_id)!==String(me.id)&&!staff.rowCount)return res.status(403).json({error:"Нет прав редактировать объекты планеты."});
+    const normalized=[];
+    for(const item of objects){
+      const code=String(item?.code||"");
+      const x=Number(item?.x),y=Number(item?.y),rotation=Number(item?.rotation||0),scale=Number(item?.scale||1);
+      if(!OBJECT_CODES.has(code)||![x,y,rotation,scale].every(Number.isFinite)||x<0||x>1||y<0||y>1||rotation < -360||rotation>360||scale<.5||scale>2)
+        return res.status(400).json({error:"В списке есть некорректный объект или координаты."});
+      normalized.push({code,x,y,rotation,scale});
+    }
+    const client=await pool.connect();
+    try{
+      await client.query("BEGIN");
+      await client.query("DELETE FROM nexora_social_world.custom_planet_objects WHERE planet_id=$1",[req.params.id]);
+      for(const item of normalized)await client.query(
+        "INSERT INTO nexora_social_world.custom_planet_objects(planet_id,object_code,x,y,rotation,scale) VALUES($1,$2,$3,$4,$5,$6)",
+        [req.params.id,item.code,item.x,item.y,item.rotation,item.scale]
+      );
+      await client.query("INSERT INTO nexora_social_world.planet_audit_logs(planet_id,actor_account_id,action,details) VALUES($1,$2,'objects_updated',$3::jsonb)",[req.params.id,me.id,JSON.stringify({count:normalized.length})]);
+      await client.query("COMMIT");
+      io.to("planet:custom-"+req.params.id).emit("planet:objects-updated",normalized);
+      res.json({ok:true,count:normalized.length});
+    }catch(e){await client.query("ROLLBACK");next(e);}finally{client.release();}
   });
   router.post("/:id/visit",async(req,res,next)=>{
     try{

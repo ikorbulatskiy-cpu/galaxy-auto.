@@ -18,7 +18,7 @@
   const skins = ["#f4c7a1", "#c9875b", "#75452f"];
   const suits = ["#6d7cff", "#ef6c9b", "#35bca5"];
   const state = {
-    me: null, players: new Map(), planet: "starter", selected: null,
+    me: null, players: new Map(), planet: "starter", selected: null, customPlanetObjects: [],
     stars: [], chat: [], roomEvents: [], unreadEvents: 0, width: 0, height: 0, dpr: 1, toastTimer: null, movementFrame: 0,
     auraQuality: localStorage.getItem("nexora-aura-quality") === "low" ? "low" : "high"
   };
@@ -399,6 +399,14 @@
     if(progress>=1){player.renderX=player.moveToX;player.renderY=player.moveToY;player.moving=false;player.moveStartedAt=null;player.moveDuration=null;}else player.moving=true;
   }
 
+  function drawCustomPlanetObject(ctx,item,w,h){
+    const icons={tree:"🌳",bench:"🪑",fountain:"⛲",lamp:"💡",flowerbed:"🌼",kiosk:"🏪",palm:"🌴",beach_chair:"🏖️",club_table:"🍸",dj_booth:"🎛️",sofa:"🛋️",plant:"🪴"};
+    const x=Number(item.x)*w,y=Number(item.y)*h,icon=icons[item.code]||"✦";
+    ctx.save();ctx.translate(x,y);ctx.rotate((Number(item.rotation)||0)*Math.PI/180);
+    ctx.globalAlpha=.28;ctx.fillStyle="#080d25";ctx.beginPath();ctx.ellipse(0,5,20*(item.scale||1),6,0,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;ctx.font=(30*(item.scale||1))+"px Apple Color Emoji, Segoe UI Emoji, sans-serif";ctx.textAlign="center";ctx.textBaseline="bottom";ctx.fillText(icon,0,0);ctx.restore();
+  }
+
   function drawScene() {
     if (gameScreen.classList.contains("hidden")) return;
     const w = state.width, h = state.height;
@@ -437,13 +445,16 @@
     window.NexoraWorldScene?.draw(ctx, w, h, state.planet, Date.now());
 
     const props = window.NexoraWorldObjects?.get(state.planet,w,h,Date.now()) || [];
+    const customProps=String(state.planet).startsWith("custom-")?state.customPlanetObjects.map(object=>({depth:Number(object.y),custom:object})):[];
     const ordered = [
       ...[...state.players.values()].map((player)=>({kind:"player",player,depth:player.renderY??player.y??.82})),
-      ...props.map((object)=>({kind:"object",object,depth:object.depth}))
+      ...props.map((object)=>({kind:"object",object,depth:object.depth})),
+      ...customProps.map(item=>({kind:"custom-object",object:item.custom,depth:item.depth}))
     ].sort((a,b)=>a.depth-b.depth);
     const now = performance.now();
     ordered.forEach((item) => {
       if(item.kind==="object"){window.NexoraWorldObjects?.render(ctx,[item.object]);return;}
+      if(item.kind==="custom-object"){drawCustomPlanetObject(ctx,item.object,w,h);return;}
       const player=item.player;
       advancePlayerMovement(player, now);
       const drawX = (player.renderX ?? player.x) * w;
@@ -766,6 +777,7 @@
     $("#profile-menu").classList.remove("hidden");
     $("#character-action-list").classList.toggle("hidden",ownProfile);
     $("#gift-options").classList.add("hidden");
+    $("#report-user-button").classList.toggle("hidden",ownProfile);
     renderRoomPlayers();
   }
   function closeProfile() {
@@ -773,7 +785,7 @@
     $("#profile-menu").classList.add("hidden");
     $("#character-action-list").classList.add("hidden");
     $("#my-profile-context").classList.add("hidden");
-    ["#dm-open-button","#whisper-button","#gift-button","#friend-button"].forEach(selector => $(selector).classList.remove("hidden"));
+    ["#dm-open-button","#whisper-button","#gift-button","#friend-button","#report-user-button"].forEach(selector => $(selector).classList.remove("hidden"));
     renderRoomPlayers();
   }
   $("#close-profile").addEventListener("click", closeProfile);
@@ -803,6 +815,14 @@
       const result = await socialApi("/requests", { method: "POST", body: JSON.stringify({ targetId: state.selected }) });
       showToast("Заявка отправлена игроку " + result.nickname);
     } catch (error) { showToast(error.message); }
+    closeProfile();
+  });
+  $("#report-user-button").addEventListener("click",async()=>{
+    const targetId=state.selected;if(!targetId)return;
+    const details=prompt("Опишите нарушение (до 500 символов):");
+    if(details===null)return;
+    try{await economyRequest("/reports",{method:"POST",body:JSON.stringify({targetId:Number(targetId),category:"other",details})});showToast("Жалоба отправлена модераторам.");}
+    catch(error){showToast(error.message);}
     closeProfile();
   });
   document.querySelectorAll("[data-character-action]").forEach(button=>button.addEventListener("click",()=>{const targetId=state.selected;if(!targetId||String(targetId)===String(state.me?.id))return;socket.emit("player:action",{targetId,action:button.dataset.characterAction},result=>{if(!result?.ok)showToast(result?.error||"Действие не выполнено.");else showToast("Действие отправлено.");});}));
@@ -988,6 +1008,12 @@
     }catch(e){error.textContent=e.message;}finally{button.disabled=false;}
   });
 
+  let planetDraftObjects=[];
+  function renderPlanetObjectDraft(){
+    const list=$("#planet-object-list");if(!list)return;list.replaceChildren();
+    planetDraftObjects.forEach((item,index)=>{const row=document.createElement("div");row.className="planet-owner-visitor";const label=document.createElement("span");label.textContent=item.code+" · X "+Math.round(item.x*100)+"% · Y "+Math.round(item.y*100)+"%";const remove=document.createElement("button");remove.type="button";remove.textContent="Удалить";remove.addEventListener("click",()=>{planetDraftObjects.splice(index,1);renderPlanetObjectDraft();});row.append(label,remove);list.append(row);});
+    if(!planetDraftObjects.length){const empty=document.createElement("p");empty.className="planet-empty";empty.textContent="Пока нет декораций.";list.append(empty);}
+  }
   async function openPlanetOwnerTools(id) {
     try{
       const data=await planetRequest("/api/planets/"+encodeURIComponent(id));
@@ -1005,6 +1031,9 @@
       $("#planet-edit-theme").value=p.theme||"nebula";
       $("#planet-edit-capacity").value=p.capacity||30;
       $("#planet-owner-error").textContent="";
+      const objectData=await planetRequest("/api/planets/"+encodeURIComponent(id)+"/objects");
+      planetDraftObjects=(objectData.objects||[]).map(item=>({code:item.code,x:Number(item.x),y:Number(item.y),rotation:Number(item.rotation)||0,scale:Number(item.scale)||1}));
+      renderPlanetObjectDraft();
       const visitors=await planetRequest("/api/planets/"+encodeURIComponent(id)+"/visitors");
       const list=$("#planet-owner-visitors");list.replaceChildren();
       if(!visitors.visitors.length){const empty=document.createElement("p");empty.className="planet-empty";empty.textContent="Сейчас посетителей нет.";list.append(empty);}
@@ -1022,6 +1051,16 @@
       showToast("Настройки планеты сохранены.");loadPlanetCatalog();
     }catch(e){$("#planet-owner-error").textContent=e.message;}
   });
+  $("#planet-object-add").addEventListener("click",()=>{
+    if(planetDraftObjects.length>=100){showToast("Лимит: 100 объектов на планету.");return;}
+    planetDraftObjects.push({code:$("#planet-object-code").value,x:Math.max(0,Math.min(100,Number($("#planet-object-x").value)||50))/100,y:Math.max(0,Math.min(100,Number($("#planet-object-y").value)||80))/100,rotation:0,scale:1});
+    renderPlanetObjectDraft();
+  });
+  $("#planet-object-save").addEventListener("click",async()=>{
+    const id=$("#planet-owner-id").value;
+    try{await planetRequest("/api/planets/"+encodeURIComponent(id)+"/objects",{method:"PUT",body:JSON.stringify({objects:planetDraftObjects})});state.customPlanetObjects=planetDraftObjects.map((item,index)=>({...item,id:index+1}));drawScene();showToast("Декорации сохранены.");}
+    catch(error){$("#planet-owner-error").textContent=error.message;}
+  });
   $("#planet-owner-invite").addEventListener("click",async()=>{
     try{const id=$("#planet-owner-id").value,accountId=$("#planet-invite-account").value.trim();await planetRequest("/api/planets/"+encodeURIComponent(id)+"/invite",{method:"POST",body:JSON.stringify({accountId})});$("#planet-owner-error").textContent="Приглашение создано на 7 дней.";}
     catch(e){$("#planet-owner-error").textContent=e.message;}
@@ -1035,12 +1074,18 @@
     showToast(event?.message||"Доступ к планете закрыт.");
     socket.emit("planet:change",{planet:"starter"},()=>{});
   });
+  socket.on("planet:objects-updated",objects=>{
+    state.customPlanetObjects=Array.isArray(objects)?objects:[];
+    drawScene();
+  });
   socket.on("planet:state",async data=>{
-    if(!String(data.planet).startsWith("custom-"))return;
+    state.customPlanetObjects=[];
+    if(!String(data.planet).startsWith("custom-")){drawScene();return;}
     const id=String(data.planet).slice(7);
     try{
       const result=await planetRequest("/api/planets/"+encodeURIComponent(id));
       const p=result.planet,theme=planetThemes[p.theme]||planetThemes.nebula;
+      try{const objects=await planetRequest("/api/planets/"+encodeURIComponent(id)+"/objects");state.customPlanetObjects=objects.objects||[];}catch(_error){state.customPlanetObjects=[];}
       PLANETS[data.planet]={name:p.name,location:"Владелец: "+p.owner_nickname,sky:theme.slice(0,2),ground:theme[2],glow:theme[3],ownerId:String(p.ownerId),ownerNickname:p.owner_nickname};
       $("#planet-title").textContent=p.name;
       $("#room-location-title").textContent="👑 "+p.owner_nickname;
@@ -1308,6 +1353,24 @@
       } else if (tab === "moderation") {
         const d = await developerRequest("/moderation");
         developerRender("История модерации", d.entries.map(e => ({title: e.action_type + " · " + e.target_nickname + " · ID " + e.target_account_id, detail: e.reason + " · " + e.actor_nickname + " · " + new Date(e.created_at).toLocaleString("ru-RU") + (e.expires_at ? " · до " + new Date(e.expires_at).toLocaleString("ru-RU") : "") + (e.revoked_at ? " · отменено" : "")})));
+        const reportsTitle=document.createElement("h3");reportsTitle.textContent="Жалобы игроков";content.append(reportsTitle);
+        (d.reports||[]).forEach(report=>{
+          const row=document.createElement("div");row.className="developer-row";
+          const title=document.createElement("strong");title.textContent="#"+report.id+" · "+report.category+" · "+report.target_nickname+" (ID "+report.target_account_id+")";
+          const detail=document.createElement("span");detail.textContent="От: "+report.reporter_nickname+" · "+report.details+" · "+report.status+" · "+new Date(report.created_at).toLocaleString("ru-RU");
+          row.append(title,detail);
+          if(developerPermissions.includes("reports.manage")&&report.status!=="resolved"&&report.status!=="dismissed"){
+            const actions=document.createElement("div");actions.className="developer-actions";
+            [["reviewing","В работу"],["resolved","Закрыть"],["dismissed","Отклонить"]].forEach(([status,label])=>{
+              const button=document.createElement("button");button.type="button";button.textContent=label;
+              button.addEventListener("click",async()=>{button.disabled=true;try{await developerRequest("/reports/"+report.id,{method:"PATCH",body:JSON.stringify({status})});showToast("Статус жалобы обновлён.");loadDeveloperTab("moderation");}catch(error){showToast(error.message);button.disabled=false;}});
+              actions.append(button);
+            });
+            row.append(actions);
+          }
+          content.append(row);
+        });
+        if(!(d.reports||[]).length){const empty=document.createElement("p");empty.className="developer-muted";empty.textContent="Новых жалоб нет.";content.append(empty);}
       } else if (tab === "world") {
         const d = await developerRequest("/world");
         developerRender("Планеты и комнаты", d.world.map(p => ({ title: p.title, detail: p.online + " онлайн · " + p.rooms + " комнат" })));
@@ -1457,7 +1520,7 @@
         reason.maxLength = 500; reason.placeholder = "Причина назначения";
         const permissionWrap = document.createElement("div");
         permissionWrap.className = "developer-permission-grid";
-        const available = ["players.view","players.ban","players.unban","players.warn","moderation.view","world.view","world.manage","economy.view","economy.manage","items.view","items.manage","system.view","logs.view","authority.view","authority.assign","authority.remove","authority.configure","authority.history","planets.view","planets.manage"];
+        const available = ["players.view","players.ban","players.unban","players.warn","moderation.view","reports.manage","world.view","world.manage","economy.view","economy.manage","items.view","items.manage","system.view","logs.view","authority.view","authority.assign","authority.remove","authority.configure","authority.history","planets.view","planets.manage"];
         available.forEach(value => {
           const label = document.createElement("label");
           const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.value = value;
@@ -1708,95 +1771,101 @@
     window.Telegram.WebApp.expand();
   }
 
-  // Premium shop UI. Catalog is presentation-only until server-side economy endpoints exist.
+  // NEXORA 11.0 server-backed shop and inventory.
   const SHOP_CATEGORIES = [
-    { id:"featured", label:"✦ Популярное" }, { id:"vip", label:"👑 VIP" },
-    { id:"quests", label:"🎯 Задания" }, { id:"gifts", label:"🎁 Подарки" },
-    { id:"chests", label:"📦 Сундуки" }, { id:"authority", label:"⭐ Авторитет" },
-    { id:"pets", label:"🐾 Питомцы" }, { id:"clothes", label:"👕 Одежда" },
-    { id:"auras", label:"✨ Ауры" }, { id:"teleports", label:"🌀 Телепорты" },
-    { id:"planets", label:"🪐 Планеты" }, { id:"banners", label:"🖼️ Баннеры" }
+    {id:"all",label:"✦ Всё"},{id:"clothes",label:"👕 Одежда"},
+    {id:"hair",label:"💇 Причёски"},{id:"accessories",label:"🕶️ Аксессуары"}
   ];
-  const SHOP_ITEMS = [
-    {cat:"featured",icon:"👑",name:"VIP статус",desc:"Особый статус и визуальные привилегии",price:"Скоро",badge:"ХИТ"},
-    {cat:"featured",icon:"🐉",name:"Дракон-компаньон",desc:"Редкий спутник для твоего персонажа",price:"Скоро",badge:"RARE"},
-    {cat:"featured",icon:"🌌",name:"Космическая аура",desc:"Мягкое сияние вокруг аватара",price:"Скоро",badge:"NEW"},
-    {cat:"vip",icon:"👑",name:"VIP на 30 дней",desc:"Премиальный статус NEXORA",price:"Скоро",badge:"VIP"},
-    {cat:"vip",icon:"💎",name:"VIP навсегда",desc:"Постоянный премиальный статус",price:"Скоро"},
-    {cat:"quests",icon:"🎯",name:"Ежедневные задания",desc:"Набор игровых испытаний и наград",price:"Бесплатно",badge:"DAILY"},
-    {cat:"gifts",icon:"🌹",name:"Букет роз",desc:"Подарок другому игроку",price:"Скоро"},
-    {cat:"gifts",icon:"💝",name:"Сердце",desc:"Покажи внимание друзьям",price:"Скоро"},
-    {cat:"chests",icon:"🎁",name:"Таинственный сундук",desc:"Содержимое будет определяться сервером",price:"Скоро",badge:"MYSTERY"},
-    {cat:"authority",icon:"⭐",name:"Звания авторитета",desc:"Прокачка статуса за Koins",price:"Смотреть цены"},
-    {cat:"pets",icon:"🦊",name:"Лисёнок",desc:"Питомец-компаньон",price:"Скоро",badge:"NEW"},
-    {cat:"pets",icon:"🐈",name:"Космический кот",desc:"Питомец с особым обликом",price:"Скоро"},
-    {cat:"clothes",icon:"🧥",name:"Неоновый костюм",desc:"Новый образ для персонажа",price:"Скоро"},
-    {cat:"clothes",icon:"👟",name:"Кроссовки Nova",desc:"Деталь твоего стиля",price:"Скоро"},
-    {cat:"auras",icon:"💫",name:"Ауры званий",desc:"Аура открывается вместе со званием",price:"Входит в звание"},
-    {cat:"auras",icon:"🔥",name:"Огненная аура Создателя",desc:"Открывается со званием Создатель",price:"Входит в звание"},
-    {cat:"teleports",icon:"🌀",name:"Портал домой",desc:"Быстрый переход между локациями",price:"Скоро"},
-    {cat:"planets",icon:"🪐",name:"Новая планета",desc:"Дополнительная игровая локация",price:"Скоро"},
-    {cat:"banners",icon:"🌠",name:"Звёздный баннер",desc:"Оформление карточки профиля",price:"Скоро"}
-  ];
-  let activeShopCategory = "featured";
-  function renderShopCategories() {
-    const box = $("#shop-categories");
-    box.replaceChildren();
-    SHOP_CATEGORIES.forEach(category => {
-      const button = document.createElement("button");
-      button.type = "button"; button.className = "shop-category" + (category.id === activeShopCategory ? " active" : "");
-      button.textContent = category.label;
-      button.addEventListener("click", () => { activeShopCategory = category.id; renderShopCategories(); renderShopItems(); });
+  let activeShopCategory="all",shopCatalog=[],shopInventory=[];
+  async function economyRequest(path,options={}){
+    const response=await fetch("/api/economy"+path,{credentials:"same-origin",headers:{"Content-Type":"application/json",...(options.headers||{})},...options});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.error||"Не удалось выполнить запрос.");
+    return data;
+  }
+  function renderShopCategories(){
+    const box=$("#shop-categories");box.replaceChildren();
+    SHOP_CATEGORIES.forEach(category=>{
+      const button=document.createElement("button");button.type="button";
+      button.className="shop-category"+(category.id===activeShopCategory?" active":"");
+      button.textContent=category.label;
+      button.addEventListener("click",()=>{activeShopCategory=category.id;renderShopCategories();renderShopItems();});
       box.append(button);
     });
   }
-  function renderShopItems() {
-    const box = $("#shop-items"); box.replaceChildren();
-    const items = activeShopCategory === "featured" ? SHOP_ITEMS.filter(item => item.cat === "featured") : SHOP_ITEMS.filter(item => item.cat === activeShopCategory);
-    const category = SHOP_CATEGORIES.find(item => item.id === activeShopCategory);
-    $("#shop-category-title").textContent = category ? category.label.replace(/^\S+\s/,"") : "Популярное";
-    $("#shop-item-count").textContent = items.length + " предмета";
-    items.forEach(item => {
-      const card = document.createElement("article"); card.className = "shop-item";
-      const art = document.createElement("div"); art.className = "shop-item-art"; art.textContent = item.icon;
-      if (item.badge) { const badge = document.createElement("span"); badge.className = "shop-item-badge"; badge.textContent = item.badge; art.append(badge); }
-      const body = document.createElement("div"); body.className = "shop-item-body";
-      const name = document.createElement("strong"); name.textContent = item.name;
-      const desc = document.createElement("p"); desc.textContent = item.desc;
-      const price = document.createElement("div"); price.className = "shop-item-price"; price.textContent = item.price;
-      const button = document.createElement("button"); button.type = "button"; button.textContent = "Скоро в продаже"; button.disabled = true;
-      if (item.cat === "authority" || item.cat === "auras") {
-        button.disabled = false; button.textContent = "Открыть звания";
-        button.addEventListener("click", () => { $("#shop-panel").classList.add("hidden"); openAuthorityPanel(); });
-      }
-      body.append(name,desc,price,button); card.append(art,body); box.append(card);
+  function renderShopItems(){
+    const box=$("#shop-items");box.replaceChildren();
+    const items=shopCatalog.filter(item=>activeShopCategory==="all"||item.category===activeShopCategory);
+    $("#shop-category-title").textContent=SHOP_CATEGORIES.find(x=>x.id===activeShopCategory)?.label.replace(/^\S+\s/,"")||"Магазин";
+    $("#shop-item-count").textContent=items.length+" предметов";
+    const owned=new Set(shopInventory.map(item=>item.code));
+    items.forEach(item=>{
+      const card=document.createElement("article");card.className="shop-item";
+      const art=document.createElement("div");art.className="shop-item-art";art.textContent=item.icon||"✦";
+      const body=document.createElement("div");body.className="shop-item-body";
+      const name=document.createElement("strong");name.textContent=item.name;
+      const desc=document.createElement("p");desc.textContent=item.description||"Предмет NEXORA";
+      const price=document.createElement("div");price.className="shop-item-price";price.textContent=Number(item.price).toLocaleString("ru-RU")+" ✦";
+      const button=document.createElement("button");button.type="button";
+      button.textContent=owned.has(item.code)?"Уже куплено":"Купить";
+      button.disabled=owned.has(item.code);
+      button.addEventListener("click",async()=>{
+        button.disabled=true;button.textContent="Покупка…";
+        try{
+          const result=await economyRequest("/purchase",{method:"POST",body:JSON.stringify({code:item.code,requestId:crypto.randomUUID()})});
+          $("#shop-koins").textContent=Number(result.balance).toLocaleString("ru-RU")+" ✦";
+          await loadShopInventory();renderShopItems();showToast("Предмет добавлен в инвентарь.");
+        }catch(error){button.disabled=false;button.textContent="Купить";showToast(error.message);}
+      });
+      body.append(name,desc,price,button);card.append(art,body);box.append(card);
     });
-    if (!items.length) { const empty = document.createElement("p"); empty.className = "shop-notice"; empty.textContent = "Новые предметы этой категории появятся позже."; box.append(empty); }
+    if(!items.length){const empty=document.createElement("p");empty.className="shop-notice";empty.textContent="В этой категории пока нет предметов.";box.append(empty);}
   }
-  async function openShop() {
-    $("#shop-panel").classList.remove("hidden");
-    $("#profile-editor").classList.add("hidden");
-    $("#developer-panel").classList.add("hidden");
-    activeShopCategory = "featured"; renderShopCategories(); renderShopItems();
-    $("#shop-character-name").textContent = state.me?.nickname || "Персонаж NEXORA";
-    const shopCanvas = $("#shop-character-canvas"), shopCtx = shopCanvas.getContext("2d");
-    shopCtx.clearRect(0,0,shopCanvas.width,shopCanvas.height);
-    drawAvatar(shopCtx,110,165,3.0,state.me?.avatar || {},1,null);
-    $("#shop-koins").textContent = "— ✦";
-    try {
-      const response = await fetch("/api/profile",{credentials:"same-origin"});
-      const data = await response.json().catch(()=>({}));
-      if (response.ok && data.profile) $("#shop-koins").textContent = Number(data.profile.koins || 0).toLocaleString("ru-RU") + " ✦";
-      else $("#shop-koins").textContent = "— ✦";
-    } catch (_error) { $("#shop-koins").textContent = "— ✦"; }
+  async function loadShopInventory(){
+    const data=await economyRequest("/inventory");shopInventory=data.items||[];
+    $("#shop-koins").textContent=Number(data.balance||0).toLocaleString("ru-RU")+" ✦";
+    const box=$("#shop-inventory-items");if(!box)return;
+    box.replaceChildren();
+    if(!shopInventory.length){const empty=document.createElement("p");empty.className="shop-notice";empty.textContent="Инвентарь пока пуст. Купленные предметы появятся здесь.";box.append(empty);return;}
+    shopInventory.forEach(item=>{
+      const card=document.createElement("article");card.className="shop-item";
+      const art=document.createElement("div");art.className="shop-item-art";art.textContent=item.icon||"✦";
+      const body=document.createElement("div");body.className="shop-item-body";
+      const name=document.createElement("strong");name.textContent=item.name||item.code;
+      const desc=document.createElement("p");desc.textContent=item.description||"Предмет в коллекции";
+      const button=document.createElement("button");button.type="button";button.textContent="Надеть";
+      button.addEventListener("click",async()=>{
+        button.disabled=true;
+        try{
+          const result=await economyRequest("/equip",{method:"POST",body:JSON.stringify({code:item.code})});
+          if(state.me)state.me.avatar=result.avatar;
+          const canvas=$("#shop-character-canvas"),ctx=canvas?.getContext("2d");
+          if(ctx){ctx.clearRect(0,0,canvas.width,canvas.height);drawAvatar(ctx,110,165,3.0,result.avatar,1,null);}
+          showToast("Внешность обновлена.");
+        }catch(error){showToast(error.message);}finally{button.disabled=false;}
+      });
+      body.append(name,desc,button);card.append(art,body);box.append(card);
+    });
+  }
+  async function openShop(){
+    $("#shop-panel").classList.remove("hidden");$("#profile-editor").classList.add("hidden");$("#developer-panel").classList.add("hidden");
+    $("#shop-character-name").textContent=state.me?.nickname||"Персонаж NEXORA";
+    const canvas=$("#shop-character-canvas"),ctx=canvas.getContext("2d");
+    ctx.clearRect(0,0,canvas.width,canvas.height);drawAvatar(ctx,110,165,3.0,state.me?.avatar||{},1,null);
+    $("#shop-koins").textContent="Загрузка…";
+    try{
+      const data=await economyRequest("/catalog");shopCatalog=data.items||[];
+      await loadShopInventory();activeShopCategory="all";renderShopCategories();renderShopItems();
+    }catch(error){$("#shop-koins").textContent="— ✦";showToast(error.message);}
   }
   $("#shop-open").addEventListener("click",openShop);
-  $("#shop-close").addEventListener("click",() => $("#shop-panel").classList.add("hidden"));
-  document.querySelectorAll("[data-shop-tab]").forEach(button => button.addEventListener("click",() => {
-    const tab = button.dataset.shopTab;
-    document.querySelectorAll("[data-shop-tab]").forEach(item => item.classList.toggle("active",item === button));
-    ["store","inventory","character"].forEach(name => $("#shop-"+name+"-view").classList.toggle("hidden",name !== tab));
+  $("#shop-close").addEventListener("click",()=>$("#shop-panel").classList.add("hidden"));
+  document.querySelectorAll("[data-shop-tab]").forEach(button=>button.addEventListener("click",async()=>{
+    const tab=button.dataset.shopTab;
+    document.querySelectorAll("[data-shop-tab]").forEach(item=>item.classList.toggle("active",item===button));
+    ["store","inventory","character"].forEach(name=>$("#shop-"+name+"-view").classList.toggle("hidden",name!==tab));
+    if(tab==="inventory")try{await loadShopInventory();}catch(error){showToast(error.message);}
   }));
-  $("#shop-edit-profile").addEventListener("click",() => { $("#shop-panel").classList.add("hidden"); openMyProfile(); });
+  $("#shop-edit-profile").addEventListener("click",()=>{$("#shop-panel").classList.add("hidden");openMyProfile();});
 
 })();

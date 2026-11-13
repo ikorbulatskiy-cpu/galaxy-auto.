@@ -10,6 +10,7 @@ const { createProfileRouter } = require("./src/profile");
 const { createDeveloperRouter } = require("./src/developer");
 const { createAuthorityRouter } = require("./src/authority");
 const { createPlanetsRouter } = require("./src/planets");
+const { createEconomyRouter } = require("./src/economy");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -79,6 +80,7 @@ app.use("/api/profile", createProfileRouter({ pool, auth, io }));
 app.use("/api/developer", createDeveloperRouter({ pool, auth, players, planets: PLANETS }));
 app.use("/api/authority", createAuthorityRouter({ pool, auth, io, players }));
 app.use("/api/planets", createPlanetsRouter({ pool, auth, io, players }));
+app.use("/api/economy", createEconomyRouter({ pool, auth, io }));
 app.use((error, _req, res, _next) => {
   console.error("API error:", error);
   if (!res.headersSent) res.status(500).json({ error: "Внутренняя ошибка сервера." });
