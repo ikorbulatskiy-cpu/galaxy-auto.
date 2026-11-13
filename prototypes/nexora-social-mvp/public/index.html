@@ -255,6 +255,24 @@
     <div class="shop-character-card"><div class="shop-character-preview"><canvas id="shop-character-canvas" width="220" height="260" aria-label="Предпросмотр персонажа"></canvas></div><div><span class="shop-kicker">ТВОЙ АВАТАР</span><h3 id="shop-character-name">Персонаж NEXORA</h3><p>Текущий образ загружается из сохранённого профиля. Редактирование внешности доступно в разделе «Профиль».</p><button id="shop-edit-profile" type="button">Настроить персонажа</button></div></div>
   </section>
 </aside>
+      <aside id="planets-panel" class="planets-panel hidden" aria-label="Галактика NEXORA">
+        <div class="planets-head"><div><span class="planet-kicker">EXPLORE THE NEXORA GALAXY</span><h2>Галактика планет</h2><p>Исследуй миры или создай собственную планету.</p></div><button id="planets-close" type="button" aria-label="Закрыть">×</button></div>
+        <div class="planet-tools"><input id="planet-search" type="search" maxlength="32" placeholder="Поиск планеты"><select id="planet-category"><option value="">Все категории</option><option value="social">Социальные</option><option value="romantic">Романтика</option><option value="music">Музыка</option><option value="dance">Танцы</option><option value="game">Игры</option><option value="vip">VIP</option><option value="private">Приватные</option><option value="custom">Авторские</option></select><button id="planet-create-open" type="button">＋ Создать планету</button></div>
+        <div id="planet-catalog" class="planet-catalog"><p class="planet-empty">Загружаем галактику…</p></div>
+        <section id="planet-create-form" class="planet-create-form hidden">
+          <div class="planet-form-head"><strong>Создание планеты</strong><button id="planet-create-cancel" type="button">Назад</button></div>
+          <div class="planet-form-grid">
+            <label>Название<input id="planet-new-name" maxlength="32" minlength="3" placeholder="Например, Nova"></label>
+            <label>Категория<select id="planet-new-category"><option value="social">Социальная</option><option value="romantic">Романтическая</option><option value="music">Музыкальная</option><option value="dance">Танцевальная</option><option value="game">Игровая</option><option value="vip">VIP</option><option value="private">Приватная</option><option value="custom">Авторская</option></select></label>
+            <label>Оформление<select id="planet-new-theme"><option value="nebula">Туманность</option><option value="aurora">Северное сияние</option><option value="sunset">Закат</option><option value="ocean">Океан</option><option value="violet">Фиолетовая</option><option value="emerald">Изумрудная</option></select></label>
+            <label>Доступ<select id="planet-new-access"><option value="public">Открытая</option><option value="invite">По приглашению</option><option value="private">Приватная</option></select></label>
+            <label>Вместимость<select id="planet-new-capacity"><option value="10">10 игроков</option><option value="20">20 игроков</option><option value="30" selected>30 игроков</option><option value="50">50 игроков</option><option value="100">100 игроков</option></select></label>
+            <label class="planet-wide">Описание<textarea id="planet-new-description" maxlength="240" rows="2" placeholder="Расскажи о своей планете"></textarea></label>
+            <label class="planet-wide">Приветствие<input id="planet-new-welcome" maxlength="180" placeholder="Добро пожаловать!"></label>
+          </div>
+          <p id="planet-create-error" role="status"></p><button id="planet-create-submit" type="button">Создать мир ✦</button>
+        </section>
+      </aside>
       <aside id="developer-panel" class="developer-panel hidden" aria-label="Панель разработчика"><div class="developer-head"><div><span class="developer-kicker">NEXORA CONTROL</span><strong>Панель управления</strong></div><button id="developer-close" type="button" aria-label="Закрыть">×</button></div><div class="developer-tabs"><button type="button" data-developer-tab="overview" class="active">Обзор</button><button type="button" data-developer-tab="players">Игроки</button><button type="button" data-developer-tab="moderation">Модерация</button><button type="button" data-developer-tab="world">Мир</button><button type="button" data-developer-tab="audit">Журнал</button><button type="button" data-developer-tab="authority" id="developer-authority-tab" class="hidden">Авторитеты</button><button type="button" data-developer-tab="roles" id="developer-roles-tab" class="hidden">Роли</button></div><div id="developer-content" class="developer-content"><p class="developer-muted">Загрузка панели…</p></div></aside><div id="toast" class="toast hidden" role="status"></div>
     </section>
   </main>
