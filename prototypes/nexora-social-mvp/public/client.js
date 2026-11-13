@@ -27,7 +27,10 @@
       gender: $("#gender").value,
       skin: $("#skin").value,
       hair: $("#hair").value,
-      suit: $("#suit").value
+      suit: $("#suit").value,
+      hairColor: $("#hair-color").value,
+      shoes: $("#shoes").value,
+      accessory: $("#accessory").value
     };
   }
 
@@ -61,11 +64,11 @@
   }
 
   function drawAvatar(target,x,y,scale,avatar,facing=1,emotion=null){
-    const skin=avatar?.skin||skins[0],suit=avatar?.suit||suits[0],female=avatar?.gender==="female",hair=avatar?.hair||"short",time=Date.now()/1000,bob=emotion==="dance"?Math.sin(time*9)*3:Math.sin(time*2.2)*1.1;
+    const skin=avatar?.skin||skins[0],suit=avatar?.suit||suits[0],female=avatar?.gender==="female",hair=avatar?.hair||"short",hairColor=avatar?.hairColor||"#30233d",shoes=avatar?.shoes||"sneakers",accessory=avatar?.accessory||"none",time=Date.now()/1000,bob=emotion==="dance"?Math.sin(time*9)*3:Math.sin(time*2.2)*1.1;
     target.save();target.translate(x,y+bob);target.scale(scale*facing,scale);
     target.fillStyle="rgba(3,7,24,.48)";target.beginPath();target.ellipse(0,40,19,5,0,0,Math.PI*2);target.fill();
     target.fillStyle="#20294f";target.beginPath();target.roundRect(-11,19,8,19,3);target.roundRect(3,19,8,19,3);target.fill();
-    target.fillStyle="#dfe7ff";target.beginPath();target.roundRect(-13,35,11,5,2);target.roundRect(2,35,12,5,2);target.fill();
+    target.fillStyle=shoes==="boots"?"#30364f":shoes==="heels"?"#8f466f":"#dfe7ff";target.beginPath();target.roundRect(-13,35,11,shoes==="boots"?7:5,2);target.roundRect(2,35,12,shoes==="boots"?7:5,2);target.fill();
     target.strokeStyle=skin;target.lineCap="round";target.lineWidth=7;target.beginPath();target.moveTo(-11,1);target.lineTo(-18,17);target.moveTo(11,1);target.lineTo(18,16);target.stroke();
     target.strokeStyle=suit;target.lineWidth=8;target.beginPath();target.moveTo(-12,1);target.lineTo(-16,10);target.moveTo(12,1);target.lineTo(16,9);target.stroke();
     target.fillStyle=skin;target.beginPath();target.arc(-18,18,3.5,0,Math.PI*2);target.arc(18,17,3.5,0,Math.PI*2);target.fill();
@@ -76,12 +79,15 @@
     target.fillStyle=skin;target.beginPath();target.roundRect(-4,-10,8,10,3);target.fill();target.beginPath();target.arc(-12,-15,3.2,0,Math.PI*2);target.arc(12,-15,3.2,0,Math.PI*2);target.fill();target.beginPath();target.ellipse(0,-16,12.5,14.5,0,0,Math.PI*2);target.fill();
     target.fillStyle="rgba(255,255,255,.18)";target.beginPath();target.ellipse(-4,-22,4,3,-.4,0,Math.PI*2);target.fill();target.fillStyle="#25203b";target.beginPath();target.ellipse(-4.2,-16,1.35,2,0,0,Math.PI*2);target.ellipse(4.2,-16,1.35,2,0,0,Math.PI*2);target.fill();
     target.strokeStyle="#8b4d50";target.lineWidth=1.2;target.beginPath();if(emotion==="sad")target.arc(0,-8,3,Math.PI+.2,Math.PI*2-.2);else if(emotion==="surprise")target.ellipse(0,-9,1.6,2.2,0,0,Math.PI*2);else target.arc(0,-11,3,.2,Math.PI-.2);target.stroke();
-    target.fillStyle=female?"#4a2946":"#30233d";
+    target.fillStyle=hairColor;
     if(hair==="long"){target.beginPath();target.arc(0,-19,14,Math.PI,Math.PI*2);target.lineTo(14,9);target.quadraticCurveTo(9,13,8,4);target.lineTo(8,-9);target.lineTo(-8,-9);target.lineTo(-8,4);target.quadraticCurveTo(-10,13,-14,9);target.closePath();target.fill();}
     else if(hair==="spiky"){target.beginPath();target.moveTo(-13,-17);target.lineTo(-15,-27);target.lineTo(-6,-23);target.lineTo(0,-32);target.lineTo(6,-23);target.lineTo(15,-27);target.lineTo(13,-12);target.closePath();target.fill();}
     else{target.beginPath();target.arc(0,-19,14,Math.PI,Math.PI*2);target.lineTo(13,-10);target.quadraticCurveTo(6,-16,0,-12);target.quadraticCurveTo(-7,-18,-13,-10);target.closePath();target.fill();}
     target.strokeStyle="rgba(255,255,255,.16)";target.lineWidth=1;target.beginPath();target.arc(-2,-20,10,Math.PI*1.08,Math.PI*1.7);target.stroke();target.fillStyle="#f4d88b";target.beginPath();target.arc(0,7,1.5,0,Math.PI*2);target.fill();
     if(female){target.fillStyle="#f4b5dc";target.beginPath();target.arc(10,-27,2.2,0,Math.PI*2);target.fill();}
+    if(accessory==="glasses"){target.strokeStyle="#26324f";target.lineWidth=1.5;target.beginPath();target.roundRect(-8,-19,7,6,2);target.roundRect(1,-19,7,6,2);target.moveTo(-1,-16);target.lineTo(1,-16);target.stroke();}
+    else if(accessory==="headphones"){target.strokeStyle="#aab7e8";target.lineWidth=3;target.beginPath();target.arc(0,-17,15,Math.PI,Math.PI*2);target.stroke();target.fillStyle="#7788c9";target.fillRect(-15,-17,4,8);target.fillRect(11,-17,4,8);}
+    else if(accessory==="crown"){target.fillStyle="#ffd76a";target.beginPath();target.moveTo(-9,-28);target.lineTo(-7,-37);target.lineTo(-2,-32);target.lineTo(2,-38);target.lineTo(7,-32);target.lineTo(9,-28);target.closePath();target.fill();}
     const icons={wave:"👋",kiss:"💋",dance:"♪",smile:"😊",sad:"😢",laugh:"😂",surprise:"😮",love:"💗",angry:"💢",blush:"☺",sleep:"💤",music:"♫"};if(emotion&&icons[emotion]){target.font="15px sans-serif";target.textAlign="center";target.fillText(icons[emotion],18,-31);}target.restore();
   }
 
@@ -618,14 +624,17 @@
       gender: $("#edit-gender").value,
       skin: $("#edit-skin").value,
       hair: $("#edit-hair").value,
-      suit: $("#edit-suit").value
+      suit: $("#edit-suit").value,
+      hairColor: $("#edit-hair-color").value,
+      shoes: $("#edit-shoes").value,
+      accessory: $("#edit-accessory").value
     };
   }
   function drawProfilePreview() {
     profileCtx.clearRect(0, 0, profileCanvas.width, profileCanvas.height);
     drawAvatar(profileCtx, 90, 96, 1.8, editorAvatarSettings(), 1, null);
   }
-  ["edit-gender", "edit-skin", "edit-hair", "edit-suit"].forEach(id => $("#" + id).addEventListener("change", drawProfilePreview));
+  ["edit-gender","edit-skin","edit-hair","edit-suit","edit-hair-color","edit-shoes","edit-accessory"].forEach(id=>$("#"+id).addEventListener("change",drawProfilePreview));
 
   async function openMyProfile() {
     const panel = $("#profile-editor");
@@ -656,6 +665,9 @@
       $("#edit-skin").value = avatar.skin || skins[0];
       $("#edit-hair").value = avatar.hair || "short";
       $("#edit-suit").value = avatar.suit || suits[0];
+      $("#edit-hair-color").value = avatar.hairColor || "#30233d";
+      $("#edit-shoes").value = avatar.shoes || "sneakers";
+      $("#edit-accessory").value = avatar.accessory || "none";
       drawProfilePreview();
       save.disabled = false;
     } catch (error) {
