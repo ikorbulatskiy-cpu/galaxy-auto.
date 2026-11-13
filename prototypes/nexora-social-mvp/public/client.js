@@ -412,6 +412,16 @@
     updateChatUnread();
   }
 
+  $("#clear-chat-button")?.addEventListener("click", () => {
+    const before = state.chat.length;
+    // Clear only public room messages in this browser. Private whispers stay intact.
+    state.chat = state.chat.filter(message => message.whisper);
+    state.unreadChat = 0;
+    renderHistory();
+    const removed = before - state.chat.length;
+    showToast(removed ? "История общего чата очищена только у вас." : "Общий чат уже пуст.");
+  });
+
   $("#chat-history")?.addEventListener("scroll", () => {
     const container = $("#chat-history");
     if (container.scrollHeight - container.scrollTop - container.clientHeight < 24) {
@@ -674,7 +684,8 @@
     state.planet = data.planet;
     state.players.clear();
     data.players.forEach((player) => state.players.set(player.id, { ...player, y: player.y ?? .82, renderX: player.x, renderY: player.y ?? .82 }));
-    state.chat = (data.history || []).slice(-80);
+    // Public chat is session-only: a fresh join never restores old messages.
+    state.chat = [];
     state.unreadChat = 0;
     renderHistory();
     $("#planet-title").textContent = (PLANETS[state.planet] || {name:"Авторская планета"}).name;
@@ -1037,6 +1048,8 @@
       state.players.clear();
       state.selected = null;
       state.chat = [];
+      state.unreadChat = 0;
+      renderHistory();
       state.roomEvents=[];state.unreadEvents=0;renderRoomEvents();
       $("#planet-picker").classList.add("hidden");
       $("#chat-drawer").classList.remove("hidden");
