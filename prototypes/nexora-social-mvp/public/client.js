@@ -321,9 +321,15 @@
 
   function preview() {
     previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-    drawAvatar(previewCtx, 90, 130, 2.5, avatarSettings(), 1, null);
+    drawAvatar(previewCtx, previewCanvas.width / 2, previewCanvas.height - 16, 2.05, avatarSettings(), 1, null);
+    const maleCanvas = $("#gender-male-preview"), femaleCanvas = $("#gender-female-preview");
+    if (maleCanvas) { const target=maleCanvas.getContext("2d"); target.clearRect(0,0,maleCanvas.width,maleCanvas.height); drawAvatar(target,maleCanvas.width/2,maleCanvas.height-10,1.35,{...avatarSettings(),gender:"male"},1,null); }
+    if (femaleCanvas) { const target=femaleCanvas.getContext("2d"); target.clearRect(0,0,femaleCanvas.width,femaleCanvas.height); drawAvatar(target,femaleCanvas.width/2,femaleCanvas.height-10,1.35,{...avatarSettings(),gender:"female"},1,null); }
+    document.querySelectorAll("[data-gender]").forEach(button=>{const selected=button.dataset.gender===$("#gender").value;button.classList.toggle("selected",selected);button.setAttribute("aria-pressed",String(selected));});
+    $("#register-next").disabled=!$("#gender").value;
   }
   ["gender","skin","hair","outfit","suit","hair-color","shoes","accessory"].forEach(id=>$("#"+id).addEventListener("change",preview));
+  document.querySelectorAll("[data-gender]").forEach(button=>button.addEventListener("click",()=>{$("#gender").value=button.dataset.gender;preview();}));
   preview();
 
   function showToast(message) {
@@ -570,89 +576,87 @@
     context.closePath();
   }
 
+  let pendingRegistration = null;
   async function enterWorld() {
-    loginError.textContent = "";
-    const meResponse = await fetch("/api/me");
-    if (!meResponse.ok) {
-      loginError.textContent = "Сначала создай аккаунт или войди по коду восстановления.";
-      return;
-    }
-    socket.connect();
-    socket.once("connect", () => {
-      socket.emit("player:join", {}, (result) => {
-        if (!result?.ok) {
-          loginError.textContent = result?.error || "Не удалось загрузить персонажа.";
-          return;
-        }
-        state.me = result.player;
-        state.planet = result.player.planet;
-        refreshTopbarWallet();
-        setConnectionStatus("online","На связи");
+    loginError.textContent="";
+    const meResponse=await fetch("/api/me",{credentials:"same-origin"});
+    if(!meResponse.ok){loginError.textContent="Сначала создай персонажа или войди по коду восстановления.";return false;}
+    return new Promise(resolve=>{
+      let finished=false;
+      const finish=ok=>{if(finished)return;finished=true;socket.off("connect",onConnect);socket.off("connect_error",onError);resolve(ok);};
+      const onError=()=>{loginError.textContent="Не удалось подключиться к миру. Проверь соединение и повтори попытку.";finish(false);};
+      const onConnect=()=>socket.emit("player:join",{},result=>{
+        if(!result?.ok){loginError.textContent=result?.error||"Не удалось загрузить персонажа.";finish(false);return;}
+        state.me=result.player;state.planet=result.player.planet;refreshTopbarWallet();setConnectionStatus("online","На связи");
         pushRoomEvent("Добро пожаловать","Вы вошли на планету "+(PLANETS[state.planet]?.name||state.planet)+".","✦");
-        loginScreen.classList.add("hidden");
-        gameScreen.classList.remove("hidden");
-        $("#planet-title").textContent = (PLANETS[state.planet] || {name:"Авторская планета"}).name;
-    $("#room-location-title").textContent = (PLANETS[state.planet] || {location:"Космическое пространство"}).location;
-        resize();
-        requestAnimationFrame(drawScene);
-        refreshSocial();
-        refreshDeveloperAccess();
-        renderRoomPlayers();
+        loginScreen.classList.add("hidden");gameScreen.classList.remove("hidden");
+        $("#planet-title").textContent=(PLANETS[state.planet]||{name:"Авторская планета"}).name;
+        $("#room-location-title").textContent=(PLANETS[state.planet]||{location:"Космическое пространство"}).location;
+        resize();requestAnimationFrame(drawScene);refreshSocial();refreshDeveloperAccess();renderRoomPlayers();finish(true);
       });
-    });
-    socket.once("connect_error", () => {
-      loginError.textContent = "Не удалось подключиться. Проверь авторизацию и сервер.";
+      socket.once("connect",onConnect);socket.once("connect_error",onError);
+      if(socket.connected)onConnect();else socket.connect();
     });
   }
-
-  async function submitAuth(endpoint) {
-    loginError.textContent = "";
-    $("#recovery-result").classList.add("hidden");
-    const registering = endpoint.endsWith("/register");
-    const payload = registering
-      ? { nickname: nicknameInput.value.trim(), avatar: avatarSettings() }
-      : { recoveryCode: $("#recovery-code").value.trim() };
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify(payload)
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Ошибка авторизации.");
-      if (data.recoveryCode) {
-        const box = $("#recovery-result");
-        box.textContent = "АККАУНТ СОЗДАН. ТВОЙ КОД: " + data.recoveryCode + ". Сохрани его, затем введи этот код в поле выше и нажми «Войти». В комнату ты попадёшь только после проверки кода.";
-        box.classList.remove("hidden");
-        $("#recovery-code").value = "";
-        $("#register-mode").classList.add("hidden");
-        $("#login-mode").classList.remove("hidden");
-        $("#recovery-code").focus();
-        return;
-      }
-      await enterWorld();
-    } catch (error) {
-      loginError.textContent = error.message || "Не удалось выполнить запрос.";
-    }
+  async function submitLogin(){
+    loginError.textContent="";const code=$("#recovery-code").value.trim();
+    if(!code){loginError.textContent="Введи код восстановления.";return;}
+    const button=$("#login-button");button.disabled=true;
+    try{
+      const response=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({recoveryCode:code})});
+      const data=await response.json();if(!response.ok)throw new Error(data.error||"Не удалось войти.");
+      const entered=await enterWorld();if(!entered)throw new Error(loginError.textContent||"Не удалось загрузить персонажа.");
+    }catch(error){loginError.textContent=error.message||"Не удалось выполнить вход.";}finally{button.disabled=false;}
   }
-  $("#register-button").addEventListener("click", () => submitAuth("/api/auth/register"));
-  $("#login-button").addEventListener("click", () => submitAuth("/api/auth/login"));
-  $("#show-register").addEventListener("click", () => {
-    $("#login-mode").classList.add("hidden");
-    $("#register-mode").classList.remove("hidden");
-    $("#recovery-result").classList.add("hidden");
-    loginError.textContent = "";
-    nicknameInput.focus();
+  async function submitRegistration(){
+    if(!pendingRegistration)return;const button=$("#confirm-registration");button.disabled=true;$("#age-confirm-error").textContent="";
+    try{
+      const response=await fetch("/api/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({
+        nickname:pendingRegistration.nickname,skipNickname:pendingRegistration.skipNickname,avatar:pendingRegistration.avatar,
+        acceptedPersonalData:true,acceptedLegalTerms:true,ageConfirmed:true,legalVersion:"2026-11-14"
+      })});
+      const data=await response.json();if(!response.ok)throw new Error(data.error||"Не удалось создать персонажа.");
+      $("#age-confirm-modal").classList.add("hidden");
+      const entered=await enterWorld();if(!entered)loginError.textContent=loginError.textContent||"Аккаунт создан. Войди по коду восстановления.";
+      $("#recovery-code-display").textContent=data.recoveryCode||"Код восстановления не получен.";
+      $("#recovery-success-modal").classList.remove("hidden");pendingRegistration=null;
+    }catch(error){$("#age-confirm-error").textContent=error.message||"Не удалось создать персонажа.";}
+    finally{button.disabled=!$("#age-terms-checkbox").checked;}
+  }
+  function beginRegistration(skipNickname){
+    loginError.textContent="";
+    if(!$("#personal-data-consent").checked){loginError.textContent="Подтверди согласие на обработку персональных данных.";return;}
+    const nickname=skipNickname?"":nicknameInput.value.trim();
+    if(!skipNickname&&(nickname.length<2||nickname.length>18)){loginError.textContent="Ник должен содержать от 2 до 18 символов. Или выбери вход без ника.";nicknameInput.focus();return;}
+    if(!$("#gender").value){loginError.textContent="Сначала выбери пол персонажа.";$("#register-step-one").classList.remove("hidden");$("#register-step-two").classList.add("hidden");return;}
+    pendingRegistration={skipNickname,nickname,avatar:avatarSettings()};
+    $("#age-terms-checkbox").checked=false;$("#confirm-registration").disabled=true;$("#age-confirm-error").textContent="";$("#age-confirm-modal").classList.remove("hidden");
+  }
+  $("#show-register").addEventListener("click",()=>{
+    $("#auth-home").classList.add("hidden");$("#login-mode").classList.add("hidden");$("#register-mode").classList.remove("hidden");
+    $("#register-step-one").classList.remove("hidden");$("#register-step-two").classList.add("hidden");$("#gender").value="";loginError.textContent="";preview();
   });
-  $("#show-login").addEventListener("click", () => {
-    $("#register-mode").classList.add("hidden");
-    $("#login-mode").classList.remove("hidden");
-    loginError.textContent = "";
-    $("#recovery-code").focus();
+  $("#show-login").addEventListener("click",()=>{
+    $("#auth-home").classList.add("hidden");$("#register-mode").classList.add("hidden");$("#login-mode").classList.remove("hidden");
+    $("#recovery-result").classList.add("hidden");loginError.textContent="";$("#recovery-code").focus();
   });
-
-
+  $("#login-cancel").addEventListener("click",()=>{$("#login-mode").classList.add("hidden");$("#auth-home").classList.remove("hidden");loginError.textContent="";});
+  $("#register-next").addEventListener("click",()=>{
+    if(!$("#gender").value)return;$("#register-step-one").classList.add("hidden");$("#register-step-two").classList.remove("hidden");loginError.textContent="";preview();nicknameInput.focus();
+  });
+  $("#register-back").addEventListener("click",()=>{$("#register-step-two").classList.add("hidden");$("#register-step-one").classList.remove("hidden");loginError.textContent="";});
+  $("#register-button").addEventListener("click",()=>beginRegistration(false));
+  $("#skip-nickname").addEventListener("click",()=>beginRegistration(true));
+  $("#login-button").addEventListener("click",submitLogin);
+  $("#age-terms-checkbox").addEventListener("change",()=>{$("#confirm-registration").disabled=!$("#age-terms-checkbox").checked;});
+  $("#cancel-registration").addEventListener("click",()=>{$("#age-confirm-modal").classList.add("hidden");$("#age-confirm-error").textContent="";pendingRegistration=null;});
+  $("#confirm-registration").addEventListener("click",()=>{if($("#age-terms-checkbox").checked)submitRegistration();else $("#age-confirm-error").textContent="Подтверди возраст и принятие документов.";});
+  $("#copy-recovery-code").addEventListener("click",async()=>{
+    const code=$("#recovery-code-display").textContent.trim();
+    try{await navigator.clipboard.writeText(code);$("#copy-recovery-code").textContent="Скопировано ✓";}
+    catch{const field=document.createElement("textarea");field.value=code;document.body.append(field);field.select();document.execCommand("copy");field.remove();$("#copy-recovery-code").textContent="Скопировано ✓";}
+  });
+  $("#enter-after-register").addEventListener("click",()=>$("#recovery-success-modal").classList.add("hidden"));
   socket.on("connect", () => {
     const status = $("#chat-connection-status");
     if (status) { status.dataset.state = "online"; status.lastChild.textContent = "В сети"; }
@@ -1042,6 +1046,11 @@
       loginError.textContent = "";
       gameScreen.classList.add("hidden");
       loginScreen.classList.remove("hidden");
+      $("#auth-home").classList.remove("hidden");
+      $("#register-mode").classList.add("hidden");
+      $("#login-mode").classList.add("hidden");
+      $("#age-confirm-modal").classList.add("hidden");
+      $("#recovery-success-modal").classList.add("hidden");
       button.disabled = false;
     }
   });

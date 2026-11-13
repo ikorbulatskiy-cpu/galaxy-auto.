@@ -25,32 +25,40 @@ async function issueSession(accountId) {
   return token;
 }
 async function register(req, res) {
-  const nickname = normalizeNickname(req.body?.nickname);
-  if (nickname.length < 2) return res.status(400).json({ error: "Ник должен содержать от 2 до 18 букв или цифр." });
+  const skipNickname = req.body?.skipNickname === true;
+  let nickname = skipNickname ? "" : normalizeNickname(req.body?.nickname);
+  if (!skipNickname && nickname.length < 2) return res.status(400).json({ error: "Ник должен содержать от 2 до 18 букв или цифр." });
+  if (req.body?.acceptedPersonalData !== true || req.body?.acceptedLegalTerms !== true || req.body?.ageConfirmed !== true) {
+    return res.status(400).json({ error: "Для регистрации необходимо подтвердить согласие и возраст 18+." });
+  }
   const code = generateRecoveryCode();
   const client = await pool.connect();
+  let account;
   try {
     await client.query("BEGIN");
-    const result = await client.query(
-      "INSERT INTO nexora_social_world.accounts(nickname,nickname_normalized,recovery_code_hash,recovery_code_lookup_hash) VALUES($1,$2,$3,$4) RETURNING id,nickname",
-      [nickname, nickname.toLocaleLowerCase("ru-RU"), await bcrypt.hash(code, 12), hashToken(code)]
-    );
-    const account = result.rows[0];
-    await client.query(
-      "INSERT INTO nexora_social_world.characters(account_id,nickname,avatar) VALUES($1,$2,$3::jsonb)",
-      [account.id, nickname, JSON.stringify(normalizeAvatar(req.body?.avatar))]
-    );
-    await client.query("INSERT INTO nexora_social_world.wallets(account_id,balance) VALUES($1,0)", [account.id]);
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      if (skipNickname) nickname = "Гость" + crypto.randomInt(100000, 999999);
+      const result = await client.query(
+        "INSERT INTO nexora_social_world.accounts(nickname,nickname_normalized,recovery_code_hash,recovery_code_lookup_hash) VALUES($1,$2,$3,$4) ON CONFLICT (nickname_normalized) DO NOTHING RETURNING id,nickname",
+        [nickname, nickname.toLocaleLowerCase("ru-RU"), await bcrypt.hash(code, 12), hashToken(code)]
+      );
+      if (result.rowCount) { account = result.rows[0]; break; }
+      if (!skipNickname) { await client.query("ROLLBACK"); return res.status(409).json({ error: "Этот ник уже занят." }); }
+    }
+    if (!account) throw new Error("Не удалось подобрать свободный гостевой ник. Попробуйте ещё раз.");
+    await client.query("INSERT INTO nexora_social_world.characters(account_id,nickname,avatar) VALUES($1,$2,$3::jsonb)",[account.id,nickname,JSON.stringify(normalizeAvatar(req.body?.avatar))]);
+    await client.query("INSERT INTO nexora_social_world.wallets(account_id,balance) VALUES($1,0)",[account.id]);
+    await client.query("INSERT INTO nexora_social_world.account_consents(account_id,age_confirmed_at,personal_data_consent_at,legal_terms_accepted_at,legal_version) VALUES($1,NOW(),NOW(),NOW(),$2)",[String(account.id),String(req.body?.legalVersion||"2026-11-14").slice(0,32)]);
     await client.query("COMMIT");
-    res.clearCookie("nexora_session", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/" });
-    res.status(201).json({ ok: true, account: { id: account.id, nickname }, recoveryCode: code });
   } catch (error) {
     await client.query("ROLLBACK");
     if (error.code === "23505") return res.status(409).json({ error: "Этот ник уже занят." });
     throw error;
-  } finally {
-    client.release();
-  }
+  } finally { client.release(); }
+  const token = await issueSession(account.id);
+  res.clearCookie("nexora_session",{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/"});
+  res.cookie("nexora_session",token,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:SESSION_DAYS*86400000});
+  res.status(201).json({ok:true,account:{id:account.id,nickname:account.nickname},recoveryCode:code});
 }
 const MAX_LOGIN_FAILURES = 8;
 const LOGIN_WINDOW_MINUTES = 15;
