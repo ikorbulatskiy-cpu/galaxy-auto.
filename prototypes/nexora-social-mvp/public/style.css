@@ -1322,3 +1322,41 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 .developer-player-actions button { background:linear-gradient(110deg,#625fe0,#9270df); font-weight:750; }
 .developer-player-actions button:disabled { opacity:.45; }
 @media(max-width:430px) { #room-toolbar { width:64px; } }
+
+
+/* NEXORA public player profiles and leaderboards */
+.public-profile {
+  position:fixed; z-index:95; inset: max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));
+  width:min(100% - 24px,460px); max-height:calc(100dvh - 24px); margin:auto; overflow-y:auto;
+  padding:18px; border:1px solid rgba(190,183,255,.22); border-radius:22px;
+  background:linear-gradient(155deg,rgba(28,35,78,.98),rgba(10,15,40,.99));
+  box-shadow:0 24px 80px rgba(0,0,0,.55); backdrop-filter:blur(18px);
+}
+.public-profile-summary { display:flex; align-items:center; gap:14px; margin:16px 0; }
+.public-profile-summary canvas { width:112px; height:104px; flex:0 0 112px; border-radius:16px; background:radial-gradient(circle,#33366f,#111833); }
+.public-profile-summary div { display:grid; gap:7px; min-width:0; }
+.public-profile-summary strong { font-size:19px; overflow-wrap:anywhere; }
+.public-profile-summary span { color:var(--muted); font-size:11px; }
+.public-profile-rank { display:grid; gap:5px; padding:12px; border:1px solid rgba(173,157,255,.25); border-radius:14px; background:rgba(117,95,220,.12); }
+.public-profile-rank strong { color:#d9d0ff; }
+.public-profile-rank span { color:#bfc8e8; font-size:12px; }
+.public-profile-status { margin:14px 0; padding:12px; border-radius:13px; background:rgba(255,255,255,.045); }
+.public-profile-status strong { color:#e7dcff; font-size:13px; }
+.public-profile-status p { margin:7px 0 0; color:#c6cce6; font-size:12px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; }
+.public-profile-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }
+.public-profile-actions button { min-height:42px; border:1px solid rgba(255,255,255,.14); border-radius:12px; background:linear-gradient(110deg,#625fe0,#9270df); color:white; font-weight:700; font-size:12px; }
+.rating-categories { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin:12px 0; }
+.rating-categories button { min-height:36px; border:1px solid rgba(255,255,255,.12); border-radius:10px; background:rgba(255,255,255,.05); color:#c8cce7; font-size:11px; }
+.rating-categories button.active { background:linear-gradient(110deg,#625fe0,#9270df); color:#fff; border-color:transparent; }
+.rating-top-three { border-color:rgba(255,211,120,.35); background:rgba(255,195,85,.08); }
+.rating-me { margin:12px 0; padding:10px; border-radius:11px; background:rgba(157,140,255,.12); color:#ded8ff; font-size:12px; }
+#social-rating-view { min-height:0; }
+#social-rating-list .social-row { align-items:center; }
+#social-search-results .social-row { gap:6px; }
+#social-search-results .social-row button { flex-shrink:0; }
+@media(max-width:430px) {
+  .public-profile { padding:14px; }
+  .public-profile-summary canvas { width:92px; height:92px; flex-basis:92px; }
+  .public-profile-summary strong { font-size:16px; }
+  .rating-categories button { font-size:10px; }
+}
