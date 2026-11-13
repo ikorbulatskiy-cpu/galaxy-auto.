@@ -1,0 +1,22 @@
+name: NEXORA syntax checks
+
+on:
+  pull_request:
+    paths:
+      - "prototypes/nexora-social-mvp/**"
+      - ".github/workflows/nexora-syntax-check.yml"
+
+jobs:
+  javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check JavaScript syntax
+        working-directory: prototypes/nexora-social-mvp
+        run: |
+          find . -type f -name '*.js' -not -path './node_modules/*' -print0 | xargs -0 -n1 node --check
