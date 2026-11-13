@@ -1138,6 +1138,7 @@
     profileCtx.clearRect(0, 0, profileCanvas.width, profileCanvas.height);
     drawAvatar(profileCtx, 90, 96, 1.8, editorAvatarSettings(), 1, null);
   }
+  window.addEventListener("nexora:sprites-ready",()=>{preview();if(!$("#profile-editor").classList.contains("hidden"))drawProfilePreview();});
   ["edit-gender","edit-skin","edit-hair","edit-outfit","edit-suit","edit-hair-color","edit-shoes","edit-accessory"].forEach(id=>$("#"+id).addEventListener("change",drawProfilePreview));
 
   async function openMyProfile() {
