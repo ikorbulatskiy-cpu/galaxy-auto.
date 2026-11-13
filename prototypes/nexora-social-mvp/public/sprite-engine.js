@@ -76,6 +76,28 @@
     }
     ctx.restore();
   }
+  function drawEmotion(ctx,x,y,width,height,emotion) {
+    const type=String(emotion||"").toLowerCase();
+    if(!type)return;
+    const cx=x+width/2, faceY=y+height*.25;
+    ctx.save();ctx.lineCap="round";ctx.lineJoin="round";
+    if(type==="sad"){
+      ctx.strokeStyle="#914e59";ctx.lineWidth=1.7;ctx.beginPath();ctx.arc(cx,faceY+height*.12,5,Math.PI+.15,Math.PI*2-.15);ctx.stroke();
+      ctx.fillStyle="#72b9ef";ctx.beginPath();ctx.ellipse(cx+width*.2,faceY+height*.16,1.8,3,.3,0,Math.PI*2);ctx.fill();
+    } else if(type==="happy"||type==="smile"||type==="laugh"){
+      ctx.strokeStyle="#914e59";ctx.lineWidth=1.8;ctx.beginPath();ctx.arc(cx,faceY+height*.07,5,.15,Math.PI-.15);ctx.stroke();
+      if(type==="laugh"){ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(cx,faceY+height*.10,3.5,2.2,0,0,Math.PI*2);ctx.fill();}
+    } else if(type==="angry"){
+      ctx.strokeStyle="#49334a";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx-width*.15,faceY-height*.015);ctx.lineTo(cx-width*.04,faceY+height*.015);ctx.moveTo(cx+width*.15,faceY-height*.015);ctx.lineTo(cx+width*.04,faceY+height*.015);ctx.stroke();
+      ctx.strokeStyle="#914e59";ctx.beginPath();ctx.moveTo(cx-3,faceY+height*.13);ctx.lineTo(cx+3,faceY+height*.13);ctx.stroke();
+    } else if(type==="love"||type==="kiss"){
+      const hx=cx+width*.25,hy=faceY-height*.2;
+      ctx.fillStyle="#ff76b9";ctx.beginPath();ctx.moveTo(hx,hy+5);ctx.bezierCurveTo(hx-11,hy-2,hx-5,hy-10,hx,hy-4);ctx.bezierCurveTo(hx+5,hy-10,hx+11,hy-2,hx,hy+5);ctx.fill();
+    } else if(type==="surprise"){
+      ctx.strokeStyle="#914e59";ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(cx,faceY+height*.12,2.3,3.2,0,0,Math.PI*2);ctx.stroke();
+    }
+    ctx.restore();
+  }
   function draw(ctx, x, groundY, scale, avatar, direction, moving, emotion) {
     if (!ready || failed) return false;
     const frames = animationFrames(moving, emotion);
@@ -91,6 +113,7 @@
     ctx.drawImage(atlas, sx, sy, CELL_W, CELL_H, dx, dy, width, height);
     tint(ctx, dx, dy, width, height, avatar);
     drawAppearanceDetails(ctx,dx,dy,width,height,avatar);
+    drawEmotion(ctx,dx,dy,width,height,emotion);
     ctx.restore();
     return true;
   }
