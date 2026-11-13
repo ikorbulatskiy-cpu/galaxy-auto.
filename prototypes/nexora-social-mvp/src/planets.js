@@ -23,7 +23,8 @@ function createPlanetsRouter({ pool, auth, players, io }) {
     if (p.banned) return { error: "Владелец планеты ограничил вам доступ.", status: 403 };
     if (p.access_mode === "private" && String(p.owner_account_id) !== String(accountId) && !p.staff) return { error: "Планета закрыта для посещения.", status: 403 };
     if (p.access_mode === "invite" && String(p.owner_account_id) !== String(accountId) && !p.staff && !p.invited) return { error: "Для входа требуется приглашение.", status: 403 };
-    if (p.members >= p.capacity && !p.membership && String(p.owner_account_id) !== String(accountId)) return { error: "На планете нет свободных мест.", status: 409 };
+    const onlineCount = [...players.values()].filter(x => x.planet === "custom-" + String(planetId)).length;
+    if (onlineCount >= p.capacity && String(p.owner_account_id) !== String(accountId)) return { error: "На планете нет свободных мест.", status: 409 };
     return { planet: p };
   }
   router.get("/", async (req,res,next) => {
