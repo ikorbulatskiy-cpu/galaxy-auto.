@@ -1535,61 +1535,98 @@
         const data=await authorityApi("/");
         content.replaceChildren();
         const heading=document.createElement("h3");heading.textContent="Выдача авторитетов и аур";content.append(heading);
-        const form=document.createElement("form");form.className="developer-authority-form";
-        const searchInput=document.createElement("input");searchInput.type="search";searchInput.maxLength=18;searchInput.placeholder="Найти игрока по ID или никнейму";
-        const searchResults=document.createElement("div");searchResults.className="developer-search-results";
-        const account=document.createElement("input");account.type="text";account.inputMode="numeric";account.required=true;account.placeholder="ID аккаунта игрока";
+        const hint=document.createElement("p");hint.className="developer-muted";hint.textContent="Введи ник игрока, выбери его и выполни нужное действие. Причина не требуется.";content.append(hint);
+        const form=document.createElement("form");form.className="developer-authority-form developer-authority-quick";
+        const searchInput=document.createElement("input");searchInput.type="search";searchInput.maxLength=24;searchInput.autocomplete="off";searchInput.placeholder="Ник игрока или ID";
         const searchButton=document.createElement("button");searchButton.type="button";searchButton.textContent="Найти игрока";
-        searchButton.addEventListener("click",async()=>{
+        const searchResults=document.createElement("div");searchResults.className="developer-search-results";
+        const selectedCard=document.createElement("section");selectedCard.className="developer-selected-player hidden";
+        const selectedName=document.createElement("strong");const selectedStatus=document.createElement("span");
+        selectedCard.append(selectedName,selectedStatus);
+        const title=document.createElement("select");
+        data.titles.forEach(item=>{const option=document.createElement("option");option.value=item.title_key;option.textContent=item.title_label;title.append(option);});
+        const auraLabel=document.createElement("label");auraLabel.className="developer-aura-toggle";
+        const aura=document.createElement("input");aura.type="checkbox";aura.checked=true;
+        auraLabel.append(aura,document.createTextNode("Включить ауру"));
+        const submit=document.createElement("button");submit.type="submit";submit.textContent="Выдать звание";
+        const removeButton=document.createElement("button");removeButton.type="button";removeButton.className="developer-remove-rank";removeButton.textContent="Снять звание · вернуть Новичка";
+        const auraButton=document.createElement("button");auraButton.type="button";auraButton.className="developer-aura-action";auraButton.textContent="Включить ауру";
+        form.append(searchInput,searchButton,searchResults,selectedCard,title,auraLabel,submit);
+        if(developerPermissions.includes("authority.remove"))form.append(removeButton);
+        if(developerPermissions.includes("authority.assign"))form.append(auraButton);
+        content.append(form);
+        let selectedPlayer=null;
+        const labelFor=key=>data.titles.find(item=>item.title_key===key)?.title_label||"Новичок";
+        const updateSelected=()=>{
+          if(!selectedPlayer){selectedCard.classList.add("hidden");submit.disabled=true;removeButton.disabled=true;auraButton.disabled=true;return;}
+          selectedCard.classList.remove("hidden");
+          selectedName.textContent=selectedPlayer.nickname+" · ID "+selectedPlayer.id;
+          const rank=selectedPlayer.authority_title||"NOVICE";
+          selectedStatus.textContent=labelFor(rank)+" · "+(selectedPlayer.aura_enabled?"Аура включена":(data.titles.find(item=>item.title_key===rank)?.aura_type||"NONE"));
+          if([...title.options].some(option=>option.value===rank))title.value=rank;
+          aura.checked=rank!=="NOVICE"&&Boolean(selectedPlayer.aura_enabled);
+          submit.disabled=!developerPermissions.includes("authority.assign");
+          removeButton.disabled=!developerPermissions.includes("authority.remove")||rank==="NOVICE";
+          auraButton.disabled=!developerPermissions.includes("authority.assign")||rank==="NOVICE";
+          auraButton.textContent=selectedPlayer.aura_enabled?"Выключить ауру":"Включить ауру";
+        };
+        async function findDeveloperPlayers(){
+          const query=searchInput.value.trim();
+          if(!query){searchResults.replaceChildren();const note=document.createElement("p");note.textContent="Введи ник или ID игрока.";searchResults.append(note);return;}
           searchButton.disabled=true;searchResults.replaceChildren();
           try{
-            const found=await authorityApi("/admin/players?q="+encodeURIComponent(searchInput.value.trim()));
-            if(!found.players.length){const empty=document.createElement("p");empty.textContent="Игроки не найдены.";searchResults.append(empty);}
+            const found=await authorityApi("/admin/players?q="+encodeURIComponent(query));
+            if(!found.players.length){const empty=document.createElement("p");empty.textContent="Игроки не найдены.";searchResults.append(empty);return;}
             found.players.forEach(player=>{
-              const pick=document.createElement("button");pick.type="button";pick.textContent=player.nickname+" · ID "+player.id;
-              pick.addEventListener("click",()=>{account.value=player.id;showToast("Выбран игрок "+player.nickname);});
+              const pick=document.createElement("button");pick.type="button";
+              const rank=player.authority_title||"NOVICE";
+              pick.textContent=player.nickname+" · "+labelFor(rank)+" · "+(player.aura_enabled?"Аура":"NONE");
+              pick.addEventListener("click",()=>{
+                selectedPlayer={...player};
+                searchResults.replaceChildren();
+                updateSelected();
+              });
               searchResults.append(pick);
             });
           }catch(error){showToast(error.message);}finally{searchButton.disabled=false;}
-        });
-        const title=document.createElement("select");
-        data.titles.forEach(item=>{const option=document.createElement("option");option.value=item.title_key;option.textContent=item.title_label;title.append(option);});
-        const auraPreview=document.createElement("div");auraPreview.className="authority-aura-preview";
-        const auraPreviewOrb=document.createElement("span");auraPreviewOrb.className="authority-aura-preview-orb";
-        const auraPreviewText=document.createElement("strong");
-        auraPreview.append(auraPreviewOrb,auraPreviewText);
-        const refreshAuraPreview=()=>{
-          const selected=data.titles.find(item=>item.title_key===title.value);
-          auraPreview.dataset.aura=selected?.aura_type||"NONE";
-          auraPreviewText.textContent=(selected?.title_label||"Новичок")+" · "+(selected?.aura_type||"NONE");
-        };
-        title.addEventListener("change",refreshAuraPreview);refreshAuraPreview();
-        const reason=document.createElement("input");reason.maxLength=500;reason.required=true;reason.placeholder="Причина выдачи / изменения";
-        const auraLabel=document.createElement("label");const aura=document.createElement("input");aura.type="checkbox";aura.checked=true;auraLabel.append(aura,document.createTextNode("Включить ауру"));
-        const submit=document.createElement("button");submit.type="submit";submit.textContent="Выдать звание";
-        form.append(searchInput,searchButton,searchResults,account,title,auraPreview,reason,auraLabel,submit);content.append(form);
-        if(!developerPermissions.includes("authority.assign"))form.classList.add("hidden");
-        if(developerPermissions.includes("authority.remove")){
-          const removeButton=document.createElement("button");removeButton.type="button";removeButton.textContent="Снять звание · вернуть Новичка";
-          removeButton.addEventListener("click",async()=>{
-            if(!account.value||!reason.value.trim())return showToast("Укажите ID игрока и причину.");
-            removeButton.disabled=true;
-            try{
-              const response=await fetch("/api/authority/admin/remove/"+encodeURIComponent(account.value),{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({reason:reason.value})});
-              const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||"Не удалось снять звание.");
-              showToast("Звание сброшено до Новичка.");
-            }catch(error){showToast(error.message);}finally{removeButton.disabled=false;}
-          });
-          content.append(removeButton);
+        }
+        searchButton.addEventListener("click",findDeveloperPlayers);
+        searchInput.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();findDeveloperPlayers();}});
+        title.addEventListener("change",()=>{aura.checked=title.value!=="NOVICE";});
+        async function applyRank(titleKey,auraEnabled,button,successText){
+          if(!selectedPlayer)return showToast("Сначала найди игрока.");
+          button.disabled=true;
+          try{
+            const response=await fetch("/api/authority/admin/assign",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({accountId:selectedPlayer.id,titleKey,auraEnabled})});
+            const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||"Не удалось выполнить действие.");
+            selectedPlayer.authority_title=result.titleKey;
+            selectedPlayer.aura_enabled=Boolean(result.auraEnabled);
+            updateSelected();
+            showToast(successText+" · "+selectedPlayer.nickname);
+          }catch(error){showToast(error.message);}finally{button.disabled=false;}
         }
         form.addEventListener("submit",async event=>{
-          event.preventDefault();submit.disabled=true;
-          try{
-            const response=await fetch("/api/authority/admin/assign",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({accountId:account.value,titleKey:title.value,reason:reason.value,auraEnabled:aura.checked})});
-            const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||"Не удалось выдать звание.");
-            showToast("Звание обновлено для аккаунта "+result.accountId);reason.value="";
-          }catch(error){showToast(error.message);}finally{submit.disabled=false;}
+          event.preventDefault();
+          if(!developerPermissions.includes("authority.assign"))return showToast("Недостаточно прав.");
+          await applyRank(title.value,aura.checked,submit,"Звание выдано");
         });
+        removeButton.addEventListener("click",async()=>{
+          if(!selectedPlayer)return showToast("Сначала найди игрока.");
+          removeButton.disabled=true;
+          try{
+            const response=await fetch("/api/authority/admin/remove/"+encodeURIComponent(selectedPlayer.id),{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({})});
+            const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||"Не удалось снять звание.");
+            selectedPlayer.authority_title="NOVICE";selectedPlayer.aura_enabled=false;updateSelected();
+            showToast("Возвращён статус Новичок · NONE.");
+          }catch(error){showToast(error.message);}finally{removeButton.disabled=false;}
+        });
+        auraButton.addEventListener("click",async()=>{
+          if(!selectedPlayer)return showToast("Сначала найди игрока.");
+          const rank=selectedPlayer.authority_title||"NOVICE";
+          if(rank==="NOVICE")return showToast("Сначала выдай игроку звание.");
+          await applyRank(rank,!selectedPlayer.aura_enabled,auraButton,selectedPlayer.aura_enabled?"Аура выключена":"Аура включена");
+        });
+        updateSelected();
         if(developerPermissions.includes("authority.configure")){
           const configTitle=document.createElement("h3");configTitle.textContent="Стоимость и требования";content.append(configTitle);
           const response=await fetch("/api/authority/admin/config",{credentials:"same-origin"}),config=await response.json();
