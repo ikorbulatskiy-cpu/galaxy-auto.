@@ -868,6 +868,8 @@
     renderDeveloperPlayerActions(player, ownProfile);
   }
 
+  $("#profile-info-button").addEventListener("click",()=>{const id=state.selected;$("#profile-menu").classList.add("hidden");if(id!=null)openPublicProfile(id);});
+
   async function renderDeveloperPlayerActions(player, ownProfile) {
     let panel=$("#developer-player-actions");
     if(!panel){panel=document.createElement("section");panel.id="developer-player-actions";panel.className="developer-player-actions hidden";panel.setAttribute("aria-label","Действия разработчика");$("#profile-menu").append(panel);}
@@ -1994,10 +1996,9 @@
     const box=$("#social-rating-list");
     box.dataset.category=category;
     document.querySelectorAll("[data-rating-category]").forEach(button=>button.classList.toggle("active",button.dataset.ratingCategory===category));
-    const result=await socialApi("/../profile/rating?category="+encodeURIComponent(category)).catch(async()=>{
-      const response=await fetch("/api/profile/rating?category="+encodeURIComponent(category),{credentials:"same-origin"});
-      const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||"Не удалось загрузить рейтинг.");return data;
-    });
+    const response=await fetch("/api/profile/rating?category="+encodeURIComponent(category),{credentials:"same-origin"});
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(result.error||"Не удалось загрузить рейтинг.");
     box.replaceChildren();
     if(!result.entries.length)emptySocial(box,"Пока нет игроков в рейтинге.");
     result.entries.filter(item=>item.position<=50).forEach(item=>{
