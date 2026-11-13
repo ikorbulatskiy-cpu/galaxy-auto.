@@ -61,7 +61,12 @@ jobs:
           const sprites = fs.readFileSync(root + "public/sprite-engine.js", "utf8");
           const atlas = fs.readFileSync(root + "public/assets/sprites/characters/nexora-avatar-atlas.svg", "utf8");
           const props = fs.readFileSync(root + "public/world-objects.js", "utf8");
-          const checks = [
+          const checks = [            [html.includes('id="hair"') && html.includes('id="edit-hair"') && ['value="bob"','value="ponytail"','value="curly"'].every(value=>html.includes(value)), "avatar editors expose expanded hairstyles"],
+            [html.includes('id="shoes"') && html.includes('id="edit-shoes"') && html.includes('value="sandals"'), "avatar editors expose sandals"],
+            [html.includes('id="accessory"') && html.includes('id="edit-accessory"') && ['value="flower"','value="cap"','value="scarf"'].every(value=>html.includes(value)), "avatar editors expose expanded accessories"],
+            [html.includes('id="outfit"') && html.includes('id="edit-outfit"') && ['hoodie','jacket','dress','beach','club'].every(value=>html.includes('value="'+value+'"')), "avatar editors expose outfit styles"],
+            [fs.readFileSync(root + "public/sprite-engine.js", "utf8").includes("nexora:sprites-ready") && client.includes("nexora:sprites-ready"), "avatar previews refresh when sprite atlas loads"],
+
             [html.includes('id="world-canvas"') && html.includes('id="room-events-panel"'), "world canvas and event panel exist"],
             [html.includes('data-room-toggle="events"') && html.includes('id="room-player-search"'), "events control and player search exist"],
             [client.includes("function drawPlanetBackdrop") && client.includes("function drawAvatar"), "planet and character renderers exist"],
