@@ -41,7 +41,7 @@ function createPlanetsRouter({ pool, auth, players, io }) {
          FROM nexora_social_world.planets p
          JOIN nexora_social_world.accounts a ON a.id=p.owner_account_id
          LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
-         WHERE p.status='active' AND (p.access_mode='public' OR p.owner_account_id=$3 OR EXISTS(SELECT 1 FROM nexora_social_world.planet_staff s WHERE s.planet_id=p.id AND s.account_id=$3) OR EXISTS(SELECT 1 FROM nexora_social_world.planet_members m WHERE m.planet_id=p.id AND m.account_id=$3)) AND ($1='' OR p.name ILIKE '%'||$1||'%') AND ($2='' OR p.category=$2)
+         WHERE p.status='active' AND (p.access_mode='public' OR p.owner_account_id=$3 OR EXISTS(SELECT 1 FROM nexora_social_world.planet_staff s WHERE s.planet_id=p.id AND s.account_id=$3) OR (p.access_mode='invite' AND EXISTS(SELECT 1 FROM nexora_social_world.planet_members m WHERE m.planet_id=p.id AND m.account_id=$3))) AND ($1=' OR p.name ILIKE '%'||$1||'%') AND ($2='' OR p.category=$2)
          ORDER BY p.total_visits DESC,p.created_at DESC LIMIT 100`, [q,category,me.id]
       );
       const onlineCounts = new Map();
