@@ -777,6 +777,7 @@
     $("#profile-menu").classList.remove("hidden");
     $("#character-action-list").classList.toggle("hidden",ownProfile);
     $("#gift-options").classList.add("hidden");
+    $("#report-user-button").classList.toggle("hidden",ownProfile);
     renderRoomPlayers();
   }
   function closeProfile() {
@@ -784,7 +785,7 @@
     $("#profile-menu").classList.add("hidden");
     $("#character-action-list").classList.add("hidden");
     $("#my-profile-context").classList.add("hidden");
-    ["#dm-open-button","#whisper-button","#gift-button","#friend-button"].forEach(selector => $(selector).classList.remove("hidden"));
+    ["#dm-open-button","#whisper-button","#gift-button","#friend-button","#report-user-button"].forEach(selector => $(selector).classList.remove("hidden"));
     renderRoomPlayers();
   }
   $("#close-profile").addEventListener("click", closeProfile);
@@ -814,6 +815,14 @@
       const result = await socialApi("/requests", { method: "POST", body: JSON.stringify({ targetId: state.selected }) });
       showToast("Заявка отправлена игроку " + result.nickname);
     } catch (error) { showToast(error.message); }
+    closeProfile();
+  });
+  $("#report-user-button").addEventListener("click",async()=>{
+    const targetId=state.selected;if(!targetId)return;
+    const details=prompt("Опишите нарушение (до 500 символов):");
+    if(details===null)return;
+    try{await economyRequest("/reports",{method:"POST",body:JSON.stringify({targetId:Number(targetId),category:"other",details})});showToast("Жалоба отправлена модераторам.");}
+    catch(error){showToast(error.message);}
     closeProfile();
   });
   document.querySelectorAll("[data-character-action]").forEach(button=>button.addEventListener("click",()=>{const targetId=state.selected;if(!targetId||String(targetId)===String(state.me?.id))return;socket.emit("player:action",{targetId,action:button.dataset.characterAction},result=>{if(!result?.ok)showToast(result?.error||"Действие не выполнено.");else showToast("Действие отправлено.");});}));
