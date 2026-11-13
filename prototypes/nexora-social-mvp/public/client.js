@@ -610,6 +610,7 @@
 
 
   let developerTab = "overview";
+  let developerPermissions = [];
   async function developerRequest(path) {
     const response = await fetch("/api/developer" + path, { credentials: "same-origin" });
     const data = await response.json().catch(() => ({}));
@@ -619,7 +620,9 @@
   async function refreshDeveloperAccess() {
     try {
       const data = await developerRequest("/access");
+      developerPermissions = data.permissions || [];
       $("#developer-open").classList.toggle("hidden", !data.allowed);
+      $("#developer-roles-tab").classList.toggle("hidden", !developerPermissions.includes("roles.manage"));
     } catch (_error) { $("#developer-open").classList.add("hidden"); }
   }
   function developerRender(title, rows) {
@@ -665,6 +668,58 @@
       } else if (tab === "world") {
         const d = await developerRequest("/world");
         developerRender("Планеты и комнаты", d.world.map(p => ({ title: p.title, detail: p.online + " онлайн · " + p.rooms + " комнат" })));
+      } else if (tab === "roles") {
+        if (!developerPermissions.includes("roles.manage")) throw new Error("Недостаточно прав.");
+        const d = await developerRequest("/roles");
+        content.replaceChildren();
+        const heading = document.createElement("h3");
+        heading.textContent = "Управление ролями";
+        content.append(heading);
+        const form = document.createElement("form");
+        form.className = "developer-role-form";
+        const account = document.createElement("input");
+        account.type = "number"; account.min = "1"; account.required = true; account.placeholder = "ID аккаунта";
+        const role = document.createElement("select");
+        ["DEVELOPER","MODERATOR","HELPER","USER"].forEach(value => {
+          const option = document.createElement("option"); option.value = value; option.textContent = value; role.append(option);
+        });
+        const reason = document.createElement("input");
+        reason.maxLength = 500; reason.placeholder = "Причина назначения";
+        const permissionWrap = document.createElement("div");
+        permissionWrap.className = "developer-permission-grid";
+        const available = ["players.view","players.ban","players.unban","world.view","world.manage","economy.view","economy.manage","items.view","items.manage","system.view","logs.view"];
+        available.forEach(value => {
+          const label = document.createElement("label");
+          const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.value = value;
+          label.append(checkbox, document.createTextNode(value)); permissionWrap.append(label);
+        });
+        const submit = document.createElement("button");
+        submit.type = "submit"; submit.textContent = "Сохранить роль";
+        form.append(account, role, reason, permissionWrap, submit);
+        form.addEventListener("submit", async event => {
+          event.preventDefault(); submit.disabled = true;
+          try {
+            const permissions = [...permissionWrap.querySelectorAll("input:checked")].map(input => input.value);
+            const response = await fetch("/api/developer/roles", {
+              method: "POST", credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ accountId: account.value, role: role.value, reason: reason.value, permissions })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.error || "Не удалось изменить роль.");
+            showToast("Роль игрока обновлена.");
+            loadDeveloperTab("roles");
+          } catch (error) { showToast(error.message); }
+          finally { submit.disabled = false; }
+        });
+        content.append(form);
+        const listTitle = document.createElement("h3"); listTitle.textContent = "Назначенные роли"; content.append(listTitle);
+        d.assignments.forEach(assignment => {
+          const row = document.createElement("div"); row.className = "developer-row";
+          const name = document.createElement("strong"); name.textContent = assignment.nickname + " · ID " + assignment.id;
+          const detail = document.createElement("span"); detail.textContent = assignment.role + " · " + (assignment.permissions || []).join(", ");
+          row.append(name, detail); content.append(row);
+        });
       } else if (tab === "audit") {
         const d = await developerRequest("/audit");
         developerRender("Последние действия", d.entries.map(e => ({ title: e.action, detail: e.actorNickname + " · " + e.createdAt + (e.reason ? " · " + e.reason : "") })));
