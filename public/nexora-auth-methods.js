@@ -10,7 +10,9 @@
   const regEmail=el("input",{class:"field",type:"email",name:"registerEmail",placeholder:"Email",autocomplete:"email",maxlength:"254"});
   const regPass=el("input",{class:"field",type:"password",name:"registerPassword",placeholder:"Пароль (минимум 10 символов)",autocomplete:"new-password",minlength:"10",maxlength:"128"});
   reg.insertBefore(el("label",{},"Email для входа"),reg.querySelector(".nx-consent"));
-  reg.insertBefore(regEmail,reg.querySelector(".nx-consent"));reg.insertBefore(regPass,reg.querySelector(".nx-consent"));regEmail.required=true;regPass.required=true;
+  reg.insertBefore(regEmail,reg.querySelector(".nx-consent"));
+  reg.insertBefore(el("label",{},"Пароль"),reg.querySelector(".nx-consent"));
+  reg.insertBefore(regPass,reg.querySelector(".nx-consent"));regEmail.required=true;regPass.required=true;
   const switcher=el("div",{class:"nx-auth-switcher"});
   const emailTab=el("button",{type:"button",class:"btn small"},"Email и пароль");
   const codeTab=el("button",{type:"button",class:"btn small"},"Код персонажа");
@@ -18,7 +20,8 @@
   const code=document.getElementById("nx-character-code"),codeSubmit=document.getElementById("auth-login-submit");
   const emailLabel=el("label",{},"Email"),email=el("input",{class:"field",type:"email",name:"loginEmail",placeholder:"Email",autocomplete:"username"});
   const passLabel=el("label",{},"Пароль"),pass=el("input",{class:"field",type:"password",name:"loginPassword",placeholder:"Пароль",autocomplete:"current-password"});
-  login.insertBefore(emailLabel,code);login.insertBefore(email,code);login.insertBefore(passLabel,code);login.insertBefore(pass,code);
+  const emailSubmit=el("button",{type:"submit",class:"btn primary"},"Войти по email");
+  login.insertBefore(emailLabel,code);login.insertBefore(email,code);login.insertBefore(passLabel,code);login.insertBefore(pass,code);login.insertBefore(emailSubmit,code);
   const note=el("p",{class:"muted"},"Также можно войти по коду восстановления персонажа.");login.appendChild(note);
   const social=el("div",{class:"nx-social-auth"},"Google, Apple и VK ID: подключение появится после добавления ключей OAuth в настройки сервера.");
   reg.appendChild(social);login.appendChild(social.cloneNode(true));
@@ -26,7 +29,7 @@
   const setMethod=v=>{
    method=v;const useCode=v==="code";
    [code,codeSubmit].forEach(x=>x.classList.toggle("hidden",!useCode));
-   [emailLabel,email,passLabel,pass].forEach(x=>x.classList.toggle("hidden",useCode));
+   [emailLabel,email,passLabel,pass,emailSubmit].forEach(x=>x.classList.toggle("hidden",useCode));
    code.required=useCode;email.required=!useCode;pass.required=!useCode;
    emailTab.classList.toggle("primary",!useCode);codeTab.classList.toggle("primary",useCode);
   };
@@ -39,7 +42,7 @@
    if(registering&&reg.classList.contains("hidden"))return;
    if(!registering&&method==="code")return;
    e.preventDefault();e.stopImmediatePropagation();
-   const button=registering?document.getElementById("auth-submit"):emailTab;if(button)button.disabled=true;
+   const button=registering?document.getElementById("auth-submit"):method==="code"?codeSubmit:emailSubmit;if(button)button.disabled=true;
    try{
     let data;
     if(registering){
