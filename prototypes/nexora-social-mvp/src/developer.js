@@ -52,10 +52,10 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
       const current = await requirePermission(req, res, "players.view"); if (!current) return;
       const query = String(req.query.q || "").trim().slice(0, 18);
       const result = await pool.query(
-        \`SELECT a.id,a.nickname,a.created_at,COALESCE(c.planet,'unknown') AS planet
+        `SELECT a.id,a.nickname,a.created_at,COALESCE(c.planet,'unknown') AS planet
            FROM nexora_social_world.accounts a LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
           WHERE ($1='' OR a.nickname ILIKE $2 OR a.id::text=$1)
-          ORDER BY a.created_at DESC LIMIT 50\`,
+          ORDER BY a.created_at DESC LIMIT 50`,
         [query, "%" + query.replace(/[\\%_]/g, "\\$&") + "%"]
       );
       const online = new Set([...players.values()].map(player => String(player.accountId)));
@@ -75,9 +75,9 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
     try {
       const current = await requirePermission(req, res, "logs.view"); if (!current) return;
       const result = await pool.query(
-        \`SELECT l.action,l.reason,l.created_at,COALESCE(a.nickname,'Системный пользователь') AS actor_nickname
+        `SELECT l.action,l.reason,l.created_at,COALESCE(a.nickname,'Системный пользователь') AS actor_nickname
            FROM nexora_social_world.developer_audit_logs l LEFT JOIN nexora_social_world.accounts a ON a.id=l.actor_account_id
-          ORDER BY l.created_at DESC LIMIT 50\`
+          ORDER BY l.created_at DESC LIMIT 50`
       );
       res.json({ ok: true, entries: result.rows.map(e => ({ action: e.action, reason: e.reason, actorNickname: e.actor_nickname, createdAt: e.created_at })) });
     } catch (error) { next(error); }
@@ -85,7 +85,7 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
   router.get("/roles", async (req, res, next) => {
     try {
       const current = await requirePermission(req, res, "roles.manage"); if (!current) return;
-      const result = await pool.query(\`SELECT r.account_id AS id,a.nickname,r.role,r.permissions,r.updated_at FROM nexora_social_world.developer_role_assignments r JOIN nexora_social_world.accounts a ON a.id=r.account_id ORDER BY r.updated_at DESC LIMIT 100\`);
+      const result = await pool.query(`SELECT r.account_id AS id,a.nickname,r.role,r.permissions,r.updated_at FROM nexora_social_world.developer_role_assignments r JOIN nexora_social_world.accounts a ON a.id=r.account_id ORDER BY r.updated_at DESC LIMIT 100`);
       res.json({ ok: true, assignments: result.rows });
     } catch (error) { next(error); }
   });
@@ -106,8 +106,8 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
         await client.query("BEGIN");
         if (role === "USER") await client.query("DELETE FROM nexora_social_world.developer_role_assignments WHERE account_id=$1", [accountId]);
         else await client.query(
-          \`INSERT INTO nexora_social_world.developer_role_assignments(account_id,role,permissions,assigned_by)
-           VALUES($1,$2,$3::jsonb,$4) ON CONFLICT(account_id) DO UPDATE SET role=EXCLUDED.role,permissions=EXCLUDED.permissions,assigned_by=EXCLUDED.assigned_by,updated_at=NOW()\`,
+          `INSERT INTO nexora_social_world.developer_role_assignments(account_id,role,permissions,assigned_by)
+           VALUES($1,$2,$3::jsonb,$4) ON CONFLICT(account_id) DO UPDATE SET role=EXCLUDED.role,permissions=EXCLUDED.permissions,assigned_by=EXCLUDED.assigned_by,updated_at=NOW()`,
           [accountId, role, JSON.stringify(permissions), current.account.id]
         );
         await client.query("INSERT INTO nexora_social_world.developer_audit_logs(actor_account_id,target_account_id,action,reason,details) VALUES($1,$2,$3,$4,$5::jsonb)", [current.account.id, accountId, "role.assignment", reason || null, JSON.stringify({ role, permissions })]);
