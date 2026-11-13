@@ -27,11 +27,9 @@ INSERT INTO nexora_social_world.friend_requests(from_account_id,to_account_id,st
 VALUES (900002,900001,'pending',NOW()-INTERVAL '3 days',NOW()-INTERVAL '3 days');
 
 INSERT INTO nexora_social_world.conversations(id,participant_a,participant_b,created_at,updated_at)
-OVERRIDING SYSTEM VALUE
 VALUES (70001,900001,900002,NOW()-INTERVAL '4 days',NOW()-INTERVAL '1 hour');
 
 INSERT INTO nexora_social_world.direct_messages(id,conversation_id,sender_account_id,body,created_at,read_at)
-OVERRIDING SYSTEM VALUE
 VALUES (71001,70001,900001,'Старое личное сообщение',NOW()-INTERVAL '1 hour',NULL);
 
 INSERT INTO nexora_social_world.notifications(account_id,actor_account_id,type,payload,created_at)
@@ -39,7 +37,6 @@ VALUES (900002,900001,'friend_request','{"title":"Старая заявка","bo
 
 INSERT INTO nexora_social_world.custom_planets
   (id,owner_account_id,name,description,category,theme,accent_color,access_mode,capacity,welcome_message,status,total_visits,created_at,updated_at)
-OVERRIDING SYSTEM VALUE
 VALUES (90001,900001,'Старая планета','Планета для проверки переноса.','social','aurora','#9d8cff','invite',45,'Добро пожаловать!','active',12,NOW()-INTERVAL '10 days',NOW());
 
 INSERT INTO nexora_social_world.planet_staff(planet_id,account_id,role,permissions,created_at)
