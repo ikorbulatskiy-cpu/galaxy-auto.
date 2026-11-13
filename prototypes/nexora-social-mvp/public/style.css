@@ -2331,3 +2331,12 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 .room-global-search-meta strong{overflow:hidden;font-size:11px;text-overflow:ellipsis;white-space:nowrap}
 .room-global-search-meta small{overflow:hidden;color:#9eacd7;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:600px){.room-global-search-results{max-height:30dvh}.room-global-search>input{min-height:39px}}
+
+
+/* Главный разработчик: инструменты в карточке персонажа */
+.public-profile-owner-tools{display:grid;gap:9px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12)}
+.public-profile-owner-tools>button,.public-profile-owner-actions>button,.owner-code-result>button{border:1px solid rgba(177,157,255,.35);border-radius:10px;background:rgba(130,101,220,.16);color:#f5f1ff;padding:9px 11px;font-size:12px;font-weight:700}
+.public-profile-owner-content{display:grid;gap:8px;max-height:42dvh;overflow:auto}
+.public-profile-owner-actions{display:flex;flex-wrap:wrap;gap:7px}
+.public-profile-owner-actions>button{flex:1 1 145px;min-width:0}
+.owner-code-result code{display:block;overflow-wrap:anywhere;padding:8px;margin:7px 0;border-radius:8px;background:#090914;color:#d8c7ff;font-size:15px;letter-spacing:.12em}
