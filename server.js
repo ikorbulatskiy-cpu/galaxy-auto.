@@ -77,6 +77,30 @@ const authLimiter = rateLimit({
   message: { error: "Слишком много попыток. Попробуйте позже." }
 });
 
+const clientErrorLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 15,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Слишком много диагностических событий." }
+});
+
+app.post("/api/client-errors", clientErrorLimiter, (req, res) => {
+  const body = req.body && typeof req.body === "object" ? req.body : {};
+  const clean = (value, max) => String(value || "").replace(/[\\r\\n\\t]+/g, " ").slice(0, max);
+  const event = {
+    kind: clean(body.kind, 32) || "unknown",
+    message: clean(body.message, 500) || "Client-side error",
+    source: clean(body.source, 180),
+    line: Number.isSafeInteger(body.line) ? body.line : null,
+    column: Number.isSafeInteger(body.column) ? body.column : null,
+    page: clean(body.page, 120) || "/",
+    timestamp: new Date().toISOString()
+  };
+  console.error("[CLIENT_DIAGNOSTIC]", JSON.stringify(event));
+  return res.status(202).json({ received: true });
+});
+
 app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/world", worldRouter);
 app.use("/api/social", socialRouter);
