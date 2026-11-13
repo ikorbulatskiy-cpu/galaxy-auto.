@@ -217,6 +217,7 @@
   }
 
   function drawAvatar(target,x,y,scale,avatar,facing=1,emotion=null,moving=false){
+    if(window.NexoraSpriteEngine?.draw(target,x,y,scale,avatar,"down",moving,emotion))return;
     const skin=avatar?.skin||skins[0],suit=avatar?.suit||suits[0],female=avatar?.gender==="female",hair=avatar?.hair||"short",hairColor=avatar?.hairColor||"#30233d",shoes=avatar?.shoes||"sneakers",accessory=avatar?.accessory||"none",time=Date.now()/1000,phase=moving?Math.sin(time*13):0,bob=emotion==="dance"?Math.sin(time*9)*2.8:moving?Math.abs(Math.sin(time*13))*1.5:Math.sin(time*2.2)*.65;
     const shade=(hex,amount)=>{const raw=String(hex).replace("#","");if(!/^[0-9a-f]{6}$/i.test(raw))return hex;const n=parseInt(raw,16),r=Math.max(0,Math.min(255,(n>>16)+amount)),g=Math.max(0,Math.min(255,((n>>8)&255)+amount)),b=Math.max(0,Math.min(255,(n&255)+amount));return "#"+[r,g,b].map(v=>v.toString(16).padStart(2,"0")).join("");};
     const path=(points,fill,stroke="#222642",line=1.2)=>{target.beginPath();points.forEach((p,i)=>i?target.lineTo(p[0],p[1]):target.moveTo(p[0],p[1]));target.closePath();if(fill){target.fillStyle=fill;target.fill();}if(stroke){target.lineWidth=line;target.strokeStyle=stroke;target.stroke();}};
@@ -321,7 +322,7 @@
     previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
     drawAvatar(previewCtx, 90, 130, 2.5, avatarSettings(), 1, null);
   }
-  ["gender","skin","hair","suit","hair-color","shoes","accessory"].forEach(id=>$("#"+id).addEventListener("change",preview));
+  ["gender","skin","hair","outfit","suit","hair-color","shoes","accessory"].forEach(id=>$("#"+id).addEventListener("change",preview));
   preview();
 
   function showToast(message) {
