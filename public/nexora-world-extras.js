@@ -11,9 +11,21 @@
     modal.querySelector("[data-content]").innerHTML="<h2>"+safe(title)+"</h2>"+body;modal.hidden=false;return modal;
   }
   function openPlanetModal(create){
-    const box=showModal("Создать планету",'<form data-planet-form><label>Название планеты</label><input name="name" minlength="3" maxlength="48" required placeholder="Например, Звёздная гавань"><label>Описание</label><textarea name="description" maxlength="300" rows="2"></textarea><label>Фон сцены</label><select name="theme"><option value="sunset">Закатный город</option><option value="space">Космос</option><option value="forest">Лесная поляна</option><option value="city">Ночной город</option><option value="underwater">Подводный мир</option></select><label>Погода</label><select name="weather"><option>Ясно</option><option>Звёздный дождь</option><option>Снег</option><option>Туман</option></select><label>Интерьер</label><input name="interior" maxlength="60" value="Центральный зал"><label>Модули планеты</label><label><input type="checkbox" name="modules" value="magic" checked> Магия и гороскопы</label><label><input type="checkbox" name="modules" value="games" checked> Игры и викторины</label><label><input type="checkbox" name="modules" value="defender"> Защитник</label><label><input type="checkbox" name="modules" value="love"> Любовный помощник</label><div class="nx-dialog-actions"><button type="button" data-close>Отмена</button><button class="primary" type="submit">Создать · 3 Coins</button></div><p class="muted">Оплата 3 Nexora Coins проверяется сервером.</p></form>');
+    const box=showModal("Создать планету",'<form data-planet-form><label>Название твоей планеты</label><input name="name" minlength="3" maxlength="48" required autocomplete="off" placeholder="Например, Звёздная гавань"><p class="muted">Название будет видно всем игрокам в списке планет и над комнатой.</p><div class="nx-dialog-actions"><button type="button" data-close>Отмена</button><button class="primary" type="submit">Создать за 2.99 Coins</button></div><p class="muted">Стоимость спишется с баланса только после успешного создания. Комната и статус владельца создаются автоматически.</p></form>');
     const form=box.querySelector("[data-planet-form]");
-    form.addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(form),payload={name:String(f.get("name")||"").trim(),description:String(f.get("description")||""),theme:String(f.get("theme")||"sunset"),weather:String(f.get("weather")||"Ясно"),interior:String(f.get("interior")||"Центральный зал"),modules:f.getAll("modules")};const button=form.querySelector('[type="submit"]');button.disabled=true;button.textContent="Создаём…";try{await create(payload);box.hidden=true}catch(error){const note=document.createElement("p");note.className="nx-planet-module-note";note.textContent=error.message||"Не удалось создать планету.";form.append(note);button.disabled=false;button.textContent="Повторить"}});
+    form.addEventListener("submit",async e=>{
+      e.preventDefault();
+      const name=String(new FormData(form).get("name")||"").trim();
+      const button=form.querySelector('[type="submit"]');
+      button.disabled=true;button.textContent="Создаём планету…";
+      try{await create({name});box.hidden=true}
+      catch(error){
+        const note=form.querySelector(".nx-planet-module-note")||document.createElement("p");
+        note.className="nx-planet-module-note";note.textContent=error.message||"Не удалось создать планету.";
+        if(!note.parentNode)form.append(note);
+        button.disabled=false;button.textContent="Повторить · 2.99 Coins";
+      }
+    });
   }
   async function openMyPlanets(){
     let planets=[];try{const d=await window.NexoraAPI.request("/api/game/planets");planets=(d.planets||[]).filter(p=>p.is_owner)}catch(e){showModal("Мои планеты",'<div class="nx-my-planets-empty"><div class="crown">♛</div><b>Не удалось загрузить планеты</b><p>'+safe(e.message)+'</p></div>');return}
