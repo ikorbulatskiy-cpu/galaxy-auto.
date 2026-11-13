@@ -999,7 +999,7 @@
   });
   document.querySelectorAll("[data-room-action]").forEach(button => button.addEventListener("click",() => {
     const action = button.dataset.roomAction;
-    closeRoomFlyouts();
+    if (action !== "search") closeRoomFlyouts();
     if (action === "profile") openMyProfile();
     else if (action === "rating") openSocialTab("rating");
     else if (action === "friends") openMyProfile("friends");
