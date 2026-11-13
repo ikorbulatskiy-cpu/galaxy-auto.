@@ -42,7 +42,7 @@ async function register(req, res) {
     await client.query("INSERT INTO nexora_social_world.wallets(account_id,balance) VALUES($1,0)", [account.id]);
     await client.query("COMMIT");
     const token = await issueSession(account.id);
-    res.status(201).json({ ok: true, token, account: { id: account.id, nickname }, recoveryCode: code });
+    res.cookie("nexora_session", token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: SESSION_DAYS * 86400000 });\n    res.status(201).json({ ok: true, account: { id: account.id, nickname }, recoveryCode: code });
   } catch (error) {
     await client.query("ROLLBACK");
     if (error.code === "23505") return res.status(409).json({ error: "Этот ник уже занят." });
@@ -65,7 +65,7 @@ async function login(req, res) {
   }
   await pool.query("UPDATE nexora_social_world.accounts SET last_login_at=NOW() WHERE id=$1", [account.id]);
   const token = await issueSession(account.id);
-  res.json({ ok: true, token, account: { id: account.id, nickname: account.nickname } });
+  res.cookie("nexora_session", token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: SESSION_DAYS * 86400000 });\n  res.json({ ok: true, account: { id: account.id, nickname: account.nickname } });
 }
 async function authenticateToken(token) {
   if (!token || typeof token !== "string" || token.length > 256) return null;
