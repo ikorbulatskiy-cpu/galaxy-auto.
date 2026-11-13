@@ -627,7 +627,7 @@
         $("#planet-title").textContent=(PLANETS[state.planet]||{name:"Авторская планета"}).name;
         $("#room-location-title").textContent=(PLANETS[state.planet]||{location:"Космическое пространство"}).location;
         syncOnlineRoomName();
-        resize();requestAnimationFrame(drawScene);refreshSocial();refreshDeveloperAccess();renderRoomPlayers();finish(true);
+        resize();requestAnimationFrame(drawScene);refreshSocial();refreshDeveloperAccess();renderRoomPlayers();openIntegratedGalaxy();finish(true);
       });
       socket.once("connect",onConnect);socket.once("connect_error",onError);
       if(socket.connected)onConnect();else socket.connect();
@@ -1034,6 +1034,23 @@
     if (frame) frame.src = "about:blank";
     view?.classList.add("hidden");
   });
+  document.querySelectorAll("[data-galaxy-feature]").forEach(button => button.addEventListener("click", () => {
+    const feature = button.dataset.galaxyFeature;
+    if (feature === "menu") toggleRoomFlyout("menu");
+    else if (feature === "profile") openMyProfile();
+    else if (feature === "friends") openMyProfile("friends");
+    else if (feature === "messages") openMyProfile("messages");
+    else if (feature === "shop") openShop();
+    else if (feature === "planets") $("#planets-button")?.click();
+    else if (feature === "developer" && !$("#developer-open")?.classList.contains("hidden")) openDeveloperPanel("overview");
+  }));
+  const developerSource = $("#developer-open");
+  const developerShortcut = document.querySelector(".galaxy-developer-shortcut");
+  if (developerSource && developerShortcut) {
+    const syncDeveloperShortcut = () => developerShortcut.classList.toggle("hidden", developerSource.classList.contains("hidden"));
+    syncDeveloperShortcut();
+    new MutationObserver(syncDeveloperShortcut).observe(developerSource, { attributes: true, attributeFilter: ["class"] });
+  }
   document.querySelectorAll("[data-room-emotion]").forEach(button => button.addEventListener("click",() => {
     socket.emit("emotion:play",{emotion:button.dataset.roomEmotion});
     closeRoomFlyouts();
@@ -1059,6 +1076,13 @@
     renderRoomPlayers();
     renderDeveloperPlayerActions(player, ownProfile);
   }
+
+  window.addEventListener("message",event=>{
+    if(event.origin!==location.origin||event.source!==$("#integrated-galaxy-frame")?.contentWindow)return;
+    if(event.data?.type!=="NEXORA_GALAXY_PLAYER_SELECTED")return;
+    const player=state.players.get(String(event.data.playerId));
+    if(player){openProfile(player);$("#integrated-galaxy-frame")?.contentWindow?.postMessage({type:"NEXORA_GALAXY_CLOSE_CONTEXT"},location.origin);}
+  });
 
   $("#profile-info-button").addEventListener("click",()=>{const id=state.selected;$("#profile-menu").classList.add("hidden");if(id!=null)openPublicProfile(id);});
 
@@ -1275,6 +1299,8 @@
       $("#recovery-result").classList.add("hidden");
       loginError.textContent = "";
       gameScreen.classList.add("hidden");
+      $("#integrated-galaxy-frame")?.setAttribute("src","about:blank");
+      $("#integrated-galaxy-view")?.classList.add("hidden");
       loginScreen.classList.remove("hidden");
       $("#auth-home").classList.remove("hidden");
       $("#register-mode").classList.add("hidden");

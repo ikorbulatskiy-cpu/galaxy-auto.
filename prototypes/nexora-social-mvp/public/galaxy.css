@@ -47,3 +47,15 @@
 @media(max-width:600px){.context-menu{min-width:205px;max-width:calc(100vw - 16px)}.context-menu button{min-height:42px;font-size:13px}}
 
 .planet-search{flex:1 1 190px;min-width:150px;border:1px solid #7889c355;border-radius:20px;padding:8px 13px;background:#ffffff0a;color:#f4f6ff;font:inherit;font-size:11px;outline:none}.planet-search:focus{border-color:#a89cff;box-shadow:0 0 0 3px #a89cff22}.planet-search::placeholder{color:#aab8d8}.planet-category-toolbar{display:flex;gap:7px;overflow-x:auto;padding:0 2px 9px;scrollbar-width:thin}.planet-category-toolbar .map-filter{white-space:nowrap;flex:0 0 auto}
+
+
+/* Galaxy-first composition: planet chat above the 2D scene. */
+.layout{width:100%;max-width:none;height:calc(100dvh - 62px);margin:0;padding:46px 8px 8px;display:flex;flex-direction:column;gap:0}
+.game-frame{display:flex;flex:1 1 auto;min-height:0;flex-direction:column;border-radius:10px}
+.chat-panel{order:0;flex:0 0 auto;border-top:0;border-bottom:1px solid #3b82f655}
+.chat-log{height:clamp(76px,13vh,124px)}
+.scene-heading{order:1;flex:0 0 32px}
+.scene-viewport{order:2;flex:1 1 auto;min-height:180px;height:auto}
+.move-confirm-bar{order:3;flex:0 0 auto}
+.actionbar{order:4;flex:0 0 auto;padding:7px 0 0}
+@media(max-width:600px){.layout{height:calc(100dvh - 57px);padding:46px 6px 6px}.chat-log{height:clamp(70px,12vh,105px)}.scene-viewport{min-height:160px}.actionbar{gap:5px;padding-top:6px}.actionbar button{flex-basis:calc(33.333% - 5px);padding:8px 5px;font-size:10px}}

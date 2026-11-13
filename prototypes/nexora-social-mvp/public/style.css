@@ -2357,3 +2357,15 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 @media(max-width:600px){.integrated-galaxy-back{top:calc(env(safe-area-inset-top) + 66px);left:8px;padding:7px 10px;font-size:11px}}
 
 .public-profile-planet{font-size:12px;color:#b9c9ff;margin:9px 0;padding:8px 10px;border:1px solid #8095d633;border-radius:10px;background:#ffffff08}
+
+
+/* Galaxy 2D is the primary signed-in view; legacy NEXORA panels remain available above it. */
+.integrated-galaxy-view{z-index:120}
+.galaxy-primary-toolbar{position:absolute;z-index:130;top:calc(max(66px,env(safe-area-inset-top) + 62px));left:10px;right:10px;display:flex;align-items:center;gap:6px;overflow-x:auto;padding:5px 7px;border:1px solid rgba(165,190,255,.22);border-radius:13px;background:rgba(8,14,30,.88);backdrop-filter:blur(14px);scrollbar-width:none}
+.galaxy-primary-toolbar::-webkit-scrollbar{display:none}
+.galaxy-primary-toolbar button{flex:0 0 auto;min-height:32px;padding:6px 10px;border:1px solid rgba(165,190,255,.22);border-radius:9px;background:rgba(255,255,255,.07);color:#edf5ff;font-size:11px;font-weight:750;white-space:nowrap}
+.galaxy-primary-toolbar button:active{background:#557fd255}
+.galaxy-primary-toolbar .integrated-galaxy-back{position:static;z-index:auto;min-height:32px;box-shadow:none;backdrop-filter:none}
+.profile-menu,.profile-editor,.social-panel,.shop-panel,.planets-panel,.developer-panel,.authority-panel,.room-flyout,.public-profile{position:fixed!important;z-index:155!important}
+.toast{z-index:170}
+@media(max-width:600px){.galaxy-primary-toolbar{left:6px;right:6px;gap:4px;padding:4px}.galaxy-primary-toolbar button{min-height:31px;padding:6px 8px;font-size:10px}}

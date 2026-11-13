@@ -299,8 +299,17 @@
       <aside id="developer-panel" class="developer-panel hidden" aria-label="Панель разработчика"><div class="developer-head"><div><span class="developer-kicker">NEXORA CONTROL</span><strong>Панель управления</strong></div><button id="developer-close" type="button" aria-label="Закрыть">×</button></div><div class="developer-tabs"><button type="button" data-developer-tab="overview" class="active">Обзор</button><button type="button" data-developer-tab="players">Игроки</button><button type="button" data-developer-tab="moderation">Модерация</button><button type="button" data-developer-tab="world">Мир</button><button type="button" data-developer-tab="planets" id="developer-planets-tab" class="hidden">Планеты</button><button type="button" data-developer-tab="audit">Журнал</button><button type="button" data-developer-tab="authority" id="developer-authority-tab" class="hidden">Авторитеты</button><button type="button" data-developer-tab="roles" id="developer-roles-tab" class="hidden">Роли</button></div><div id="developer-content" class="developer-content"><p class="developer-muted">Загрузка панели…</p></div></aside><div id="toast" class="toast hidden" role="status"></div>
     </section>
   <section id="integrated-galaxy-view" class="integrated-galaxy-view hidden" aria-label="NEXORA Galaxy 2D">
-    <button id="integrated-galaxy-back" class="integrated-galaxy-back" type="button">‹ Назад в NEXORA</button>
     <iframe id="integrated-galaxy-frame" title="NEXORA Galaxy 2D" loading="lazy" allow="fullscreen"></iframe>
+    <nav class="galaxy-primary-toolbar" aria-label="Функции NEXORA">
+      <button id="integrated-galaxy-back" class="integrated-galaxy-back" type="button">Классический режим</button>
+      <button type="button" data-galaxy-feature="menu">☰ Меню</button>
+      <button type="button" data-galaxy-feature="profile">👤 Профиль</button>
+      <button type="button" data-galaxy-feature="friends">👥 Друзья</button>
+      <button type="button" data-galaxy-feature="messages">✉ Почта</button>
+      <button type="button" data-galaxy-feature="shop">🛍️ Магазин</button>
+      <button type="button" data-galaxy-feature="planets">🪐 Планеты</button>
+      <button type="button" data-galaxy-feature="developer" class="galaxy-developer-shortcut hidden">🛠️ Разработчик</button>
+    </nav>
   </section>
   </main>
   <script src="/socket.io/socket.io.js"></script>
