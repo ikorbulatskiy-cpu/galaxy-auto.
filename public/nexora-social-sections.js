@@ -27,9 +27,7 @@
   const h=document.createElement("h1");h.textContent=icon+" "+title;
   const p=document.createElement("p");p.textContent=description;
   copy.append(h,p);
-  const back=document.createElement("button");back.type="button";back.textContent="⌂";back.setAttribute("aria-label","Вернуться в игровой мир");
-  back.addEventListener("click",()=>window.switchTab?.("world"));
-  heading.append(copy,back);
+  heading.append(copy);
   section.insertBefore(heading,section.firstChild);
  });
  if(!dashboard.querySelector(".nx-social-bottom")){
@@ -40,7 +38,7 @@
    const glyph=document.createElement("span");glyph.textContent=icon;
    const caption=document.createElement("small");caption.textContent=label;
    b.append(glyph,caption);
-   b.addEventListener("click",()=>window.switchTab?.(tab));
+   b.addEventListener("click",()=>dashboard.querySelector('.dashnav [data-tab="'+tab+'"]')?.click());
    nav.append(b);
   });
   const more=document.createElement("button");more.type="button";more.dataset.more="true";more.setAttribute("aria-haspopup","dialog");more.setAttribute("aria-expanded","false");
@@ -58,6 +56,7 @@
   head.append(title,close);
   const grid=document.createElement("div");grid.className="nx-more-grid";
   pages.filter(([key])=>!["world","friends","messages","profile"].includes(key)).forEach(([key,label,,icon])=>{
+   if(dashboard.querySelector('.dashnav [data-tab="'+key+'"]')?.hidden)return;
    const b=document.createElement("button");b.type="button";b.className="nx-more-link";b.dataset.moreTab=key;
    const glyph=document.createElement("span");glyph.textContent=icon;
    const text=document.createElement("small");text.textContent=label;
@@ -78,6 +77,8 @@
   const active=dashboard.querySelector(".tabpane:not(.hidden)");
   const key=active?.id?.replace("tab-","");
   dashboard.querySelectorAll(".nx-social-bottom [data-shortcut]").forEach(b=>b.classList.toggle("active",b.dataset.shortcut===key));
+  const more=dashboard.querySelector(".nx-social-bottom [data-more]");
+  if(more)more.classList.toggle("active",!!key&&!["world","friends","messages","profile"].includes(key));
  };
  new MutationObserver(sync).observe(dashboard,{attributes:true,subtree:true,attributeFilter:["class"]});
  dashboard.querySelectorAll(".dashnav [data-tab]").forEach(b=>b.addEventListener("click",()=>setTimeout(sync,0)));

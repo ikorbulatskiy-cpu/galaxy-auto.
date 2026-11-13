@@ -110,3 +110,245 @@ body > .top .mark{border-radius:11px;background:var(--nx-accent);box-shadow:0 5p
 .nx-more-link small{font-size:12px}
 @media(min-width:761px){.nx-more-backdrop{display:none!important}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+
+/* NEXORA UI alignment pass: consistent controls, spacing and navigation. */
+:root{
+ --nx-control-height:42px;
+ --nx-control-radius:11px;
+}
+#dashboard>.dashnav{
+ display:grid!important;
+ grid-template-columns:repeat(7,minmax(0,1fr));
+ align-items:stretch;
+ gap:8px;
+ padding:10px;
+ border:1px solid var(--nx-border);
+ border-radius:16px;
+ background:var(--nx-surface);
+}
+#dashboard>.dashnav .tab{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ min-width:0;
+ min-height:42px;
+ height:auto;
+ padding:7px 9px;
+ border:1px solid transparent;
+ border-radius:10px;
+ background:transparent;
+ color:var(--nx-muted);
+ font-size:12px;
+ line-height:1.2;
+ text-align:center;
+ white-space:normal;
+}
+#dashboard>.dashnav .tab.active{
+ border-color:#8f78ff66;
+ background:#8e72ff1c;
+ color:#eee9ff;
+ box-shadow:none;
+}
+#dashboard>.head{
+ align-items:center;
+ gap:16px;
+}
+#dashboard>.head #logout{min-width:88px;min-height:40px}
+#dashboard .nx-pane-close{
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ width:auto;
+ min-width:0;
+ min-height:34px;
+ margin:0 0 14px;
+ padding:0 12px;
+ border:1px solid var(--nx-border);
+ border-radius:10px;
+ background:var(--nx-surface-raised);
+ color:var(--nx-muted);
+ font-size:12px;
+ line-height:1;
+}
+#dashboard .tabpane:not(#tab-world) .nx-section-heading{
+ display:flex;
+ align-items:center;
+ justify-content:flex-start;
+ min-height:48px;
+ margin:0 0 16px;
+ padding:0 0 12px;
+ border-bottom:1px solid var(--nx-border);
+}
+#dashboard .tabpane:not(#tab-world) .nx-section-heading h1{
+ margin:0;
+ color:var(--nx-text);
+ font-size:22px;
+ line-height:1.2;
+ letter-spacing:-.35px;
+}
+#dashboard .tabpane:not(#tab-world) .nx-section-heading p{
+ margin:5px 0 0;
+ color:var(--nx-muted);
+ font-size:12px;
+ line-height:1.45;
+}
+#dashboard .tabpane:not(#tab-world) .panel,
+#dashboard .tabpane:not(#tab-world) .card{
+ min-width:0;
+ overflow-wrap:anywhere;
+ border:1px solid var(--nx-border);
+ border-radius:var(--nx-radius);
+ background:linear-gradient(155deg,var(--nx-surface-raised),var(--nx-surface));
+ box-shadow:0 8px 22px #0003;
+}
+#dashboard .tabpane:not(#tab-world) button{
+ min-height:var(--nx-control-height);
+ max-width:100%;
+ padding:8px 13px;
+ border-radius:var(--nx-control-radius);
+ font-size:12px;
+ line-height:1.25;
+}
+#dashboard .tabpane:not(#tab-world) .btn.primary{
+ border:0;
+ background:var(--nx-accent);
+ color:#fff;
+}
+#dashboard .tabpane:not(#tab-world) .stack>button,
+#dashboard .tabpane:not(#tab-world) form.stack>button{
+ width:100%;
+}
+#dashboard .tabpane:not(#tab-world) .sendrow{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) auto;
+ align-items:center;
+ gap:8px;
+ min-width:0;
+}
+#dashboard .tabpane:not(#tab-world) .sendrow .field{
+ width:100%;
+ min-width:0;
+ margin:0;
+}
+#dashboard .tabpane:not(#tab-world) .sendrow button{
+ min-width:92px;
+}
+#dashboard .tabpane:not(#tab-world) .row{
+ display:flex;
+ align-items:center;
+ flex-wrap:wrap;
+ gap:9px;
+}
+#dashboard .tabpane:not(#tab-world) .row>div:first-child{
+ flex:1 1 150px;
+ min-width:0;
+ overflow-wrap:anywhere;
+}
+#dashboard .tabpane:not(#tab-world) .row>button{
+ flex:0 1 auto;
+ min-width:82px;
+}
+#dashboard .tabpane:not(#tab-world) .field{
+ min-width:0;
+ width:100%;
+ max-width:100%;
+ min-height:var(--nx-control-height);
+ border-radius:var(--nx-control-radius);
+}
+@media(min-width:761px) and (max-width:980px){
+ #dashboard>.dashnav{grid-template-columns:repeat(5,minmax(0,1fr))}
+ #dashboard>.dashnav .tab{font-size:11px}
+}
+@media(max-width:760px){
+ #dashboard{max-width:430px!important}
+ #dashboard>.tabpane:not(#tab-world){
+  padding:calc(env(safe-area-inset-top) + 16px) 16px calc(94px + env(safe-area-inset-bottom));
+ }
+ #dashboard .nx-pane-close{
+  min-height:34px;
+  margin-bottom:12px;
+  padding:0 11px;
+  font-size:11px;
+ }
+ #dashboard .tabpane:not(#tab-world) .nx-section-heading{
+  min-height:0;
+  margin-bottom:14px;
+  padding-bottom:12px;
+ }
+ #dashboard .tabpane:not(#tab-world) .nx-section-heading h1{font-size:20px}
+ #dashboard .tabpane:not(#tab-world) .nx-section-heading p{font-size:11px}
+ #dashboard .tabpane:not(#tab-world) .dashgrid{grid-template-columns:minmax(0,1fr);gap:12px}
+ #dashboard .tabpane:not(#tab-world) .panel,
+ #dashboard .tabpane:not(#tab-world) .card{padding:14px}
+ #dashboard .tabpane:not(#tab-world) .sendrow{
+  grid-template-columns:minmax(0,1fr) 94px;
+  gap:7px;
+  width:100%;
+ }
+ #dashboard .tabpane:not(#tab-world) .sendrow button{min-width:0;width:100%;padding-inline:8px}
+ #dashboard .nx-social-bottom{
+  left:50%;
+  bottom:0;
+  z-index:90;
+  width:min(430px,100vw);
+  min-height:calc(66px + env(safe-area-inset-bottom));
+  padding:7px 9px calc(7px + env(safe-area-inset-bottom));
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  align-items:stretch;
+  gap:6px;
+  border-top:1px solid var(--nx-border);
+  border-radius:16px 16px 0 0;
+  background:#111827f7;
+  box-shadow:0 -8px 28px #0004;
+ }
+ #dashboard .nx-social-bottom button{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  width:100%;
+  min-width:0;
+  min-height:48px;
+  height:48px;
+  padding:4px 2px;
+  border:1px solid transparent;
+  border-radius:11px;
+  background:transparent;
+  color:#aeb8cb;
+  line-height:1;
+ }
+ #dashboard .nx-social-bottom button span{
+  display:block;
+  margin:0;
+  font-size:18px;
+  line-height:1;
+ }
+ #dashboard .nx-social-bottom button small{
+  display:block;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:9px;
+  line-height:1.1;
+ }
+ #dashboard .nx-social-bottom button.active{
+  border-color:#8e72ff55;
+  background:#8e72ff1b;
+  color:#e4dcff;
+ }
+ #dashboard .nx-more-backdrop{z-index:120;padding:12px 12px calc(76px + env(safe-area-inset-bottom))}
+ #dashboard .nx-more-sheet{width:min(430px,100%);padding:16px;border-radius:20px}
+ #dashboard .nx-more-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ #dashboard .nx-more-link{min-width:0;min-height:50px;justify-content:flex-start;text-align:left}
+ #dashboard .tabpane:not(#tab-world) .stack>button,
+ #dashboard .tabpane:not(#tab-world) form.stack>button{width:100%}
+}
+@media(max-width:360px){
+ #dashboard .tabpane:not(#tab-world){padding-left:12px;padding-right:12px}
+ #dashboard .nx-social-bottom{gap:3px;padding-left:6px;padding-right:6px}
+ #dashboard .nx-social-bottom button small{font-size:8px}
+ #dashboard .tabpane:not(#tab-world) .sendrow{grid-template-columns:minmax(0,1fr) 84px}
+}
