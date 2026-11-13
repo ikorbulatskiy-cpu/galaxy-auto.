@@ -1516,7 +1516,7 @@
         reason.maxLength = 500; reason.placeholder = "Причина назначения";
         const permissionWrap = document.createElement("div");
         permissionWrap.className = "developer-permission-grid";
-        const available = ["players.view","players.ban","players.unban","players.warn","moderation.view","world.view","world.manage","economy.view","economy.manage","items.view","items.manage","system.view","logs.view","authority.view","authority.assign","authority.remove","authority.configure","authority.history","planets.view","planets.manage"];
+        const available = ["players.view","players.ban","players.unban","players.warn","moderation.view","reports.manage","world.view","world.manage","economy.view","economy.manage","items.view","items.manage","system.view","logs.view","authority.view","authority.assign","authority.remove","authority.configure","authority.history","planets.view","planets.manage"];
         available.forEach(value => {
           const label = document.createElement("label");
           const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.value = value;
