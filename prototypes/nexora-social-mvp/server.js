@@ -26,7 +26,7 @@ const GIFTS = {
   cocktail: { name: "Коктейль", icon: "🍹", authority: 7 },
   heart: { name: "Сердце", icon: "💖", authority: 10 }
 };
-const EMOTIONS = ["wave", "kiss", "dance"];
+const EMOTIONS = ["wave","kiss","dance","smile","sad","laugh","surprise","love","angry","blush","sleep","music"];
 const players = new Map();
 
 app.use(express.json({ limit: "32kb" }));
@@ -191,6 +191,17 @@ io.on("connection", (socket) => {
     if (!player || !EMOTIONS.includes(payload?.emotion)) return;
     player.emotion = { type: payload.emotion, until: Date.now() + 1800 };
     io.to(roomName(player.planet)).emit("emotion:played", { id: player.id, emotion: payload.emotion });
+  });
+
+  socket.on("player:action",(payload,ack=()=>{})=>{
+    const sender=players.get(socket.id),target=[...players.values()].find(p=>p.id===String(payload?.targetId||"")),action=String(payload?.action||"");
+    const labels={wave:"поприветствовал(а)",smile:"улыбнулся(ась)",hug:"обнял(а)",kiss:"отправил(а) воздушный поцелуй",dance:"пригласил(а) танцевать",flower:"подарил(а) цветок"};
+    if(!sender||!target||sender.id===target.id||sender.planet!==target.planet||!Object.hasOwn(labels,action))return ack({ok:false,error:"Это действие сейчас недоступно."});
+    const now=Date.now();if(now-(sender.lastActionAt||0)<1200)return ack({ok:false,error:"Подождите перед следующим действием."});sender.lastActionAt=now;
+    const event={fromId:sender.id,toId:target.id,from:sender.nickname,to:target.nickname,action,label:labels[action],time:now};
+    io.to(roomName(sender.planet)).emit("player:action:played",event);
+    io.to(roomName(sender.planet)).emit("chat:message",{id:"action-"+now+"-"+sender.id,playerId:sender.id,nickname:"NEXORA",text:sender.nickname+" "+labels[action]+" "+target.nickname+".",time:now,system:true});
+    ack({ok:true});
   });
 
   socket.on("whisper:send", (payload, ack = () => {}) => {
