@@ -494,3 +494,44 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 .shop-character-card button { margin-top:8px; padding:10px 12px; border:1px solid #a88fff66; border-radius:11px; background:#907bff25; color:#fff; font-size:10px; font-weight:800; }
 @media(max-width:520px) { .shop-panel { border-radius:21px; } .shop-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; } .shop-item-art { min-height:78px; } .shop-topline { gap:6px; } .shop-balance { padding:8px 9px; } .shop-balance strong { font-size:15px; } .shop-hero { min-height:108px; padding:13px; } .shop-hero-art { right:12px; font-size:60px; opacity:.8; } }
 @media(max-width:350px) { .shop-character-card { grid-template-columns:1fr; } .shop-character-preview { min-height:145px; } }
+
+
+/* NEXORA authority ranks and animated aura UI */
+.authority-profile-card,.authority-panel { border:1px solid rgba(170,158,255,.25); border-radius:17px; background:radial-gradient(circle at 90% 0%,rgba(146,112,255,.18),transparent 42%),linear-gradient(145deg,rgba(28,35,82,.96),rgba(10,16,43,.98)); box-shadow:inset 0 1px rgba(255,255,255,.06),0 12px 30px #0003; }
+.authority-profile-card { display:grid; gap:7px; margin:12px 0 16px; padding:14px; }
+.authority-kicker { color:#b7a8ff; font-size:9px; font-weight:900; letter-spacing:.18em; }
+#profile-authority-title { width:max-content; color:#f3e7b5; font-size:18px; letter-spacing:.06em; text-shadow:0 0 16px currentColor; }
+#profile-authority-aura { margin:0; color:#bdc8ed; font-size:10px; }
+.authority-progress { height:6px; overflow:hidden; border-radius:99px; background:#ffffff15; }
+.authority-progress i { display:block; width:0; height:100%; border-radius:inherit; background:linear-gradient(90deg,#8d7aff,#ffd16d); transition:width .25s; }
+.authority-profile-card small { color:#aab5df; font-size:9px; }
+.authority-profile-card button,.authority-title-card button { min-height:37px; border:1px solid #a78cff55; border-radius:10px; background:linear-gradient(110deg,#7669dc,#946fe1); color:#fff; font-size:10px; font-weight:850; }
+.authority-panel { position:absolute; z-index:44; inset:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom)); width:min(650px,calc(100% - 16px)); margin:auto; padding:16px; display:flex; flex-direction:column; overflow:hidden; }
+.authority-panel-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding-bottom:12px; border-bottom:1px solid #ffffff18; }
+.authority-panel-head h2 { margin:4px 0; font-size:22px; }
+.authority-panel-head p { margin:0; color:#aeb9df; font-size:10px; }
+#authority-close { width:34px; height:34px; border:1px solid #ffffff20; border-radius:11px; background:#ffffff0b; color:#fff; font-size:23px; }
+.authority-title-list { display:grid; gap:9px; overflow:auto; padding:14px 2px; }
+.authority-title-card { display:grid; grid-template-columns:58px 1fr; align-items:center; gap:11px; padding:12px; border:1px solid #ffffff19; border-radius:15px; background:#ffffff08; }
+.authority-title-card.current { border-color:#d6bc79aa; box-shadow:0 0 20px #d6bc791b; }
+.authority-title-icon { width:54px; height:54px; display:grid; place-items:center; border-radius:16px; background:radial-gradient(circle,#ffffff24,transparent 70%); font-size:28px; }
+.authority-title-info { min-width:0; display:grid; gap:4px; }
+.authority-title-info strong { font-size:13px; }
+.authority-title-info small { color:#aeb9df; font-size:9px; line-height:1.45; }
+.authority-title-info em { color:#ffdc93; font-size:10px; font-style:normal; font-weight:800; }
+.authority-title-card button { grid-column:2; width:100%; }
+.authority-title-card button:disabled { opacity:.45; cursor:not-allowed; }
+.authority-message { min-height:18px; margin:0; color:#c7d5ff; font-size:10px; }
+.authority-title-card[data-aura="GOLD_SOFT"] .authority-title-icon { color:#ffe17a; box-shadow:0 0 20px #ffd34c44; }
+.authority-title-card[data-aura="GOLD_PREMIUM"] .authority-title-icon { color:#ffcb4f; box-shadow:0 0 26px #ffbd3d66; }
+.authority-title-card[data-aura="GREEN"] .authority-title-icon { color:#76ffad; box-shadow:0 0 24px #48ed9166; }
+.authority-title-card[data-aura="FIRE_RED"] .authority-title-icon { color:#ff685f; box-shadow:0 0 28px #ff3e3266; animation:authority-fire 1.1s ease-in-out infinite alternate; }
+@keyframes authority-fire { from { filter:brightness(.9); transform:translateY(1px) scale(.98); } to { filter:brightness(1.3); transform:translateY(-2px) scale(1.04); } }
+.developer-authority-form { display:grid; gap:8px; margin:10px 0 16px; padding:12px; border:1px solid #ffffff18; border-radius:14px; background:#ffffff08; }
+.developer-authority-form input,.developer-authority-form select,.developer-authority-form button { width:100%; min-width:0; padding:10px; border:1px solid var(--line); border-radius:10px; background:#080e2a; color:#fff; }
+.developer-authority-form button { border:0; background:linear-gradient(110deg,#7669dc,#946fe1); font-weight:800; }
+.authority-config-row { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin:8px 0; padding:10px; border:1px solid #ffffff15; border-radius:12px; }
+.authority-config-row strong { grid-column:1/-1; font-size:11px; }
+.authority-config-row label { display:grid; gap:4px; color:#aeb9df; font-size:9px; }
+.authority-config-row input { width:100%; min-width:0; padding:8px; border:1px solid var(--line); border-radius:8px; background:#080e2a; color:#fff; }
+@media(max-width:430px) { .authority-panel { padding:12px; } .authority-title-card { grid-template-columns:48px 1fr; gap:8px; } .authority-title-icon { width:46px; height:46px; } }
