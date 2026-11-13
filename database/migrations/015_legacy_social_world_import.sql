@@ -26,6 +26,35 @@ CREATE TABLE IF NOT EXISTS planet_bans (
   PRIMARY KEY (planet_id,user_id)
 );
 
+ALTER TABLE avatar_items ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+CREATE TABLE IF NOT EXISTS planet_objects (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  planet_id UUID NOT NULL REFERENCES planets(id) ON DELETE CASCADE,
+  object_code VARCHAR(40) NOT NULL CHECK (object_code IN ('tree','bench','fountain','lamp','flowerbed','kiosk','palm','beach_chair','club_table','dj_booth','sofa','plant')),
+  x REAL NOT NULL CHECK (x BETWEEN 0 AND 1),
+  y REAL NOT NULL CHECK (y BETWEEN 0 AND 1),
+  rotation REAL NOT NULL DEFAULT 0 CHECK (rotation BETWEEN -360 AND 360),
+  scale REAL NOT NULL DEFAULT 1 CHECK (scale BETWEEN 0.45 AND 1.6),
+  properties JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS planet_objects_planet_depth_idx ON planet_objects(planet_id,y,id);
+
+CREATE TABLE IF NOT EXISTS planet_favorites (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  planet_id UUID NOT NULL REFERENCES planets(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id,planet_id)
+);
+CREATE TABLE IF NOT EXISTS planet_visits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  planet_id UUID NOT NULL REFERENCES planets(id) ON DELETE CASCADE,
+  visited_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS planet_visits_user_time_idx ON planet_visits(user_id,visited_at DESC);
+
 CREATE TABLE IF NOT EXISTS legacy_social_character_map (
   legacy_account_id BIGINT PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -224,6 +253,32 @@ BEGIN
   $q$;
 
   EXECUTE $q$
+    INSERT INTO planet_objects(id,planet_id,object_code,x,y,rotation,scale,properties,created_at)
+    SELECT md5('nexora-legacy-planet-object:'||o.id::text)::uuid,p.id,o.object_code,o.x,o.y,o.rotation,o.scale,o.properties,o.created_at
+    FROM nexora_social_world.custom_planet_objects o
+    JOIN planets p ON p.slug='custom-'||o.planet_id::text
+    ON CONFLICT (id) DO NOTHING
+  $q$;
+
+  EXECUTE $q$
+    INSERT INTO planet_favorites(user_id,planet_id,created_at)
+    SELECT u.id,p.id,pf.created_at
+    FROM nexora_social_world.planet_favorites pf
+    JOIN users u ON u.legacy_social_account_id=pf.account_id
+    JOIN planets p ON p.slug='custom-'||pf.planet_id::text
+    ON CONFLICT (user_id,planet_id) DO NOTHING
+  $q$;
+
+  EXECUTE $q$
+    INSERT INTO planet_visits(id,user_id,planet_id,visited_at)
+    SELECT md5('nexora-legacy-planet-visit:'||v.id::text)::uuid,u.id,p.id,v.visited_at
+    FROM nexora_social_world.planet_visits v
+    JOIN users u ON u.legacy_social_account_id=v.account_id
+    JOIN planets p ON p.slug='custom-'||v.planet_id::text
+    ON CONFLICT (id) DO NOTHING
+  $q$;
+
+  EXECUTE $q$
     INSERT INTO planet_access(planet_id,user_id,access_level,permissions,created_at)
     SELECT p.id,u.id,'member','[]'::jsonb,pm.joined_at
     FROM nexora_social_world.planet_members pm
@@ -404,6 +459,17 @@ BEGIN
   $q$;
 
   EXECUTE $q$
+    INSERT INTO avatar_items(slug,name,description,category,rarity,price_coins,price_diamonds,is_active,metadata)
+    SELECT 'legacy-shop-'||SUBSTRING(md5(sc.item_code),1,20),LEFT(sc.name,100),LEFT(sc.description,500),
+      CASE sc.category WHEN 'clothes' THEN 'outfit' WHEN 'hair' THEN 'hair'
+        WHEN 'accessories' THEN 'accessory' WHEN 'body' THEN 'body'
+        WHEN 'head' THEN 'head' WHEN 'shoes' THEN 'shoes' ELSE 'accessory' END,
+      'common',sc.price,0,sc.enabled,COALESCE(sc.metadata,'{}'::jsonb)
+    FROM nexora_social_world.shop_catalog sc
+    ON CONFLICT (slug) DO NOTHING
+  $q$;
+
+  EXECUTE $q$
     INSERT INTO avatar_items(slug,name,description,category,rarity,price_coins,price_diamonds,is_active)
     SELECT DISTINCT
       'legacy-gift-'||SUBSTRING(md5(gift_type),1,16),LEFT(gift_type,100),
@@ -433,6 +499,50 @@ BEGIN
     JOIN users u ON u.legacy_social_account_id=i.account_id
     ON CONFLICT (legacy_account_id,item_code) DO NOTHING
   $q$;
+
+  EXECUTE $q$
+    INSERT INTO character_inventory(character_id,item_id,acquired_at,equipped)
+    SELECT cm.character_id,item.id,NOW(),FALSE
+    FROM nexora_social_world.inventory i
+    JOIN legacy_social_character_map cm ON cm.legacy_account_id=i.account_id
+    JOIN avatar_items item ON item.slug='legacy-shop-'||SUBSTRING(md5(i.item_code),1,20)
+    ON CONFLICT (character_id,item_id) DO NOTHING
+  $q$;
+
+  EXECUTE $q$
+    INSERT INTO purchases(user_id,item_id,character_id,currency,amount,idempotency_key,created_at)
+    SELECT u.id,item.id,cm.character_id,'coins',tx.amount,
+      md5('nexora-legacy-purchase:'||tx.id::text)::uuid,tx.created_at
+    FROM nexora_social_world.wallet_transactions tx
+    JOIN users u ON u.legacy_social_account_id=tx.account_id
+    JOIN legacy_social_character_map cm ON cm.legacy_account_id=tx.account_id
+    JOIN avatar_items item ON item.slug='legacy-shop-'||SUBSTRING(md5(tx.item_code),1,20)
+    ON CONFLICT (idempotency_key) DO NOTHING
+  $q$;
+
+  EXECUTE $q$
+    INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id,created_at)
+    SELECT u.id,'coins',-tx.amount,LEFT('Покупка из старого магазина: '||tx.item_code,120),
+      p.id,tx.created_at
+    FROM nexora_social_world.wallet_transactions tx
+    JOIN users u ON u.legacy_social_account_id=tx.account_id
+    JOIN purchases p ON p.idempotency_key=md5('nexora-legacy-purchase:'||tx.id::text)::uuid
+    WHERE tx.amount>0
+  $q$;
+
+  EXECUTE $q$
+    INSERT INTO reports(id,reporter_id,target_user_id,category,details,status,created_at)
+    SELECT md5('nexora-legacy-player-report:'||r.id::text)::uuid,reporter.id,target.id,
+      r.category,LEFT(r.details,1000),
+      CASE r.status WHEN 'reviewing' THEN 'reviewing' WHEN 'resolved' THEN 'resolved'
+        WHEN 'dismissed' THEN 'dismissed' ELSE 'open' END,
+      r.created_at
+    FROM nexora_social_world.player_reports r
+    JOIN users reporter ON reporter.legacy_social_account_id=r.reporter_account_id
+    JOIN users target ON target.legacy_social_account_id=r.target_account_id
+    ON CONFLICT (id) DO NOTHING
+  $q$;
+
 
   EXECUTE $q$
     INSERT INTO legacy_social_role_assignments(legacy_account_id,user_id,legacy_role,permissions,assigned_by_legacy_account_id,created_at,updated_at)
@@ -472,6 +582,17 @@ BEGIN
       h.created_at
     FROM nexora_social_world.authority_history h
     JOIN users u ON u.legacy_social_account_id=h.account_id
+  $q$;
+
+  EXECUTE $q$
+    INSERT INTO admin_logs(id,admin_user_id,action,target_type,target_id,details,created_at)
+    SELECT md5('nexora-legacy-planet-audit:'||l.id::text)::uuid,actor.id,
+      LEFT(l.action,80),'legacy_planet',NULL,
+      jsonb_build_object('legacyPlanetId',l.planet_id,'targetLegacyAccountId',l.target_account_id,'details',l.details),
+      l.created_at
+    FROM nexora_social_world.planet_audit_logs l
+    JOIN users actor ON actor.legacy_social_account_id=l.actor_account_id
+    ON CONFLICT (id) DO NOTHING
   $q$;
 
   -- Imported historical activity must not trigger new-account achievement rewards.
