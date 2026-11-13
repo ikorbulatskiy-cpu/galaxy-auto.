@@ -36,9 +36,12 @@ function mockResponse() {
 
 async function registerAndLogin(nickname, ip) {
   const registration = mockResponse();
-  await auth.register({ body: { nickname, avatar: { gender: "female", skin: "#c9875b", hair: "ponytail", suit: "#ef6c9b", outfit: "club", hairColor: "#e5c07b", shoes: "sandals", accessory: "flower", unexpected: "ignored" } } }, registration);
+  await auth.register({ body: { nickname, acceptedPersonalData: true, acceptedLegalTerms: true, ageConfirmed: true, legalVersion: "ci-test", avatar: { gender: "female", skin: "#c9875b", hair: "ponytail", suit: "#ef6c9b", outfit: "club", hairColor: "#e5c07b", shoes: "sandals", accessory: "flower", unexpected: "ignored" } } }, registration);
   assert.equal(registration.statusCode, 201, "account registration succeeds");
   assert.ok(registration.body.recoveryCode, "registration returns a recovery code");
+  assert.ok(registration.cookies.nexora_session, "registration creates an HTTP-only session immediately");
+  const consent = await pool.query("SELECT age_confirmed_at,personal_data_consent_at,legal_terms_accepted_at FROM nexora_social_world.account_consents WHERE account_id=$1", [String(registration.body.account.id)]);
+  assert.equal(consent.rowCount, 1, "registration persists age and legal consent");
   const account = registration.body.account;
   const login = mockResponse();
   await auth.login({ body: { recoveryCode: registration.body.recoveryCode }, ip }, login);
