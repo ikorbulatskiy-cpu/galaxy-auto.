@@ -392,7 +392,8 @@
         ctx.beginPath();ctx.ellipse(drawX,y+2,25*scale,46*scale,0,0,Math.PI*2);ctx.stroke();ctx.restore();
       }
       drawAura(ctx,drawX,y,scale,player.auraType,player.auraEnabled,state.auraQuality);
-      drawAvatar(ctx,drawX,y,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));\n      drawAuraHalo(ctx,drawX,y,scale,player.auraType,player.auraEnabled,state.auraQuality);
+      drawAvatar(ctx,drawX,y,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
+      drawAuraHalo(ctx,drawX,y,scale,player.auraType,player.auraEnabled,state.auraQuality);
       if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20*scale,y-58*scale-Math.sin(Date.now()/120)*3);ctx.restore();}
       // Only the nickname stays above the avatar. Rank and authority belong in the info card.
       ctx.save();ctx.textAlign="center";ctx.font=(isMe?"700 ":"600 ")+Math.max(10,11*scale)+"px Inter,sans-serif";
