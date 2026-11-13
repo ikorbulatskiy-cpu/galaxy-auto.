@@ -13,12 +13,21 @@
   const mockEnabled = () => new URLSearchParams(location.search).get("nx-mock") === "1" || localStorage.getItem("nexora-mock-mode") === "on";
   async function request(url, options = {}) {
     const method = String(options.method || "GET").toUpperCase();
+    let timeoutId;
     try {
-      const response = await fetch(url,{credentials:"same-origin",...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 15000);
+      const response = await fetch(url,{
+        credentials:"same-origin",
+        ...options,
+        signal: options.signal || controller.signal,
+        headers:{"Content-Type":"application/json",...(options.headers||{})}
+      });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) { const error = new Error(data.error || "Ошибка " + response.status); error.status = response.status; throw error; }
       return data;
     } catch (error) {
+      if (error.name === "AbortError") throw new Error("Сервер не ответил за 15 секунд. Повторите попытку.");
       if (method !== "GET" || !mockEnabled()) throw error;
       if (url.includes("/api/world/me")) return {profile:{display_name:"Пилот NEXORA",city:"Демо-город",bio:"Тестовый профиль",interests:["игры","общение"],coins:25,diamonds:2,level:1,authority:0,planet_name:"Зал новичков"}};
       if (url.includes("/api/game/planets")) return {planets:mocks.planets};
@@ -31,6 +40,8 @@
       if (url.includes("/api/social/conversations")) return {conversations:[]};
       if (url.includes("/api/social/discover")) return {users:mocks.profiles};
       throw error;
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
     }
   }
   const websocketUrl = path => (location.protocol === "https:" ? "wss:" : "ws:") + "//" + location.host + path;
