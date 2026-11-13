@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const { pool } = require("./db");
+const { normalizeAvatar } = require("./avatar");
 
 const SESSION_DAYS = 30;
 
@@ -37,7 +38,7 @@ async function register(req, res) {
     const account = result.rows[0];
     await client.query(
       "INSERT INTO nexora_social_world.characters(account_id,nickname,avatar) VALUES($1,$2,$3::jsonb)",
-      [account.id, nickname, JSON.stringify(req.body?.avatar || {})]
+      [account.id, nickname, JSON.stringify(normalizeAvatar(req.body?.avatar))]
     );
     await client.query("INSERT INTO nexora_social_world.wallets(account_id,balance) VALUES($1,0)", [account.id]);
     await client.query("COMMIT");
