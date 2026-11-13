@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="768" viewBox="0 0 1024 768">
+<defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#f58d9f"/><stop offset=".48" stop-color="#f7c08f"/><stop offset="1" stop-color="#77d4d1"/></linearGradient>
+ <linearGradient id="sea" x2="0" y2="1"><stop stop-color="#46c7c5"/><stop offset="1" stop-color="#126f9c"/></linearGradient>
+ <linearGradient id="sand" x2="0" y2="1"><stop stop-color="#f5d39c"/><stop offset="1" stop-color="#c88c68"/></linearGradient>
+ <radialGradient id="sun"><stop stop-color="#fff7d0"/><stop offset=".65" stop-color="#ffe3a2"/><stop offset="1" stop-color="#ffbd98" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1024" height="768" fill="url(#sky)"/>
+<circle cx="770" cy="175" r="130" fill="url(#sun)"/><circle cx="770" cy="175" r="52" fill="#fff0bc"/>
+<path d="M0 405Q160 370 320 400T640 398T1024 390V690H0Z" fill="url(#sea)"/>
+<g fill="none" stroke="#d6ffff" stroke-width="5" opacity=".65"><path d="M0 445Q120 430 240 445T480 445T720 445T1024 445"/><path d="M40 500Q160 485 280 500T520 500T760 500T1000 500"/><path d="M0 555Q150 540 300 555T600 555T900 555"/></g>
+<path d="M0 595Q220 545 420 590T760 585T1024 590V768H0Z" fill="url(#sand)"/>
+<path d="M0 610Q220 565 420 605T760 600T1024 605" fill="none" stroke="#fff0c8" stroke-width="13" opacity=".75"/>
+<!-- palm trees -->
+<g stroke="#98664b" stroke-width="18" stroke-linecap="round" fill="none"><path d="M115 720Q145 500 112 315"/><path d="M890 720Q865 500 914 300"/></g>
+<g stroke="#3b966c" stroke-width="13" stroke-linecap="round" fill="none"><path d="M112 315Q20 230 5 300 M112 315Q42 170 78 155 M112 315Q170 180 230 205 M112 315Q225 250 245 315 M112 315Q165 340 210 375"/><path d="M914 300Q820 210 780 250 M914 300Q830 155 870 140 M914 300Q985 185 1010 230 M914 300Q1000 285 1020 340 M914 300Q850 360 815 390"/></g>
+<g fill="#58b77a"><ellipse cx="45" cy="270" rx="32" ry="14" transform="rotate(28 45 270)"/><ellipse cx="86" cy="182" rx="36" ry="15" transform="rotate(-20 86 182)"/><ellipse cx="200" cy="225" rx="36" ry="15"/><ellipse cx="870" cy="170" rx="37" ry="16"/><ellipse cx="987" cy="245" rx="35" ry="14"/></g>
+<!-- beach bar -->
+<g transform="translate(510 585)"><rect x="-72" y="-86" width="144" height="88" rx="9" fill="#e7b978" stroke="#8d654e" stroke-width="5"/><path d="M-88 -85L0 -137L88 -85Z" fill="#e77d79" stroke="#8d654e" stroke-width="5"/><rect x="-46" y="-54" width="92" height="54" fill="#8bd4d0" stroke="#8d654e" stroke-width="4"/><text x="0" y="-96" font-size="17" font-family="Arial" font-weight="bold" text-anchor="middle" fill="#fff5d8">SUNSET BAR</text></g>
+<!-- umbrellas and loungers -->
+<g><path d="M300 690V605" stroke="#805b4d" stroke-width="7"/><path d="M235 605Q300 540 365 605Z" fill="#f17b9e" stroke="#fff0d2" stroke-width="4"/><path d="M740 695V610" stroke="#805b4d" stroke-width="7"/><path d="M675 610Q740 545 805 610Z" fill="#69a8e9" stroke="#fff0d2" stroke-width="4"/></g>
+<g stroke="#805f54" stroke-width="6" fill="#fff0d2"><path d="M185 720L260 720L280 742H170Z"/><path d="M810 725L885 725L900 745H795Z"/></g>
+<g fill="#fff4d2" opacity=".25"><circle cx="390" cy="665" r="4"/><circle cx="430" cy="705" r="3"/><circle cx="640" cy="675" r="4"/><circle cx="700" cy="735" r="3"/></g>
+</svg>

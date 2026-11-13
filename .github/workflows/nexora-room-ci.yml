@@ -26,6 +26,12 @@ jobs:
           node --check prototypes/nexora-social-mvp/server.js
           node --check prototypes/nexora-social-mvp/src/profile.js
           node --check prototypes/nexora-social-mvp/public/client.js
+          node --check prototypes/nexora-social-mvp/public/sprite-engine.js
+          node --check prototypes/nexora-social-mvp/public/world-objects.js
+          node --check prototypes/nexora-social-mvp/public/world-scene.js
+          python3 -c "import xml.etree.ElementTree as ET; ET.parse('prototypes/nexora-social-mvp/public/assets/sprites/characters/nexora-avatar-atlas.svg')"
+          python3 -c "import xml.etree.ElementTree as ET; [ET.parse('prototypes/nexora-social-mvp/public/assets/sprites/planets/' + name + '.svg') for name in ('starter','club','beach')]"
+          node -e "JSON.parse(require('fs').readFileSync('prototypes/nexora-social-mvp/public/assets/sprites/characters/atlas.json','utf8'))"
       - name: Verify room features and server validation
         run: |
           node <<'NODE'
@@ -33,9 +39,14 @@ jobs:
           const root = "prototypes/nexora-social-mvp/";
           const html = fs.readFileSync(root + "public/index.html", "utf8");
           const css = fs.readFileSync(root + "public/style.css", "utf8");
+          const spriteCss = fs.readFileSync(root + "public/sprite-overhaul.css", "utf8");
+          const worldScene = fs.readFileSync(root + "public/world-scene.js", "utf8");
           const client = fs.readFileSync(root + "public/client.js", "utf8");
           const server = fs.readFileSync(root + "server.js", "utf8");
           const profile = fs.readFileSync(root + "src/profile.js", "utf8");
+          const sprites = fs.readFileSync(root + "public/sprite-engine.js", "utf8");
+          const atlas = fs.readFileSync(root + "public/assets/sprites/characters/nexora-avatar-atlas.svg", "utf8");
+          const props = fs.readFileSync(root + "public/world-objects.js", "utf8");
           const checks = [
             [html.includes('id="world-canvas"') && html.includes('id="room-events-panel"'), "world canvas and event panel exist"],
             [html.includes('data-room-toggle="events"') && html.includes('id="room-player-search"'), "events control and player search exist"],
@@ -46,7 +57,15 @@ jobs:
             [server.includes("lastActionAt") && server.includes("lastEmotionAt"), "action and emotion throttles exist"],
             [server.includes("hairColor: allowed.hairColor") && server.includes("accessory: allowed.accessory"), "server validates appearance fields"],
             [profile.includes("HAIR_COLORS.includes") && profile.includes("ACCESSORIES.includes"), "profile validates persisted appearance"],
-            [css.includes("grid-template-columns:repeat(5") && css.includes("room-events-panel"), "five-control toolbar and event styles exist"]
+            [css.includes("grid-template-columns:repeat(5") && css.includes("room-events-panel"), "five-control toolbar and event styles exist"],
+            [html.includes('/sprite-engine.js') && html.includes('/world-objects.js'), "sprite and world-object engines are loaded"],
+            [html.includes('/sprite-overhaul.css'), "mobile-first visual stylesheet is loaded"],
+            [spriteCss.includes("prefers-reduced-motion") && spriteCss.includes("env(safe-area-inset-bottom)"), "mobile safe-area and reduced-motion styles exist"],
+            [worldScene.includes("sceneAssets") && worldScene.includes("drawImage(art"), "illustrated planet backgrounds are loaded by scene renderer"],
+            [sprites.includes("function animationFrames") && sprites.includes("drawImage(atlas"), "sprite atlas animation renderer exists"],
+            [atlas.includes("sprite atlas") && atlas.includes("id=\"front\"") && atlas.includes("id=\"back\""), "original directional SVG sprite atlas exists"],
+            [props.includes("function drawFountain") && props.includes("function drawPalm"), "planet prop library exists"],
+            [client.includes("player.direction=") && client.includes("spriteDirection"), "four-direction movement drives sprite rendering"]
           ];
           for (const [ok, label] of checks) console.log((ok ? "PASS " : "FAIL ") + label);
           if (checks.some(([ok]) => !ok)) process.exit(1);

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="768" viewBox="0 0 1024 768">
+<defs>
+ <linearGradient id="night" x2="0" y2="1"><stop stop-color="#110e2c"/><stop offset=".65" stop-color="#3d1b5c"/><stop offset="1" stop-color="#211d49"/></linearGradient>
+ <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#6b3c91"/><stop offset="1" stop-color="#171c43"/></linearGradient>
+ <linearGradient id="stage" x2="0" y2="1"><stop stop-color="#8e4fc3"/><stop offset="1" stop-color="#312455"/></linearGradient>
+ <filter id="neon"><feGaussianBlur stdDeviation="14"/></filter>
+</defs>
+<rect width="1024" height="768" fill="url(#night)"/>
+<path d="M0 80Q512 -20 1024 80V510H0Z" fill="#21183f"/>
+<g opacity=".25" fill="#ff68d1" filter="url(#neon)"><path d="M130 120L350 570H210Z"/><path d="M890 120L670 570H810Z"/></g>
+<g stroke="#f06bd4" stroke-width="5" fill="none"><path d="M80 150H944V470H80Z"/><path d="M125 185H899V440H125Z"/></g>
+<g stroke="#69eaff" stroke-width="4" opacity=".8"><path d="M160 190V440 M320 190V440 M480 190V440 M640 190V440 M800 190V440"/></g>
+<path d="M0 510L220 420H804L1024 510V768H0Z" fill="url(#floor)"/>
+<path d="M220 420H804L1024 768H0Z" fill="#583579" opacity=".42"/>
+<g stroke="#a77be0" stroke-width="3" opacity=".55">
+ <path d="M512 420L90 768 M512 420L260 768 M512 420L430 768 M512 420L594 768 M512 420L760 768 M512 420L930 768"/>
+ <path d="M180 500H844 M120 570H904 M60 650H964 M20 720H1004"/>
+</g>
+<g transform="translate(512 365)">
+ <rect x="-205" y="-95" width="410" height="140" rx="22" fill="#241a49" stroke="#ee72db" stroke-width="7"/>
+ <rect x="-175" y="-70" width="350" height="80" rx="14" fill="#111b3c"/>
+ <g fill="#65eaff"><rect x="-145" y="-52" width="24" height="48" rx="5"/><rect x="-95" y="-52" width="24" height="48" rx="5"/><rect x="-45" y="-52" width="24" height="48" rx="5"/></g>
+ <g fill="#ff80d6"><rect x="5" y="-52" width="24" height="48" rx="5"/><rect x="55" y="-52" width="24" height="48" rx="5"/><rect x="105" y="-52" width="24" height="48" rx="5"/></g>
+ <text x="0" y="-112" fill="#ffd9fb" font-size="25" font-family="Arial" font-weight="bold" text-anchor="middle" letter-spacing="5">NEXORA CLUB</text>
+</g>
+<g fill="#17152f" stroke="#9a65bb" stroke-width="7"><rect x="70" y="360" width="115" height="205" rx="16"/><rect x="839" y="360" width="115" height="205" rx="16"/></g>
+<g fill="#69eaff" opacity=".9"><circle cx="128" cy="420" r="32"/><circle cx="896" cy="420" r="32"/></g><g fill="#ff79d8"><circle cx="128" cy="500" r="22"/><circle cx="896" cy="500" r="22"/></g>
+<g fill="#ff70d6" opacity=".2"><path d="M120 145L420 515H320Z"/><path d="M900 145L600 515H700Z"/></g>
+<g fill="#4d2b67"><path d="M0 680Q220 620 360 700T700 690T1024 680V768H0Z"/></g>
+</svg>

@@ -152,11 +152,45 @@
     ctx.globalAlpha = 1;
   }
 
+  const sceneAssets = {};
+  for (const name of ["starter","club","beach"]) {
+    const image = new Image();
+    image.src = "/assets/sprites/planets/" + name + ".svg";
+    sceneAssets[name] = image;
+  }
+
   function draw(ctx, width, height, planet, time = Date.now()) {
     if (!ctx || width < 1 || height < 1) return;
     ctx.save();
     ctx.lineJoin = "round";
-    if (planet === "club") drawClub(ctx, width, height, time);
+    const art = sceneAssets[planet];
+    if (art && art.complete && art.naturalWidth > 0) {
+      ctx.drawImage(art, 0, 0, width, height);
+      if (planet === "beach") {
+        ctx.save(); ctx.globalAlpha = .25; ctx.strokeStyle = "#e6ffff"; ctx.lineWidth = 2;
+        for (let row=0; row<4; row++) {
+          ctx.beginPath();
+          for (let x=0; x<=width; x+=16) {
+            const y=height*.59+row*height*.035+Math.sin(x/38+time/430+row)*2.5;
+            if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+          }
+          ctx.stroke();
+        }
+        ctx.restore();
+      } else if (planet === "club") {
+        ctx.save(); ctx.globalAlpha=.12;
+        for(let i=0;i<4;i++){
+          const x=width*(.18+i*.21);
+          ctx.fillStyle=i%2?"#65eaff":"#ff78d8";
+          ctx.beginPath();ctx.moveTo(x,height*.17);ctx.lineTo(x+Math.sin(time/470+i)*width*.14,height*.72);ctx.lineTo(x+width*.06,height*.72);ctx.closePath();ctx.fill();
+        }
+        ctx.restore();
+      } else {
+        ctx.save();ctx.globalAlpha=.14;ctx.fillStyle="#fff1bd";
+        for(let i=0;i<5;i++){const x=(i*193+time/45)%Math.max(1,width);const y=height*(.13+(i%3)*.09);ctx.beginPath();ctx.arc(x,y,1.4,0,Math.PI*2);ctx.fill();}
+        ctx.restore();
+      }
+    } else if (planet === "club") drawClub(ctx, width, height, time);
     else if (planet === "beach") drawBeach(ctx, width, height, time);
     else drawStarter(ctx, width, height, time);
     ctx.restore();
