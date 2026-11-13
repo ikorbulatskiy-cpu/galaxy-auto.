@@ -33,6 +33,9 @@ jobs:
           node --check prototypes/nexora-social-mvp/src/planets.js
           node --check prototypes/nexora-social-mvp/src/social.js
           node --check prototypes/nexora-social-mvp/src/developer.js
+          node --check prototypes/nexora-social-mvp/src/galaxy-sockets.js
+          node --check prototypes/nexora-social-mvp/public/galaxy.js
+          node --check prototypes/nexora-social-mvp/public/galaxy-scene.js
           node --check prototypes/nexora-social-mvp/public/client.js
           node --check prototypes/nexora-social-mvp/public/sprite-engine.js
           node --check prototypes/nexora-social-mvp/public/world-objects.js
@@ -47,6 +50,11 @@ jobs:
           const fs = require("fs");
           const root = "prototypes/nexora-social-mvp/";
           const html = fs.readFileSync(root + "public/index.html", "utf8");
+          const galaxyHtml = fs.readFileSync(root + "public/galaxy.html", "utf8");
+          const galaxyCss = fs.readFileSync(root + "public/galaxy.css", "utf8");
+          const galaxyClient = fs.readFileSync(root + "public/galaxy.js", "utf8");
+          const galaxyScene = fs.readFileSync(root + "public/galaxy-scene.js", "utf8");
+          const galaxySockets = fs.readFileSync(root + "src/galaxy-sockets.js", "utf8");
           const css = fs.readFileSync(root + "public/style.css", "utf8");
           const spriteCss = fs.readFileSync(root + "public/sprite-overhaul.css", "utf8");
           const worldScene = fs.readFileSync(root + "public/world-scene.js", "utf8");
@@ -100,7 +108,13 @@ jobs:
             [client.includes('if (ownProfile)') && client.includes('Открыть панель разработчика') && client.includes('developerIsOwner'), "developer controls are available from the owner's own character"],
             [html.includes('id="public-profile-owner-tools"') && client.includes('ownerTools.classList.toggle("hidden", !developerIsOwner)') && client.includes('loadOwnerProfileTools'), "main developer tools are shown only in character profiles for the owner"],
             [developer.includes('router.post("/players/:id/access-code/reset"') && developer.includes('player.access_code.reset') && developer.includes('current.role !== "OWNER"'), "character access-code reset is owner-only and audited"],
-            [client.includes('async function developerRequest(path, options = {})'), "developer requests support protected actions"]
+            [client.includes('async function developerRequest(path, options = {})'), "developer requests support protected actions"],
+            [server.includes('app.get("/galaxy"') && server.includes("attachGalaxySockets(io"), "Galaxy page and isolated socket namespace are mounted"],
+            [galaxyHtml.includes('id="galaxy-canvas"') && galaxyHtml.includes('id="chat-form"') && galaxyHtml.includes('id="planet-select"'), "standalone Galaxy HUD, canvas and planet chat are present"],
+            [galaxySockets.includes('io.of("/galaxy")') && galaxySockets.includes("auth.authenticateToken") && galaxySockets.includes('socket.on("player:move"'), "Galaxy sockets use authenticated sessions and server-validated movement"],
+            [galaxyClient.includes('io("/galaxy"') && galaxyClient.includes('socket.emit("chat:send"') && galaxyClient.includes('socket.emit("planet:change"'), "Galaxy client supports chat and planet travel"],
+            [galaxyScene.includes("NexoraSpriteEngine.draw") && galaxyScene.includes("this.camera"), "Galaxy scene uses the existing sprite atlas and pannable stage"],
+            [galaxyCss.includes("rgba(16,22,38,.9)") && galaxyCss.includes("#3b82f6"), "Galaxy UI uses the requested cosmic panel palette"]
           ];
           for (const [ok, label] of checks) console.log((ok ? "PASS " : "FAIL ") + label);
           if (checks.some(([ok]) => !ok)) process.exit(1);

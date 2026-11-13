@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101626">
+<title>NEXORA · Galaxy</title>
+<link rel="stylesheet" href="/galaxy.css?v=1">
+</head>
+<body>
+<div class="galaxy-app">
+<header class="topbar">
+  <a class="brand" href="/"><span>✦</span><b>NEXORA</b><small>GALAXY SOCIAL SPACE</small></a>
+  <div class="planet-tools"><label for="planet-select">✦</label><select id="planet-select" aria-label="Планета"></select><button id="rejoin" title="Перезалететь">↻</button></div>
+  <button id="players-toggle" class="online-pill" type="button">♟ <span id="online-room-name">Стартовая</span><b id="online-count">0</b><span>онлайн</span></button>
+</header>
+<main class="layout">
+  <section class="game-frame">
+    <div class="scene-heading"><strong id="planet-name">Загрузка планеты…</strong><span id="connection-state">Подключение…</span></div>
+    <div id="scene-viewport" class="scene-viewport"><canvas id="galaxy-canvas" aria-label="2D-сцена планеты"></canvas>
+      <aside id="players-panel" class="players-panel" hidden><div class="panel-head"><b>Игроки комнаты</b><button data-close="players" aria-label="Закрыть">×</button></div><div id="players-list"></div></aside>
+    </div>
+    <div id="move-confirm-bar" class="move-confirm-bar" hidden><span id="move-hint">Выберите место и нажмите ОК</span><div><button id="move-cancel" type="button">Отмена</button><button id="move-confirm" class="accent" type="button">ОК</button></div></div>
+    <section class="chat-panel">
+      <div class="chat-head"><b>Общий чат планеты</b><button id="chat-toggle" type="button">Свернуть −</button></div>
+      <div id="chat-log" class="chat-log" aria-live="polite"></div>
+      <form id="chat-form" class="chat-form"><button id="emoji-button" type="button" aria-label="Добавить смайл">☺</button><input id="chat-input" maxlength="240" autocomplete="off" placeholder="Написать в чат..." required><button class="send" type="submit">Отправить</button></form>
+    </section>
+  </section>
+  <nav class="actionbar">
+    <button id="my-character" type="button">♙ Мой персонаж</button>
+    <button id="move-mode" type="button">⇢ Переместиться</button>
+    <button id="emote" type="button">☺ Действия / эмоции</button>
+    <button id="planet-list" type="button">✦ Планеты</button>
+  </nav>
+</main>
+</div>
+<div id="context-menu" class="context-menu" hidden>
+  <div class="context-title" id="context-title">Персонаж</div>
+  <button id="context-info" data-action="info" type="button">Инфо</button>
+  <button id="context-move" data-action="move" type="button">Переместиться</button>
+  <button id="context-wave" data-action="wave" type="button">Действия / Эмоции · 👋</button>
+  <button data-action="rejoin" type="button">Перезалететь</button>
+</div>
+<div id="profile-modal" class="modal" hidden><section class="modal-card"><header><b id="profile-title">Информация персонажа</b><button data-close="profile" type="button">×</button></header><p id="profile-content"></p></section></div>
+<div id="galaxy-toast" class="toast" role="status"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/sprite-engine.js"></script>
+<script src="/galaxy-scene.js?v=1" defer></script>
+<script src="/galaxy.js?v=1" defer></script>
+</body>
+</html>
