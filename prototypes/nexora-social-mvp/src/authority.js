@@ -197,7 +197,13 @@ function createAuthorityRouter({ pool, auth, io, players }) {
                 COALESCE(c.aura_enabled,FALSE) AS aura_enabled,
                 COALESCE(w.balance,0)::text AS koins
            FROM nexora_social_world.accounts a
-           LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
+           LEFT JOIN LATERAL (
+             SELECT authority,authority_title,aura_enabled
+               FROM nexora_social_world.characters
+              WHERE account_id=a.id
+              ORDER BY updated_at DESC
+              LIMIT 1
+           ) c ON TRUE
            LEFT JOIN nexora_social_world.wallets w ON w.account_id=a.id
           WHERE ($1='' OR a.nickname ILIKE $2 OR a.id::text=$1)
           ORDER BY a.created_at DESC LIMIT 30`,
