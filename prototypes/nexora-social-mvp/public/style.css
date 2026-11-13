@@ -1143,3 +1143,13 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 .planet-owner-actions {display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .planet-owner-actions button,#planet-owner-save {border:1px solid #b5a5ff44;border-radius:10px;background:#8e80ef22;padding:10px;color:#fff;font-size:10px;font-weight:800}
 #planet-owner-error {min-height:15px;color:#ffb3c0;font-size:10px}
+
+
+/* NEXORA 12.0: compact planet chat dock and room frame */
+.chat-drawer{position:absolute;z-index:14;top:calc(max(64px,env(safe-area-inset-top) + 54px));left:50%;right:auto;bottom:auto;transform:translateX(-50%);width:min(570px,calc(100% - 28px));max-height:min(29dvh,270px);display:flex;flex-direction:column;overflow:hidden;padding:0;border:1px solid rgba(181,174,255,.34);border-radius:16px;background:linear-gradient(145deg,rgba(11,17,45,.88),rgba(8,13,34,.84));box-shadow:0 12px 34px rgba(0,0,0,.28);backdrop-filter:blur(18px)}
+.chat-drawer.hidden{display:none!important}.drawer-head{padding:7px 10px 5px;min-height:34px;border-bottom:0}.chat-title{display:grid;gap:1px}.chat-title strong{font-size:11px}.chat-title span{font-size:8px;color:#aeb8df}.chat-head-actions{display:flex;align-items:center;gap:7px}.chat-head-actions button{width:27px;height:25px;border:1px solid #ffffff20;border-radius:8px;background:#ffffff0b;color:#fff;font-size:17px}.chat-new-count{font-size:8px;color:#ffe5a3}
+.chat-tabs{display:flex;gap:4px;padding:0 8px 6px}.chat-tabs button{flex:1;min-height:27px;border:1px solid #ffffff12;border-radius:8px;background:#ffffff08;color:#cbd3f2;font-size:9px;font-weight:750}.chat-tabs button.active{border-color:#a999ff66;background:linear-gradient(120deg,#8c78f033,#65b9e322);color:#fff}
+.chat-history{min-height:48px;max-height:none;padding:4px 8px 7px;gap:4px}.history-message{grid-template-columns:auto minmax(0,1fr) auto;gap:4px 6px;margin:0;padding:5px 7px;border-radius:8px;font-size:10px}
+.chat-form{padding:6px 7px;gap:6px}.chat-form input{padding:8px 10px;font-size:11px}.chat-form button{min-height:34px;width:36px;flex-basis:36px}.chat-emoji-button{min-height:34px;width:34px;flex-basis:34px}
+@media(max-width:520px){.chat-drawer{top:calc(max(57px,env(safe-area-inset-top) + 48px));width:calc(100% - 16px);max-height:min(27dvh,225px);border-radius:13px}.drawer-head{padding:5px 8px 3px}.chat-tabs{padding:0 6px 4px}.chat-tabs button{min-height:25px;font-size:8px}.chat-history{padding:3px 6px 5px}.history-message{font-size:9px;padding:4px 6px}.chat-form{padding:5px}}
+@media(max-height:620px){.chat-drawer{max-height:22dvh}.chat-history{min-height:34px}}
