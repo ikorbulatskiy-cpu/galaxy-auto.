@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS nexora_social_world.custom_planets (
   description VARCHAR(240) NOT NULL DEFAULT '',
   category VARCHAR(24) NOT NULL DEFAULT 'social' CHECK (category IN ('social','romantic','music','dance','game','vip','private','custom')),
   theme VARCHAR(24) NOT NULL DEFAULT 'nebula' CHECK (theme IN ('nebula','aurora','sunset','ocean','violet','emerald')),
-  accent_color VARCHAR(7) NOT NULL DEFAULT '#9d8cff' CHECK (accent_color ~ '^#[0-9A-Fa-F]{6}$'),
+  accent_color VARCHAR(7) NOT NULL DEFAULT '#9d8cff' CHECK (accent_color ~ '^#[[:xdigit:]]{6}$'),
   access_mode VARCHAR(16) NOT NULL DEFAULT 'public' CHECK (access_mode IN ('public','invite','private')),
   capacity SMALLINT NOT NULL DEFAULT 30 CHECK (capacity BETWEEN 2 AND 100),
   welcome_message VARCHAR(180) NOT NULL DEFAULT '',
