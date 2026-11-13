@@ -607,6 +607,78 @@
       save.disabled = true;
     }
   }
+
+  function paintAuthorityProfile(profile) {
+    const labels={NOVICE:"Новичок",BEDA:"Беда",PAPA:"Папа",ANGEL:"Ангел",CREATOR:"Создатель"};
+    const colors={NOVICE:"#d7def9",BEDA:"#ffe17a",PAPA:"#ffca55",ANGEL:"#78f0a5",CREATOR:"#ff655c"};
+    const key=profile.authorityTitle||"NOVICE";
+    $("#profile-authority-title").textContent=(labels[key]||labels.NOVICE).toUpperCase();
+    $("#profile-authority-title").style.color=colors[key]||colors.NOVICE;
+    $("#profile-authority-aura").textContent=profile.auraEnabled
+      ? "Активная аура: "+(key==="BEDA"?"золотое сияние":key==="PAPA"?"премиальное золотое сияние":key==="ANGEL"?"зелёное сияние":key==="CREATOR"?"красное пламя и искры":"нет")
+      : "Без активной ауры";
+    const order=["NOVICE","BEDA","PAPA","ANGEL","CREATOR"],index=order.indexOf(key),next=order[index+1];
+    const thresholds=[25,75,150,300];
+    const progress=Math.min(100,Math.max(0,Number(profile.authority||0)/Math.max(1,thresholds[index]||300)*100));
+    $("#profile-authority-progress").style.width=index>=4?"100%":progress+"%";
+    $("#profile-authority-next").textContent=next?"Следующее звание: "+labels[next]:"Максимальное звание достигнуто";
+  }
+  async function authorityApi(path="",options={}) {
+    const response=await fetch("/api/authority"+path,{credentials:"same-origin",headers:{"Content-Type":"application/json",...(options.headers||{})},...options});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.error||"Ошибка системы авторитета.");
+    return data;
+  }
+  async function openAuthorityPanel() {
+    const panel=$("#authority-panel"),list=$("#authority-title-list"),message=$("#authority-message");
+    panel.classList.remove("hidden");$("#profile-editor").classList.add("hidden");
+    $("#developer-panel").classList.add("hidden");$("#shop-panel").classList.add("hidden");
+    list.textContent="Загрузка званий…";message.textContent="";
+    try {
+      const data=await authorityApi("/"),current=data.current;
+      $("#authority-current-label").textContent="Текущее звание: "+current.title+" · Koins: "+Number(current.koins).toLocaleString("ru-RU");
+      const currentOrder=data.titles.find(item=>item.title_key===current.titleKey)?.sort_order??0;
+      list.replaceChildren();
+      const icons={NOVICE:"✦",BEDA:"☀",PAPA:"👑",ANGEL:"✧",CREATOR:"🔥"};
+      data.titles.forEach(item=>{
+        const card=document.createElement("article");card.className="authority-title-card"+(item.title_key===current.titleKey?" current":"");card.dataset.aura=item.aura_type;
+        const icon=document.createElement("div");icon.className="authority-title-icon";icon.textContent=icons[item.title_key]||"✦";
+        const info=document.createElement("div");info.className="authority-title-info";
+        const name=document.createElement("strong");name.textContent=item.title_label;
+        const desc=document.createElement("small");
+        desc.textContent=item.title_key==="NOVICE"?"Начальное звание персонажа. Без специальной ауры."
+          :item.title_key==="BEDA"?"Мягкое золотое сияние и частицы."
+          :item.title_key==="PAPA"?"Премиальная золотая аура с искрами."
+          :item.title_key==="ANGEL"?"Зелёное свечение и лёгкие частицы."
+          :"Красное пламя, огненные частицы и сверкающие искры.";
+        const price=document.createElement("em");price.textContent=item.sort_order===0?"Стартовое звание":Number(item.koins_price).toLocaleString("ru-RU")+" Koins · "+item.min_authority+" авторитета";
+        info.append(name,desc,price);card.append(icon,info);
+        const button=document.createElement("button");button.type="button";
+        if(item.title_key===current.titleKey){button.textContent="Текущее звание";button.disabled=true;}
+        else if(item.sort_order<currentOrder){button.textContent="Уже пройдено";button.disabled=true;}
+        else if(item.sort_order!==currentOrder+1||!item.enabled){button.textContent=item.enabled?"Сначала предыдущее звание":"Недоступно";button.disabled=true;}
+        else {
+          button.textContent="Повысить за "+Number(item.koins_price).toLocaleString("ru-RU")+" Koins";
+          button.addEventListener("click",async()=>{
+            button.disabled=true;message.textContent="Проверяем покупку…";
+            try {
+              const result=await authorityApi("/purchase",{method:"POST",body:JSON.stringify({titleKey:item.title_key,requestId:crypto.randomUUID()})});
+              message.textContent="Звание «"+item.title_label+"» получено!";
+              state.me={...state.me,authorityTitle:result.current.titleKey,auraType:item.aura_type,auraEnabled:result.current.auraEnabled};
+              const me=state.players.get(state.me?.id);if(me)Object.assign(me,{authorityTitle:result.current.titleKey,auraType:item.aura_type,auraEnabled:result.current.auraEnabled});
+              $("#authority-current-label").textContent="Текущее звание: "+result.current.title+" · Koins: "+Number(result.current.koins).toLocaleString("ru-RU");
+              const profileResponse=await fetch("/api/profile",{credentials:"same-origin"}),profileData=await profileResponse.json();
+              if(profileResponse.ok){$("#profile-koins").textContent=profileData.profile.koins;paintAuthorityProfile(profileData.profile);}
+              showToast("Новое звание: "+item.title_label);await openAuthorityPanel();
+            }catch(error){message.textContent=error.message;button.disabled=false;}
+          });
+        }
+        card.append(button);list.append(card);
+      });
+    }catch(error){list.textContent=error.message;}
+  }
+  $("#authority-open").addEventListener("click",openAuthorityPanel);
+  $("#authority-close").addEventListener("click",()=>$("#authority-panel").classList.add("hidden"));
   $("#my-profile").addEventListener("click", openMyProfile);
   $("#profile-editor-close").addEventListener("click", () => $("#profile-editor").classList.add("hidden"));
   $("#profile-save").addEventListener("click", async () => {
