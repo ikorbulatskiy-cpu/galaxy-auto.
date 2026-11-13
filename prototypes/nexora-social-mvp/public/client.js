@@ -118,7 +118,7 @@
       const row = document.createElement("div");
       row.className = "history-message";
       const name = document.createElement("strong");
-      name.textContent = whisper ? "Шёпот" : message.nickname;
+      name.textContent = message.whisper ? "Шёпот" : message.nickname;
       const text = document.createElement("span");
       text.textContent = message.text;
       const time = document.createElement("time");
@@ -344,6 +344,8 @@
         me.facing = targetX >= me.x ? 1 : -1;
         me.x = targetX;
         me.moving = true;
+        clearTimeout(me.moveTimer);
+        me.moveTimer = setTimeout(() => { me.moving = false; }, 450);
       }
       socket.emit("player:move", { x: targetX });
     } else {
