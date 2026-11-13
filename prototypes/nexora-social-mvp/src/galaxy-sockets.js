@@ -93,7 +93,7 @@ function attachGalaxySockets(io, { pool, auth, planets, normalizeAvatar }) {
         players.set(socket.id, player);
         socket.data.player = player;
         socket.join(roomName(planet));
-        emitState(socket);
+        await emitState(socket);
         socket.to(roomName(planet)).emit("player:joined", publicPlayer(player));
         ack({ ok: true, player: publicPlayer(player) });
       } catch (error) {
