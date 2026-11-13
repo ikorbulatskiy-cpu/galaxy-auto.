@@ -1,6 +1,11 @@
 name: NEXORA Room UI CI
 
 on:
+  push:
+    branches: [nexora-6-galaxy-room-redesign]
+    paths:
+      - "prototypes/nexora-social-mvp/public/**"
+      - ".github/workflows/nexora-room-ui-ci.yml"
   pull_request:
     branches: [nexora-social-mvp]
     paths:
