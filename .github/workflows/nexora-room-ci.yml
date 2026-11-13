@@ -1,0 +1,53 @@
+name: NEXORA Room Redesign CI
+
+on:
+  pull_request:
+    branches: [nexora-social-mvp]
+  push:
+    branches: [nexora-social-mvp]
+    paths:
+      - "prototypes/nexora-social-mvp/public/**"
+      - "prototypes/nexora-social-mvp/server.js"
+      - "prototypes/nexora-social-mvp/src/profile.js"
+      - ".github/workflows/nexora-room-ci.yml"
+
+jobs:
+  room-redesign:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install application dependencies
+        run: cd prototypes/nexora-social-mvp && npm install
+      - name: Check JavaScript syntax
+        run: |
+          node --check prototypes/nexora-social-mvp/server.js
+          node --check prototypes/nexora-social-mvp/src/profile.js
+          node --check prototypes/nexora-social-mvp/public/client.js
+      - name: Verify room features and server validation
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const root = "prototypes/nexora-social-mvp/";
+          const html = fs.readFileSync(root + "public/index.html", "utf8");
+          const css = fs.readFileSync(root + "public/style.css", "utf8");
+          const client = fs.readFileSync(root + "public/client.js", "utf8");
+          const server = fs.readFileSync(root + "server.js", "utf8");
+          const profile = fs.readFileSync(root + "src/profile.js", "utf8");
+          const checks = [
+            [html.includes('id="world-canvas"') && html.includes('id="room-events-panel"'), "world canvas and event panel exist"],
+            [html.includes('data-room-toggle="events"') && html.includes('id="room-player-search"'), "events control and player search exist"],
+            [client.includes("function drawPlanetBackdrop") && client.includes("function drawAvatar"), "planet and character renderers exist"],
+            [client.includes('socket.on("player:action:played"') && client.includes('socket.emit("player:action"'), "player action client flow exists"],
+            [client.includes("function renderRoomEvents") && client.includes("setConnectionStatus"), "event feed and connection state exist"],
+            [server.includes('socket.on("player:action"') && server.includes("sender.planet!==target.planet"), "player actions validate same planet"],
+            [server.includes("lastActionAt") && server.includes("lastEmotionAt"), "action and emotion throttles exist"],
+            [server.includes("hairColor: allowed.hairColor") && server.includes("accessory: allowed.accessory"), "server validates appearance fields"],
+            [profile.includes("HAIR_COLORS.includes") && profile.includes("ACCESSORIES.includes"), "profile validates persisted appearance"],
+            [css.includes("grid-template-columns:repeat(5") && css.includes("room-events-panel"), "five-control toolbar and event styles exist"]
+          ];
+          for (const [ok, label] of checks) console.log((ok ? "PASS " : "FAIL ") + label);
+          if (checks.some(([ok]) => !ok)) process.exit(1);
+          NODE
