@@ -130,7 +130,7 @@ test("avatar editor renders a safe layered 2D preview and persists selectable ap
 test("production HTTP security is configured without trusting arbitrary proxies", () => {
   const server = read("server.js");
   assert.match(server, /TRUST_PROXY_HOPS/);
-  assert.match(server, /app\\.set\\("trust proxy", proxyHops \\? Number\\(proxyHops\\) : 1\\)/);
+  assert.match(server, /app\.set\("trust proxy", proxyHops \? Number\(proxyHops\) : 1\)/);
   assert.match(server, /TRUST_PROXY_HOPS must be a non-negative integer/);
   assert.match(server, /contentSecurityPolicy:/);
   assert.match(server, /frameAncestors: \["'none'"\]/);
