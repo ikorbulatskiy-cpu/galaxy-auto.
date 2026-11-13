@@ -1847,6 +1847,17 @@
       body.append(name,desc,button);card.append(art,body);box.append(card);
     });
   }
+  async function loadShopHistory(){
+    const data=await economyRequest("/transactions");
+    const box=$("#shop-history-items");box.replaceChildren();
+    if(!data.transactions?.length){const empty=document.createElement("p");empty.className="shop-notice";empty.textContent="Покупок пока нет.";box.append(empty);return;}
+    data.transactions.forEach(tx=>{
+      const row=document.createElement("div");row.className="developer-row";
+      const title=document.createElement("strong");title.textContent=(shopCatalog.find(item=>item.code===tx.code)?.name||tx.code)+" · −"+Number(tx.amount).toLocaleString("ru-RU")+" ✦";
+      const detail=document.createElement("span");detail.textContent="Остаток: "+Number(tx.balance_after).toLocaleString("ru-RU")+" ✦ · "+new Date(tx.created_at).toLocaleString("ru-RU");
+      row.append(title,detail);box.append(row);
+    });
+  }
   async function openShop(){
     $("#shop-panel").classList.remove("hidden");$("#profile-editor").classList.add("hidden");$("#developer-panel").classList.add("hidden");
     $("#shop-character-name").textContent=state.me?.nickname||"Персонаж NEXORA";
@@ -1865,6 +1876,7 @@
     document.querySelectorAll("[data-shop-tab]").forEach(item=>item.classList.toggle("active",item===button));
     ["store","inventory","character"].forEach(name=>$("#shop-"+name+"-view").classList.toggle("hidden",name!==tab));
     if(tab==="inventory")try{await loadShopInventory();}catch(error){showToast(error.message);}
+    if(tab==="history")try{await loadShopHistory();}catch(error){showToast(error.message);}
   }));
   $("#shop-edit-profile").addEventListener("click",()=>{$("#shop-panel").classList.add("hidden");openMyProfile();});
 
