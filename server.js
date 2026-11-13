@@ -87,7 +87,7 @@ const clientErrorLimiter = rateLimit({
 
 app.post("/api/client-errors", clientErrorLimiter, (req, res) => {
   const body = req.body && typeof req.body === "object" ? req.body : {};
-  const clean = (value, max) => String(value || "").replace(/[\\r\\n\\t]+/g, " ").slice(0, max);
+  const clean = (value, max) => String(value || "").replace(/[\r\n\t]+/g, " ").slice(0, max);
   const event = {
     kind: clean(body.kind, 32) || "unknown",
     message: clean(body.message, 500) || "Client-side error",
