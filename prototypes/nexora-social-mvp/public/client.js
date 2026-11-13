@@ -1531,7 +1531,27 @@
                 showToast("Действие модерации выполнено."); loadDeveloperTab("players");
               } catch(error){showToast(error.message);}
             });
-            row.append(ban); list.append(row);
+            row.append(ban);
+            if (developerPermissions.includes("players.delete")) {
+              const remove = document.createElement("button");
+              remove.type = "button";
+              remove.textContent = "Удалить персонажа";
+              remove.className = "danger-button";
+              remove.addEventListener("click", async () => {
+                const confirmation = prompt("ВНИМАНИЕ: будет навсегда удалён персонаж и его аккаунт вместе со связанными данными. Для подтверждения введи ник: " + p.nickname);
+                if (confirmation === null) return;
+                const reason = prompt("Причина удаления персонажа:");
+                if (!reason?.trim()) return;
+                remove.disabled = true;
+                try {
+                  await developerRequest("/players/" + p.id, { method: "DELETE", body: JSON.stringify({ confirmNickname: confirmation, reason }) });
+                  showToast("Персонаж " + p.nickname + " удалён.");
+                  loadDeveloperTab("players");
+                } catch (error) { showToast(error.message); remove.disabled = false; }
+              });
+              row.append(remove);
+            }
+            list.append(row);
           });
         };
         renderPlayers(d.players);
@@ -1744,7 +1764,7 @@
         reason.maxLength = 500; reason.placeholder = "Причина назначения";
         const permissionWrap = document.createElement("div");
         permissionWrap.className = "developer-permission-grid";
-        const available = ["players.view","players.ban","players.unban","players.warn","moderation.view","reports.manage","world.view","world.manage","economy.view","economy.manage","items.view","items.manage","system.view","logs.view","authority.view","authority.assign","authority.remove","authority.configure","authority.history","planets.view","planets.manage"];
+        const available = ["players.view","players.ban","players.unban","players.warn","players.delete","moderation.view","reports.manage","world.view","world.manage","economy.view","economy.manage","items.view","items.manage","system.view","logs.view","authority.view","authority.assign","authority.remove","authority.configure","authority.history","planets.view","planets.manage"];
         available.forEach(value => {
           const label = document.createElement("label");
           const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.value = value;
