@@ -1,6 +1,15 @@
 (() => {
   "use strict";
   const $=s=>document.querySelector(s);
+  if (new URLSearchParams(location.search).get("embedded") === "1") {
+    const back = $("#embedded-back");
+    const brand = $(".brand");
+    if (back) {
+      back.hidden = false;
+      back.addEventListener("click", () => window.parent.postMessage({ type: "nexora:galaxy-close" }, location.origin));
+    }
+    if (brand) brand.hidden = true;
+  }
   const scene=new window.NexoraGalaxyScene($("#scene-viewport"),$("#galaxy-canvas"),openPlayer,setMoveTarget);
   const socket=io("/galaxy",{autoConnect:false});
   const me={id:null,nickname:""};
