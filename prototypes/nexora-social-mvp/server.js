@@ -7,6 +7,7 @@ const { pool, migrate } = require("./src/db");
 const auth = require("./src/auth");
 const { createSocialRouter } = require("./src/social");
 const { createProfileRouter } = require("./src/profile");
+const { createDeveloperRouter } = require("./src/developer");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -73,6 +74,7 @@ app.get("/health", async (_req, res) => {
 });
 app.use("/api/social", createSocialRouter({ pool, auth, io }));
 app.use("/api/profile", createProfileRouter({ pool, auth, io }));
+app.use("/api/developer", createDeveloperRouter({ pool, auth, players, planets: PLANETS }));
 app.use((error, _req, res, _next) => {
   console.error("API error:", error);
   if (!res.headersSent) res.status(500).json({ error: "Внутренняя ошибка сервера." });

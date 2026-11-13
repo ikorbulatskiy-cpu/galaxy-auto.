@@ -257,6 +257,7 @@
         resize();
         requestAnimationFrame(drawScene);
         refreshSocial();
+        refreshDeveloperAccess();
       });
     });
     socket.once("connect_error", () => {
@@ -606,6 +607,77 @@
       button.disabled = false;
     }
   });
+
+
+  let developerTab = "overview";
+  async function developerRequest(path) {
+    const response = await fetch("/api/developer" + path, { credentials: "same-origin" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Нет доступа к панели.");
+    return data;
+  }
+  async function refreshDeveloperAccess() {
+    try {
+      const data = await developerRequest("/access");
+      $("#developer-open").classList.toggle("hidden", !data.allowed);
+    } catch (_error) { $("#developer-open").classList.add("hidden"); }
+  }
+  function developerRender(title, rows) {
+    const content = $("#developer-content");
+    content.replaceChildren();
+    const heading = document.createElement("h3");
+    heading.textContent = title;
+    content.append(heading);
+    if (!rows.length) {
+      const empty = document.createElement("p");
+      empty.className = "developer-muted";
+      empty.textContent = "Пока нет данных.";
+      content.append(empty);
+      return;
+    }
+    rows.forEach((row) => {
+      const item = document.createElement("div");
+      item.className = "developer-row";
+      const label = document.createElement("strong");
+      label.textContent = String(row.title || "Событие");
+      const detail = document.createElement("span");
+      detail.textContent = String(row.detail || "");
+      item.append(label, detail);
+      content.append(item);
+    });
+  }
+  async function loadDeveloperTab(tab = developerTab) {
+    developerTab = tab;
+    document.querySelectorAll("[data-developer-tab]").forEach((button) => button.classList.toggle("active", button.dataset.developerTab === tab));
+    const content = $("#developer-content");
+    content.textContent = "Загрузка…";
+    try {
+      if (tab === "overview") {
+        const d = await developerRequest("/overview");
+        developerRender("Состояние NEXORA", [
+          { title: "Статус сервера", detail: d.server }, { title: "Игроки онлайн", detail: d.onlinePlayers },
+          { title: "Аккаунты", detail: d.accounts }, { title: "Персонажи", detail: d.characters },
+          { title: "Активные комнаты", detail: d.activeRooms }, { title: "База данных", detail: d.database }
+        ]);
+      } else if (tab === "players") {
+        const d = await developerRequest("/players");
+        developerRender("Последние игроки", d.players.map(p => ({ title: p.nickname + " · ID " + p.id, detail: (p.online ? "В сети" : "Не в сети") + " · " + p.planet + " · " + new Date(p.createdAt).toLocaleDateString("ru-RU") })));
+      } else if (tab === "world") {
+        const d = await developerRequest("/world");
+        developerRender("Планеты и комнаты", d.world.map(p => ({ title: p.title, detail: p.online + " онлайн · " + p.rooms + " комнат" })));
+      } else if (tab === "audit") {
+        const d = await developerRequest("/audit");
+        developerRender("Последние действия", d.entries.map(e => ({ title: e.action, detail: e.actorNickname + " · " + e.createdAt + (e.reason ? " · " + e.reason : "") })));
+      }
+    } catch (error) { content.textContent = error.message; }
+  }
+  $("#developer-open").addEventListener("click", () => {
+    $("#developer-panel").classList.remove("hidden");
+    $("#profile-editor").classList.add("hidden");
+    loadDeveloperTab("overview");
+  });
+  $("#developer-close").addEventListener("click", () => $("#developer-panel").classList.add("hidden"));
+  document.querySelectorAll("[data-developer-tab]").forEach(button => button.addEventListener("click", () => loadDeveloperTab(button.dataset.developerTab)));
 
   let activeConversationId = null;
   let socialUnread = 0;
