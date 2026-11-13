@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "atlas": "/assets/sprites/characters/nexora-avatar-atlas.svg",
+  "cell": {
+    "width": 80,
+    "height": 104
+  },
+  "columns": 8,
+  "rows": 4,
+  "directions": {
+    "down": 0,
+    "left": 1,
+    "right": 2,
+    "up": 3
+  },
+  "animations": {
+    "IDLE": [
+      0,
+      1
+    ],
+    "WALK": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "DANCE": [
+      6
+    ],
+    "WAVE": [
+      7
+    ],
+    "HAPPY": [
+      1
+    ],
+    "SAD": [
+      0
+    ],
+    "ANGRY": [
+      1
+    ],
+    "LAUGH": [
+      6
+    ],
+    "LOVE": [
+      7
+    ]
+  }
+}
