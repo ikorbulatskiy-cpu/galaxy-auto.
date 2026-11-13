@@ -109,6 +109,16 @@ app.get("/api/status", async (_req, res) => {
   }
 });
 
+// Do not let mobile browsers keep an old HTML shell with stale click handlers.
+app.use((req, res, next) => {
+  if (req.path === "/" || req.path.endsWith(".html")) {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+  }
+  next();
+});
+
 app.use(express.static(path.join(__dirname, "public")));
 app.use((err, req, res, _next) => {
   if (res.headersSent) return;
