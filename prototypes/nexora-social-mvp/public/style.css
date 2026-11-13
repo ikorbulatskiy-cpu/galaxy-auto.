@@ -1068,3 +1068,17 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 @media (prefers-reduced-motion: reduce) {
   .room-toolbar button, .room-menu-grid button, .room-emotion-grid button { transition: none; }
 }
+
+.room-flyout-head small { display:none; }
+.room-flyout-head { padding-top:2px; }
+.room-toolbar button:focus-visible,
+.room-menu-grid button:focus-visible,
+.room-emotion-grid button:focus-visible {
+  outline: 2px solid rgba(188,174,255,.9);
+  outline-offset: 2px;
+}
+.chat-form button:focus-visible,
+.drawer-head button:focus-visible {
+  outline: 2px solid rgba(188,174,255,.9);
+  outline-offset: 2px;
+}
