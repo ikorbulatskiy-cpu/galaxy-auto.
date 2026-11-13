@@ -387,7 +387,7 @@
     const now=performance.now(),fromX=Number.isFinite(player.renderX)?player.renderX:player.x,fromY=Number.isFinite(player.renderY)?player.renderY:(player.y??.82);
     const distance=Math.hypot((targetX-fromX)*Math.max(1,state.width),(targetY-fromY)*Math.max(1,state.height));
     player.moveFromX=fromX;player.moveFromY=fromY;player.moveToX=targetX;player.moveToY=targetY;player.moveStartedAt=now;
-    player.moveDuration=Math.max(180,Math.min(2400,distance/185*1000));player.facing=targetX>=fromX?1:-1;
+    player.moveDuration=Math.max(180,Math.min(2400,distance/185*1000));const dx=targetX-fromX,dy=targetY-fromY;player.direction=Math.abs(dx)>Math.abs(dy)?(dx>=0?"right":"left"):(dy>=0?"down":"up");player.facing=targetX>=fromX?1:-1;
     player.x=targetX;player.y=targetY;player.moving=distance>3;
     if(!player.moving){player.renderX=targetX;player.renderY=targetY;}
   }
@@ -436,9 +436,15 @@
     // Detailed, planet-specific world geometry is rendered beneath player avatars.
     window.NexoraWorldScene?.draw(ctx, w, h, state.planet, Date.now());
 
-    const ordered = [...state.players.values()].sort((a,b)=>(a.renderY??a.y??.82)-(b.renderY??b.y??.82));
+    const props = window.NexoraWorldObjects?.get(state.planet,w,h,Date.now()) || [];
+    const ordered = [
+      ...[...state.players.values()].map((player)=>({kind:"player",player,depth:player.renderY??player.y??.82})),
+      ...props.map((object)=>({kind:"object",object,depth:object.depth}))
+    ].sort((a,b)=>a.depth-b.depth);
     const now = performance.now();
-    ordered.forEach((player) => {
+    ordered.forEach((item) => {
+      if(item.kind==="object"){window.NexoraWorldObjects?.render(ctx,[item.object]);return;}
+      const player=item.player;
       advancePlayerMovement(player, now);
       const drawX = (player.renderX ?? player.x) * w;
       const depth = Math.max(.60,Math.min(.86,player.renderY ?? player.y ?? .82));
@@ -459,7 +465,9 @@
         ctx.beginPath();ctx.ellipse(drawX,y+2,25*scale,46*scale,0,0,Math.PI*2);ctx.stroke();ctx.restore();
       }
       drawAura(ctx,drawX,y,scale,player.auraType,player.auraEnabled,state.auraQuality);
-      drawAvatar(ctx,drawX,y,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
+      const spriteDirection=player.direction||"down";
+      const spriteDrawn=window.NexoraSpriteEngine?.draw(ctx,drawX,y,scale,player.avatar,spriteDirection,Boolean(player.moving),emotion);
+      if(!spriteDrawn)drawAvatar(ctx,drawX,y,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
       drawAuraHalo(ctx,drawX,y,scale,player.auraType,player.auraEnabled,state.auraQuality);
       if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20*scale,y-58*scale-Math.sin(Date.now()/120)*3);ctx.restore();}
       // Only the nickname stays above the avatar. Rank and authority belong in the info card.
