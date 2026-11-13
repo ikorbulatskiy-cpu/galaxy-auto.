@@ -268,7 +268,7 @@ function attachRealtime(server) {
             );
             inserted.rows = fallback.rows;
           }
-          publish({ type: "room_message", roomId: socket.joinedRoom, message: { ...inserted.rows[0], username: user.username } });
+          publish({ type: "room_message", roomId: socket.joinedRoom, message: { ...inserted.rows[0], user_id: user.id, username: user.username } });
         } catch { socket.send(JSON.stringify({type:"error",message:"Сообщение не сохранено."})); }
       }
     });
