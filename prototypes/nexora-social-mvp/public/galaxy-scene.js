@@ -19,7 +19,7 @@
     upsert(p){if(!p?.id)return;const current=this.players.get(String(p.id))||{bubbles:[]};Object.assign(current,p,{id:String(p.id)});this.players.set(String(p.id),current)}
     remove(id){this.players.delete(String(id))}
     movePlayer(id,x,y,duration=140){const p=this.players.get(String(id));if(p){const from=p.renderX??p.x;p.move={from,to:x,started:performance.now(),duration};p.x=x;p.y=y;p.direction=x<from?"left":"right";p.moving=true;clearTimeout(p.moveTimer);p.moveTimer=setTimeout(()=>{p.moving=false;p.move=null;p.renderX=p.x},duration+40)}}
-    bubble(id,text){const p=this.players.get(String(id));if(!p)return;p.bubbles.push({text,until:Date.now()+7000});if(p.bubbles.length>3)p.bubbles.shift()}
+    bubble(id,text){const p=this.players.get(String(id));if(!p)return;p.bubbles.unshift({text,until:Date.now()+7000});if(p.bubbles.length>3)p.bubbles.pop()}
     setCursor(x){this.cursor=x}
     drawBackground(ctx,t){
       const sky=ctx.createLinearGradient(0,0,0,this.height);sky.addColorStop(0,"#07132d");sky.addColorStop(.62,"#182b50");sky.addColorStop(1,"#3b4a67");ctx.fillStyle=sky;ctx.fillRect(0,0,this.width,this.height);
