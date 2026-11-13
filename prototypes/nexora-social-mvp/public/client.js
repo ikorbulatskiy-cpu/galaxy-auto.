@@ -1070,6 +1070,13 @@
     } finally {
       socket.disconnect();
       state.me = null;
+      developerPermissions = [];
+      developerRole = "USER";
+      developerIsOwner = false;
+      developerAdminAssigned = false;
+      $("#developer-open").classList.add("hidden");
+      $("#room-developer-action").classList.add("hidden");
+      $("#developer-admins-tab").classList.add("hidden");
       state.players.clear();
       state.selected = null;
       state.chat = [];
@@ -1547,7 +1554,15 @@
       }
       $("#developer-authority-tab").classList.toggle("hidden", !developerPermissions.some(permission => permission.startsWith("authority.")));
       $("#developer-planets-tab").classList.toggle("hidden", !developerPermissions.includes("planets.view"));
-    } catch (_error) { $("#developer-open").classList.add("hidden"); }
+    } catch (_error) {
+      developerPermissions = [];
+      developerRole = "USER";
+      developerIsOwner = false;
+      developerAdminAssigned = false;
+      $("#developer-open").classList.add("hidden");
+      $("#room-developer-action").classList.add("hidden");
+      $("#developer-admins-tab").classList.add("hidden");
+    }
   }
   function developerRender(title, rows) {
     const content = $("#developer-content");
