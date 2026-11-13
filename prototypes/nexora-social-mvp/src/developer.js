@@ -140,6 +140,12 @@ function createDeveloperRouter({ pool, auth, players, planets, io }) {
       const expiresAt = hours === null ? null : new Date(Date.now() + hours * 3600000);
       const result = await pool.query("INSERT INTO nexora_social_world.moderation_actions(actor_account_id,target_account_id,action_type,reason,expires_at) VALUES($1,$2,'BAN',$3,$4) RETURNING id,expires_at", [current.account.id,targetId,reason,expiresAt]);
       await pool.query("INSERT INTO nexora_social_world.developer_audit_logs(actor_account_id,target_account_id,action,reason,details) VALUES($1,$2,'player.ban',$3,$4::jsonb)", [current.account.id,targetId,reason,JSON.stringify({ moderationId: result.rows[0].id, expiresAt })]);
+      for (const [socketId, onlinePlayer] of players.entries()) {
+        if (String(onlinePlayer.accountId) !== targetId) continue;
+        io?.to("planet:" + onlinePlayer.planet).emit("player:left", { id: String(onlinePlayer.accountId) });
+        io?.sockets?.sockets?.get(socketId)?.disconnect(true);
+        players.delete(socketId);
+      }
       res.status(201).json({ ok: true, moderation: result.rows[0] });
     } catch (error) { next(error); }
   });
@@ -152,6 +158,8 @@ function createDeveloperRouter({ pool, auth, players, planets, io }) {
       let changed;
       try {
         await client.query("BEGIN");
+        const target = await client.query("SELECT id FROM nexora_social_world.accounts WHERE id=$1 FOR UPDATE", [targetId]);
+        if (!target.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ error: "Персонаж не найден." }); }
         changed = await client.query("UPDATE nexora_social_world.moderation_actions SET revoked_at=NOW(),revoked_by=$2,revocation_reason=$3 WHERE target_account_id=$1 AND action_type='BAN' AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at>NOW()) RETURNING id", [targetId,current.account.id,reason]);
         if (changed.rowCount) await audit(client,current,targetId,"player.unban",reason,{ moderationIds: changed.rows.map(row=>row.id) });
         await client.query("COMMIT");

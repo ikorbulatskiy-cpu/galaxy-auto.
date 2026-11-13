@@ -2314,3 +2314,20 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
   .online-pill-caption { font-size:8px; }
   .online-pill #online-count { font-size:9px; }
 }
+
+
+/* NEXORA global search in the room menu */
+.room-global-search{display:grid;gap:8px;margin-top:13px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);min-width:0}
+.room-global-search>label{color:#c7c4ff;font-size:10px;font-weight:900;letter-spacing:.1em}
+.room-global-search>input{width:100%;min-width:0;min-height:42px;padding:10px 12px;border:1px solid rgba(174,163,255,.25);border-radius:11px;outline:none;background:#0d1431;color:#fff;font-size:12px}
+.room-global-search>input:focus{border-color:#9e91ff;box-shadow:0 0 0 3px rgba(142,126,255,.12)}
+.room-global-search-results{display:grid;gap:5px;max-height:min(34dvh,260px);overflow:auto;overscroll-behavior:contain}
+.room-global-search-results>p{margin:0;padding:8px;color:#9ca8d0;font-size:10px;line-height:1.45}
+.room-global-search-heading{padding:7px 3px 2px;color:#9da9d8;font-size:9px;letter-spacing:.13em}
+.room-global-search-row{width:100%;min-width:0;display:flex;align-items:center;gap:9px;padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:rgba(255,255,255,.045);color:#f1f2ff;text-align:left;cursor:pointer}
+.room-global-search-row:active{background:rgba(143,128,245,.2)}
+.room-global-search-icon{width:30px;height:30px;flex:0 0 30px;display:grid;place-items:center;border-radius:9px;background:rgba(143,128,245,.15);font-size:15px}
+.room-global-search-meta{min-width:0;display:grid;gap:3px}
+.room-global-search-meta strong{overflow:hidden;font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+.room-global-search-meta small{overflow:hidden;color:#9eacd7;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:600px){.room-global-search-results{max-height:30dvh}.room-global-search>input{min-height:39px}}

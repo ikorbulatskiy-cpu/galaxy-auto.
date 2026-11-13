@@ -19,6 +19,60 @@ function createSocialRouter({ pool, auth, io }) {
     next();
   }));
 
+  router.get("/search", asyncRoute(async (req, res) => {
+    const q = clean(req.query.q, 40);
+    if (q.length < 2) return res.json({ characters: [], planets: [] });
+    const pattern = "%" + q + "%";
+    const [characterRows, planetRows, itemRows] = await Promise.all([
+      pool.query(
+        `SELECT a.id,a.nickname,c.avatar,c.planet,c.authority,c.authority_title,c.aura_enabled,c.level
+           FROM nexora_social_world.accounts a
+           JOIN nexora_social_world.characters c ON c.account_id=a.id
+          WHERE a.nickname ILIKE $1 OR a.id::text=$2
+          ORDER BY CASE WHEN a.nickname ILIKE $3 THEN 0 ELSE 1 END,a.nickname
+          LIMIT 20`,
+        [pattern, q, q]
+      ),
+      pool.query(
+        `SELECT p.id,p.name,p.description,p.category,p.theme,p.access_mode,p.capacity,
+                a.nickname AS owner_nickname,a.id AS owner_id
+           FROM nexora_social_world.custom_planets p
+           JOIN nexora_social_world.accounts a ON a.id=p.owner_account_id
+          WHERE p.status='active'
+            AND (p.name ILIKE $1 OR COALESCE(p.description,'') ILIKE $1 OR p.id::text=$2)
+            AND (p.access_mode='public' OR p.owner_account_id=$3
+              OR EXISTS(SELECT 1 FROM nexora_social_world.planet_staff s WHERE s.planet_id=p.id AND s.account_id=$3)
+              OR EXISTS(SELECT 1 FROM nexora_social_world.planet_members m WHERE m.planet_id=p.id AND m.account_id=$3)
+              OR EXISTS(SELECT 1 FROM nexora_social_world.planet_invites i WHERE i.planet_id=p.id AND i.invited_account_id=$3 AND i.used_at IS NULL AND i.expires_at>NOW()))
+          ORDER BY p.total_visits DESC,p.name LIMIT 15`,
+        [pattern, q, req.account.id]
+      ),
+      pool.query(
+        `SELECT item_code AS code,name,description,category,icon,price::text AS price
+           FROM nexora_social_world.shop_catalog
+          WHERE enabled=TRUE AND (name ILIKE $1 OR COALESCE(description,'') ILIKE $1 OR item_code ILIKE $1 OR category ILIKE $1)
+          ORDER BY category,price,item_code LIMIT 15`,
+        [pattern]
+      )
+    ]);
+    const characters = characterRows.rows.map(row => ({
+      id: String(row.id), nickname: row.nickname, avatar: row.avatar || {},
+      planet: row.planet || "starter", authority: Number(row.authority || 0),
+      authorityTitle: row.authority_title || "NOVICE", auraEnabled: Boolean(row.aura_enabled),
+      level: Number(row.level || 1),
+      online: Boolean(io.sockets.adapter.rooms.get("account:" + row.id)?.size)
+    }));
+    const planets = planetRows.rows.map(row => ({
+      id: String(row.id), name: row.name, description: row.description || "",
+      category: row.category, theme: row.theme, accessMode: row.access_mode,
+      capacity: Number(row.capacity || 30), ownerNickname: row.owner_nickname,
+      ownerId: String(row.owner_id),
+      onlineCount: [...io.sockets.sockets.values()].filter(socket => String(socket.data.player?.planet) === "custom-" + String(row.id)).length
+    }));
+    const items = itemRows.rows.map(row => ({ code: row.code, name: row.name, description: row.description || "", category: row.category, icon: row.icon || "✦", price: row.price }));
+    res.json({ ok: true, characters, planets, items });
+  }));
+
   router.get("/users", asyncRoute(async (req, res) => {
     const q = clean(req.query.q, 18);
     if (q.length < 2) return res.json({ users: [] });

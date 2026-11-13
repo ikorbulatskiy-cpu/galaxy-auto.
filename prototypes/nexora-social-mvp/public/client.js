@@ -825,6 +825,127 @@
 
   function renderRoomPlayers(){const box=$("#room-player-list");if(!box)return;const query=($("#room-player-search")?.value||"").trim().toLocaleLowerCase("ru-RU");const rows=[...state.players.values()].filter(p=>!query||p.nickname.toLocaleLowerCase("ru-RU").includes(query)).sort((a,b)=>{if(String(a.id)===String(state.me?.id))return -1;if(String(b.id)===String(state.me?.id))return 1;return String(a.nickname).localeCompare(String(b.nickname),"ru");});$("#room-player-count").textContent=String(state.players.size);box.replaceChildren();if(!rows.length){const empty=document.createElement("p");empty.className="developer-muted";empty.textContent=query?"Игроки не найдены.":"В комнате пока никого нет.";box.append(empty);return;}rows.forEach(player=>{const row=document.createElement("button");row.type="button";row.className="room-player-row"+(String(state.selected)===String(player.id)?" selected":"");const avatar=document.createElement("canvas");avatar.className="room-player-avatar";avatar.width=64;avatar.height=72;drawAvatar(avatar.getContext("2d"),32,54,.78,player.avatar,1,null);const meta=document.createElement("span");meta.className="room-player-meta";const name=document.createElement("strong");name.textContent=player.nickname+(String(player.id)===String(state.me?.id)?" · Вы":"");const rank=document.createElement("small");rank.textContent=(player.title||"Новичок")+(player.auraEnabled?" · Аура активна":"");meta.append(name,rank);const status=document.createElement("i");status.className="room-player-status";row.append(avatar,meta,status);row.addEventListener("click",()=>{openProfile(player);closeRoomFlyouts("players");});box.append(row);});}
   $("#room-player-search")?.addEventListener("input",renderRoomPlayers);
+  let globalSearchTimer = null;
+  let globalSearchSequence = 0;
+  function renderGlobalSearch(data, query) {
+    const box = $("#room-global-search-results");
+    box.replaceChildren();
+    const addSection = (title, entries, renderEntry) => {
+      if (!entries.length) return;
+      const heading = document.createElement("strong");
+      heading.className = "room-global-search-heading";
+      heading.textContent = title;
+      box.append(heading);
+      entries.forEach(entry => box.append(renderEntry(entry)));
+    };
+    const characterRow = player => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "room-global-search-row";
+      const icon = document.createElement("span");
+      icon.className = "room-global-search-icon";
+      icon.textContent = "👤";
+      const meta = document.createElement("span");
+      meta.className = "room-global-search-meta";
+      const name = document.createElement("strong");
+      name.textContent = player.nickname;
+      const detail = document.createElement("small");
+      detail.textContent = (player.online ? "В сети" : "Не в сети") + " · " + (player.authorityTitle === "NOVICE" ? "Новичок" : player.authorityTitle) + " · ID " + player.id;
+      meta.append(name, detail);
+      button.append(icon, meta);
+      button.addEventListener("click", () => {
+        closeRoomFlyouts();
+        openPublicProfile(player.id);
+      });
+      return button;
+    };
+    const itemRow = item => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "room-global-search-row";
+      const icon = document.createElement("span");
+      icon.className = "room-global-search-icon";
+      icon.textContent = item.icon || "✦";
+      const meta = document.createElement("span");
+      meta.className = "room-global-search-meta";
+      const name = document.createElement("strong");
+      name.textContent = item.name;
+      const detail = document.createElement("small");
+      detail.textContent = "Магазин · " + item.category + " · " + Number(item.price || 0).toLocaleString("ru-RU") + " Koins";
+      meta.append(name, detail);
+      button.append(icon, meta);
+      button.addEventListener("click", async () => {
+        closeRoomFlyouts();
+        await openShop();
+        document.querySelector('[data-shop-tab="store"]')?.click();
+        const card = [...$("#shop-items").children].find(node => node.querySelector(".shop-item-body strong")?.textContent === item.name);
+        card?.scrollIntoView({ behavior:"smooth", block:"center" });
+      });
+      return button;
+    };
+    const planetRow = planet => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "room-global-search-row";
+      const icon = document.createElement("span");
+      icon.className = "room-global-search-icon";
+      icon.textContent = "🪐";
+      const meta = document.createElement("span");
+      meta.className = "room-global-search-meta";
+      const name = document.createElement("strong");
+      name.textContent = planet.name;
+      const detail = document.createElement("small");
+      detail.textContent = "Планета · " + (planet.ownerNickname || "NEXORA") + " · " + (planet.onlineCount || 0) + " онлайн";
+      meta.append(name, detail);
+      button.append(icon, meta);
+      button.addEventListener("click", () => {
+        closeRoomFlyouts();
+        enterPlanet(planet);
+      });
+      return button;
+    };
+    const builtin = [
+      { id:"starter", key:"starter", name:"Стартовая", description:"Главная площадь NEXORA", ownerNickname:"NEXORA", onlineCount:state.planet==="starter"?state.players.size:0, builtin:true },
+      { id:"club", key:"club", name:"Клуб", description:"Музыка, танцы и общение", ownerNickname:"NEXORA", onlineCount:state.planet==="club"?state.players.size:0, builtin:true },
+      { id:"beach", key:"beach", name:"Пляж", description:"Отдых у океана", ownerNickname:"NEXORA", onlineCount:state.planet==="beach"?state.players.size:0, builtin:true }
+    ].filter(planet => planet.name.toLocaleLowerCase("ru-RU").includes(query.toLocaleLowerCase("ru-RU")));
+    addSection("ПЕРСОНАЖИ", data.characters || [], characterRow);
+    addSection("ПЛАНЕТЫ", [...builtin, ...(data.planets || []).map(planet => ({...planet,key:"custom-"+planet.id,builtin:false}))], planetRow);
+    addSection("МАГАЗИН", data.items || [], itemRow);
+    if (!box.children.length) {
+      const empty = document.createElement("p");
+      empty.textContent = "Ничего не найдено. Попробуй другой запрос.";
+      box.append(empty);
+    }
+  }
+  $("#room-global-search-input")?.addEventListener("input", () => {
+    const input = $("#room-global-search-input");
+    const box = $("#room-global-search-results");
+    const query = input.value.trim();
+    clearTimeout(globalSearchTimer);
+    const sequence = ++globalSearchSequence;
+    if (query.length < 2) {
+      box.replaceChildren();
+      const hint = document.createElement("p");
+      hint.textContent = "Введи минимум 2 символа: ник, ID или название планеты.";
+      box.append(hint);
+      return;
+    }
+    box.textContent = "Ищем персонажей и планеты…";
+    globalSearchTimer = setTimeout(async () => {
+      try {
+        const response = await fetch("/api/social/search?q=" + encodeURIComponent(query), { credentials:"same-origin" });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "Поиск временно недоступен.");
+        if (sequence !== globalSearchSequence) return;
+        renderGlobalSearch(data, query);
+      } catch (error) {
+        if (sequence !== globalSearchSequence) return;
+        box.textContent = error.message;
+      }
+    }, 220);
+  });
+
 
   function closeCompetingPanels(except = "") {
     const panels = ["#profile-menu","#social-panel","#public-profile","#profile-editor","#authority-panel","#shop-panel","#developer-panel","#planets-panel","#room-main-menu","#room-emotions-panel","#room-players-panel","#room-events-panel"];
@@ -1631,19 +1752,34 @@
             const label = document.createElement("strong"); label.textContent = p.nickname + " · ID " + p.id + (p.banned ? " · ЗАБЛОКИРОВАН" : "");
             const detail = document.createElement("span"); detail.textContent = (p.online ? "В сети" : "Не в сети") + " · " + p.planet + " · Koins: " + p.balance;
             row.append(label, detail);
-            const warn = document.createElement("button"); warn.type = "button"; warn.textContent = "Предупредить";
-            warn.addEventListener("click", async () => { const reason = prompt("Причина предупреждения"); if (!reason) return; try { await developerRequest("/players/"+p.id+"/warn",{method:"POST",body:JSON.stringify({reason})}); showToast("Предупреждение выдано."); } catch(error){showToast(error.message);} });
-            row.append(warn);
-            const ban = document.createElement("button"); ban.type = "button"; ban.textContent = p.banned ? "Разблокировать персонажа" : "Заблокировать персонажа";
-            ban.addEventListener("click", async () => {
-              const reason = prompt(p.banned ? "Причина разблокировки" : "Причина блокировки"); if (!reason) return;
-              try {
-                if (p.banned) await developerRequest("/players/"+p.id+"/ban",{method:"DELETE",body:JSON.stringify({reason})});
-                else { const duration = prompt("Срок в часах. Оставь пустым для постоянной блокировки.","24"); if (duration===null) return; await developerRequest("/players/"+p.id+"/ban",{method:"POST",body:JSON.stringify({reason,hours:duration===""?null:Number(duration)})}); }
-                showToast("Действие модерации выполнено."); loadDeveloperTab("players");
-              } catch(error){showToast(error.message);}
-            });
-            row.append(ban);
+            if (developerPermissions.includes("players.warn")) {
+              const warn = document.createElement("button"); warn.type = "button"; warn.textContent = "Предупредить";
+              warn.addEventListener("click", async () => { const reason = prompt("Причина предупреждения"); if (!reason) return; try { await developerRequest("/players/"+p.id+"/warn",{method:"POST",body:JSON.stringify({reason})}); showToast("Предупреждение выдано."); } catch(error){showToast(error.message);} });
+              row.append(warn);
+            }
+            const canBan = developerPermissions.includes("players.ban");
+            const canUnban = developerPermissions.includes("players.unban");
+            if ((!p.banned && canBan) || (p.banned && canUnban)) {
+              const ban = document.createElement("button"); ban.type = "button"; ban.textContent = p.banned ? "🔓 Разблокировать персонажа" : "🔒 Заблокировать персонажа";
+              ban.addEventListener("click", async () => {
+                const reason = prompt(p.banned ? "Причина разблокировки" : "Причина блокировки"); if (!reason?.trim()) return;
+                ban.disabled = true;
+                try {
+                  if (p.banned) {
+                    const result = await developerRequest("/players/"+p.id+"/ban",{method:"DELETE",body:JSON.stringify({reason})});
+                    if (!result.revoked) throw new Error("Активная блокировка не найдена.");
+                    showToast("Персонаж разблокирован. Теперь он может войти в NEXORA.");
+                  } else {
+                    const duration = prompt("Срок в часах. Оставь пустым для постоянной блокировки.","24");
+                    if (duration===null) return;
+                    await developerRequest("/players/"+p.id+"/ban",{method:"POST",body:JSON.stringify({reason,hours:duration===""?null:Number(duration)})});
+                    showToast("Персонаж заблокирован.");
+                  }
+                  loadDeveloperTab("players");
+                } catch(error){showToast(error.message);ban.disabled=false;}
+              });
+              row.append(ban);
+            }
             if (developerPermissions.includes("players.delete")) {
               const remove = document.createElement("button");
               remove.type = "button";
