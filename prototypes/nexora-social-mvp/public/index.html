@@ -22,14 +22,13 @@
           <p class="auth-caption">ВОЗВРАЩЕНИЕ ВО ВСЕЛЕННУЮ</p>
           <label class="field-label" for="recovery-code">Код восстановления</label>
           <input id="recovery-code" maxlength="10" minlength="10" inputmode="text" autocapitalize="none" spellcheck="false" autocomplete="one-time-code" placeholder="Введите 10-символьный код">
-          <button id="login-button" class="primary-button" type="button">Войти в NEXORA <span>→</span></button>
+          <button id="login-button" class="primary-button auth-submit" type="button">Войти <span>→</span></button>
           <button id="show-register" class="text-button" type="button">Нет аккаунта? Создать</button>
         </div>
         <div class="auth-mode hidden" id="register-mode">
           <p class="auth-caption">СОЗДАНИЕ НОВОГО АККАУНТА</p>
           <label class="field-label" for="nickname">Придумай ник</label>
           <input id="nickname" maxlength="18" autocomplete="nickname" placeholder="Например, КосмоКот">
-          <button id="register-button" class="primary-button" type="button">Создать аккаунт <span>✦</span></button>
         <div class="registration-customization">
           <div class="customization-heading">НАСТРОЙ СВОЕГО ПЕРСОНАЖА</div>
           <div class="preview-wrap">
@@ -66,7 +65,8 @@
           </label>
           </div>
         </div>
-          <button id="show-login" class="text-button" type="button">Уже есть аккаунт? Войти по коду</button>
+          <button id="register-button" class="primary-button auth-submit" type="button">Создать аккаунт <span>✦</span></button>
+          <button id="show-login" class="text-button" type="button">Уже есть аккаунт? Войти</button>
         </div>
         <p id="recovery-result" class="recovery-result hidden" role="status"></p>
 
