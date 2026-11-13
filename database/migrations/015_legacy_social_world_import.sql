@@ -29,11 +29,11 @@ CREATE TABLE IF NOT EXISTS planet_bans (
 CREATE TABLE IF NOT EXISTS legacy_social_character_map (
   legacy_account_id BIGINT PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  character_id UUID NOT NULL UNIQUE REFERENCES characters(id) ON DELETE CASCADE
+  character_id UUID NOT NULL UNIQUE
 );
 CREATE TABLE IF NOT EXISTS legacy_social_conversation_map (
   legacy_conversation_id BIGINT PRIMARY KEY,
-  conversation_id UUID NOT NULL UNIQUE REFERENCES conversations(id) ON DELETE CASCADE
+  conversation_id UUID NOT NULL UNIQUE
 );
 CREATE TABLE IF NOT EXISTS legacy_social_inventory (
   legacy_account_id BIGINT NOT NULL,
@@ -253,7 +253,16 @@ BEGIN
 
   EXECUTE $q$
     INSERT INTO user_locations(user_id,planet_id,arrived_at)
-    SELECT u.id,COALESCE(destination.id,starter.id),COALESCE(c.updated_at,NOW())
+    SELECT u.id,
+      CASE WHEN destination.id IS NULL OR NOT destination.is_active OR active_ban.user_id IS NOT NULL
+        OR (destination.access_type='vip' AND destination.owner_user_id IS DISTINCT FROM u.id
+          AND NOT EXISTS (
+            SELECT 1 FROM planet_access pa WHERE pa.planet_id=destination.id AND pa.user_id=u.id
+              AND (pa.expires_at IS NULL OR pa.expires_at>NOW())
+              AND (COALESCE(destination.settings->>'legacy_access_mode','')<>'private' OR pa.access_level='staff')
+          ))
+        THEN starter.id ELSE destination.id END,
+      COALESCE(c.updated_at,NOW())
     FROM nexora_social_world.accounts a
     JOIN users u ON u.legacy_social_account_id=a.id
     LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
@@ -263,7 +272,6 @@ BEGIN
       WHEN 'beach' THEN 'legacy-beach' ELSE c.planet END
     LEFT JOIN planet_bans active_ban ON active_ban.planet_id=destination.id AND active_ban.user_id=u.id
       AND (active_ban.expires_at IS NULL OR active_ban.expires_at>NOW())
-    WHERE active_ban.user_id IS NULL
     ON CONFLICT (user_id) DO NOTHING
   $q$;
 
