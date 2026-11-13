@@ -40,7 +40,7 @@
     });
     box.querySelectorAll("[data-remove-object]").forEach(button=>button.addEventListener("click",async()=>{
       const next=objects.filter((_,index)=>index!==Number(button.dataset.removeObject));
-      try{await save(next)}catch(error){const note=document.createElement("p");note.className="nx-planet-module-note";note.textContent=error.message;box.querySelector("[data-content]").append(note)}
+      try{await save(next)}catch(error){const note=document.createElement("p");note.className="nx-planet-module-note";note.textContent=error.message;box.append(note)}
     }));
   }
   async function openMyPlanets(){
