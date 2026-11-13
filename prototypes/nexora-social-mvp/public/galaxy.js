@@ -26,7 +26,7 @@
   }
   function updateOnline(){const count=players.length;$("#online-count").textContent=count;$("#players-list").replaceChildren(...players.map(p=>{const row=document.createElement("button");row.className="player-row";row.textContent=(p.nickname||"Игрок")+(String(p.id)===String(me.id)?" · Вы":"");row.addEventListener("click",()=>openPlayer(p));return row}))}
   function setPlayers(list){players=list||[];players.forEach(p=>{p.isMe=String(p.id)===String(me.id)});scene.setPlayers(players);scene.centerOn(me.id);updateOnline()}
-  function openPlayer(player){selected=player;const menu=$("#context-menu");menu.hidden=false;menu.style.left=Math.max(8,Math.min(innerWidth-200,innerWidth/2-90))+"px";menu.style.top=Math.max(70,Math.min(innerHeight-220,innerHeight/2-50))+"px";$("#context-title").textContent=player.nickname||"Персонаж";$("#context-move").hidden=String(player.id)!==String(me.id);$("#context-info").hidden=false}
+  function openPlayer(player,clientX=innerWidth/2,clientY=innerHeight/2){selected=player;const menu=$("#context-menu");menu.hidden=false;$("#context-actions").hidden=true;menu.style.left=Math.max(8,Math.min(innerWidth-menu.offsetWidth-8,clientX+14))+"px";menu.style.top=Math.max(62,Math.min(innerHeight-menu.offsetHeight-8,clientY-24))+"px";$("#context-title").textContent=player.nickname||"Персонаж";$("#context-move").hidden=String(player.id)!==String(me.id);$("#context-info").hidden=false}
   function closeContext(){$("#context-menu").hidden=true}
   function openInfo(){if(!selected)return;$("#profile-title").textContent=selected.nickname||"Персонаж";$("#profile-content").textContent=(selected.title||"Новичок")+" · "+(selected.authority||0)+" очков авторитета"+(selected.auraEnabled?" · Аура активна":"");$("#profile-modal").hidden=false;closeContext()}
   function setMoveTarget(x){if(!moveMode)return;moveTarget=x;scene.setCursor(x);$("#move-confirm-bar").hidden=false}
@@ -91,7 +91,7 @@
   socket.on("chat:message",message=>addChat(message));
   socket.on("player:bubble",event=>scene.bubble(event.id,event.text||event.bubble?.text||""));
   socket.on("emotion:played",event=>{const p=players.find(x=>String(x.id)===String(event.id));if(p){p.emotion={type:event.emotion};scene.upsert(p)}});
-  socket.on("player:action:played",event=>{toast(event.from+" "+event.label+" "+event.to)});
+  socket.on("player:action:played",event=>{const actor=players.find(p=>String(p.id)===String(event.fromId)),target=players.find(p=>String(p.id)===String(event.toId));if(actor)scene.bubble(actor.id,event.label);if(target)scene.bubble(target.id,event.label+" тебе");toast(event.from+" "+event.label+" "+event.to)});
   socket.on("profile:updated",p=>{const i=players.findIndex(x=>String(x.id)===String(p.id));if(i>=0)players[i]=p;setPlayers(players)});
 
   $("#chat-form").addEventListener("submit",e=>{e.preventDefault();const input=$("#chat-input"),text=input.value.trim();if(!text)return;socket.emit("chat:send",{text},result=>{if(!result?.ok)toast(result?.error||"Не удалось отправить сообщение")});input.value=""});
@@ -103,13 +103,13 @@
   $("#my-character").addEventListener("click",()=>{const p=players.find(x=>String(x.id)===String(me.id));if(p)openPlayer(p)});
   $("#rejoin").addEventListener("click",()=>{if(socket.connected){socket.disconnect();setTimeout(()=>socket.connect(),180)}else socket.connect()});
   $("#planet-select").addEventListener("change",e=>{const p=planetCatalog.find(x=>x.key===e.target.value);if(p)travelToPlanet(p);else e.target.value=roomPlanet});
-  $("#context-menu").addEventListener("click",e=>{const action=e.target.dataset.action;if(!action)return;if(action==="info")openInfo();if(action==="move"){closeContext();beginMove()}if(action==="emote"){closeContext();socket.emit("emotion:play",{emotion:"wave"})}if(action==="rejoin"){closeContext();$("#rejoin").click()}if(action==="wave"&&selected){if(String(selected.id)===String(me.id))socket.emit("emotion:play",{emotion:"wave"});else socket.emit("player:action",{targetId:selected.id,action:"wave"},r=>{if(!r?.ok)toast(r?.error||"Действие не выполнено")});closeContext()}});
+  $("#context-menu").addEventListener("click",e=>{const choice=e.target.closest("[data-action-choice]");if(choice){playCharacterAction(choice.dataset.actionChoice);return}const action=e.target.closest("[data-action]")?.dataset.action;if(!action)return;if(action==="info")openInfo();if(action==="move"){closeContext();beginMove()}if(action==="actions"){$("#context-actions").hidden=!$("#context-actions").hidden;$("#context-actions-toggle .context-chevron").textContent=$("#context-actions").hidden?"›":"⌄";$("#context-menu").style.top=Math.max(62,Math.min(innerHeight-$("#context-menu").offsetHeight-8,parseFloat($("#context-menu").style.top)||80))+"px"}if(action==="rejoin"){closeContext();$("#rejoin").click()}});
+  function playCharacterAction(action){if(!selected)return;const own=String(selected.id)===String(me.id);if(own){const emotionMap={wave:"wave",smile:"smile",hug:"love",kiss:"kiss",dance:"dance",flower:"love"};socket.emit("emotion:play",{emotion:emotionMap[action]||"smile"},r=>{if(r&&!r.ok)toast(r.error||"Действие не выполнено")})}else{socket.emit("player:action",{targetId:selected.id,action},r=>{if(!r?.ok)toast(r?.error||"Действие не выполнено")})}closeContext()}
   document.addEventListener("click",e=>{if(!e.target.closest("#context-menu")&&!e.target.closest("#scene-viewport"))closeContext()});
   $("#profile-modal").addEventListener("click",e=>{if(e.target===e.currentTarget||e.target.closest("[data-close]"))$("#profile-modal").hidden=true});
   $("#planet-list").addEventListener("click",openPlanetMap);
   $("#planet-map").addEventListener("click",e=>{if(e.target===e.currentTarget||e.target.closest("[data-map-close]"))closePlanetMap();const filter=e.target.closest("[data-map-filter]");if(filter){planetFilter=filter.dataset.mapFilter;document.querySelectorAll("[data-map-filter]").forEach(b=>b.classList.toggle("active",b===filter));renderPlanetMap()}});
   $("#planet-visit").addEventListener("click",()=>travelToPlanet(selectedPlanet));
-  $("#emote").addEventListener("click",()=>socket.emit("emotion:play",{emotion:"dance"}));
   async function start(){
     try{const d=await api("/api/me");me.id=String(d.account.id);me.nickname=d.account.nickname;roomPlanet=d.character.planet||"starter";await loadPlanets();$("#planet-select").value=roomPlanet;socket.connect();$("#connection-state").textContent="Подключение…"}
     catch(error){toast(error.message);$("#connection-state").textContent="Нужен вход";setTimeout(()=>location.href="/",1200)}
