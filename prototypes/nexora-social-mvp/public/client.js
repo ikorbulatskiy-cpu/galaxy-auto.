@@ -266,7 +266,10 @@
   async function submitAuth(endpoint) {
     loginError.textContent = "";
     $("#recovery-result").classList.add("hidden");
-    const payload = { nickname: nicknameInput.value.trim(), avatar: avatarSettings(), recoveryCode: $("#recovery-code").value.trim() };
+    const registering = endpoint.endsWith("/register");
+    const payload = registering
+      ? { nickname: nicknameInput.value.trim(), avatar: avatarSettings() }
+      : { recoveryCode: $("#recovery-code").value.trim() };
     try {
       const response = await fetch(endpoint, {
         method: "POST",
@@ -281,6 +284,8 @@
         box.textContent = "АККАУНТ СОЗДАН. ТВОЙ КОД: " + data.recoveryCode + ". Сохрани его, затем введи этот код в поле выше и нажми «Войти по коду». В комнату ты попадёшь только после проверки кода.";
         box.classList.remove("hidden");
         $("#recovery-code").value = "";
+        $("#register-mode").classList.add("hidden");
+        $("#login-mode").classList.remove("hidden");
         $("#recovery-code").focus();
         return;
       }
@@ -291,6 +296,19 @@
   }
   $("#register-button").addEventListener("click", () => submitAuth("/api/auth/register"));
   $("#login-button").addEventListener("click", () => submitAuth("/api/auth/login"));
+  $("#show-register").addEventListener("click", () => {
+    $("#login-mode").classList.add("hidden");
+    $("#register-mode").classList.remove("hidden");
+    $("#recovery-result").classList.add("hidden");
+    loginError.textContent = "";
+    nicknameInput.focus();
+  });
+  $("#show-login").addEventListener("click", () => {
+    $("#register-mode").classList.add("hidden");
+    $("#login-mode").classList.remove("hidden");
+    loginError.textContent = "";
+    $("#recovery-code").focus();
+  });
 
   socket.on("planet:state", (data) => {
     state.planet = data.planet;
