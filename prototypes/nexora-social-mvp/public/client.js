@@ -19,7 +19,7 @@
   const suits = ["#6d7cff", "#ef6c9b", "#35bca5"];
   const state = {
     me: null, players: new Map(), planet: "starter", selected: null,
-    stars: [], chat: [], width: 0, height: 0, dpr: 1, toastTimer: null
+    stars: [], chat: [], roomEvents: [], unreadEvents: 0, width: 0, height: 0, dpr: 1, toastTimer: null
   };
 
   function avatarSettings() {
@@ -27,7 +27,10 @@
       gender: $("#gender").value,
       skin: $("#skin").value,
       hair: $("#hair").value,
-      suit: $("#suit").value
+      suit: $("#suit").value,
+      hairColor: $("#hair-color").value,
+      shoes: $("#shoes").value,
+      accessory: $("#accessory").value
     };
   }
 
@@ -60,70 +63,39 @@
     target.restore();
   }
 
-  function drawAvatar(target, x, y, scale, avatar, facing = 1, emotion = null) {
-    target.save();
-    target.translate(x, y);
-    target.scale(scale * facing, scale);
-    const skin = avatar?.skin || skins[0];
-    const suit = avatar?.suit || suits[0];
-    const female = avatar?.gender === "female";
-    const hair = avatar?.hair || "short";
-
-    target.fillStyle = "#080b20";
-    target.beginPath(); target.ellipse(0, 39, 18, 5, 0, 0, Math.PI * 2); target.fill();
-
-    target.fillStyle = "#202a54";
-    target.fillRect(-10, 21, 7, 17);
-    target.fillRect(3, 21, 7, 17);
-    target.fillStyle = "#e7eaff";
-    target.fillRect(-11, 36, 9, 4);
-    target.fillRect(3, 36, 9, 4);
-
-    target.fillStyle = suit;
-    target.beginPath();
-    if (female) {
-      target.moveTo(-12, -1); target.lineTo(12, -1); target.lineTo(17, 22); target.lineTo(-17, 22);
-    } else {
-      target.roundRect(-14, -2, 28, 25, 6);
-    }
-    target.closePath(); target.fill();
-
-    target.strokeStyle = skin; target.lineWidth = 6; target.lineCap = "round";
-    target.beginPath(); target.moveTo(-12, 2); target.lineTo(-18, 17); target.moveTo(12, 2); target.lineTo(18, 16); target.stroke();
-
-    target.fillStyle = skin;
-    target.beginPath(); target.arc(0, -14, 13, 0, Math.PI * 2); target.fill();
-
-    target.fillStyle = "#39233a";
-    if (hair === "long") {
-      target.beginPath(); target.arc(0, -17, 14, Math.PI, Math.PI * 2); target.lineTo(14, 10); target.lineTo(9, 5); target.lineTo(9, -9); target.lineTo(-9, -9); target.lineTo(-9, 7); target.lineTo(-14, 10); target.closePath(); target.fill();
-    } else if (hair === "spiky") {
-      target.beginPath(); target.moveTo(-13,-16); target.lineTo(-14,-27); target.lineTo(-5,-22); target.lineTo(0,-31); target.lineTo(5,-22); target.lineTo(14,-27); target.lineTo(13,-12); target.closePath(); target.fill();
-    } else {
-      target.beginPath(); target.arc(0, -17, 14, Math.PI, Math.PI * 2); target.lineTo(13, -11); target.lineTo(-13, -11); target.closePath(); target.fill();
-    }
-    target.fillStyle = "#25203b";
-    target.beginPath(); target.arc(-4, -14, 1.3, 0, Math.PI * 2); target.arc(4, -14, 1.3, 0, Math.PI * 2); target.fill();
-    target.strokeStyle = "#8b4d50"; target.lineWidth = 1.2;
-    target.beginPath(); target.arc(0, -10, 3, .2, Math.PI - .2); target.stroke();
-
-    if (emotion === "wave") {
-      target.strokeStyle = skin; target.lineWidth = 5; target.beginPath(); target.moveTo(14, 0); target.lineTo(19, -15); target.stroke();
-    }
-    if (emotion === "kiss") {
-      target.fillStyle = "#ff8bb9"; target.font = "18px sans-serif"; target.fillText("♥", 14, -25);
-    }
-    if (emotion === "dance") {
-      target.strokeStyle = "#f9d77b"; target.lineWidth = 3; target.beginPath(); target.moveTo(-17, 3); target.lineTo(-24, -9); target.moveTo(15, 3); target.lineTo(23, -8); target.stroke();
-    }
-    target.restore();
+  function drawAvatar(target,x,y,scale,avatar,facing=1,emotion=null){
+    const skin=avatar?.skin||skins[0],suit=avatar?.suit||suits[0],female=avatar?.gender==="female",hair=avatar?.hair||"short",hairColor=avatar?.hairColor||"#30233d",shoes=avatar?.shoes||"sneakers",accessory=avatar?.accessory||"none",time=Date.now()/1000,bob=emotion==="dance"?Math.sin(time*9)*3:Math.sin(time*2.2)*1.1;
+    target.save();target.translate(x,y+bob);target.scale(scale*facing,scale);
+    target.fillStyle="rgba(3,7,24,.48)";target.beginPath();target.ellipse(0,40,19,5,0,0,Math.PI*2);target.fill();
+    target.fillStyle="#20294f";target.beginPath();target.roundRect(-11,19,8,19,3);target.roundRect(3,19,8,19,3);target.fill();
+    target.fillStyle=shoes==="boots"?"#30364f":shoes==="heels"?"#8f466f":"#dfe7ff";target.beginPath();target.roundRect(-13,35,11,shoes==="boots"?7:5,2);target.roundRect(2,35,12,shoes==="boots"?7:5,2);target.fill();
+    target.strokeStyle=skin;target.lineCap="round";target.lineWidth=7;target.beginPath();target.moveTo(-11,1);target.lineTo(-18,17);target.moveTo(11,1);target.lineTo(18,16);target.stroke();
+    target.strokeStyle=suit;target.lineWidth=8;target.beginPath();target.moveTo(-12,1);target.lineTo(-16,10);target.moveTo(12,1);target.lineTo(16,9);target.stroke();
+    target.fillStyle=skin;target.beginPath();target.arc(-18,18,3.5,0,Math.PI*2);target.arc(18,17,3.5,0,Math.PI*2);target.fill();
+    target.fillStyle="rgba(3,7,24,.38)";target.beginPath();target.roundRect(-15,-5,30,30,8);target.fill();target.fillStyle=suit;target.beginPath();
+    if(female){target.moveTo(-12,-3);target.lineTo(12,-3);target.lineTo(18,23);target.lineTo(-18,23);}else target.roundRect(-14,-4,28,28,7);target.closePath();target.fill();
+    target.fillStyle="rgba(255,255,255,.22)";target.beginPath();target.roundRect(-9,-1,18,3,2);target.fill();target.fillStyle="rgba(8,14,39,.3)";target.fillRect(-2,2,4,17);
+    target.fillStyle="#e5d8ff";target.beginPath();target.moveTo(-4,-2);target.lineTo(0,5);target.lineTo(4,-2);target.closePath();target.fill();
+    target.fillStyle=skin;target.beginPath();target.roundRect(-4,-10,8,10,3);target.fill();target.beginPath();target.arc(-12,-15,3.2,0,Math.PI*2);target.arc(12,-15,3.2,0,Math.PI*2);target.fill();target.beginPath();target.ellipse(0,-16,12.5,14.5,0,0,Math.PI*2);target.fill();
+    target.fillStyle="rgba(255,255,255,.18)";target.beginPath();target.ellipse(-4,-22,4,3,-.4,0,Math.PI*2);target.fill();target.fillStyle="#25203b";target.beginPath();target.ellipse(-4.2,-16,1.35,2,0,0,Math.PI*2);target.ellipse(4.2,-16,1.35,2,0,0,Math.PI*2);target.fill();
+    target.strokeStyle="#8b4d50";target.lineWidth=1.2;target.beginPath();if(emotion==="sad")target.arc(0,-8,3,Math.PI+.2,Math.PI*2-.2);else if(emotion==="surprise")target.ellipse(0,-9,1.6,2.2,0,0,Math.PI*2);else target.arc(0,-11,3,.2,Math.PI-.2);target.stroke();
+    target.fillStyle=hairColor;
+    if(hair==="long"){target.beginPath();target.arc(0,-19,14,Math.PI,Math.PI*2);target.lineTo(14,9);target.quadraticCurveTo(9,13,8,4);target.lineTo(8,-9);target.lineTo(-8,-9);target.lineTo(-8,4);target.quadraticCurveTo(-10,13,-14,9);target.closePath();target.fill();}
+    else if(hair==="spiky"){target.beginPath();target.moveTo(-13,-17);target.lineTo(-15,-27);target.lineTo(-6,-23);target.lineTo(0,-32);target.lineTo(6,-23);target.lineTo(15,-27);target.lineTo(13,-12);target.closePath();target.fill();}
+    else{target.beginPath();target.arc(0,-19,14,Math.PI,Math.PI*2);target.lineTo(13,-10);target.quadraticCurveTo(6,-16,0,-12);target.quadraticCurveTo(-7,-18,-13,-10);target.closePath();target.fill();}
+    target.strokeStyle="rgba(255,255,255,.16)";target.lineWidth=1;target.beginPath();target.arc(-2,-20,10,Math.PI*1.08,Math.PI*1.7);target.stroke();target.fillStyle="#f4d88b";target.beginPath();target.arc(0,7,1.5,0,Math.PI*2);target.fill();
+    if(female){target.fillStyle="#f4b5dc";target.beginPath();target.arc(10,-27,2.2,0,Math.PI*2);target.fill();}
+    if(accessory==="glasses"){target.strokeStyle="#26324f";target.lineWidth=1.5;target.beginPath();target.roundRect(-8,-19,7,6,2);target.roundRect(1,-19,7,6,2);target.moveTo(-1,-16);target.lineTo(1,-16);target.stroke();}
+    else if(accessory==="headphones"){target.strokeStyle="#aab7e8";target.lineWidth=3;target.beginPath();target.arc(0,-17,15,Math.PI,Math.PI*2);target.stroke();target.fillStyle="#7788c9";target.fillRect(-15,-17,4,8);target.fillRect(11,-17,4,8);}
+    else if(accessory==="crown"){target.fillStyle="#ffd76a";target.beginPath();target.moveTo(-9,-28);target.lineTo(-7,-37);target.lineTo(-2,-32);target.lineTo(2,-38);target.lineTo(7,-32);target.lineTo(9,-28);target.closePath();target.fill();}
+    const icons={wave:"👋",kiss:"💋",dance:"♪",smile:"😊",sad:"😢",laugh:"😂",surprise:"😮",love:"💗",angry:"💢",blush:"☺",sleep:"💤",music:"♫"};if(emotion&&icons[emotion]){target.font="15px sans-serif";target.textAlign="center";target.fillText(icons[emotion],18,-31);}target.restore();
   }
 
   function preview() {
     previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
     drawAvatar(previewCtx, 90, 130, 2.5, avatarSettings(), 1, null);
   }
-  ["gender", "skin", "hair", "suit"].forEach((id) => $("#" + id).addEventListener("change", preview));
+  ["gender","skin","hair","suit","hair-color","shoes","accessory"].forEach(id=>$("#"+id).addEventListener("change",preview));
   preview();
 
   function showToast(message) {
@@ -133,6 +105,10 @@
     clearTimeout(state.toastTimer);
     state.toastTimer = setTimeout(() => toast.classList.add("hidden"), 2600);
   }
+
+  function renderRoomEvents(){const list=$("#room-event-list");if(!list)return;list.replaceChildren();if(!state.roomEvents.length){const empty=document.createElement("p");empty.className="room-event-empty";empty.textContent="Здесь появятся события комнаты.";list.append(empty);}state.roomEvents.forEach(event=>{const row=document.createElement("article");row.className="room-event-row";const icon=document.createElement("span");icon.className="room-event-icon";icon.textContent=event.icon||"✦";const body=document.createElement("div");const title=document.createElement("strong");title.textContent=event.title;const detail=document.createElement("p");detail.textContent=event.detail;const time=document.createElement("time");time.textContent=new Date(event.time).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});body.append(title,detail,time);row.append(icon,body);list.append(row);});const badge=$("#room-event-count");if(badge){badge.textContent=String(state.unreadEvents);badge.classList.toggle("hidden",state.unreadEvents<1);}}
+  function pushRoomEvent(title,detail,icon="✦"){state.roomEvents.unshift({title:String(title||"Событие"),detail:String(detail||""),icon,time:Date.now()});if(state.roomEvents.length>40)state.roomEvents.length=40;if($("#room-events-panel")?.classList.contains("hidden"))state.unreadEvents+=1;renderRoomEvents();}
+  function setConnectionStatus(status,label){const pill=$("#connection-status");if(!pill)return;pill.dataset.state=status;const text=pill.querySelector("span");if(text)text.textContent=label;}
 
   function addHistory(message, whisper = false) {
     state.chat.push({ ...message, whisper });
@@ -149,7 +125,8 @@
       const name = document.createElement("button");
       name.type = "button";
       name.className = "history-author";
-      name.textContent = message.whisper ? "Шёпот" : message.nickname;
+      name.textContent = message.whisper ? "Шёпот" : (message.system ? "✦ NEXORA" : message.nickname);
+      if(message.system)name.classList.add("system-author");
       if (!message.whisper) name.addEventListener("click", () => {
         const player = [...state.players.values()].find(item => item.nickname === message.nickname);
         if (player) openProfile(player);
@@ -188,6 +165,8 @@
     return h * .82 - (1 - normalized * normalized) * h * .16;
   }
 
+  function drawPlanetBackdrop(){const w=state.width,h=state.height,t=Date.now()/1000;ctx.save();if(state.planet==="starter"){const moon=ctx.createRadialGradient(w*.76,h*.25,4,w*.76,h*.25,Math.min(w,h)*.16);moon.addColorStop(0,"rgba(210,220,255,.9)");moon.addColorStop(.72,"rgba(135,151,222,.24)");moon.addColorStop(1,"rgba(135,151,222,0)");ctx.fillStyle=moon;ctx.beginPath();ctx.arc(w*.76,h*.25,Math.min(w,h)*.16,0,Math.PI*2);ctx.fill();for(let i=0;i<12;i++){const bw=24+(i%4)*13,bh=h*(.12+((i*7)%5)*.035),bx=i*w/11-8;ctx.fillStyle=i%2?"rgba(23,34,79,.72)":"rgba(31,42,93,.78)";ctx.fillRect(bx,h*.69-bh,bw,bh);ctx.fillStyle="rgba(151,190,255,.38)";for(let wy=h*.69-bh+9;wy<h*.68;wy+=13)for(let wx=bx+6;wx<bx+bw-4;wx+=11)ctx.fillRect(wx,wy,3,4);}}else if(state.planet==="club"){for(let i=0;i<5;i++){const x=w*(.12+i*.19),top=h*(.16+(i%2)*.1);ctx.globalAlpha=.16+Math.sin(t*1.8+i)*.05;ctx.strokeStyle=i%2?"#ff75d1":"#68eaff";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x+Math.sin(t+i)*w*.08,h*.68);ctx.stroke();}ctx.globalAlpha=.3;ctx.fillStyle="#f36acb";ctx.beginPath();ctx.ellipse(w*.5,h*.61,w*.36,12,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;for(let i=0;i<7;i++){ctx.fillStyle=i%2?"rgba(16,21,57,.78)":"rgba(35,18,65,.8)";ctx.fillRect(i*w/7,h*(.47+(i%3)*.035),w/10,h*.2);}}else{const sun=ctx.createRadialGradient(w*.78,h*.22,2,w*.78,h*.22,Math.min(w,h)*.2);sun.addColorStop(0,"rgba(255,239,183,.92)");sun.addColorStop(.55,"rgba(255,196,133,.25)");sun.addColorStop(1,"rgba(255,196,133,0)");ctx.fillStyle=sun;ctx.beginPath();ctx.arc(w*.78,h*.22,Math.min(w,h)*.2,0,Math.PI*2);ctx.fill();ctx.fillStyle="rgba(255,255,255,.12)";for(let i=0;i<4;i++){const x=((i*.31+t*.012)%1.25-.1)*w,y=h*(.25+i*.075);ctx.beginPath();ctx.ellipse(x,y,34,8,0,0,Math.PI*2);ctx.ellipse(x+22,y-4,22,7,0,0,Math.PI*2);ctx.fill();}for(const px of [w*.12,w*.9]){ctx.strokeStyle="rgba(29,67,61,.78)";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(px,h*.73);ctx.quadraticCurveTo(px+18,h*.48,px+2,h*.34);ctx.stroke();for(let j=0;j<5;j++){ctx.strokeStyle="rgba(33,89,75,.88)";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(px+2,h*.36);ctx.quadraticCurveTo(px+(j-2)*15,h*.28,px+(j-2)*27,h*.34);ctx.stroke();}}ctx.fillStyle="rgba(116,222,220,.18)";ctx.fillRect(0,h*.62,w,h*.07);ctx.fillStyle="rgba(255,255,255,.22)";for(let i=0;i<8;i++){const x=((i*.17+t*.02)%1.15-.05)*w;ctx.fillRect(x,h*(.64+(i%3)*.018),28,1);}}ctx.restore();}
+
   function drawScene() {
     if (gameScreen.classList.contains("hidden")) return;
     const w = state.width, h = state.height;
@@ -203,6 +182,7 @@
       ctx.beginPath(); ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2); ctx.fill();
     });
     ctx.globalAlpha = 1;
+    drawPlanetBackdrop();
 
     const glow = ctx.createRadialGradient(w / 2, h * .8, 8, w / 2, h * .8, w * .7);
     glow.addColorStop(0, palette.glow + "44");
@@ -258,11 +238,13 @@
       }
       drawAura(ctx, drawX, y + moveOffset, .95, player.auraType, player.auraEnabled);
       drawAvatar(ctx, drawX, y + moveOffset, .95, player.avatar, player.facing || 1, emotion);
+      if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20,y-58-Math.sin(Date.now()/120)*3);ctx.restore();}
       ctx.textAlign = "center";
       ctx.font = isMe ? "bold 11px sans-serif" : "10px sans-serif";
       ctx.fillStyle = isMe ? "#fff1a8" : "#ffffff";
       ctx.shadowColor = "#080b20"; ctx.shadowBlur = 5;
       ctx.fillText(player.nickname, drawX, baseY + 13);
+      if(player.title){ctx.font="bold 8px sans-serif";ctx.fillStyle="#bfcaff";ctx.fillText(player.title.toUpperCase(),drawX,baseY+24);}
       ctx.shadowBlur = 0;
       ctx.textAlign = "start";
     });
@@ -295,6 +277,8 @@
         }
         state.me = result.player;
         state.planet = result.player.planet;
+        setConnectionStatus("online","На связи");
+        pushRoomEvent("Добро пожаловать","Вы вошли на планету "+(PLANETS[state.planet]?.name||state.planet)+".","✦");
         loginScreen.classList.add("hidden");
         gameScreen.classList.remove("hidden");
         $("#planet-title").textContent = PLANETS[state.planet].name;
@@ -366,15 +350,8 @@
     $("#planet-title").textContent = PLANETS[state.planet].name;
     updateOnline();
   });
-  socket.on("player:joined", (player) => {
-    state.players.set(player.id, { ...player, renderX: player.x });
-    updateOnline();
-  });
-  socket.on("player:left", ({ id }) => {
-    state.players.delete(id);
-    updateOnline();
-    if (state.selected === id) closeProfile();
-  });
+  socket.on("player:joined",player=>{state.players.set(player.id,{...player,renderX:player.x});updateOnline();pushRoomEvent("Игрок вошёл",player.nickname+" присоединился к планете.","✦");});
+  socket.on("player:left",({id})=>{const departed=state.players.get(id);state.players.delete(id);updateOnline();if(departed)pushRoomEvent("Игрок вышел",departed.nickname+" покинул планету.","↗");if(state.selected===id)closeProfile();});
   socket.on("player:moved", ({ id, x }) => {
     const player = state.players.get(id);
     if (!player) return;
@@ -388,7 +365,8 @@
     const player = state.players.get(id);
     if (player) player.bubble = bubble;
   });
-  socket.on("chat:message", (message) => addHistory(message));
+  socket.on("chat:message",message=>{addHistory(message);if(!message.system&&String(message.playerId)!==String(state.me?.id))pushRoomEvent("Новое сообщение",message.nickname+": "+message.text,"💬");});
+  socket.on("player:action:played",event=>{const icon=({wave:"👋",smile:"😊",hug:"🤗",kiss:"💋",dance:"💃",flower:"🌹"})[event.action]||"✦";[event.fromId,event.toId].forEach(id=>{const p=state.players.get(String(id));if(p)p.action={icon,until:Date.now()+1900};});pushRoomEvent("Социальное действие",event.from+" · "+event.label+" · "+event.to,icon);});
   socket.on("emotion:played", ({ id, emotion }) => {
     const player = state.players.get(id);
     if (player) {
@@ -399,9 +377,10 @@
   });
   socket.on("whisper:received", (message) => {
     addHistory({ nickname: "От " + message.from, text: message.text, time: message.time }, true);
+    pushRoomEvent("Личное сообщение","Шёпот от "+message.from,"💌");
     showToast("💌 Шёпот от " + message.from + ": " + message.text);
   });
-  socket.on("whisper:sent", ({ to }) => showToast("Шёпот отправлен игроку " + to));
+  socket.on("whisper:sent",({to})=>{pushRoomEvent("Шёпот отправлен","Сообщение для "+to,"💌");showToast("Шёпот отправлен игроку "+to);});
   socket.on("gift:received", (event) => {
     const el = document.createElement("span");
     el.className = "gift-fly";
@@ -409,6 +388,7 @@
     el.style.setProperty("--dx", (Math.random() * 100 - 50) + "px");
     $("#gift-layer").append(el);
     setTimeout(() => el.remove(), 1300);
+    pushRoomEvent("Подарок",event.from+" подарил "+event.icon+" игроку "+event.to,"🎁");
     if (event.toId === state.me?.id) {
       const me = state.players.get(state.me?.id);
       if (me) me.authority += event.authorityAdded;
@@ -427,7 +407,7 @@
     if (state.selected === player.id) $("#profile-rank").textContent = (player.title || "Новичок") + " · Авторитет " + player.authority;
   });
   socket.on("friend:result", ({ nickname, already }) => showToast(already ? nickname + " уже в друзьях" : nickname + " добавлен в друзья"));
-  socket.on("friend:notice", ({ nickname }) => showToast(nickname + " добавил вас в друзья"));
+  socket.on("friend:notice",({nickname})=>{pushRoomEvent("Новый друг",nickname+" добавил вас в друзья.","⭐");showToast(nickname+" добавил вас в друзья");});
 
   canvas.addEventListener("pointerdown", (event) => {
     const rect = canvas.getBoundingClientRect();
@@ -467,35 +447,11 @@
     renderRoomPlayers();
   }
 
-  function renderRoomPlayers() {
-    const box = $("#room-player-list");
-    if (!box) return;
-    const players = [...state.players.values()].sort((a,b) => {
-      if (String(a.id) === String(state.me?.id)) return -1;
-      if (String(b.id) === String(state.me?.id)) return 1;
-      return String(a.nickname).localeCompare(String(b.nickname),"ru");
-    });
-    $("#room-player-count").textContent = String(players.length);
-    box.replaceChildren();
-    if (!players.length) {
-      const empty = document.createElement("p"); empty.className = "developer-muted"; empty.textContent = "В комнате пока никого нет."; box.append(empty); return;
-    }
-    players.forEach(player => {
-      const row = document.createElement("button"); row.type = "button";
-      row.className = "room-player-row" + (String(state.selected) === String(player.id) ? " selected" : "");
-      const avatar = document.createElement("span"); avatar.className = "room-player-avatar"; avatar.textContent = String(player.id) === String(state.me?.id) ? "✦" : "●";
-      const meta = document.createElement("span"); meta.className = "room-player-meta";
-      const name = document.createElement("strong"); name.textContent = player.nickname + (String(player.id) === String(state.me?.id) ? " · Вы" : "");
-      const rank = document.createElement("small"); rank.textContent = (player.title || "Новичок") + (player.auraEnabled ? " · Аура активна" : "");
-      meta.append(name,rank);
-      const status = document.createElement("i"); status.className = "room-player-status";
-      row.append(avatar,meta,status); row.addEventListener("click",() => { openProfile(player); closeRoomFlyouts("players"); });
-      box.append(row);
-    });
-  }
+  function renderRoomPlayers(){const box=$("#room-player-list");if(!box)return;const query=($("#room-player-search")?.value||"").trim().toLocaleLowerCase("ru-RU");const rows=[...state.players.values()].filter(p=>!query||p.nickname.toLocaleLowerCase("ru-RU").includes(query)).sort((a,b)=>{if(String(a.id)===String(state.me?.id))return -1;if(String(b.id)===String(state.me?.id))return 1;return String(a.nickname).localeCompare(String(b.nickname),"ru");});$("#room-player-count").textContent=String(state.players.size);box.replaceChildren();if(!rows.length){const empty=document.createElement("p");empty.className="developer-muted";empty.textContent=query?"Игроки не найдены.":"В комнате пока никого нет.";box.append(empty);return;}rows.forEach(player=>{const row=document.createElement("button");row.type="button";row.className="room-player-row"+(String(state.selected)===String(player.id)?" selected":"");const avatar=document.createElement("canvas");avatar.className="room-player-avatar";avatar.width=64;avatar.height=72;drawAvatar(avatar.getContext("2d"),32,54,.78,player.avatar,1,null);const meta=document.createElement("span");meta.className="room-player-meta";const name=document.createElement("strong");name.textContent=player.nickname+(String(player.id)===String(state.me?.id)?" · Вы":"");const rank=document.createElement("small");rank.textContent=(player.title||"Новичок")+(player.auraEnabled?" · Аура активна":"");meta.append(name,rank);const status=document.createElement("i");status.className="room-player-status";row.append(avatar,meta,status);row.addEventListener("click",()=>{openProfile(player);closeRoomFlyouts("players");});box.append(row);});}
+  $("#room-player-search")?.addEventListener("input",renderRoomPlayers);
 
   function closeRoomFlyouts(except = "") {
-    const panels = {menu:"#room-main-menu",emotions:"#room-emotions-panel",players:"#room-players-panel"};
+    const panels = {menu:"#room-main-menu",emotions:"#room-emotions-panel",players:"#room-players-panel",events:"#room-events-panel"};
     Object.entries(panels).forEach(([key,selector]) => {
       if (key !== except) $(selector).classList.add("hidden");
       const button = document.querySelector('[data-room-toggle="'+key+'"]');
@@ -503,12 +459,13 @@
     });
   }
   function toggleRoomFlyout(name) {
-    const panels = {menu:"#room-main-menu",emotions:"#room-emotions-panel",players:"#room-players-panel"};
+    const panels = {menu:"#room-main-menu",emotions:"#room-emotions-panel",players:"#room-players-panel",events:"#room-events-panel"};
     const panel = $(panels[name]); const shouldOpen = panel.classList.contains("hidden");
     closeRoomFlyouts(shouldOpen ? name : "");
     panel.classList.toggle("hidden",!shouldOpen);
     const button = document.querySelector('[data-room-toggle="'+name+'"]');
     if (button) button.setAttribute("aria-expanded",String(shouldOpen));
+    if(name==="events"&&shouldOpen){state.unreadEvents=0;renderRoomEvents();}
   }
   document.querySelectorAll("[data-room-toggle]").forEach(button => button.addEventListener("click",() => {
     const name = button.dataset.roomToggle;
@@ -545,12 +502,14 @@
     ["#dm-open-button","#whisper-button","#gift-button","#friend-button"].forEach(selector => $(selector).classList.toggle("hidden", ownProfile));
     $("#my-profile-context").classList.toggle("hidden", !ownProfile);
     $("#profile-menu").classList.remove("hidden");
+    $("#character-action-list").classList.toggle("hidden",ownProfile);
     $("#gift-options").classList.add("hidden");
     renderRoomPlayers();
   }
   function closeProfile() {
     state.selected = null;
     $("#profile-menu").classList.add("hidden");
+    $("#character-action-list").classList.add("hidden");
     $("#my-profile-context").classList.add("hidden");
     ["#dm-open-button","#whisper-button","#gift-button","#friend-button"].forEach(selector => $(selector).classList.remove("hidden"));
     renderRoomPlayers();
@@ -584,6 +543,8 @@
     } catch (error) { showToast(error.message); }
     closeProfile();
   });
+  document.querySelectorAll("[data-character-action]").forEach(button=>button.addEventListener("click",()=>{const targetId=state.selected;if(!targetId||String(targetId)===String(state.me?.id))return;socket.emit("player:action",{targetId,action:button.dataset.characterAction},result=>{if(!result?.ok)showToast(result?.error||"Действие не выполнено.");else showToast("Действие отправлено.");});}));
+
   document.querySelectorAll("[data-gift]").forEach((button) => {
     button.addEventListener("click", () => {
       if (state.selected) socket.emit("gift:send", { targetId: state.selected, gift: button.dataset.gift }, (result) => {
@@ -624,6 +585,7 @@
       state.players.clear();
       state.selected = null;
       state.chat = [];
+      state.roomEvents=[];state.unreadEvents=0;renderRoomEvents();
       $("#planet-picker").classList.add("hidden");
       $("#chat-drawer").classList.add("hidden");
       $("#profile-menu").classList.add("hidden");
@@ -648,12 +610,10 @@
   $("#history-button").addEventListener("click", () => $("#chat-drawer").classList.toggle("hidden"));
   $("#close-history").addEventListener("click", () => $("#chat-drawer").classList.add("hidden"));
 
-  socket.on("connect_error", () => {
-    if (!gameScreen.classList.contains("hidden")) showToast("Потеряно соединение с сервером.");
-  });
-  socket.on("disconnect", () => {
-    if (!gameScreen.classList.contains("hidden")) showToast("Соединение прервано. Перезагрузите страницу для входа снова.");
-  });
+  socket.on("connect",()=>setConnectionStatus("online","На связи"));
+  socket.on("reconnect_attempt",()=>setConnectionStatus("reconnecting","Переподключение"));
+  socket.on("connect_error",()=>{setConnectionStatus("offline","Нет соединения");if(!gameScreen.classList.contains("hidden")){pushRoomEvent("Соединение потеряно","Пытаемся восстановить подключение.","⚠️");showToast("Потеряно соединение с сервером.");}});
+  socket.on("disconnect",()=>{setConnectionStatus("reconnecting","Переподключение");if(!gameScreen.classList.contains("hidden")){pushRoomEvent("Переподключение","Соединение с сервером прервано.","↻");showToast("Соединение прервано. Выполняется переподключение.");}});
 
 
 
@@ -664,14 +624,17 @@
       gender: $("#edit-gender").value,
       skin: $("#edit-skin").value,
       hair: $("#edit-hair").value,
-      suit: $("#edit-suit").value
+      suit: $("#edit-suit").value,
+      hairColor: $("#edit-hair-color").value,
+      shoes: $("#edit-shoes").value,
+      accessory: $("#edit-accessory").value
     };
   }
   function drawProfilePreview() {
     profileCtx.clearRect(0, 0, profileCanvas.width, profileCanvas.height);
     drawAvatar(profileCtx, 90, 96, 1.8, editorAvatarSettings(), 1, null);
   }
-  ["edit-gender", "edit-skin", "edit-hair", "edit-suit"].forEach(id => $("#" + id).addEventListener("change", drawProfilePreview));
+  ["edit-gender","edit-skin","edit-hair","edit-suit","edit-hair-color","edit-shoes","edit-accessory"].forEach(id=>$("#"+id).addEventListener("change",drawProfilePreview));
 
   async function openMyProfile() {
     const panel = $("#profile-editor");
@@ -702,6 +665,9 @@
       $("#edit-skin").value = avatar.skin || skins[0];
       $("#edit-hair").value = avatar.hair || "short";
       $("#edit-suit").value = avatar.suit || suits[0];
+      $("#edit-hair-color").value = avatar.hairColor || "#30233d";
+      $("#edit-shoes").value = avatar.shoes || "sneakers";
+      $("#edit-accessory").value = avatar.accessory || "none";
       drawProfilePreview();
       save.disabled = false;
     } catch (error) {

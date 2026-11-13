@@ -26,7 +26,7 @@ const GIFTS = {
   cocktail: { name: "Коктейль", icon: "🍹", authority: 7 },
   heart: { name: "Сердце", icon: "💖", authority: 10 }
 };
-const EMOTIONS = ["wave", "kiss", "dance"];
+const EMOTIONS = ["wave","kiss","dance","smile","sad","laugh","surprise","love","angry","blush","sleep","music"];
 const players = new Map();
 
 app.use(express.json({ limit: "32kb" }));
@@ -88,13 +88,18 @@ function cleanText(value, maxLength) {
 function normalizeAvatar(input) {
   const allowed = {
     gender: ["male", "female"], skin: ["#f4c7a1", "#c9875b", "#75452f"],
-    hair: ["short", "long", "spiky"], suit: ["#6d7cff", "#ef6c9b", "#35bca5"]
+    hair: ["short", "long", "spiky"], suit: ["#6d7cff", "#ef6c9b", "#35bca5"],
+    hairColor: ["#30233d", "#6b432c", "#e5c07b", "#e9eef8", "#bd5de5"],
+    shoes: ["sneakers", "boots", "heels"], accessory: ["none", "glasses", "headphones", "crown"]
   };
   return {
     gender: allowed.gender.includes(input?.gender) ? input.gender : "male",
     skin: allowed.skin.includes(input?.skin) ? input.skin : allowed.skin[0],
     hair: allowed.hair.includes(input?.hair) ? input.hair : "short",
-    suit: allowed.suit.includes(input?.suit) ? input.suit : allowed.suit[0]
+    suit: allowed.suit.includes(input?.suit) ? input.suit : allowed.suit[0],
+    hairColor: allowed.hairColor.includes(input?.hairColor) ? input.hairColor : allowed.hairColor[0],
+    shoes: allowed.shoes.includes(input?.shoes) ? input.shoes : "sneakers",
+    accessory: allowed.accessory.includes(input?.accessory) ? input.accessory : "none"
   };
 }
 function publicPlayer(player) {
@@ -189,8 +194,22 @@ io.on("connection", (socket) => {
   socket.on("emotion:play", (payload) => {
     const player = players.get(socket.id);
     if (!player || !EMOTIONS.includes(payload?.emotion)) return;
-    player.emotion = { type: payload.emotion, until: Date.now() + 1800 };
+    const now = Date.now();
+    if (now - (player.lastEmotionAt || 0) < 350) return;
+    player.lastEmotionAt = now;
+    player.emotion = { type: payload.emotion, until: now + 1800 };
     io.to(roomName(player.planet)).emit("emotion:played", { id: player.id, emotion: payload.emotion });
+  });
+
+  socket.on("player:action",(payload,ack=()=>{})=>{
+    const sender=players.get(socket.id),target=[...players.values()].find(p=>p.id===String(payload?.targetId||"")),action=String(payload?.action||"");
+    const labels={wave:"поприветствовал(а)",smile:"улыбнулся(ась)",hug:"обнял(а)",kiss:"отправил(а) воздушный поцелуй",dance:"пригласил(а) танцевать",flower:"подарил(а) цветок"};
+    if(!sender||!target||sender.id===target.id||sender.planet!==target.planet||!Object.hasOwn(labels,action))return ack({ok:false,error:"Это действие сейчас недоступно."});
+    const now=Date.now();if(now-(sender.lastActionAt||0)<1200)return ack({ok:false,error:"Подождите перед следующим действием."});sender.lastActionAt=now;
+    const event={fromId:sender.id,toId:target.id,from:sender.nickname,to:target.nickname,action,label:labels[action],time:now};
+    io.to(roomName(sender.planet)).emit("player:action:played",event);
+    io.to(roomName(sender.planet)).emit("chat:message",{id:"action-"+now+"-"+sender.id,playerId:sender.id,nickname:"NEXORA",text:sender.nickname+" "+labels[action]+" "+target.nickname+".",time:now,system:true});
+    ack({ok:true});
   });
 
   socket.on("whisper:send", (payload, ack = () => {}) => {
