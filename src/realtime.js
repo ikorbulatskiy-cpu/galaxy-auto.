@@ -95,8 +95,17 @@ function attachRealtime(server) {
   connectListener();
   const cleanup = setInterval(async () => {
     try {
-      const stale = await pool.query("DELETE FROM room_presence WHERE connected_at < NOW() - INTERVAL '2 minutes' RETURNING room_id,user_id,connection_id");
-      for (const row of stale.rows) publish({ type: "presence", action: "left", roomId: row.room_id, userId: row.user_id, connectionId: row.connection_id });
+      const stale = await pool.query(`WITH expired AS (
+        SELECT rp.connection_id,NOT COALESCE(gp.invisible,FALSE) AS announce
+        FROM room_presence rp LEFT JOIN galaxy_preferences gp ON gp.user_id=rp.user_id
+        WHERE rp.connected_at < NOW() - INTERVAL '2 minutes'
+      ), removed AS (
+        DELETE FROM room_presence rp USING expired e
+        WHERE rp.connection_id=e.connection_id
+        RETURNING rp.room_id,rp.user_id,rp.connection_id
+      )
+      SELECT removed.*,expired.announce FROM removed JOIN expired USING(connection_id)`);
+      for (const row of stale.rows) if(row.announce) publish({ type: "presence", action: "left", roomId: row.room_id, userId: row.user_id, connectionId: row.connection_id });
     } catch (error) {
       console.error("Presence cleanup failed:", error.message);
     }
@@ -181,9 +190,17 @@ function attachRealtime(server) {
           try {
             await client.query("BEGIN");
             await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", ["nexora-room:" + packet.roomId]);
-            const stale = await client.query(
-              "DELETE FROM room_presence WHERE connected_at < NOW() - INTERVAL '2 minutes' RETURNING room_id,user_id,connection_id"
-            );
+            const stale = await client.query(`WITH expired AS (
+                SELECT rp.connection_id,NOT COALESCE(gp.invisible,FALSE) AS announce
+                FROM room_presence rp LEFT JOIN galaxy_preferences gp ON gp.user_id=rp.user_id
+                WHERE rp.connected_at < NOW() - INTERVAL '2 minutes'
+              ), removed AS (
+                DELETE FROM room_presence rp USING expired e
+                WHERE rp.connection_id=e.connection_id
+                RETURNING rp.room_id,rp.user_id,rp.connection_id
+              )
+              SELECT removed.*,expired.announce FROM removed JOIN expired USING(connection_id)`);
+            const freshPreference = await client.query("SELECT COALESCE((SELECT invisible FROM galaxy_preferences WHERE user_id=$1),FALSE) AS invisible",[user.id]);
             const room = await client.query(
               "SELECT r.id,r.capacity FROM rooms r JOIN user_locations l ON l.planet_id=r.planet_id WHERE r.id=$1 AND r.is_active=TRUE AND l.user_id=$2 FOR UPDATE OF l",
               [packet.roomId,user.id]
@@ -204,7 +221,8 @@ function attachRealtime(server) {
               [connectionId,packet.roomId,user.id,character.rows[0]?.id || null]
             );
             await client.query("COMMIT");
-            for (const row of stale.rows) {
+            socket.isInvisible = Boolean(freshPreference.rows[0]?.invisible);
+            for (const row of stale.rows) if(row.announce) {
               publish({ type: "presence", action: "left", roomId: row.room_id, userId: row.user_id, connectionId: row.connection_id });
             }
           } finally { client.release(); }
