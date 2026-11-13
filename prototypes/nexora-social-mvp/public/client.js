@@ -816,6 +816,19 @@
         const submit=document.createElement("button");submit.type="submit";submit.textContent="Выдать звание";
         form.append(account,title,reason,auraLabel,submit);content.append(form);
         if(!developerPermissions.includes("authority.assign"))form.classList.add("hidden");
+        if(developerPermissions.includes("authority.remove")){
+          const removeButton=document.createElement("button");removeButton.type="button";removeButton.textContent="Снять звание · вернуть Новичка";
+          removeButton.addEventListener("click",async()=>{
+            if(!account.value||!reason.value.trim())return showToast("Укажите ID игрока и причину.");
+            removeButton.disabled=true;
+            try{
+              const response=await fetch("/api/authority/admin/remove/"+encodeURIComponent(account.value),{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({reason:reason.value})});
+              const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||"Не удалось снять звание.");
+              showToast("Звание сброшено до Новичка.");
+            }catch(error){showToast(error.message);}finally{removeButton.disabled=false;}
+          });
+          content.append(removeButton);
+        }
         form.addEventListener("submit",async event=>{
           event.preventDefault();submit.disabled=true;
           try{
