@@ -258,3 +258,41 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
   .auth-mode { padding: 15px 13px; }
   .auth-submit { width: min(100%, 270px); }
 }
+
+/* NEXORA social hub */
+.social-panel {
+  position: absolute; z-index: 24; top: max(66px, env(safe-area-inset-top) + 58px);
+  left: 10px; right: 10px; bottom: max(86px, env(safe-area-inset-bottom) + 78px);
+  max-width: 520px; margin: 0 auto; padding: 13px;
+  display: flex; flex-direction: column; min-height: 220px;
+  border: 1px solid rgba(190,196,255,.22); border-radius: 21px;
+  background: rgba(10,15,40,.97); box-shadow: 0 22px 65px #000a; backdrop-filter: blur(18px);
+}
+.social-head { display:flex; align-items:center; justify-content:space-between; padding: 2px 2px 10px; }
+.social-head strong { font-size: 15px; }
+.social-head button { border:0; background:transparent; color:#d9dcff; font-size:25px; }
+.social-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; padding-bottom:10px; border-bottom:1px solid var(--line); }
+.social-tabs button { min-width:0; border:1px solid transparent; border-radius:11px; padding:9px 5px; background:#ffffff0a; color:#bfc7ec; font-size:11px; }
+.social-tabs button.active { color:white; border-color:#a99aff55; background:#9284f52a; }
+.social-tabs span { color:#ffb5d0; font-weight:800; }
+.social-view { min-height:0; flex:1; overflow-y:auto; padding:10px 2px 2px; }
+.social-view h4 { margin:14px 3px 7px; color:#aeb8df; font-size:10px; letter-spacing:.08em; text-transform:uppercase; }
+.social-view input { width:100%; min-width:0; border:1px solid var(--line); border-radius:12px; padding:11px 12px; color:white; background:#ffffff0b; outline:none; }
+.social-list { display:grid; gap:7px; margin-top:8px; }
+.social-row { display:flex; align-items:center; gap:8px; padding:9px; border:1px solid #ffffff12; border-radius:12px; background:#ffffff08; }
+.social-row .social-name { min-width:0; flex:1; overflow-wrap:anywhere; font-size:12px; }
+.social-row small { display:block; color:#9ba8d2; font-size:9px; margin-top:3px; }
+.social-row button { flex:0 0 auto; border:1px solid #a99aff44; border-radius:9px; padding:7px 9px; background:#8d80f422; color:#eeeaff; font-size:10px; }
+.social-empty { color:#9ba8d2; text-align:center; font-size:11px; padding:16px 8px; }
+.social-thread { min-height:80px; max-height:42%; overflow-y:auto; margin-top:9px; padding:8px; border:1px solid #ffffff12; border-radius:13px; background:#05091d55; }
+.social-message { margin:5px 0; font-size:11px; line-height:1.4; overflow-wrap:anywhere; }
+.social-message strong { color:#c4b6ff; margin-right:5px; }
+.social-message time { display:block; color:#8591bb; font-size:8px; }
+.social-message-form { display:flex; gap:7px; margin-top:8px; }
+.social-message-form button { width:42px; flex:0 0 42px; border:0; border-radius:11px; background:#8d80f4; color:white; font-size:17px; }
+@media (max-width: 430px) {
+  .topbar { gap:5px; left:8px; right:8px; }
+  .topbar-actions { gap:4px; }
+  .topbar-actions .glass-button { padding:7px 8px; font-size:10px; }
+  .online-pill { padding:7px 8px; font-size:9px; }
+}
