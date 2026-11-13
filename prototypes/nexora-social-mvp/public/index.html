@@ -20,6 +20,13 @@
 
         <label class="field-label" for="nickname">Твой ник</label>
         <input id="nickname" maxlength="18" autocomplete="nickname" placeholder="Например, КосмоКот">
+        <label class="field-label" for="recovery-code">Код восстановления</label>
+        <input id="recovery-code" maxlength="24" autocomplete="one-time-code" placeholder="Только для входа">
+        <div class="auth-actions">
+          <button id="register-button" class="primary-button" type="button">Создать аккаунт</button>
+          <button id="login-button" class="glass-button" type="button">Войти по коду</button>
+        </div>
+        <p id="recovery-result" class="recovery-result hidden" role="status"></p>
 
         <div class="preview-wrap">
           <canvas id="preview-canvas" width="180" height="210" aria-label="Предпросмотр персонажа"></canvas>
@@ -54,7 +61,6 @@
             </select>
           </label>
         </div>
-        <button id="enter-button" class="primary-button">Войти на планету <span>→</span></button>
         <p id="login-error" class="error-text" role="alert"></p>
       </div>
     </section>
