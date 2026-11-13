@@ -5,6 +5,7 @@ const cookie = require("cookie");
 const { Server } = require("socket.io");
 const { pool, migrate } = require("./src/db");
 const auth = require("./src/auth");
+const { createSocialRouter } = require("./src/social");
 
 const app = express();
 const server = http.createServer(app);
@@ -68,6 +69,7 @@ app.get("/health", async (_req, res) => {
     res.json({ ok: true, service: "nexora-social-mvp", database: "connected", players: players.size });
   } catch (_error) { res.status(503).json({ ok: false, database: "unavailable" }); }
 });
+app.use("/api/social", createSocialRouter({ pool, auth, io }));
 app.use((error, _req, res, _next) => {
   console.error("API error:", error);
   if (!res.headersSent) res.status(500).json({ error: "Внутренняя ошибка сервера." });
@@ -118,6 +120,7 @@ io.use(async (socket, next) => {
 });
 
 io.on("connection", (socket) => {
+  socket.join("account:" + socket.data.account.id);
   socket.on("player:join", async (_payload, ack = () => {}) => {
     try {
       const account = socket.data.account;
