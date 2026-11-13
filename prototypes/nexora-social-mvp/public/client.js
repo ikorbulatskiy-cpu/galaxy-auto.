@@ -1018,15 +1018,15 @@
     else if (action === "players") toggleRoomFlyout("players");
     else if (action === "events") toggleRoomFlyout("events");
   }));
-  function openIntegratedGalaxy() {
+  function openIntegratedGalaxy(options = {}) {
     const view = $("#integrated-galaxy-view");
     const frame = $("#integrated-galaxy-frame");
     if (!view || !frame) return;
     closeCompetingPanels();
     view.classList.remove("hidden");
-    if (!frame.getAttribute("src") || frame.getAttribute("src") === "about:blank") {
-      frame.src = "/galaxy?embedded=1";
-    }
+    const travelTo = options.travelTo ? String(options.travelTo) : "";
+    if (travelTo) frame.src = "/galaxy?embedded=1&travelTo=" + encodeURIComponent(travelTo);
+    else if (!frame.getAttribute("src") || frame.getAttribute("src") === "about:blank") frame.src = "/galaxy?embedded=1";
   }
   $("#integrated-galaxy-back")?.addEventListener("click", () => {
     const view = $("#integrated-galaxy-view");
@@ -2397,6 +2397,14 @@
       const avatar=$("#public-profile-avatar"),avatarCtx=avatar.getContext("2d");
       avatarCtx.clearRect(0,0,avatar.width,avatar.height);
       drawAvatar(avatarCtx,90,105,1.8,p.avatar||{},1,null);
+      const planetButton=$("#public-profile-planet-travel");
+      const planetLabel=$("#public-profile-planet");
+      const canTravelToFriend=Boolean(p.isFriend&&p.online&&p.planetKey);
+      planetLabel.textContent=p.planetName ? "🪐 Планета: "+p.planetName : (p.online?"🪐 В сети":"🪐 Планета не указана");
+      planetLabel.classList.toggle("hidden",!p.isFriend);
+      planetButton.classList.toggle("hidden",!canTravelToFriend);
+      planetButton.disabled=!canTravelToFriend;
+      planetButton.onclick=()=>openIntegratedGalaxy({travelTo:p.id});
       const friendButton=$("#public-profile-friend"),messageButton=$("#public-profile-message");
       friendButton.classList.toggle("hidden",p.isMe||p.isFriend);
       friendButton.textContent=p.requestIncoming?"Принять заявку":p.requestPending?"Заявка отправлена":"Добавить в друзья";
