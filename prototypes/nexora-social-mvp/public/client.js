@@ -522,7 +522,6 @@
     customProps.sort((a,b)=>a.depth-b.depth).forEach(item=>drawCustomPlanetObject(ctx,item.custom,w,h));
 
     const now = performance.now();
-    processMovementPad(now);
     const orderedPlayers=[...state.players.values()].sort((a,b)=>(a.renderY??a.y??.82)-(b.renderY??b.y??.82));
     orderedPlayers.forEach((player) => {
       advancePlayerMovement(player, now);
@@ -736,73 +735,6 @@
   socket.on("friend:result", ({ nickname, already }) => showToast(already ? nickname + " уже в друзьях" : nickname + " добавлен в друзья"));
   socket.on("friend:notice",({nickname})=>{pushRoomEvent("Новый друг",nickname+" добавил вас в друзья.","⭐");showToast(nickname+" добавил вас в друзья");});
 
-  const movementPad = $("#movement-pad");
-  const movementKnob = $("#movement-knob");
-  const joystick = state.joystick;
-
-  function updateMovementPad(event) {
-    const rect = movementPad.getBoundingClientRect();
-    const radius = Math.min(rect.width, rect.height) * .34;
-    const dx = event.clientX - (rect.left + rect.width / 2);
-    const dy = event.clientY - (rect.top + rect.height / 2);
-    const length = Math.hypot(dx, dy);
-    const factor = length > radius ? radius / length : 1;
-    const knobX = dx * factor, knobY = dy * factor;
-    joystick.dx = knobX / radius;
-    joystick.dy = knobY / radius;
-    movementKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
-  }
-
-  function stopMovementPad(event) {
-    if (event && joystick.pointerId !== event.pointerId) return;
-    joystick.active = false;
-    joystick.pointerId = null;
-    joystick.dx = 0;
-    joystick.dy = 0;
-    movementKnob.style.transform = "translate(0, 0)";
-    movementPad.classList.remove("is-active");
-  }
-
-  movementPad?.addEventListener("pointerdown", event => {
-    if (!state.me || (event.button !== undefined && event.button !== 0)) return;
-    event.preventDefault();
-    event.stopPropagation();
-    joystick.active = true;
-    joystick.pointerId = event.pointerId;
-    joystick.lastSentAt = 0;
-    movementPad.setPointerCapture?.(event.pointerId);
-    movementPad.classList.add("is-active");
-    updateMovementPad(event);
-  });
-  movementPad?.addEventListener("pointermove", event => {
-    if (!joystick.active || joystick.pointerId !== event.pointerId) return;
-    event.preventDefault();
-    updateMovementPad(event);
-  });
-  movementPad?.addEventListener("pointerup", stopMovementPad);
-  movementPad?.addEventListener("pointercancel", stopMovementPad);
-  movementPad?.addEventListener("lostpointercapture", stopMovementPad);
-
-  function processMovementPad(now) {
-    if (!joystick.active || !state.me || !socket.connected) return;
-    const magnitude = Math.hypot(joystick.dx, joystick.dy);
-    if (magnitude < .12 || now - joystick.lastSentAt < 220) return;
-    const player = [...state.players.values()].find(item => String(item.id) === String(state.me.id));
-    if (!player) return;
-    const elapsed = joystick.lastSentAt ? Math.min(.24, (now - joystick.lastSentAt) / 1000) : .22;
-    const speed = 155 * elapsed;
-    const targetX = Math.max(.04, Math.min(.96, Number(player.x) + joystick.dx / Math.max(1, magnitude) * speed / Math.max(1, state.width)));
-    const targetY = Math.max(.60, Math.min(.86, Number(player.y ?? .82) + joystick.dy / Math.max(1, magnitude) * speed / Math.max(1, state.height)));
-    if (Math.abs(targetX - player.x) < .0001 && Math.abs(targetY - (player.y ?? .82)) < .0001) return;
-    joystick.lastSentAt = now;
-    socket.emit("player:move", { x: targetX, y: targetY }, result => {
-      if (!result?.ok && joystick.active) {
-        stopMovementPad();
-        showToast(result?.error || "Не удалось переместить персонажа.");
-      }
-    });
-  }
-
   canvas.addEventListener("pointerdown",(event)=>{
     if(event.button!==undefined&&event.button!==0)return;
     const rect=canvas.getBoundingClientRect(),x=event.clientX-rect.left,y=event.clientY-rect.top;
@@ -842,10 +774,9 @@
   $("#room-player-search")?.addEventListener("input",renderRoomPlayers);
 
   function closeCompetingPanels(except = "") {
-    const panels = ["#profile-menu","#social-panel","#public-profile","#profile-editor","#authority-panel","#shop-panel","#developer-panel","#planets-panel","#chat-drawer","#room-main-menu","#room-emotions-panel","#room-players-panel","#room-events-panel"];
+    const panels = ["#profile-menu","#social-panel","#public-profile","#profile-editor","#authority-panel","#shop-panel","#developer-panel","#planets-panel","#room-main-menu","#room-emotions-panel","#room-players-panel","#room-events-panel"];
     panels.forEach(selector => { if (selector !== except) $(selector)?.classList.add("hidden"); });
-    gameScreen.classList.remove("chat-open");
-    document.querySelectorAll("[data-room-toggle]").forEach(button => { button.classList.remove("active"); button.setAttribute("aria-expanded","false"); });
+    $("#chat-drawer")?.classList.remove("hidden");
   }
 
   function closeRoomFlyouts(except = "") {
@@ -867,44 +798,14 @@
     if(name==="events"&&shouldOpen){state.unreadEvents=0;renderRoomEvents();}
   }
   document.querySelectorAll("[data-room-toggle]").forEach(button => button.addEventListener("click",() => {
-    const name = button.dataset.roomToggle;
-    if(name==="chat"){
-      const opening=$("#chat-drawer").classList.contains("hidden");
-      closeCompetingPanels(opening ? "#chat-drawer" : "");
-      $("#chat-drawer").classList.toggle("hidden",!opening);
-      gameScreen.classList.toggle("chat-open",opening);
-      button.classList.toggle("active",opening);
-      button.setAttribute("aria-expanded",String(opening));
-      closeRoomFlyouts();
-      if(opening){state.unreadChat=0;renderHistory();setTimeout(()=>$("#chat-input").focus(),80);}
-      return;
-    }
-    const chatDrawer = $("#chat-drawer");
-    if (!chatDrawer.classList.contains("hidden")) {
-      chatDrawer.classList.add("hidden");
-      gameScreen.classList.remove("chat-open");
-      const chatButton = $('#room-toolbar [data-room-toggle="chat"]');
-      if (chatButton) {
-        chatButton.classList.remove("active");
-        chatButton.setAttribute("aria-expanded", "false");
-      }
-    }
-    toggleRoomFlyout(name);
+    toggleRoomFlyout(button.dataset.roomToggle);
   }));
   document.querySelectorAll("[data-room-close]").forEach(button => button.addEventListener("click",() => closeRoomFlyouts()));
   document.querySelectorAll("[data-room-action]").forEach(button => button.addEventListener("click",() => {
     const action = button.dataset.roomAction;
     closeRoomFlyouts();
-    $("#chat-drawer").classList.add("hidden");
-    gameScreen.classList.remove("chat-open");
-    const chatButton = $('#room-toolbar [data-room-toggle="chat"]');
-    if (chatButton) {
-      chatButton.classList.remove("active");
-      chatButton.setAttribute("aria-expanded", "false");
-    }
     if (action === "profile") openMyProfile();
     else if (action === "rating") openSocialTab("rating");
-    else if (action === "chat") { $("#room-toolbar [data-room-toggle=\"chat\"]").click(); }
     else if (action === "friends") openMyProfile("friends");
     else if (action === "messages") openMyProfile("messages");
     else if (action === "gifts") { if (state.selected && String(state.selected) !== String(state.me?.id)) { $("#gift-options").classList.remove("hidden"); $("#profile-menu").classList.remove("hidden"); } else showToast("Выбери игрока в комнате, чтобы отправить подарок."); }
@@ -1134,7 +1035,7 @@
       state.chat = [];
       state.roomEvents=[];state.unreadEvents=0;renderRoomEvents();
       $("#planet-picker").classList.add("hidden");
-      $("#chat-drawer").classList.add("hidden");
+      $("#chat-drawer").classList.remove("hidden");
       $("#profile-menu").classList.add("hidden");
       $("#gift-options").classList.add("hidden");
       $("#recovery-result").classList.add("hidden");
@@ -1154,12 +1055,7 @@
       });
     });
   });
-  $("#close-history").addEventListener("click",()=>{
-    $("#chat-drawer").classList.add("hidden");
-    gameScreen.classList.remove("chat-open");
-    const chatButton = $("#room-toolbar [data-room-toggle=\"chat\"]");
-    if (chatButton) { chatButton.classList.remove("active"); chatButton.setAttribute("aria-expanded","false"); }
-  });
+
 
 
   document.querySelectorAll("[data-chat-view]").forEach(button=>button.addEventListener("click",()=>{
