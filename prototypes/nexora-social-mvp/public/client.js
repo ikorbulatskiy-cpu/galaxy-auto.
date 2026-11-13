@@ -20,6 +20,7 @@
   const state = {
     me: null, players: new Map(), planet: "starter", selected: null, customPlanetObjects: [], unreadChat: 0,
     stars: [], chat: [], roomEvents: [], unreadEvents: 0, width: 0, height: 0, dpr: 1, toastTimer: null, movementFrame: 0,
+    joystick: { active: false, pointerId: null, dx: 0, dy: 0, lastSentAt: 0 },
     auraQuality: localStorage.getItem("nexora-aura-quality") === "low" ? "low" : "high"
   };
 
@@ -444,7 +445,7 @@
     const now=performance.now(),fromX=Number.isFinite(player.renderX)?player.renderX:player.x,fromY=Number.isFinite(player.renderY)?player.renderY:(player.y??.82);
     const distance=Math.hypot((targetX-fromX)*Math.max(1,state.width),(targetY-fromY)*Math.max(1,state.height));
     player.moveFromX=fromX;player.moveFromY=fromY;player.moveToX=targetX;player.moveToY=targetY;player.moveStartedAt=now;
-    player.moveDuration=Math.max(180,Math.min(2400,distance/185*1000));const dx=targetX-fromX,dy=targetY-fromY;player.direction=Math.abs(dx)>Math.abs(dy)?(dx>=0?"right":"left"):(dy>=0?"down":"up");player.facing=targetX>=fromX?1:-1;
+    player.moveDuration=Math.max(180,Math.min(2400,distance/185*1000));const dx=targetX-fromX,dy=targetY-fromY;const screenDx=dx*Math.max(1,state.width),screenDy=dy*Math.max(1,state.height);player.direction=Math.abs(screenDx)>Math.abs(screenDy)?(screenDx>=0?"right":"left"):(screenDy>=0?"down":"up");if(Math.abs(screenDx)>2)player.facing=screenDx>=0?1:-1;
     player.x=targetX;player.y=targetY;player.moving=distance>3;
     if(!player.moving){player.renderX=targetX;player.renderY=targetY;}
   }
@@ -521,6 +522,7 @@
     customProps.sort((a,b)=>a.depth-b.depth).forEach(item=>drawCustomPlanetObject(ctx,item.custom,w,h));
 
     const now = performance.now();
+    processMovementPad(now);
     const orderedPlayers=[...state.players.values()].sort((a,b)=>(a.renderY??a.y??.82)-(b.renderY??b.y??.82));
     orderedPlayers.forEach((player) => {
       advancePlayerMovement(player, now);
@@ -733,6 +735,73 @@
   });
   socket.on("friend:result", ({ nickname, already }) => showToast(already ? nickname + " уже в друзьях" : nickname + " добавлен в друзья"));
   socket.on("friend:notice",({nickname})=>{pushRoomEvent("Новый друг",nickname+" добавил вас в друзья.","⭐");showToast(nickname+" добавил вас в друзья");});
+
+  const movementPad = $("#movement-pad");
+  const movementKnob = $("#movement-knob");
+  const joystick = state.joystick;
+
+  function updateMovementPad(event) {
+    const rect = movementPad.getBoundingClientRect();
+    const radius = Math.min(rect.width, rect.height) * .34;
+    const dx = event.clientX - (rect.left + rect.width / 2);
+    const dy = event.clientY - (rect.top + rect.height / 2);
+    const length = Math.hypot(dx, dy);
+    const factor = length > radius ? radius / length : 1;
+    const knobX = dx * factor, knobY = dy * factor;
+    joystick.dx = knobX / radius;
+    joystick.dy = knobY / radius;
+    movementKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+  }
+
+  function stopMovementPad(event) {
+    if (event && joystick.pointerId !== event.pointerId) return;
+    joystick.active = false;
+    joystick.pointerId = null;
+    joystick.dx = 0;
+    joystick.dy = 0;
+    movementKnob.style.transform = "translate(0, 0)";
+    movementPad.classList.remove("is-active");
+  }
+
+  movementPad?.addEventListener("pointerdown", event => {
+    if (!state.me || (event.button !== undefined && event.button !== 0)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    joystick.active = true;
+    joystick.pointerId = event.pointerId;
+    joystick.lastSentAt = 0;
+    movementPad.setPointerCapture?.(event.pointerId);
+    movementPad.classList.add("is-active");
+    updateMovementPad(event);
+  });
+  movementPad?.addEventListener("pointermove", event => {
+    if (!joystick.active || joystick.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    updateMovementPad(event);
+  });
+  movementPad?.addEventListener("pointerup", stopMovementPad);
+  movementPad?.addEventListener("pointercancel", stopMovementPad);
+  movementPad?.addEventListener("lostpointercapture", stopMovementPad);
+
+  function processMovementPad(now) {
+    if (!joystick.active || !state.me || !socket.connected) return;
+    const magnitude = Math.hypot(joystick.dx, joystick.dy);
+    if (magnitude < .12 || now - joystick.lastSentAt < 220) return;
+    const player = [...state.players.values()].find(item => String(item.id) === String(state.me.id));
+    if (!player) return;
+    const elapsed = joystick.lastSentAt ? Math.min(.24, (now - joystick.lastSentAt) / 1000) : .22;
+    const speed = 155 * elapsed;
+    const targetX = Math.max(.04, Math.min(.96, Number(player.x) + joystick.dx / Math.max(1, magnitude) * speed / Math.max(1, state.width)));
+    const targetY = Math.max(.60, Math.min(.86, Number(player.y ?? .82) + joystick.dy / Math.max(1, magnitude) * speed / Math.max(1, state.height)));
+    if (Math.abs(targetX - player.x) < .0001 && Math.abs(targetY - (player.y ?? .82)) < .0001) return;
+    joystick.lastSentAt = now;
+    socket.emit("player:move", { x: targetX, y: targetY }, result => {
+      if (!result?.ok && joystick.active) {
+        stopMovementPad();
+        showToast(result?.error || "Не удалось переместить персонажа.");
+      }
+    });
+  }
 
   canvas.addEventListener("pointerdown",(event)=>{
     if(event.button!==undefined&&event.button!==0)return;
