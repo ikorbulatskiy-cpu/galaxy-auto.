@@ -365,26 +365,6 @@ if(window.NexoraAPI?.mockEnabled()){currentUser={id:"mock-user",username:"pilot"
 <script src="/nexora-room-cleanup.js?v=20261113-2" defer></script>
 
 
-<script>
-/* Independent auth-button fallback: works even if the main app bundle aborts during startup. */
-(() => {
-  const modal = document.getElementById("auth-modal");
-  const register = document.getElementById("register-wizard");
-  const login = document.getElementById("login-fields");
-  if (!modal || !register || !login) return;
-  const show = (mode) => {
-    const isLogin = mode === "restore" || mode === "login";
-    register.classList.toggle("hidden", isLogin);
-    login.classList.toggle("hidden", !isLogin);
-    modal.classList.add("open");
-  };
-  document.querySelectorAll('[data-open="register"]').forEach(button =>
-    button.addEventListener("click", () => show("register"))
-  );
-  document.querySelectorAll('[data-open="restore"]').forEach(button =>
-    button.addEventListener("click", () => show("restore"))
-  );
-})();
-</script>
+<script src="/nexora-auth-fallback.js?v=20261113-1" defer></script>
 <script src="/nexora-safari-boot.js?v=20261113-5" defer></script>
 </body></html>
