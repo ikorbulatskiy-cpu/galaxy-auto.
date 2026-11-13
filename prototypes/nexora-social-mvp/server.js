@@ -194,7 +194,10 @@ io.on("connection", (socket) => {
   socket.on("emotion:play", (payload) => {
     const player = players.get(socket.id);
     if (!player || !EMOTIONS.includes(payload?.emotion)) return;
-    player.emotion = { type: payload.emotion, until: Date.now() + 1800 };
+    const now = Date.now();
+    if (now - (player.lastEmotionAt || 0) < 350) return;
+    player.lastEmotionAt = now;
+    player.emotion = { type: payload.emotion, until: now + 1800 };
     io.to(roomName(player.planet)).emit("emotion:played", { id: player.id, emotion: payload.emotion });
   });
 
