@@ -174,6 +174,7 @@ router.post("/travel", requireSession, async (req, res, next) => {
        ON CONFLICT (user_id) DO UPDATE SET planet_id=EXCLUDED.planet_id,arrived_at=NOW()`,
       [req.user.id, planet.id]
     );
+    await client.query("INSERT INTO planet_visits(user_id,planet_id) VALUES($1,$2)",[req.user.id,planet.id]);
     await client.query(
       "INSERT INTO flights (user_id,from_planet_id,to_planet_id,status,fare_paid,arrived_at) VALUES ($1,$2,$3,'completed',$4,NOW())",
       [req.user.id, fromPlanetId, planet.id, planet.access_type === "ticket" ? planet.ticket_price : 0]
