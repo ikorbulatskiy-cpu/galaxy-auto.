@@ -140,6 +140,12 @@ function createDeveloperRouter({ pool, auth, players, planets, io }) {
       const expiresAt = hours === null ? null : new Date(Date.now() + hours * 3600000);
       const result = await pool.query("INSERT INTO nexora_social_world.moderation_actions(actor_account_id,target_account_id,action_type,reason,expires_at) VALUES($1,$2,'BAN',$3,$4) RETURNING id,expires_at", [current.account.id,targetId,reason,expiresAt]);
       await pool.query("INSERT INTO nexora_social_world.developer_audit_logs(actor_account_id,target_account_id,action,reason,details) VALUES($1,$2,'player.ban',$3,$4::jsonb)", [current.account.id,targetId,reason,JSON.stringify({ moderationId: result.rows[0].id, expiresAt })]);
+      for (const [socketId, onlinePlayer] of players.entries()) {
+        if (String(onlinePlayer.accountId) !== targetId) continue;
+        io?.to("planet:" + onlinePlayer.planet).emit("player:left", { id: String(onlinePlayer.accountId) });
+        io?.sockets?.sockets?.get(socketId)?.disconnect(true);
+        players.delete(socketId);
+      }
       res.status(201).json({ ok: true, moderation: result.rows[0] });
     } catch (error) { next(error); }
   });
