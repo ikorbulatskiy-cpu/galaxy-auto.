@@ -40,8 +40,8 @@
   }
   async function loadPlanets(){
     const select=$("#planet-select");select.replaceChildren();
-    planetCatalog=basePlanets.map(p=>({...p}));
-    try{const d=await api("/api/planets");(d.planets||[]).forEach((p,i)=>planetCatalog.push({key:"custom-"+p.id,id:String(p.id),name:p.name,description:p.description||"Планета сообщества NEXORA.",theme:p.theme||"nebula",color:p.accent_color||"#8068d8",light:"#e1d7ff",glow:p.accent_color||"#8068d8",onlineCount:Number(p.onlineCount||0),memberCount:Number(p.memberCount||0),totalVisits:Number(p.total_visits||0),favorite:Boolean(p.favorite),x:[18,43,72,86,34,61][i%6],y:[28,77,63,48,20,84][i%6]}))}catch(error){console.warn("Planet catalog:",error)}
+    let builtInFavorites=[];try{builtInFavorites=JSON.parse(localStorage.getItem("nexora.favoritePlanets")||"[]")}catch{}\n    planetCatalog=basePlanets.map(p=>({...p,favorite:builtInFavorites.includes(p.key)}));
+    try{const d=await api("/api/planets");(d.worlds||[]).forEach(w=>{const base=planetCatalog.find(p=>p.key===w.key);if(base)base.onlineCount=Number(w.onlineCount||0)});(d.planets||[]).forEach((p,i)=>planetCatalog.push({key:"custom-"+p.id,id:String(p.id),name:p.name,description:p.description||"Планета сообщества NEXORA.",theme:p.theme||"nebula",color:p.accent_color||"#8068d8",light:"#e1d7ff",glow:p.accent_color||"#8068d8",onlineCount:Number(p.onlineCount||0),memberCount:Number(p.memberCount||0),totalVisits:Number(p.total_visits||0),favorite:Boolean(p.favorite),x:[18,43,72,86,34,61][i%6],y:[28,77,63,48,20,84][i%6]}))}catch(error){console.warn("Planet catalog:",error)}
     planetCatalog.forEach(p=>{const o=document.createElement("option");o.value=p.key;o.textContent=p.name;select.append(o)});
     select.value=roomPlanet;
   }
@@ -65,7 +65,7 @@
     panel.querySelector(".planet-visits").textContent="✦ "+(p.totalVisits||0)+" посещений";
     panel.querySelector(".planet-fav").textContent=p.favorite?"★ В избранном":"☆ Не в избранном";
     const fav=panel.querySelector(".planet-favorite");fav.textContent=p.favorite?"★ Убрать из избранного":"☆ В избранное";
-    fav.addEventListener("click",async()=>{if(!p.id){toast("Избранное пока доступно для пользовательских планет.");return}try{await api("/api/planets/"+p.id+"/favorite",{method:p.favorite?"DELETE":"POST"});p.favorite=!p.favorite;fav.textContent=p.favorite?"★ Убрать из избранного":"☆ В избранное";panel.querySelector(".planet-fav").textContent=p.favorite?"★ В избранном":"☆ Не в избранном";toast(p.favorite?"Добавлено в избранное":"Удалено из избранного");if(planetFilter==="favorites"&&!p.favorite)renderPlanetMap()}catch(e){toast(e.message)}});
+    fav.addEventListener("click",async()=>{try{if(p.id)await api("/api/planets/"+p.id+"/favorite",{method:p.favorite?"DELETE":"POST"});else{const keys=JSON.parse(localStorage.getItem("nexora.favoritePlanets")||"[]");const next=p.favorite?keys.filter(k=>k!==p.key):[...new Set([...keys,p.key])];localStorage.setItem("nexora.favoritePlanets",JSON.stringify(next))}p.favorite=!p.favorite;fav.textContent=p.favorite?"★ Убрать из избранного":"☆ В избранное";panel.querySelector(".planet-fav").textContent=p.favorite?"★ В избранном":"☆ Не в избранном";toast(p.favorite?"Добавлено в избранное":"Удалено из избранного");if(planetFilter==="favorites"&&!p.favorite)renderPlanetMap();else renderPlanetMap()}catch(e){toast(e.message)}});
     $("#planet-visit").disabled=p.key===roomPlanet;$("#planet-visit").textContent=p.key===roomPlanet?"Ты уже здесь":"Посетить планету ↗";
   }
   async function travelToPlanet(p){
