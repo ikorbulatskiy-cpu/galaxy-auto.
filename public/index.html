@@ -44,6 +44,41 @@ header.wrap.top,#landing,#landing .hero,#landing .hero-cta,#top-actions{position
 <link rel="stylesheet" href="/nexora-planet-owner.css?v=20261113-2">
 </head>
 <body>
+<script>
+/* Earliest NEXORA interaction fallback. Does not depend on the main application bundle. */
+(function () {
+  "use strict";
+  function report(message) {
+    try {
+      fetch("/api/client-errors", {
+        method: "POST", credentials: "same-origin", keepalive: true,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "early-boot", message: String(message).slice(0, 500), source: "/index.html", page: location.pathname })
+      }).catch(function () {});
+    } catch (_) {}
+  }
+  report("NEXORA inline interaction fallback ready");
+  document.addEventListener("click", function (event) {
+    var target = event.target;
+    var trigger = target && target.closest ? target.closest("[data-open]") : null;
+    if (!trigger) return;
+    var modal = document.getElementById("auth-modal");
+    var register = document.getElementById("register-wizard");
+    var login = document.getElementById("login-fields");
+    if (!modal || !register || !login) {
+      report("Auth elements missing on click");
+      return;
+    }
+    event.preventDefault();
+    var isLogin = trigger.getAttribute("data-open") === "restore";
+    register.classList.toggle("hidden", isLogin);
+    login.classList.toggle("hidden", !isLogin);
+    modal.classList.add("open");
+    report("Auth button click handled: " + (isLogin ? "login" : "register"));
+    event.stopImmediatePropagation();
+  }, true);
+})();
+</script>
 <header class="wrap top"><a class="brand" href="#"><span class="mark">✦</span>NEXORA</a><div class="nav" id="top-actions"><button class="btn primary" data-open="register">Создать персонажа</button><button class="btn" data-open="restore">Уже есть персонаж?</button></div></header>
 <main id="landing" class="wrap">
 <section class="hero"><div><div class="eyebrow">✦ СОЦИАЛЬНЫЙ ВИРТУАЛЬНЫЙ МИР · 18+</div><h1>Люди ближе.<br><span class="grad">Моменты ярче.</span></h1><p class="lead">Создай персонажа, находи друзей, общайся в личных сообщениях и открывай новые уголки NEXORA.</p><div class="hero-cta"><button class="btn primary" data-open="register">Создать персонажа ↗</button><button type="button" class="btn" data-open="restore" onclick="document.getElementById(\'auth-modal\').classList.add(\'open\');document.getElementById(\'register-wizard\').classList.add(\'hidden\');document.getElementById(\'login-fields\').classList.remove(\'hidden\')">Уже есть персонаж?</button></div><div class="notice">Для создания персонажа нужно подтвердить, что тебе исполнилось 18 лет. Почта и пароль не нужны.</div></div><div class="visual">🌌</div></section>
