@@ -62,6 +62,55 @@
     for(let i=0;i<5;i++){const px=-16+i*8;ctx.strokeStyle="#4d9a75";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(px,-4);ctx.lineTo(px,-15-(i%2)*3);ctx.stroke();ctx.fillStyle=i%2?"#ffb2d6":"#ffe28b";ctx.beginPath();ctx.arc(px,-17-(i%2)*3,4,0,Math.PI*2);ctx.fill();}
     ctx.restore();
   }
+  function drawStreetLamp(ctx,x,y,s=1,time=0) {
+    ctx.save();ctx.translate(x,y);ctx.scale(s,s);
+    ctx.fillStyle="rgba(4,10,24,.22)";ctx.beginPath();ctx.ellipse(0,3,12,4,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#58678e";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-54);ctx.quadraticCurveTo(0,-62,10,-62);ctx.stroke();
+    ctx.fillStyle="#ffe8a6";ctx.shadowColor="#ffe8a6";ctx.shadowBlur=12+Math.sin(time/350)*3;
+    ctx.beginPath();ctx.roundRect(6,-67,12,8,3);ctx.fill();ctx.shadowBlur=0;
+    ctx.restore();
+  }
+  function drawBusStop(ctx,x,y,s=1) {
+    ctx.save();ctx.translate(x,y);ctx.scale(s,s);
+    ctx.fillStyle="rgba(5,10,28,.2)";ctx.beginPath();ctx.ellipse(0,3,31,5,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#7185aa";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,0);ctx.lineTo(-25,-43);ctx.lineTo(25,-43);ctx.lineTo(25,0);ctx.stroke();
+    ctx.fillStyle="rgba(135,194,225,.18)";ctx.fillRect(-22,-39,44,34);
+    ctx.fillStyle="#3f5579";ctx.fillRect(-20,-12,40,4);ctx.fillRect(-17,-8,3,8);ctx.fillRect(14,-8,3,8);
+    ctx.fillStyle="#f6d58d";ctx.fillRect(-7,-35,14,8);ctx.fillStyle="#33466d";ctx.font="bold 5px sans-serif";ctx.textAlign="center";ctx.fillText("NEXORA",0,-29);
+    ctx.restore();
+  }
+  function drawNeonArch(ctx,x,y,s=1,time=0) {
+    ctx.save();ctx.translate(x,y);ctx.scale(s,s);
+    ctx.shadowColor="#e96bd8";ctx.shadowBlur=14+Math.sin(time/260)*4;
+    ctx.strokeStyle="#e96bd8";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-28,0);ctx.lineTo(-28,-38);ctx.quadraticCurveTo(0,-62,28,-38);ctx.lineTo(28,0);ctx.stroke();
+    ctx.shadowBlur=0;ctx.fillStyle="#ffe2fa";ctx.font="bold 8px sans-serif";ctx.textAlign="center";ctx.fillText("NEXORA",0,-45);
+    ctx.restore();
+  }
+  function drawSofa(ctx,x,y,s=1) {
+    ctx.save();ctx.translate(x,y);ctx.scale(s,s);
+    ctx.fillStyle="rgba(3,6,20,.25)";ctx.beginPath();ctx.ellipse(0,4,31,6,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#55427c";ctx.strokeStyle="#c28be5";ctx.lineWidth=2;
+    ctx.beginPath();ctx.roundRect(-29,-19,58,22,7);ctx.fill();ctx.stroke();
+    ctx.fillStyle="#8062a8";ctx.beginPath();ctx.roundRect(-24,-28,48,18,7);ctx.fill();ctx.stroke();
+    ctx.fillStyle="#d6b7ef";ctx.beginPath();ctx.roundRect(-19,-24,16,12,4);ctx.roundRect(3,-24,16,12,4);ctx.fill();
+    ctx.restore();
+  }
+  function drawLifeguardTower(ctx,x,y,s=1) {
+    ctx.save();ctx.translate(x,y);ctx.scale(s,s);
+    ctx.fillStyle="rgba(5,10,24,.2)";ctx.beginPath();ctx.ellipse(0,3,27,5,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#795a4d";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-15,0);ctx.lineTo(-10,-34);ctx.moveTo(15,0);ctx.lineTo(10,-34);ctx.stroke();
+    ctx.fillStyle="#f6e4c9";ctx.strokeStyle="#8b655a";ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(-20,-39,40,14,3);ctx.fill();ctx.stroke();
+    ctx.fillStyle="#e76d7d";ctx.fillRect(-20,-39,40,5);ctx.fillStyle="#78c8e6";ctx.fillRect(-12,-33,9,7);ctx.fillRect(3,-33,9,7);
+    ctx.fillStyle="#fff";ctx.font="bold 6px sans-serif";ctx.textAlign="center";ctx.fillText("LIFE",0,-42);
+    ctx.restore();
+  }
+  function drawSurfboard(ctx,x,y,s=1) {
+    ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.rotate(-.18);
+    ctx.fillStyle="rgba(5,10,24,.2)";ctx.beginPath();ctx.ellipse(0,2,8,4,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#f4f0df";ctx.strokeStyle="#d36d91";ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(0,-36);ctx.quadraticCurveTo(12,-26,10,-7);ctx.quadraticCurveTo(8,7,0,12);ctx.quadraticCurveTo(-8,7,-10,-7);ctx.quadraticCurveTo(-12,-26,0,-36);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.strokeStyle="#52b9d1";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-29);ctx.lineTo(0,4);ctx.stroke();ctx.restore();
+  }
   function get(planet,w,h,time=Date.now()) {
     const objects=[];
     const add=(x,y,draw)=>objects.push({x,y,depth:y/h,draw:()=>draw(x,y)});
@@ -73,16 +122,23 @@
       add(w*.5,h*.88,(x,y)=>drawFountain(ctxRef,x,y,.9,time));
       add(w*.39,h*.84,(x,y)=>drawFlowerBed(ctxRef,x,y,.9));
       add(w*.62,h*.84,(x,y)=>drawShopKiosk(ctxRef,x,y,.85));
+      add(w*.34,h*.84,(x,y)=>drawStreetLamp(ctxRef,x,y,.9,time));
+      add(w*.68,h*.90,(x,y)=>drawBusStop(ctxRef,x,y,.82));
     } else if(planet==="club"){
       add(w*.20,h*.83,(x,y)=>drawClubTable(ctxRef,x,y,.95));
       add(w*.80,h*.84,(x,y)=>drawClubTable(ctxRef,x,y,.95));
       add(w*.5,h*.82,(x,y)=>drawDjBooth(ctxRef,x,y,1.05,time));
+      add(w*.5,h*.70,(x,y)=>drawNeonArch(ctxRef,x,y,.85,time));
+      add(w*.22,h*.89,(x,y)=>drawSofa(ctxRef,x,y,.8));
+      add(w*.78,h*.89,(x,y)=>drawSofa(ctxRef,x,y,.8));
     } else if(planet==="beach"){
       add(w*.12,h*.79,(x,y)=>drawPalm(ctxRef,x,y,.9,time));
       add(w*.87,h*.78,(x,y)=>drawPalm(ctxRef,x,y,1.05,time));
       add(w*.34,h*.86,(x,y)=>drawBeachChair(ctxRef,x,y,.9));
       add(w*.68,h*.87,(x,y)=>drawBeachChair(ctxRef,x,y,.9));
       add(w*.52,h*.82,(x,y)=>drawShopKiosk(ctxRef,x,y,.78));
+      add(w*.22,h*.90,(x,y)=>drawLifeguardTower(ctxRef,x,y,.82));
+      add(w*.78,h*.90,(x,y)=>drawSurfboard(ctxRef,x,y,.9));
     }
     return objects;
   }
