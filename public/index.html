@@ -44,9 +44,9 @@
 <link rel="stylesheet" href="/nexora-planet-owner.css?v=20261113-2">
 </head>
 <body>
-<header class="wrap top"><a class="brand" href="#"><span class="mark">✦</span>NEXORA</a><div class="nav" id="top-actions"><button type="button" class="btn primary" data-open="register" onclick="document.getElementById(\'auth-modal\').classList.add(\'open\');document.getElementById(\'register-wizard\').classList.remove(\'hidden\');document.getElementById(\'login-fields\').classList.add(\'hidden\')">Создать персонажа</button><button type="button" class="btn" data-open="restore" onclick="document.getElementById(\'auth-modal\').classList.add(\'open\');document.getElementById(\'register-wizard\').classList.add(\'hidden\');document.getElementById(\'login-fields\').classList.remove(\'hidden\')">Уже есть персонаж?</button></div></header>
+<header class="wrap top"><a class="brand" href="#"><span class="mark">✦</span>NEXORA</a><div class="nav" id="top-actions"><button class="btn primary" data-open="register">Создать персонажа</button><button class="btn" data-open="restore">Уже есть персонаж?</button></div></header>
 <main id="landing" class="wrap">
-<section class="hero"><div><div class="eyebrow">✦ СОЦИАЛЬНЫЙ ВИРТУАЛЬНЫЙ МИР · 18+</div><h1>Люди ближе.<br><span class="grad">Моменты ярче.</span></h1><p class="lead">Создай персонажа, находи друзей, общайся в личных сообщениях и открывай новые уголки NEXORA.</p><div class="hero-cta"><button type="button" class="btn primary" data-open="register" onclick="document.getElementById(\'auth-modal\').classList.add(\'open\');document.getElementById(\'register-wizard\').classList.remove(\'hidden\');document.getElementById(\'login-fields\').classList.add(\'hidden\')">Создать персонажа ↗</button><button type="button" class="btn" data-open="restore" onclick="document.getElementById(\'auth-modal\').classList.add(\'open\');document.getElementById(\'register-wizard\').classList.add(\'hidden\');document.getElementById(\'login-fields\').classList.remove(\'hidden\')">Уже есть персонаж?</button></div><div class="notice">Для создания персонажа нужно подтвердить, что тебе исполнилось 18 лет. Почта и пароль не нужны.</div></div><div class="visual">🌌</div></section>
+<section class="hero"><div><div class="eyebrow">✦ СОЦИАЛЬНЫЙ ВИРТУАЛЬНЫЙ МИР · 18+</div><h1>Люди ближе.<br><span class="grad">Моменты ярче.</span></h1><p class="lead">Создай персонажа, находи друзей, общайся в личных сообщениях и открывай новые уголки NEXORA.</p><div class="hero-cta"><button class="btn primary" data-open="register">Создать персонажа ↗</button><button type="button" class="btn" data-open="restore" onclick="document.getElementById(\'auth-modal\').classList.add(\'open\');document.getElementById(\'register-wizard\').classList.add(\'hidden\');document.getElementById(\'login-fields\').classList.remove(\'hidden\')">Уже есть персонаж?</button></div><div class="notice">Для создания персонажа нужно подтвердить, что тебе исполнилось 18 лет. Почта и пароль не нужны.</div></div><div class="visual">🌌</div></section>
 </main>
 <main id="dashboard" class="wrap dashboard hidden">
 <div class="head"><div><div class="eyebrow">ЛИЧНЫЙ КАБИНЕТ</div><h2 id="welcome">Добро пожаловать</h2><div class="muted" id="account-label"></div></div><button class="btn" id="logout">Выйти</button></div>
@@ -365,5 +365,26 @@ if(window.NexoraAPI?.mockEnabled()){currentUser={id:"mock-user",username:"pilot"
 <script src="/nexora-room-cleanup.js?v=20261113-2" defer></script>
 
 
+<script>
+/* Independent auth-button fallback: works even if the main app bundle aborts during startup. */
+(() => {
+  const modal = document.getElementById("auth-modal");
+  const register = document.getElementById("register-wizard");
+  const login = document.getElementById("login-fields");
+  if (!modal || !register || !login) return;
+  const show = (mode) => {
+    const isLogin = mode === "restore" || mode === "login";
+    register.classList.toggle("hidden", isLogin);
+    login.classList.toggle("hidden", !isLogin);
+    modal.classList.add("open");
+  };
+  document.querySelectorAll('[data-open="register"]').forEach(button =>
+    button.addEventListener("click", () => show("register"))
+  );
+  document.querySelectorAll('[data-open="restore"]').forEach(button =>
+    button.addEventListener("click", () => show("restore"))
+  );
+})();
+</script>
 <script src="/nexora-safari-boot.js?v=20261113-5" defer></script>
 </body></html>
