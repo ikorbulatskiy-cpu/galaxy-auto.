@@ -152,6 +152,10 @@ router.get("/planet-favorites",requireSession,async(req,res,next)=>{
     FROM planet_favorites pf JOIN planets p ON p.id=pf.planet_id
     WHERE pf.user_id=$1 AND p.is_active=TRUE
       AND NOT EXISTS(SELECT 1 FROM planet_bans pb WHERE pb.planet_id=p.id AND pb.user_id=$1 AND (pb.expires_at IS NULL OR pb.expires_at>NOW()))
+      AND (p.access_type<>'vip' OR p.owner_user_id=$1 OR EXISTS(
+        SELECT 1 FROM planet_access pa WHERE pa.planet_id=p.id AND pa.user_id=$1
+          AND (pa.expires_at IS NULL OR pa.expires_at>NOW())
+          AND (COALESCE(p.settings->>'legacy_access_mode','')<>'private' OR pa.access_level='staff')))
     ORDER BY pf.created_at DESC`,[req.user.id]);
   res.json({favorites:r.rows});
  }catch(e){next(e)}
@@ -170,7 +174,10 @@ router.post("/planet-favorites/:planetSlug",requireSession,async(req,res,next)=>
           AND (COALESCE(p.settings->>'legacy_access_mode','')<>'private' OR pa.access_level='staff')))
     ON CONFLICT(user_id,planet_id) DO NOTHING RETURNING planet_id`,[req.user.id,slug]);
   if(!r.rowCount){
-   const exists=await pool.query("SELECT 1 FROM planet_favorites pf JOIN planets p ON p.id=pf.planet_id WHERE pf.user_id=$1 AND p.slug=$2",[req.user.id,slug]);
+   const exists=await pool.query(`SELECT 1 FROM planet_favorites pf JOIN planets p ON p.id=pf.planet_id
+    WHERE pf.user_id=$1 AND p.slug=$2 AND NOT EXISTS(SELECT 1 FROM planet_bans pb WHERE pb.planet_id=p.id AND pb.user_id=$1 AND (pb.expires_at IS NULL OR pb.expires_at>NOW()))
+      AND (p.access_type<>'vip' OR p.owner_user_id=$1 OR EXISTS(SELECT 1 FROM planet_access pa WHERE pa.planet_id=p.id AND pa.user_id=$1
+        AND (pa.expires_at IS NULL OR pa.expires_at>NOW()) AND (COALESCE(p.settings->>'legacy_access_mode','')<>'private' OR pa.access_level='staff')))`,[req.user.id,slug]);
    if(!exists.rowCount)return res.status(404).json({error:"Планета не найдена или недоступна."});
   }
   res.json({success:true});
