@@ -12,7 +12,6 @@
  const customObjectAtlas=new Image();
  const customObjectTiles=Object.freeze({tree:[0,0],bench:[1,0],fountain:[2,0],lamp:[3,0],flowerbed:[0,1],kiosk:[1,1],palm:[2,1],beach_chair:[3,1],club_table:[0,2],dj_booth:[1,2],sofa:[2,2],plant:[3,2]});
  customObjectAtlas.decoding="async";
- customObjectAtlas.src="/assets/sprites/props/nexora-world-props-atlas.svg";
  function drawPlanetObjects(){
   const scene=root.querySelector(".nx-scene");if(!scene)return;
   let canvas=scene.querySelector(".nx-custom-objects-canvas");
@@ -41,6 +40,7 @@
   drawPlanetObjects();
  }
  customObjectAtlas.onload=drawPlanetObjects;
+ customObjectAtlas.src="/assets/sprites/props/nexora-world-props-atlas.svg";
  window.addEventListener("resize",drawPlanetObjects);
  function cosmetics(look={}){const raw=Array.isArray(look.accessories)?look.accessories:String(look.accessories||"").split(",");const items=raw.map(x=>String(x).trim()).filter(Boolean).slice(0,3);if(look.wings)items.unshift("Крылья");if(look.halo)items.unshift("Ореол");return items.length?'<div class="nx-avatar-accessories">'+items.map(x=>'<span>'+esc(x)+'</span>').join("")+'</div>':""}
  function addEvent(message,kind="info"){const box=document.getElementById("nx-event-list");if(!box)return;const row=document.createElement("div");row.className="nx-event-item nx-event-"+kind;const stamp=document.createElement("time");stamp.textContent=new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});const body=document.createElement("span");body.textContent=message;row.append(stamp,body);box.prepend(row);while(box.children.length>18)box.lastElementChild.remove();const summary=document.getElementById("nx-system-message");if(summary)summary.textContent=message}
