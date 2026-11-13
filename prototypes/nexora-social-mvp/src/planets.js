@@ -10,7 +10,7 @@ function createPlanetsRouter({ pool, auth, players, io }) {
   async function account(req) {
     return auth.authenticateToken(req.cookies?.nexora_session);
   }
-  async function planetAccess(planetId, accountId, inviteId) {
+  async function planetAccess(planetId, accountId, inviteId, enforceCapacity = true) {
     const found = await pool.query(
       `SELECT p.*, (SELECT COUNT(*)::int FROM nexora_social_world.planet_members m WHERE m.planet_id=p.id) AS members,
         EXISTS(SELECT 1 FROM nexora_social_world.planet_staff s WHERE s.planet_id=p.id AND s.account_id=$2) AS staff,
@@ -25,7 +25,7 @@ function createPlanetsRouter({ pool, auth, players, io }) {
     if (p.access_mode === "private" && String(p.owner_account_id) !== String(accountId) && !p.staff) return { error: "Планета закрыта для посещения.", status: 403 };
     if (p.access_mode === "invite" && String(p.owner_account_id) !== String(accountId) && !p.staff && !p.invited && !p.member) return { error: "Для входа требуется приглашение.", status: 403 };
     const onlineCount = [...players.values()].filter(x => x.planet === "custom-" + String(planetId)).length;
-    if (onlineCount >= p.capacity && String(p.owner_account_id) !== String(accountId)) return { error: "На планете нет свободных мест.", status: 409 };
+    if (enforceCapacity && onlineCount >= p.capacity && String(p.owner_account_id) !== String(accountId)) return { error: "На планете нет свободных мест.", status: 409 };
     return { planet: p };
   }
   router.get("/", async (req,res,next) => {
@@ -169,7 +169,7 @@ function createPlanetsRouter({ pool, auth, players, io }) {
   router.get("/:id/objects",async(req,res,next)=>{
     try{
       const me=await account(req);if(!me)return res.status(401).json({error:"Требуется вход."});
-      const access=await planetAccess(req.params.id,me.id);
+      const access=await planetAccess(req.params.id,me.id,null,false);
       if(access.error)return res.status(access.status).json({error:access.error});
       const result=await pool.query("SELECT id,object_code AS code,x,y,rotation,scale,properties FROM nexora_social_world.custom_planet_objects WHERE planet_id=$1 ORDER BY y,id",[req.params.id]);
       res.json({ok:true,objects:result.rows});
@@ -200,6 +200,7 @@ function createPlanetsRouter({ pool, auth, players, io }) {
       );
       await client.query("INSERT INTO nexora_social_world.planet_audit_logs(planet_id,actor_account_id,action,details) VALUES($1,$2,'objects_updated',$3::jsonb)",[req.params.id,me.id,JSON.stringify({count:normalized.length})]);
       await client.query("COMMIT");
+      io.to("planet:custom-"+req.params.id).emit("planet:objects-updated",normalized);
       res.json({ok:true,count:normalized.length});
     }catch(e){await client.query("ROLLBACK");next(e);}finally{client.release();}
   });
