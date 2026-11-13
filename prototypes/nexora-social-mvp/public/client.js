@@ -655,6 +655,12 @@
     if(!$("#gender").value)return;$("#register-step-one").classList.add("hidden");$("#register-step-two").classList.remove("hidden");loginError.textContent="";preview();nicknameInput.focus();
   });
   $("#register-back").addEventListener("click",()=>{$("#register-step-two").classList.add("hidden");$("#register-step-one").classList.remove("hidden");loginError.textContent="";});
+  document.querySelectorAll(".register-cancel").forEach(button=>button.addEventListener("click",()=>{
+    $("#register-mode").classList.add("hidden");$("#auth-home").classList.remove("hidden");
+    $("#register-step-one").classList.remove("hidden");$("#register-step-two").classList.add("hidden");
+    $("#gender").value="";$("#nickname").value="";$("#personal-data-consent").checked=false;
+    pendingRegistration=null;loginError.textContent="";
+  }));
   $("#register-button").addEventListener("click",()=>beginRegistration(false));
   $("#skip-nickname").addEventListener("click",()=>beginRegistration(true));
   $("#login-button").addEventListener("click",submitLogin);
