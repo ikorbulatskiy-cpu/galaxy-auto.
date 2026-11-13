@@ -90,6 +90,7 @@
       } else {
         const data = await request("/api/social/preferences");
         settings = { ...defaults, ...(data.preferences || {}) };
+        window.dispatchEvent(new CustomEvent("nexora:galaxy-preferences", { detail:settings }));
         const labels = [
           ["chat_bubbles","Облачка сообщений","Показывать текст над персонажами."],
           ["sound_enabled","Звуковые эффекты","Разрешить звуки интерфейса."],
