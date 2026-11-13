@@ -3,12 +3,45 @@
  const root=document.getElementById("tab-world");if(!root)return;
  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const api=window.NexoraAPI?window.NexoraAPI.request:async(url,options={})=>{const r=await fetch(url,{credentials:"same-origin",...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||"Ошибка "+r.status);return d};
- let planets=[],rooms=[],activePlanet="",activeRoom="",socket=null,meName="Ты",meAppearance={},meAura="none",activeCharacterId="",poll=null,reconnectTimer=null,reconnectAttempts=0,joinGeneration=0,roomAckTimer=null;
+ let planets=[],rooms=[],activePlanet="",activeRoom="",socket=null,meName="Ты",meAppearance={},meAura="none",activeCharacterId="",poll=null,reconnectTimer=null,reconnectAttempts=0,joinGeneration=0,roomAckTimer=null,planetObjects=[];
  let galaxyPrefs={chat_bubbles:true,sound_enabled:true,system_messages:true};
  function playGalaxyNotice(){if(!galaxyPrefs.sound_enabled)return;try{const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;const ctx=new Ctx(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.type="sine";osc.frequency.value=660;gain.gain.setValueAtTime(.045,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);osc.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.12);osc.onended=()=>ctx.close()}catch{}}
  function showChatBubble(message){if(!galaxyPrefs.chat_bubbles)return;const username=String(message.username||"");const card=[...document.querySelectorAll("#nx-avatars .nx-avatar-card")].find(node=>node.dataset.playerUsername===username);if(!card)return;let bubble=card.querySelector(".nx-chat-bubble");if(!bubble){bubble=document.createElement("div");bubble.className="nx-chat-bubble";card.append(bubble)}bubble.textContent=String(message.body||"").slice(0,100);bubble.hidden=false;clearTimeout(bubble._hideTimer);bubble._hideTimer=setTimeout(()=>{bubble.hidden=true},4500)}
  const palette={light:"#f2c9a5",medium:"#d49a6c",tan:"#a96e45",dark:"#68402f"};
  function avatar(look={},mini=false){const payload=esc(JSON.stringify(look||{}));return '<canvas class="nx-sprite-canvas" data-nexora-sprite data-size="'+(mini?"mini":"full")+'" data-look="'+payload+'" aria-label="Персонаж"></canvas>'}
+ const customObjectAtlas=new Image();
+ const customObjectTiles=Object.freeze({tree:[0,0],bench:[1,0],fountain:[2,0],lamp:[3,0],flowerbed:[0,1],kiosk:[1,1],palm:[2,1],beach_chair:[3,1],club_table:[0,2],dj_booth:[1,2],sofa:[2,2],plant:[3,2]});
+ customObjectAtlas.decoding="async";
+ customObjectAtlas.src="/assets/sprites/props/nexora-world-props-atlas.svg";
+ function drawPlanetObjects(){
+  const scene=root.querySelector(".nx-scene");if(!scene)return;
+  let canvas=scene.querySelector(".nx-custom-objects-canvas");
+  if(!canvas){canvas=document.createElement("canvas");canvas.className="nx-custom-objects-canvas";canvas.setAttribute("aria-hidden","true");scene.append(canvas)}
+  const rect=scene.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
+  if(!rect.width||!rect.height)return;
+  canvas.width=Math.round(rect.width*dpr);canvas.height=Math.round(rect.height*dpr);
+  canvas.style.width=rect.width+"px";canvas.style.height=rect.height+"px";
+  const ctx=canvas.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,rect.width,rect.height);
+  const items=planetObjects.slice().sort((a,b)=>Number(a.y)-Number(b.y));
+  for(const item of items){
+   const tile=customObjectTiles[item.code],x=Number(item.x)*rect.width,y=Number(item.y)*rect.height;
+   const scale=Math.max(.45,Math.min(1.6,Number(item.scale)||1)),size=78*scale;
+   ctx.save();ctx.translate(x,y);ctx.rotate((Number(item.rotation)||0)*Math.PI/180);
+   ctx.fillStyle="rgba(5,10,28,.24)";ctx.beginPath();ctx.ellipse(0,2,size*.39,size*.09,0,0,Math.PI*2);ctx.fill();
+   if(tile&&customObjectAtlas.complete&&customObjectAtlas.naturalWidth)ctx.drawImage(customObjectAtlas,tile[0]*256,tile[1]*256,256,256,-size*.5,-size*.91,size,size);
+   else{ctx.fillStyle="#8c8bd8";ctx.strokeStyle="#e1dcff";ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-size*.38,size*.22,0,Math.PI*2);ctx.fill();ctx.stroke()}
+   ctx.restore();
+  }
+ }
+ async function loadPlanetObjects(planet){
+  planetObjects=[];
+  if(!planet?.slug?.startsWith("custom-")){drawPlanetObjects();return}
+  try{const result=await api("/api/game/planets/"+encodeURIComponent(planet.slug)+"/objects");if(activePlanet!==planet.slug)return;planetObjects=result.objects||[]}
+  catch{planetObjects=[]}
+  drawPlanetObjects();
+ }
+ customObjectAtlas.onload=drawPlanetObjects;
+ window.addEventListener("resize",drawPlanetObjects);
  function cosmetics(look={}){const raw=Array.isArray(look.accessories)?look.accessories:String(look.accessories||"").split(",");const items=raw.map(x=>String(x).trim()).filter(Boolean).slice(0,3);if(look.wings)items.unshift("Крылья");if(look.halo)items.unshift("Ореол");return items.length?'<div class="nx-avatar-accessories">'+items.map(x=>'<span>'+esc(x)+'</span>').join("")+'</div>':""}
  function addEvent(message,kind="info"){const box=document.getElementById("nx-event-list");if(!box)return;const row=document.createElement("div");row.className="nx-event-item nx-event-"+kind;const stamp=document.createElement("time");stamp.textContent=new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});const body=document.createElement("span");body.textContent=message;row.append(stamp,body);box.prepend(row);while(box.children.length>18)box.lastElementChild.remove();const summary=document.getElementById("nx-system-message");if(summary)summary.textContent=message}
  function getFavorites(){try{return JSON.parse(localStorage.getItem("nexora_favorites")||"[]")}catch{return[]}}
@@ -88,7 +121,7 @@
   }catch(e){status(e.message);if(window.toast)toast(e.message)}
  }
  async function travel(slug){
-  try{const planet=planets.find(p=>p.slug===slug);if(!planet)throw new Error("Планета не найдена. Введи её название.");const overlay=document.getElementById("nx-flight-overlay");if(overlay){overlay.hidden=false;document.getElementById("nx-flight-label").textContent="Перелёт на "+planet.name;await new Promise(r=>setTimeout(r,1400))}await api("/api/world/travel",{method:"POST",body:JSON.stringify({planetSlug:slug})});activePlanet=slug;disconnect();addEvent("Перелёт на планету «"+planet.name+"» завершён.","success");applyPlanetScene(planet);await loadRooms();if(overlay)overlay.hidden=true;status("Перелёт завершён")}
+  try{const planet=planets.find(p=>p.slug===slug);if(!planet)throw new Error("Планета не найдена. Введи её название.");const overlay=document.getElementById("nx-flight-overlay");if(overlay){overlay.hidden=false;document.getElementById("nx-flight-label").textContent="Перелёт на "+planet.name;await new Promise(r=>setTimeout(r,1400))}await api("/api/world/travel",{method:"POST",body:JSON.stringify({planetSlug:slug})});activePlanet=slug;try{const recent=JSON.parse(localStorage.getItem("nexora_recent_planets")||"[]");localStorage.setItem("nexora_recent_planets",JSON.stringify([slug,...recent.filter(x=>x!==slug)].slice(0,8)))}catch{}disconnect();addEvent("Перелёт на планету «"+planet.name+"» завершён.","success");applyPlanetScene(planet);await loadRooms();if(overlay)overlay.hidden=true;status("Перелёт завершён")}
   catch(e){const overlay=document.getElementById("nx-flight-overlay");if(overlay)overlay.hidden=true;status(e.message);if(window.toast)toast(e.message)}
  }
  async function loadRooms(){
@@ -191,12 +224,19 @@
  }
  async function loadPresence(id){try{const p=await api("/api/game/rooms/"+id+"/presence");if(activeRoom===id)renderPlayers(p.users||[])}catch{}}
  
- function applyPlanetScene(p){if(!p)return;const scene=root.querySelector(".nx-scene");scene.dataset.theme=p.settings?.theme||"custom";const king=p.slug==="newbies-1"?"Король планеты пока неизвестен":(p.owner_name?"Король: "+p.owner_name:"Король: неизвестен");const meta=document.getElementById("nx-scene-meta");if(meta)meta.textContent=[king,p.settings?.interior,p.settings?.weather].filter(Boolean).join(" · ");document.getElementById("nx-room-label").textContent="🪐 "+p.name;const top=document.getElementById("nx-top-planet");if(top)top.textContent=p.name}
+ function applyPlanetScene(p){if(!p)return;const scene=root.querySelector(".nx-scene");scene.dataset.theme=p.settings?.theme||"custom";const king=p.slug==="newbies-1"?"Король планеты пока неизвестен":(p.owner_name?"Король: "+p.owner_name:"Король: неизвестен");const meta=document.getElementById("nx-scene-meta");if(meta)meta.textContent=[king,p.settings?.interior,p.settings?.weather].filter(Boolean).join(" · ");document.getElementById("nx-room-label").textContent="🪐 "+p.name;const top=document.getElementById("nx-top-planet");if(top)top.textContent=p.name;loadPlanetObjects(p)}
  function findPlanet(){const q=document.getElementById("nx-planet-search").value.trim().toLocaleLowerCase("ru");if(!q)return status("Введи название планеты.");const p=planets.find(x=>x.slug===q||x.name.toLocaleLowerCase("ru")===q||x.name.toLocaleLowerCase("ru").includes(q));if(!p)return status("Планета не найдена.");travel(p.slug)}
  async function createPlanet(){if(window.NexoraExtras?.openPlanetModal){window.NexoraExtras.openPlanetModal(async payload=>{const d=await api("/api/game/planets",{method:"POST",body:JSON.stringify(payload)});status("Планета создана. Ты её король!");await refreshWorld();document.getElementById("nx-planet-search").value=d.planet.name;await travel(d.planet.slug);return d});return}status("Конструктор планеты ещё загружается.");}
  async function openAuras(){try{const d=await api("/api/game/auras");const chars=d.characters||[];const active=chars.find(c=>c.id===activeCharacterId)||chars[0];if(!active)return status("Сначала создай персонажа.");const options=[["none","Новичок",0],["angel","Ангел",50],["god",active.gender==="female"?"Богиня":"Бог",null],["almighty","Всемогущий",100],["universe",active.gender==="female"?"Мисс Вселенная":"Мистер Вселенный",200],["legend","Легенда",300]];const text=options.map(x=>x[1]+(x[2]===null?" (цена уточняется)":x[2]?" ("+x[2]+" coins)":" (без ауры)")).join("\n");const chosen=prompt("Ауры персонажа:\n"+text+"\n\nВведи: none, angel, almighty, universe или legend",active.aura||"none");if(!chosen)return;if(chosen==="god")return status("Цена Бога / Богини пока не установлена.");await api("/api/game/characters/"+active.id+"/aura",{method:"POST",body:JSON.stringify({aura:chosen.trim().toLowerCase()})});status("Аура обновлена.");await refreshWorld()}catch(e){status(e.message);if(window.toast)toast(e.message)}}
 
  window.addEventListener("nexora:galaxy-preferences",event=>{galaxyPrefs={...galaxyPrefs,...(event.detail||{})};const room=rooms.find(item=>item.id===activeRoom);if(room&&socket?.readyState===WebSocket.OPEN)join(room)});
  window.nexoraWorldRefresh=refreshWorld;window.nexoraTravelTo=travel;
+ window.nexoraWorldGetPlanets=()=>planets.slice();
+ window.nexoraWorldTogglePlanetFavorite=async slug=>{
+  const planet=planets.find(item=>item.slug===slug);if(!planet)throw new Error("Планета не найдена.");
+  await api("/api/game/planet-favorites/"+encodeURIComponent(slug),{method:planet.is_favorite?"DELETE":"POST"});
+  await refreshWorld();return !planet.is_favorite;
+ };
+
  layout();const overlay=document.createElement("div");overlay.className="nx-flight-overlay";overlay.id="nx-flight-overlay";overlay.hidden=true;overlay.innerHTML="<div class=nx-flight-stars></div><div class=nx-flight-ship>🚀</div><b id=nx-flight-label>Перелёт между планетами</b>";root.querySelector(".nx-world").appendChild(overlay);refreshWorld();
 })();
