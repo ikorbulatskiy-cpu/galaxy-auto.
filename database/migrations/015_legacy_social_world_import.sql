@@ -261,10 +261,9 @@ BEGIN
     LEFT JOIN planets destination ON destination.slug=CASE COALESCE(c.planet,'starter')
       WHEN 'starter' THEN 'newbies-1' WHEN 'club' THEN 'legacy-club'
       WHEN 'beach' THEN 'legacy-beach' ELSE c.planet END
-    WHERE destination.id IS NULL OR NOT EXISTS (
-      SELECT 1 FROM planet_bans pb WHERE pb.planet_id=destination.id AND pb.user_id=u.id
-        AND (pb.expires_at IS NULL OR pb.expires_at>NOW())
-    )
+    LEFT JOIN planet_bans active_ban ON active_ban.planet_id=destination.id AND active_ban.user_id=u.id
+      AND (active_ban.expires_at IS NULL OR active_ban.expires_at>NOW())
+    WHERE active_ban.user_id IS NULL
     ON CONFLICT (user_id) DO NOTHING
   $q$;
 
