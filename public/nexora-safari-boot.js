@@ -26,6 +26,7 @@
     if (trigger) {
       event.preventDefault();
       showAuth(trigger.dataset.open);
+      event.stopImmediatePropagation();
       return;
     }
     const close = target && target.closest ? target.closest("#close-modal") : null;
@@ -33,6 +34,7 @@
       event.preventDefault();
       $("#auth-modal")?.classList.remove("open");
       document.body.style.overflow = "";
+      event.stopImmediatePropagation();
     }
   }, true);
 
