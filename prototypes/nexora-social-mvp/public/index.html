@@ -178,6 +178,7 @@
           <button data-social-tab="friends" class="active">Друзья</button>
           <button data-social-tab="messages">Сообщения</button>
           <button data-social-tab="notifications">Уведомления <span id="notification-count"></span></button>
+          <button data-social-tab="rating">🏆 Рейтинг</button>
         </div>
         <section id="social-friends-view" class="social-view">
           <input id="social-search" type="search" maxlength="18" placeholder="Найти игрока по нику">
@@ -192,8 +193,36 @@
           <form id="social-message-form" class="social-message-form"><input id="social-message-input" maxlength="2000" placeholder="Личное сообщение..." autocomplete="off"><button type="submit">➤</button></form>
         </section>
         <section id="social-notifications-view" class="social-view hidden"><div id="social-notifications" class="social-list"></div></section>
+        <section id="social-rating-view" class="social-view hidden">
+          <div class="rating-categories" role="group" aria-label="Категория рейтинга">
+            <button type="button" data-rating-category="authority" class="active">Авторитет</button>
+            <button type="button" data-rating-category="level">Уровень</button>
+            <button type="button" data-rating-category="popularity">Популярность</button>
+          </div>
+          <div id="social-rating-list" class="social-list"></div>
+          <p id="social-rating-me" class="rating-me"></p>
+        </section>
       </aside>
       
+      <aside id="public-profile" class="public-profile hidden" aria-label="Информация об игроке">
+        <div class="profile-editor-head"><div><span class="profile-kicker">NEXORA ID</span><strong>Профиль игрока</strong></div><button id="public-profile-close" type="button" aria-label="Закрыть">×</button></div>
+        <div class="public-profile-summary">
+          <canvas id="public-profile-avatar" width="180" height="150" aria-label="Персонаж игрока"></canvas>
+          <div><strong id="public-profile-name">Игрок</strong><span id="public-profile-presence">● Не в сети</span><span id="public-profile-joined"></span></div>
+        </div>
+        <div class="public-profile-rank"><strong id="public-profile-title">Новичок</strong><span id="public-profile-aura">Аура выключена</span></div>
+        <div class="profile-stats">
+          <div><strong id="public-profile-level">1</strong><span>Уровень</span></div>
+          <div><strong id="public-profile-authority">0</strong><span>Авторитет</span></div>
+          <div><strong id="public-profile-friends">0</strong><span>Друзья</span></div>
+          <div><strong id="public-profile-gifts">0</strong><span>Подарки</span></div>
+        </div>
+        <div class="public-profile-status"><strong id="public-profile-status"></strong><p id="public-profile-bio"></p></div>
+        <div class="public-profile-actions">
+          <button id="public-profile-friend" type="button">Добавить в друзья</button>
+          <button id="public-profile-message" type="button">Написать</button>
+        </div>
+      </aside>
       <aside id="profile-editor" class="profile-editor hidden" aria-label="Мой профиль">
         <div class="profile-editor-head"><div><span class="profile-kicker">NEXORA ID</span><strong>Мой профиль</strong></div><button id="profile-editor-close" type="button" aria-label="Закрыть">×</button></div>
         <div class="profile-editor-summary">
