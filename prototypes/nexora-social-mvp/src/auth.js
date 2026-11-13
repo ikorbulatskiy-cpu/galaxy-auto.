@@ -143,7 +143,16 @@ async function login(req, res) {
 async function authenticateToken(token) {
   if (!token || typeof token !== "string" || token.length > 256) return null;
   const result = await pool.query(
-    "SELECT a.id,a.nickname,c.avatar,c.planet,c.position_x FROM nexora_social_world.sessions s JOIN nexora_social_world.accounts a ON a.id=s.account_id LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id WHERE s.token_hash=$1 AND s.expires_at>NOW()",
+    `SELECT a.id,a.nickname,c.avatar,c.planet,c.position_x
+       FROM nexora_social_world.sessions s
+       JOIN nexora_social_world.accounts a ON a.id=s.account_id
+       LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
+      WHERE s.token_hash=$1 AND s.expires_at>NOW()
+        AND NOT EXISTS (
+          SELECT 1 FROM nexora_social_world.moderation_actions m
+           WHERE m.target_account_id=a.id AND m.action_type='BAN'
+             AND m.revoked_at IS NULL AND (m.expires_at IS NULL OR m.expires_at>NOW())
+        )`,
     [hashToken(token)]
   );
   return result.rows[0] || null;

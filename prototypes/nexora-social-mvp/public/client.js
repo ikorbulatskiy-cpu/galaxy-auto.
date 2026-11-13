@@ -664,7 +664,38 @@
         ]);
       } else if (tab === "players") {
         const d = await developerRequest("/players");
-        developerRender("Последние игроки", d.players.map(p => ({ title: p.nickname + " · ID " + p.id, detail: (p.online ? "В сети" : "Не в сети") + " · " + p.planet + " · " + new Date(p.createdAt).toLocaleDateString("ru-RU") })));
+        content.replaceChildren();
+        const heading = document.createElement("h3"); heading.textContent = "Управление игроками"; content.append(heading);
+        const search = document.createElement("input"); search.type = "search"; search.maxLength = 18; search.placeholder = "Поиск по ID или никнейму"; content.append(search);
+        const list = document.createElement("div"); content.append(list);
+        const renderPlayers = rows => {
+          list.replaceChildren();
+          rows.forEach(p => {
+            const row = document.createElement("div"); row.className = "developer-row";
+            const label = document.createElement("strong"); label.textContent = p.nickname + " · ID " + p.id + (p.banned ? " · ЗАБЛОКИРОВАН" : "");
+            const detail = document.createElement("span"); detail.textContent = (p.online ? "В сети" : "Не в сети") + " · " + p.planet + " · Koins: " + p.balance;
+            row.append(label, detail);
+            const warn = document.createElement("button"); warn.type = "button"; warn.textContent = "Предупредить";
+            warn.addEventListener("click", async () => { const reason = prompt("Причина предупреждения"); if (!reason) return; try { await developerRequest("/players/"+p.id+"/warn",{method:"POST",body:JSON.stringify({reason})}); showToast("Предупреждение выдано."); } catch(error){showToast(error.message);} });
+            row.append(warn);
+            const ban = document.createElement("button"); ban.type = "button"; ban.textContent = p.banned ? "Разблокировать" : "Заблокировать";
+            ban.addEventListener("click", async () => {
+              const reason = prompt(p.banned ? "Причина разблокировки" : "Причина блокировки"); if (!reason) return;
+              try {
+                if (p.banned) await developerRequest("/players/"+p.id+"/ban",{method:"DELETE",body:JSON.stringify({reason})});
+                else { const duration = prompt("Срок в часах. Оставь пустым для постоянной блокировки.","24"); if (duration===null) return; await developerRequest("/players/"+p.id+"/ban",{method:"POST",body:JSON.stringify({reason,hours:duration===""?null:Number(duration)})}); }
+                showToast("Действие модерации выполнено."); loadDeveloperTab("players");
+              } catch(error){showToast(error.message);}
+            });
+            row.append(ban); list.append(row);
+          });
+        };
+        renderPlayers(d.players);
+        let searchTimer;
+        search.addEventListener("input", () => { clearTimeout(searchTimer); searchTimer=setTimeout(async()=>{try{const result=await developerRequest("/players?q="+encodeURIComponent(search.value));renderPlayers(result.players);}catch(error){showToast(error.message);}},250);});
+      } else if (tab === "moderation") {
+        const d = await developerRequest("/moderation");
+        developerRender("История модерации", d.entries.map(e => ({title: e.action_type + " · " + e.target_nickname + " · ID " + e.target_account_id, detail: e.reason + " · " + e.actor_nickname + " · " + new Date(e.created_at).toLocaleString("ru-RU") + (e.expires_at ? " · до " + new Date(e.expires_at).toLocaleString("ru-RU") : "") + (e.revoked_at ? " · отменено" : "")})));
       } else if (tab === "world") {
         const d = await developerRequest("/world");
         developerRender("Планеты и комнаты", d.world.map(p => ({ title: p.title, detail: p.online + " онлайн · " + p.rooms + " комнат" })));
@@ -680,14 +711,14 @@
         const account = document.createElement("input");
         account.type = "number"; account.min = "1"; account.required = true; account.placeholder = "ID аккаунта";
         const role = document.createElement("select");
-        ["DEVELOPER","MODERATOR","HELPER","USER"].forEach(value => {
+        ["DEVELOPER","ADMIN","MODERATOR","HELPER","USER"].forEach(value => {
           const option = document.createElement("option"); option.value = value; option.textContent = value; role.append(option);
         });
         const reason = document.createElement("input");
         reason.maxLength = 500; reason.placeholder = "Причина назначения";
         const permissionWrap = document.createElement("div");
         permissionWrap.className = "developer-permission-grid";
-        const available = ["players.view","players.ban","players.unban","world.view","world.manage","economy.view","economy.manage","items.view","items.manage","system.view","logs.view"];
+        const available = ["players.view","players.ban","players.unban","players.warn","moderation.view","world.view","world.manage","economy.view","economy.manage","items.view","items.manage","system.view","logs.view"];
         available.forEach(value => {
           const label = document.createElement("label");
           const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.value = value;

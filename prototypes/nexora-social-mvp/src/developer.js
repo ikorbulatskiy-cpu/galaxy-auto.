@@ -1,13 +1,15 @@
 const express = require("express");
 
 const PERMISSIONS = new Set([
-  "players.view", "players.ban", "players.unban", "world.view", "world.manage",
-  "economy.view", "economy.manage", "items.view", "items.manage", "system.view",
+  "players.view", "players.ban", "players.unban", "players.warn",
+  "moderation.view", "world.view", "world.manage", "economy.view",
+  "economy.manage", "items.view", "items.manage", "system.view",
   "roles.manage", "logs.view"
 ]);
+const ROLES = new Set(["DEVELOPER", "ADMIN", "MODERATOR", "HELPER", "USER"]);
 function ownerId() {
   const value = String(process.env.NEXORA_OWNER_ACCOUNT_ID || "").trim();
-  return /^\d+$/.test(value) ? value : "";
+  return /^\\d+$/.test(value) ? value : "";
 }
 function createDeveloperRouter({ pool, auth, players, planets }) {
   const router = express.Router();
@@ -32,6 +34,12 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
     recent.push(now); requestTimes.set(key, recent);
     return current;
   }
+  async function audit(client, current, targetId, action, reason, details = {}) {
+    await client.query(
+      "INSERT INTO nexora_social_world.developer_audit_logs(actor_account_id,target_account_id,action,reason,details) VALUES($1,$2,$3,$4,$5::jsonb)",
+      [current.account.id, targetId || null, action, reason || null, JSON.stringify(details)]
+    );
+  }
   router.get("/access", async (req, res, next) => {
     try {
       const current = await context(req);
@@ -42,9 +50,9 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
   router.get("/overview", async (req, res, next) => {
     try {
       const current = await requirePermission(req, res, "system.view"); if (!current) return;
-      const counts = await pool.query("SELECT (SELECT COUNT(*)::int FROM nexora_social_world.accounts) AS accounts, (SELECT COUNT(*)::int FROM nexora_social_world.characters) AS characters");
+      const counts = await pool.query("SELECT (SELECT COUNT(*)::int FROM nexora_social_world.accounts) AS accounts, (SELECT COUNT(*)::int FROM nexora_social_world.characters) AS characters, (SELECT COUNT(*)::int FROM nexora_social_world.accounts WHERE created_at >= NOW() - INTERVAL '1 day') AS registrationsToday");
       const active = new Set([...players.values()].map(player => player.planet));
-      res.json({ ok: true, role: current.role, server: "online", database: "connected", onlinePlayers: players.size, accounts: counts.rows[0].accounts, characters: counts.rows[0].characters, activeRooms: active.size });
+      res.json({ ok: true, role: current.role, server: "online", database: "connected", onlinePlayers: players.size, accounts: counts.rows[0].accounts, characters: counts.rows[0].characters, registrationsToday: counts.rows[0].registrationstoday, activeRooms: active.size });
     } catch (error) { next(error); }
   });
   router.get("/players", async (req, res, next) => {
@@ -52,15 +60,95 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
       const current = await requirePermission(req, res, "players.view"); if (!current) return;
       const query = String(req.query.q || "").trim().slice(0, 18);
       const result = await pool.query(
-        `SELECT a.id,a.nickname,a.created_at,COALESCE(c.planet,'unknown') AS planet
-           FROM nexora_social_world.accounts a LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
+        `SELECT a.id,a.nickname,a.created_at,a.last_login_at,COALESCE(c.planet,'unknown') AS planet,
+                COALESCE(w.balance,0)::text AS balance,
+                EXISTS(SELECT 1 FROM nexora_social_world.moderation_actions m WHERE m.target_account_id=a.id AND m.action_type='BAN' AND m.revoked_at IS NULL AND (m.expires_at IS NULL OR m.expires_at>NOW())) AS banned
+           FROM nexora_social_world.accounts a
+           LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
+           LEFT JOIN nexora_social_world.wallets w ON w.account_id=a.id
           WHERE ($1='' OR a.nickname ILIKE $2 OR a.id::text=$1)
           ORDER BY a.created_at DESC LIMIT 50`,
-        [query, "%" + query.replace(/[\\%_]/g, "\\$&") + "%"]
+        [query, "%" + query.replace(/[\\%_]/g, "\\\\$&") + "%"]
       );
       const online = new Set([...players.values()].map(player => String(player.accountId)));
-      res.json({ ok: true, players: result.rows.map(p => ({ id: String(p.id), nickname: p.nickname, planet: p.planet, createdAt: p.created_at, online: online.has(String(p.id)) })) });
+      res.json({ ok: true, players: result.rows.map(p => ({ id: String(p.id), nickname: p.nickname, planet: p.planet, createdAt: p.created_at, lastLoginAt: p.last_login_at, balance: p.balance, banned: p.banned, online: online.has(String(p.id)) })) });
     } catch (error) { next(error); }
+  });
+  router.get("/players/:id", async (req, res, next) => {
+    try {
+      const current = await requirePermission(req, res, "players.view"); if (!current) return;
+      if (!/^\\d+$/.test(String(req.params.id))) return res.status(400).json({ error: "Некорректный ID." });
+      const result = await pool.query(
+        `SELECT a.id,a.nickname,a.created_at,a.last_login_at,c.avatar,c.planet,c.level,c.experience,c.authority,
+                COALESCE(w.balance,0)::text AS balance
+           FROM nexora_social_world.accounts a
+           LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
+           LEFT JOIN nexora_social_world.wallets w ON w.account_id=a.id
+          WHERE a.id=$1`, [req.params.id]
+      );
+      if (!result.rowCount) return res.status(404).json({ error: "Игрок не найден." });
+      const inventory = await pool.query("SELECT item_code,quantity,metadata FROM nexora_social_world.inventory WHERE account_id=$1 ORDER BY item_code", [req.params.id]);
+      const punishments = await pool.query("SELECT action_type,reason,expires_at,created_at,revoked_at FROM nexora_social_world.moderation_actions WHERE target_account_id=$1 ORDER BY created_at DESC LIMIT 30", [req.params.id]);
+      res.json({ ok: true, player: result.rows[0], inventory: inventory.rows, punishments: punishments.rows });
+    } catch (error) { next(error); }
+  });
+  router.post("/players/:id/ban", async (req, res, next) => {
+    try {
+      const current = await requirePermission(req, res, "players.ban"); if (!current) return;
+      const targetId = String(req.params.id);
+      const reason = String(req.body?.reason || "").trim().slice(0, 500);
+      const hours = req.body?.hours == null || req.body.hours === "" ? null : Number(req.body.hours);
+      if (!/^\\d+$/.test(targetId) || !reason || (hours !== null && (!Number.isInteger(hours) || hours < 1 || hours > 8760))) return res.status(400).json({ error: "Укажите корректный ID, причину и срок от 1 до 8760 часов либо постоянную блокировку." });
+      if (ownerId() && targetId === ownerId()) return res.status(403).json({ error: "Нельзя заблокировать OWNER." });
+      const target = await pool.query("SELECT id FROM nexora_social_world.accounts WHERE id=$1", [targetId]);
+      if (!target.rowCount) return res.status(404).json({ error: "Игрок не найден." });
+      const expiresAt = hours === null ? null : new Date(Date.now() + hours * 3600000);
+      const result = await pool.query("INSERT INTO nexora_social_world.moderation_actions(actor_account_id,target_account_id,action_type,reason,expires_at) VALUES($1,$2,'BAN',$3,$4) RETURNING id,expires_at", [current.account.id,targetId,reason,expiresAt]);
+      await pool.query("INSERT INTO nexora_social_world.developer_audit_logs(actor_account_id,target_account_id,action,reason,details) VALUES($1,$2,'player.ban',$3,$4::jsonb)", [current.account.id,targetId,reason,JSON.stringify({ moderationId: result.rows[0].id, expiresAt })]);
+      res.status(201).json({ ok: true, moderation: result.rows[0] });
+    } catch (error) { next(error); }
+  });
+  router.delete("/players/:id/ban", async (req, res, next) => {
+    try {
+      const current = await requirePermission(req, res, "players.unban"); if (!current) return;
+      const targetId = String(req.params.id), reason = String(req.body?.reason || "").trim().slice(0,500);
+      if (!/^\\d+$/.test(targetId) || !reason) return res.status(400).json({ error: "Укажите ID игрока и причину разблокировки." });
+      const client = await pool.connect();
+      let changed;
+      try {
+        await client.query("BEGIN");
+        changed = await client.query("UPDATE nexora_social_world.moderation_actions SET revoked_at=NOW(),revoked_by=$2,revocation_reason=$3 WHERE target_account_id=$1 AND action_type='BAN' AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at>NOW()) RETURNING id", [targetId,current.account.id,reason]);
+        if (changed.rowCount) await audit(client,current,targetId,"player.unban",reason,{ moderationIds: changed.rows.map(row=>row.id) });
+        await client.query("COMMIT");
+      } catch(error){await client.query("ROLLBACK");throw error;} finally{client.release();}
+      res.json({ ok:true, revoked:changed.rowCount });
+    } catch(error){next(error);}
+  });
+  router.post("/players/:id/warn", async (req,res,next)=>{
+    try{
+      const current=await requirePermission(req,res,"players.warn"); if(!current)return;
+      const targetId=String(req.params.id),reason=String(req.body?.reason||"").trim().slice(0,500);
+      if(!/^\\d+$/.test(targetId)||!reason)return res.status(400).json({error:"Укажите ID игрока и причину предупреждения."});
+      if(ownerId()&&targetId===ownerId())return res.status(403).json({error:"Нельзя выдать предупреждение OWNER."});
+      const target=await pool.query("SELECT id FROM nexora_social_world.accounts WHERE id=$1",[targetId]);
+      if(!target.rowCount)return res.status(404).json({error:"Игрок не найден."});
+      const result=await pool.query("INSERT INTO nexora_social_world.moderation_actions(actor_account_id,target_account_id,action_type,reason) VALUES($1,$2,'WARN',$3) RETURNING id,created_at",[current.account.id,targetId,reason]);
+      await pool.query("INSERT INTO nexora_social_world.developer_audit_logs(actor_account_id,target_account_id,action,reason,details) VALUES($1,$2,'player.warn',$3,$4::jsonb)",[current.account.id,targetId,reason,JSON.stringify({moderationId:result.rows[0].id})]);
+      res.status(201).json({ok:true,moderation:result.rows[0]});
+    }catch(error){next(error);}
+  });
+  router.get("/moderation",async(req,res,next)=>{
+    try{
+      const current=await requirePermission(req,res,"moderation.view");if(!current)return;
+      const result=await pool.query(`SELECT m.id,m.action_type,m.reason,m.expires_at,m.created_at,m.revoked_at,
+        a.nickname AS target_nickname,m.target_account_id,
+        COALESCE(actor.nickname,'Системный пользователь') AS actor_nickname
+        FROM nexora_social_world.moderation_actions m
+        LEFT JOIN nexora_social_world.accounts a ON a.id=m.target_account_id
+        LEFT JOIN nexora_social_world.accounts actor ON actor.id=m.actor_account_id
+        ORDER BY m.created_at DESC LIMIT 100`);
+      res.json({ok:true,entries:result.rows});
+    }catch(error){next(error);}
   });
   router.get("/world", async (req, res, next) => {
     try {
@@ -74,11 +162,9 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
   router.get("/audit", async (req, res, next) => {
     try {
       const current = await requirePermission(req, res, "logs.view"); if (!current) return;
-      const result = await pool.query(
-        `SELECT l.action,l.reason,l.created_at,COALESCE(a.nickname,'Системный пользователь') AS actor_nickname
-           FROM nexora_social_world.developer_audit_logs l LEFT JOIN nexora_social_world.accounts a ON a.id=l.actor_account_id
-          ORDER BY l.created_at DESC LIMIT 50`
-      );
+      const result = await pool.query(`SELECT l.action,l.reason,l.created_at,COALESCE(a.nickname,'Системный пользователь') AS actor_nickname
+        FROM nexora_social_world.developer_audit_logs l LEFT JOIN nexora_social_world.accounts a ON a.id=l.actor_account_id
+        ORDER BY l.created_at DESC LIMIT 100`);
       res.json({ ok: true, entries: result.rows.map(e => ({ action: e.action, reason: e.reason, actorNickname: e.actor_nickname, createdAt: e.created_at })) });
     } catch (error) { next(error); }
   });
@@ -97,7 +183,7 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
       const role = String(req.body?.role || "").trim().toUpperCase();
       const reason = String(req.body?.reason || "").trim().slice(0, 500);
       const permissions = Array.isArray(req.body?.permissions) ? [...new Set(req.body.permissions.filter(p => PERMISSIONS.has(p)))] : [];
-      if (!/^\d+$/.test(accountId) || !["DEVELOPER","MODERATOR","HELPER","USER"].includes(role)) return res.status(400).json({ error: "Некорректный аккаунт или роль." });
+      if (!/^\\d+$/.test(accountId) || !ROLES.has(role)) return res.status(400).json({ error: "Некорректный аккаунт или роль." });
       if (ownerId() && accountId === ownerId()) return res.status(400).json({ error: "Нельзя изменить роль владельца через назначения." });
       const target = await pool.query("SELECT id FROM nexora_social_world.accounts WHERE id=$1", [accountId]);
       if (!target.rowCount) return res.status(404).json({ error: "Аккаунт не найден." });
@@ -105,12 +191,9 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
       try {
         await client.query("BEGIN");
         if (role === "USER") await client.query("DELETE FROM nexora_social_world.developer_role_assignments WHERE account_id=$1", [accountId]);
-        else await client.query(
-          `INSERT INTO nexora_social_world.developer_role_assignments(account_id,role,permissions,assigned_by)
-           VALUES($1,$2,$3::jsonb,$4) ON CONFLICT(account_id) DO UPDATE SET role=EXCLUDED.role,permissions=EXCLUDED.permissions,assigned_by=EXCLUDED.assigned_by,updated_at=NOW()`,
-          [accountId, role, JSON.stringify(permissions), current.account.id]
-        );
-        await client.query("INSERT INTO nexora_social_world.developer_audit_logs(actor_account_id,target_account_id,action,reason,details) VALUES($1,$2,$3,$4,$5::jsonb)", [current.account.id, accountId, "role.assignment", reason || null, JSON.stringify({ role, permissions })]);
+        else await client.query(`INSERT INTO nexora_social_world.developer_role_assignments(account_id,role,permissions,assigned_by)
+          VALUES($1,$2,$3::jsonb,$4) ON CONFLICT(account_id) DO UPDATE SET role=EXCLUDED.role,permissions=EXCLUDED.permissions,assigned_by=EXCLUDED.assigned_by,updated_at=NOW()`, [accountId, role, JSON.stringify(permissions), current.account.id]);
+        await audit(client,current,accountId,"role.assignment",reason,{role,permissions});
         await client.query("COMMIT");
       } catch (error) { await client.query("ROLLBACK"); throw error; }
       finally { client.release(); }
