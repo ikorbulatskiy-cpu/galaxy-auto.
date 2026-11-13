@@ -32,6 +32,7 @@ jobs:
             ['Koins balance display', html.includes('id="topbar-koins"') && js.includes('refreshTopbarWallet')],
             ['aura quality setting', html.includes('id="aura-quality-action"') && js.includes('nexora-aura-quality')],
             ['existing Socket.IO chat', js.includes('socket.emit("chat:send"')],
+            ['chat emoji picker', html.includes('id="chat-emoji-picker"') && js.includes('data-chat-emoji')],
           ];
           for (const [name, ok] of checks) {
             console.log((ok ? 'PASS ' : 'FAIL ') + name);
