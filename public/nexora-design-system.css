@@ -18,9 +18,11 @@ html{min-width:320px;scrollbar-gutter:stable}
 body{background:radial-gradient(ellipse at 78% -18%,rgba(91,68,157,.22),transparent 38%),var(--nx-bg);color:var(--nx-text)}
 button,input,textarea,select{font-family:inherit}
 button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--nx-blue);outline-offset:2px}
-#landing .top{min-height:68px;height:auto;padding:10px 0;border-color:var(--nx-border)}
-#landing .brand{letter-spacing:1.4px}
-#landing .mark{border-radius:11px;background:var(--nx-accent);box-shadow:0 5px 18px #8069ff33}
+#landing + .top{min-height:68px;height:auto;padding:10px 0;border-color:var(--nx-border)}
+#landing + .top .brand{letter-spacing:1.4px}
+.top #top-actions{display:flex;flex-direction:row;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.top #top-actions .btn{min-height:40px;border-radius:11px}
+#landing + .top .mark{border-radius:11px;background:var(--nx-accent);box-shadow:0 5px 18px #8069ff33}
 #landing .hero{padding-top:clamp(34px,6vw,72px);gap:clamp(20px,4vw,48px)}
 #landing .hero h1{letter-spacing:-1.7px}
 #landing .visual{border-color:#ffffff16;background:radial-gradient(circle at 50% 32%,#4c4278 0,#24233f 48%,#141a2a 100%);box-shadow:var(--nx-shadow)}
@@ -64,8 +66,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 /* Phone layout: fixed five-item navigation and reachable secondary sections. */
 @media(max-width:760px){
  html,body{max-width:100%;overflow-x:hidden}
- #landing .wrap{width:calc(100% - 28px)}
- #landing .top{min-height:60px}
+ #landing{width:calc(100% - 28px)}
+ #landing + .top{min-height:60px}
  #landing .hero{padding:34px 0 20px}
  #landing .hero h1{font-size:clamp(38px,11vw,48px)}
  #landing .visual{min-height:185px;border-radius:20px}
