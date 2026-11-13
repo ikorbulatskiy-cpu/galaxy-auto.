@@ -26,6 +26,10 @@
     ctx.save();
     ctx.globalCompositeOperation = "multiply";
     ctx.globalAlpha = .28;
+    if (avatar.skin && /^#[0-9a-f]{6}$/i.test(avatar.skin)) {
+      ctx.fillStyle = avatar.skin;
+      ctx.beginPath(); ctx.ellipse(x+width*.5,y+height*.25,width*.17,height*.19,0,0,Math.PI*2); ctx.fill();
+    }
     if (avatar.suit && /^#[0-9a-f]{6}$/i.test(avatar.suit)) {
       ctx.fillStyle = avatar.suit;
       ctx.beginPath();
