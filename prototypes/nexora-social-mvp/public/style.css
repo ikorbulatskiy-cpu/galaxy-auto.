@@ -1685,3 +1685,15 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 @media (prefers-reduced-motion: reduce) {
   #app button { transition: none; }
 }
+
+
+/* NEXORA 17.0: profile-owned quick actions and rating hierarchy */
+.my-character-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin:10px 0; padding:10px; border:1px solid rgba(166,156,255,.24); border-radius:14px; background:linear-gradient(145deg,rgba(111,94,205,.16),rgba(255,255,255,.035)); }
+.my-character-actions button { min-width:0; min-height:39px; display:flex; align-items:center; justify-content:flex-start; gap:8px; padding:8px 10px; border:1px solid rgba(174,164,255,.2); border-radius:10px; background:rgba(255,255,255,.055); color:#f1efff; font-size:11px; font-weight:750; text-align:left; }
+.my-character-actions button:active { transform:translateY(1px); background:rgba(151,130,255,.22); }
+.my-character-actions button span { overflow-wrap:anywhere; }
+.profile-aura-quality-toggle,.rating-authority-link { width:100%; min-height:40px; margin:8px 0 12px; padding:10px 12px; border:1px solid rgba(166,156,255,.3); border-radius:12px; background:linear-gradient(110deg,rgba(113,103,221,.2),rgba(91,157,232,.13)); color:#eeeaff; font-size:11px; font-weight:800; text-align:left; }
+.rating-categories { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+.rating-categories button { min-width:0; padding:9px 5px; font-size:10px; }
+.rating-authority-link { margin:0 0 10px; text-align:center; }
+@media(max-width:360px) { .my-character-actions { gap:5px; padding:8px; } .my-character-actions button { padding:7px; font-size:10px; } .rating-categories button { font-size:9px; } }
