@@ -2,6 +2,7 @@ process.env.PGSSLMODE = process.env.PGSSLMODE || "disable";
 
 const assert = require("node:assert/strict");
 const express = require("express");
+const cookie = require("cookie");
 const { pool } = require("../src/db");
 const auth = require("../src/auth");
 const { createEconomyRouter } = require("../src/economy");
@@ -65,6 +66,7 @@ async function run() {
 
   const app = express();
   app.use(express.json());
+  app.use((req, _res, next) => { req.cookies = cookie.parse(req.headers.cookie || ""); next(); });
   app.use("/api/economy", createEconomyRouter({ pool, auth, io }));
   app.use("/api/planets", createPlanetsRouter({ pool, auth, io, players }));
   app.use("/api/social", createSocialRouter({ pool, auth, io }));
