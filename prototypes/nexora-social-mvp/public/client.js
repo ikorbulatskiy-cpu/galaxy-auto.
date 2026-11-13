@@ -626,6 +626,7 @@
         loginScreen.classList.add("hidden");gameScreen.classList.remove("hidden");
         $("#planet-title").textContent=(PLANETS[state.planet]||{name:"Авторская планета"}).name;
         $("#room-location-title").textContent=(PLANETS[state.planet]||{location:"Космическое пространство"}).location;
+        syncOnlineRoomName();
         resize();requestAnimationFrame(drawScene);refreshSocial();refreshDeveloperAccess();renderRoomPlayers();finish(true);
       });
       socket.once("connect",onConnect);socket.once("connect_error",onError);
@@ -720,6 +721,7 @@
     renderHistory();
     $("#planet-title").textContent = (PLANETS[state.planet] || {name:"Авторская планета"}).name;
     $("#room-location-title").textContent = (PLANETS[state.planet] || {location:"Космическое пространство"}).location;
+    syncOnlineRoomName();
     updateOnline();
   });
   socket.on("player:joined",player=>{state.players.set(player.id,{...player,y:player.y??.82,renderX:player.x,renderY:player.y??.82});updateOnline();pushRoomEvent("Игрок вошёл",player.nickname+" присоединился к планете.","✦");});
@@ -810,8 +812,14 @@
     } catch (_) { balance.textContent = "—"; }
   }
 
+  function syncOnlineRoomName() {
+    const title = $("#planet-title")?.textContent?.trim() || "Комната";
+    const label = $("#online-room-name");
+    if (label) label.textContent = title;
+  }
   function updateOnline() {
     $("#online-count").textContent = String(state.players.size);
+    syncOnlineRoomName();
     renderRoomPlayers();
   }
 
@@ -1317,6 +1325,7 @@
       PLANETS[data.planet]={name:p.name,location:"Владелец: "+p.owner_nickname,sky:theme.slice(0,2),ground:theme[2],glow:theme[3],ownerId:String(p.ownerId),ownerNickname:p.owner_nickname};
       $("#planet-title").textContent=p.name;
       $("#room-location-title").textContent="👑 "+p.owner_nickname;
+      syncOnlineRoomName();
       drawScene();
     }catch(_error){}
   });
