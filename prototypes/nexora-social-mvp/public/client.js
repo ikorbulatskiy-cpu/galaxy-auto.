@@ -1976,13 +1976,16 @@
       avatarCtx.clearRect(0,0,avatar.width,avatar.height);
       drawAvatar(avatarCtx,90,105,1.8,p.avatar||{},1,null);
       const friendButton=$("#public-profile-friend"),messageButton=$("#public-profile-message");
-      friendButton.classList.toggle("hidden",p.isMe||p.isFriend||p.requestPending);
-      friendButton.textContent=p.requestIncoming?"Принять заявку":"Добавить в друзья";
-      friendButton.disabled=Boolean(p.requestIncoming);
+      friendButton.classList.toggle("hidden",p.isMe||p.isFriend);
+      friendButton.textContent=p.requestIncoming?"Принять заявку":p.requestPending?"Заявка отправлена":"Добавить в друзья";
+      friendButton.disabled=Boolean(p.requestPending&&!p.requestIncoming);
       messageButton.classList.toggle("hidden",p.isMe||!p.isFriend);
       friendButton.onclick=async()=>{
-        try{await socialApi("/requests",{method:"POST",body:JSON.stringify({targetId:p.id})});friendButton.disabled=true;friendButton.textContent="Заявка отправлена";showToast("Заявка отправлена.");}
-        catch(error){showToast(error.message);}
+        try{
+          if(p.requestIncoming&&p.requestId){await socialApi("/requests/"+encodeURIComponent(p.requestId)+"/accept",{method:"POST"});friendButton.classList.add("hidden");messageButton.classList.remove("hidden");showToast("Теперь вы друзья.");}
+          else{await socialApi("/requests",{method:"POST",body:JSON.stringify({targetId:p.id})});friendButton.disabled=true;friendButton.textContent="Заявка отправлена";showToast("Заявка отправлена.");}
+          await loadFriends();
+        }catch(error){showToast(error.message);}
       };
       messageButton.onclick=async()=>{
         try{const result=await socialApi("/conversations",{method:"POST",body:JSON.stringify({peerId:p.id})});panel.classList.add("hidden");openSocialTab("messages");await loadConversations();await openConversation(result.conversationId);}
@@ -2014,7 +2017,7 @@
 
   function openSocialTab(tab) {
     $("#social-panel").classList.remove("hidden");
-    const labels = { friends: "Друзья", messages: "Сообщения", notifications: "Уведомления" };
+    const labels = { friends: "Друзья", messages: "Сообщения", notifications: "Уведомления", rating: "Рейтинг игроков" };
     $("#social-title").textContent = labels[tab] || "Социальное";
     document.querySelectorAll("[data-social-tab]").forEach(button => button.classList.toggle("active", button.dataset.socialTab === tab));
     $("#social-friends-view").classList.toggle("hidden", tab !== "friends");
