@@ -18,7 +18,7 @@
   const skins = ["#f4c7a1", "#c9875b", "#75452f"];
   const suits = ["#6d7cff", "#ef6c9b", "#35bca5"];
   const state = {
-    me: null, players: new Map(), planet: "starter", selected: null,
+    me: null, players: new Map(), planet: "starter", selected: null, customPlanetObjects: [],
     stars: [], chat: [], roomEvents: [], unreadEvents: 0, width: 0, height: 0, dpr: 1, toastTimer: null, movementFrame: 0,
     auraQuality: localStorage.getItem("nexora-aura-quality") === "low" ? "low" : "high"
   };
@@ -399,6 +399,14 @@
     if(progress>=1){player.renderX=player.moveToX;player.renderY=player.moveToY;player.moving=false;player.moveStartedAt=null;player.moveDuration=null;}else player.moving=true;
   }
 
+  function drawCustomPlanetObject(ctx,item,w,h){
+    const icons={tree:"🌳",bench:"🪑",fountain:"⛲",lamp:"💡",flowerbed:"🌼",kiosk:"🏪",palm:"🌴",beach_chair:"🏖️",club_table:"🍸",dj_booth:"🎛️",sofa:"🛋️",plant:"🪴"};
+    const x=Number(item.x)*w,y=Number(item.y)*h,icon=icons[item.code]||"✦";
+    ctx.save();ctx.translate(x,y);ctx.rotate((Number(item.rotation)||0)*Math.PI/180);
+    ctx.globalAlpha=.28;ctx.fillStyle="#080d25";ctx.beginPath();ctx.ellipse(0,5,20*(item.scale||1),6,0,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;ctx.font=(30*(item.scale||1))+"px Apple Color Emoji, Segoe UI Emoji, sans-serif";ctx.textAlign="center";ctx.textBaseline="bottom";ctx.fillText(icon,0,0);ctx.restore();
+  }
+
   function drawScene() {
     if (gameScreen.classList.contains("hidden")) return;
     const w = state.width, h = state.height;
@@ -437,13 +445,16 @@
     window.NexoraWorldScene?.draw(ctx, w, h, state.planet, Date.now());
 
     const props = window.NexoraWorldObjects?.get(state.planet,w,h,Date.now()) || [];
+    const customProps=String(state.planet).startsWith("custom-")?state.customPlanetObjects.map(object=>({depth:Number(object.y),custom:object})):[];
     const ordered = [
       ...[...state.players.values()].map((player)=>({kind:"player",player,depth:player.renderY??player.y??.82})),
-      ...props.map((object)=>({kind:"object",object,depth:object.depth}))
+      ...props.map((object)=>({kind:"object",object,depth:object.depth})),
+      ...customProps.map(item=>({kind:"custom-object",object:item.custom,depth:item.depth}))
     ].sort((a,b)=>a.depth-b.depth);
     const now = performance.now();
     ordered.forEach((item) => {
       if(item.kind==="object"){window.NexoraWorldObjects?.render(ctx,[item.object]);return;}
+      if(item.kind==="custom-object"){drawCustomPlanetObject(ctx,item.object,w,h);return;}
       const player=item.player;
       advancePlayerMovement(player, now);
       const drawX = (player.renderX ?? player.x) * w;
@@ -988,6 +999,12 @@
     }catch(e){error.textContent=e.message;}finally{button.disabled=false;}
   });
 
+  let planetDraftObjects=[];
+  function renderPlanetObjectDraft(){
+    const list=$("#planet-object-list");if(!list)return;list.replaceChildren();
+    planetDraftObjects.forEach((item,index)=>{const row=document.createElement("div");row.className="planet-owner-visitor";const label=document.createElement("span");label.textContent=item.code+" · X "+Math.round(item.x*100)+"% · Y "+Math.round(item.y*100)+"%";const remove=document.createElement("button");remove.type="button";remove.textContent="Удалить";remove.addEventListener("click",()=>{planetDraftObjects.splice(index,1);renderPlanetObjectDraft();});row.append(label,remove);list.append(row);});
+    if(!planetDraftObjects.length){const empty=document.createElement("p");empty.className="planet-empty";empty.textContent="Пока нет декораций.";list.append(empty);}
+  }
   async function openPlanetOwnerTools(id) {
     try{
       const data=await planetRequest("/api/planets/"+encodeURIComponent(id));
@@ -1005,6 +1022,9 @@
       $("#planet-edit-theme").value=p.theme||"nebula";
       $("#planet-edit-capacity").value=p.capacity||30;
       $("#planet-owner-error").textContent="";
+      const objectData=await planetRequest("/api/planets/"+encodeURIComponent(id)+"/objects");
+      planetDraftObjects=(objectData.objects||[]).map(item=>({code:item.code,x:Number(item.x),y:Number(item.y),rotation:Number(item.rotation)||0,scale:Number(item.scale)||1}));
+      renderPlanetObjectDraft();
       const visitors=await planetRequest("/api/planets/"+encodeURIComponent(id)+"/visitors");
       const list=$("#planet-owner-visitors");list.replaceChildren();
       if(!visitors.visitors.length){const empty=document.createElement("p");empty.className="planet-empty";empty.textContent="Сейчас посетителей нет.";list.append(empty);}
@@ -1022,6 +1042,16 @@
       showToast("Настройки планеты сохранены.");loadPlanetCatalog();
     }catch(e){$("#planet-owner-error").textContent=e.message;}
   });
+  $("#planet-object-add").addEventListener("click",()=>{
+    if(planetDraftObjects.length>=100){showToast("Лимит: 100 объектов на планету.");return;}
+    planetDraftObjects.push({code:$("#planet-object-code").value,x:Math.max(0,Math.min(100,Number($("#planet-object-x").value)||50))/100,y:Math.max(0,Math.min(100,Number($("#planet-object-y").value)||80))/100,rotation:0,scale:1});
+    renderPlanetObjectDraft();
+  });
+  $("#planet-object-save").addEventListener("click",async()=>{
+    const id=$("#planet-owner-id").value;
+    try{await planetRequest("/api/planets/"+encodeURIComponent(id)+"/objects",{method:"PUT",body:JSON.stringify({objects:planetDraftObjects})});state.customPlanetObjects=planetDraftObjects.map((item,index)=>({...item,id:index+1}));drawScene();showToast("Декорации сохранены.");}
+    catch(error){$("#planet-owner-error").textContent=error.message;}
+  });
   $("#planet-owner-invite").addEventListener("click",async()=>{
     try{const id=$("#planet-owner-id").value,accountId=$("#planet-invite-account").value.trim();await planetRequest("/api/planets/"+encodeURIComponent(id)+"/invite",{method:"POST",body:JSON.stringify({accountId})});$("#planet-owner-error").textContent="Приглашение создано на 7 дней.";}
     catch(e){$("#planet-owner-error").textContent=e.message;}
@@ -1036,11 +1066,13 @@
     socket.emit("planet:change",{planet:"starter"},()=>{});
   });
   socket.on("planet:state",async data=>{
-    if(!String(data.planet).startsWith("custom-"))return;
+    state.customPlanetObjects=[];
+    if(!String(data.planet).startsWith("custom-")){drawScene();return;}
     const id=String(data.planet).slice(7);
     try{
       const result=await planetRequest("/api/planets/"+encodeURIComponent(id));
       const p=result.planet,theme=planetThemes[p.theme]||planetThemes.nebula;
+      try{const objects=await planetRequest("/api/planets/"+encodeURIComponent(id)+"/objects");state.customPlanetObjects=objects.objects||[];}catch(_error){state.customPlanetObjects=[];}
       PLANETS[data.planet]={name:p.name,location:"Владелец: "+p.owner_nickname,sky:theme.slice(0,2),ground:theme[2],glow:theme[3],ownerId:String(p.ownerId),ownerNickname:p.owner_nickname};
       $("#planet-title").textContent=p.name;
       $("#room-location-title").textContent="👑 "+p.owner_nickname;
