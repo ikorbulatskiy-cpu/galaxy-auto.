@@ -232,3 +232,8 @@
   bottom:0!important;
   margin-left:-32px!important; /* половина ширины карточки на desktop */
 }
+
+
+/* Custom decorations imported from the previous Galaxy planet editor. */
+.nx-custom-objects-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.nx-avatars{z-index:4!important}
