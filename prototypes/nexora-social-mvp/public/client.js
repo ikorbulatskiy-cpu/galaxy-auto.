@@ -532,9 +532,9 @@
       const emotion = player.emotion?.until > Date.now() ? player.emotion.type : null;
       if(player.bubble?.until>Date.now()){
         const bubbleText=String(player.bubble.text||"");ctx.save();ctx.font="11px sans-serif";
-        const maxTextWidth=Math.max(48,Math.min(220,w-44));const words=bubbleText.split(/\\s+/);const lines=[];let line="";
+        const maxTextWidth=Math.max(48,Math.min(220,w-44));const words=bubbleText.split(/\s+/);const lines=[];let line="";
         words.forEach(word=>{const next=line?line+" "+word:word;if(ctx.measureText(next).width>maxTextWidth&&line){lines.push(line);line=word;}else line=next;});
-        if(line)lines.push(line);const visibleLines=lines.slice(0,3);if(lines.length>3)visibleLines[2]=visibleLines[2].replace(/\\s+$/,"")+"…";
+        if(line)lines.push(line);const visibleLines=lines.slice(0,3);if(lines.length>3)visibleLines[2]=visibleLines[2].replace(/\s+$/,"")+"…";
         const bubbleWidth=Math.min(w-20,Math.max(76,...visibleLines.map(item=>ctx.measureText(item).width+20)));
         const bubbleHeight=18+visibleLines.length*14;const bubbleX=Math.max(10,Math.min(w-bubbleWidth-10,drawX-bubbleWidth/2));
         const bubbleY=Math.max(8,Math.min(h-bubbleHeight-8,y-119*scale-bubbleHeight+29));
