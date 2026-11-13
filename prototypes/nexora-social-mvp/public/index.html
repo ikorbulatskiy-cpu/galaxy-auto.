@@ -98,7 +98,7 @@
 
       <nav id="room-toolbar" class="room-toolbar" aria-label="Игровое управление">
         <button type="button" data-room-toggle="menu" aria-expanded="false">☰<span>Меню</span></button>
-        <button type="button" data-room-toggle="chat">💬<span>Чат</span></button>
+        <button type="button" class="active" data-room-toggle="chat" aria-expanded="true">💬<span>Чат</span></button>
         <button type="button" data-room-toggle="emotions">😊<span>Эмоции</span></button>
         <button type="button" data-room-toggle="players">👥<span>Игроки</span></button>
         <button type="button" data-room-action="friends">⭐<span>Друзья</span></button>
@@ -139,17 +139,12 @@
 
       <aside id="room-events-panel" class="room-flyout room-events-panel hidden" aria-label="События комнаты"><div class="room-flyout-head"><div><small>NEXORA LIVE</small><strong>События комнаты</strong></div><button type="button" data-room-close="events" aria-label="Закрыть">×</button></div><div id="room-event-list" class="room-event-list"><p class="room-event-empty">Здесь появятся события комнаты.</p></div></aside>
 
-      <aside id="chat-drawer" class="chat-drawer hidden" aria-label="Чат комнаты">
-        <div class="drawer-head"><div><strong>Чат комнаты</strong><span id="chat-online-label">Сообщения игроков</span></div><button id="close-history" aria-label="Закрыть">×</button></div>
+      <aside id="chat-drawer" class="chat-drawer" aria-label="Общий чат планеты">
+        <div class="drawer-head"><div class="chat-title"><strong>Общий чат</strong><span id="chat-online-label">Все игроки этой планеты</span></div><div class="chat-head-actions"><span id="chat-new-count" class="chat-new-count hidden">0 новых</span><button id="close-history" aria-label="Свернуть чат">⌄</button></div></div>
+        <nav class="chat-tabs" aria-label="Разделы общения"><button type="button" class="active" data-chat-view="general">🌐 Общий</button><button type="button" data-chat-view="messages">✉️ Личные</button><button type="button" data-chat-view="friends">⭐ Друзья</button></nav>
         <div id="chat-history" class="chat-history" aria-live="polite"></div>
-        <div id="chat-emoji-picker" class="chat-emoji-picker hidden" aria-label="Эмодзи">
-          <button type="button" data-chat-emoji="😊">😊</button><button type="button" data-chat-emoji="😂">😂</button><button type="button" data-chat-emoji="😍">😍</button><button type="button" data-chat-emoji="😘">😘</button><button type="button" data-chat-emoji="❤️">❤️</button><button type="button" data-chat-emoji="🔥">🔥</button><button type="button" data-chat-emoji="✨">✨</button><button type="button" data-chat-emoji="👋">👋</button>
-        </div>
-        <form id="chat-form" class="chat-form">
-          <input id="chat-input" maxlength="240" placeholder="Написать сообщение..." autocomplete="off" aria-label="Сообщение">
-          <button id="chat-emoji-button" class="chat-emoji-button" type="button" aria-label="Добавить эмодзи" aria-expanded="false">😊</button>
-          <button type="submit" aria-label="Отправить сообщение">➤</button>
-        </form>
+        <div id="chat-emoji-picker" class="chat-emoji-picker hidden" aria-label="Эмодзи"><button type="button" data-chat-emoji="😊">😊</button><button type="button" data-chat-emoji="😂">😂</button><button type="button" data-chat-emoji="😍">😍</button><button type="button" data-chat-emoji="😘">😘</button><button type="button" data-chat-emoji="❤️">❤️</button><button type="button" data-chat-emoji="🔥">🔥</button><button type="button" data-chat-emoji="✨">✨</button><button type="button" data-chat-emoji="👋">👋</button></div>
+        <form id="chat-form" class="chat-form"><input id="chat-input" maxlength="240" placeholder="Написать всем на планете..." autocomplete="off" aria-label="Сообщение в общий чат"><button id="chat-emoji-button" class="chat-emoji-button" type="button" aria-label="Добавить эмодзи" aria-expanded="false">😊</button><button type="submit" aria-label="Отправить сообщение">➤</button></form>
       </aside>
 
       <div id="profile-menu" class="profile-menu hidden">
@@ -165,6 +160,7 @@
         <button id="gift-button">🎁 Подарить подарок</button>
         <button id="friend-button">⭐ Добавить в друзья</button>
         <button id="report-user-button" type="button">⚑ Пожаловаться</button>
+        <button id="block-user-button" type="button">🚫 Заблокировать</button>
         <button id="my-profile-context" class="hidden" type="button">👤 Открыть мой профиль</button>
         <div id="gift-options" class="gift-options hidden">
           <button data-gift="rose">🌹 Роза</button>

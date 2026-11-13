@@ -18,7 +18,7 @@
   const skins = ["#f4c7a1", "#c9875b", "#75452f"];
   const suits = ["#6d7cff", "#ef6c9b", "#35bca5"];
   const state = {
-    me: null, players: new Map(), planet: "starter", selected: null, customPlanetObjects: [],
+    me: null, players: new Map(), planet: "starter", selected: null, customPlanetObjects: [], unreadChat: 0,
     stars: [], chat: [], roomEvents: [], unreadEvents: 0, width: 0, height: 0, dpr: 1, toastTimer: null, movementFrame: 0,
     auraQuality: localStorage.getItem("nexora-aura-quality") === "low" ? "low" : "high"
   };
@@ -338,13 +338,17 @@
   function setConnectionStatus(status,label){const pill=$("#connection-status");if(!pill)return;pill.dataset.state=status;const text=pill.querySelector("span");if(text)text.textContent=label;}
 
   function addHistory(message, whisper = false) {
+    const container = $("#chat-history");
+    const wasAtBottom = !container || container.scrollHeight - container.scrollTop - container.clientHeight < 28;
     state.chat.push({ ...message, whisper });
-    if (state.chat.length > 50) state.chat.shift();
-    renderHistory();
+    if (state.chat.length > 80) state.chat.shift();
+    if (!wasAtBottom && String(message.playerId) !== String(state.me?.id)) state.unreadChat += 1;
+    renderHistory(wasAtBottom);
   }
 
-  function renderHistory() {
+  function renderHistory(keepBottom = true) {
     const container = $("#chat-history");
+    if (!container) return;
     container.replaceChildren();
     state.chat.forEach((message) => {
       const row = document.createElement("div");
@@ -365,7 +369,12 @@
       row.append(name, text, time);
       container.append(row);
     });
-    container.scrollTop = container.scrollHeight;
+    if (keepBottom) container.scrollTop = container.scrollHeight;
+    const badge = $("#chat-new-count");
+    if (badge) {
+      badge.textContent = state.unreadChat + " новых";
+      badge.classList.toggle("hidden", state.unreadChat < 1);
+    }
   }
 
   function resize() {
@@ -464,6 +473,10 @@
     // Detailed, planet-specific world geometry is rendered beneath player avatars.
     window.NexoraWorldScene?.draw(ctx, w, h, state.planet, Date.now());
 
+    // Visible perspective frame around the walkable floor. Server coordinates are clamped to the same room.
+    ctx.save();ctx.strokeStyle="rgba(220,225,255,.24)";ctx.lineWidth=1.5;ctx.setLineDash([7,6]);
+    ctx.beginPath();ctx.moveTo(w*.025,h*.615);ctx.lineTo(w*.975,h*.615);ctx.lineTo(w*.992,h*.91);ctx.lineTo(w*.008,h*.91);ctx.closePath();ctx.stroke();
+    ctx.setLineDash([]);ctx.restore();
     const props = window.NexoraWorldObjects?.get(state.planet,w,h,Date.now()) || [];
     const customProps=String(state.planet).startsWith("custom-")?state.customPlanetObjects.map(object=>({depth:Number(object.y),custom:object})):[];
     const ordered = [
@@ -495,16 +508,17 @@
         ctx.save();ctx.strokeStyle="#e7dcff";ctx.lineWidth=2;ctx.shadowColor="#a58cff";ctx.shadowBlur=16;
         ctx.beginPath();ctx.ellipse(drawX,y+2,25*scale,46*scale,0,0,Math.PI*2);ctx.stroke();ctx.restore();
       }
-      drawAura(ctx,drawX,y,scale,player.auraType,player.auraEnabled,state.auraQuality);
+      const auraCenterY=y-28*scale; // sprite origin is at the feet; aura is centered on the body.
+      drawAura(ctx,drawX,auraCenterY,scale,player.auraType,player.auraEnabled,state.auraQuality);
       const spriteDirection=player.direction||"down";
       const spriteDrawn=window.NexoraSpriteEngine?.draw(ctx,drawX,y,scale,player.avatar,spriteDirection,Boolean(player.moving),emotion);
       if(!spriteDrawn)drawAvatar(ctx,drawX,y,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
-      drawAuraHalo(ctx,drawX,y,scale,player.auraType,player.auraEnabled,state.auraQuality);
+      drawAuraHalo(ctx,drawX,auraCenterY,scale,player.auraType,player.auraEnabled,state.auraQuality);
       if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20*scale,y-58*scale-Math.sin(Date.now()/120)*3);ctx.restore();}
-      // Only the nickname stays above the avatar. Rank and authority belong in the info card.
-      ctx.save();ctx.textAlign="center";ctx.font=(isMe?"700 ":"600 ")+Math.max(10,11*scale)+"px Inter,sans-serif";
+      // Nickname anchored below the feet and centered on the avatar position.
+      ctx.save();ctx.textAlign="center";ctx.font=(isMe?"750 ":"650 ")+Math.max(10,11*scale)+"px Inter,sans-serif";
       ctx.fillStyle=isMe?"#fff1b8":"#fff";ctx.shadowColor="#080b20";ctx.shadowBlur=7;
-      ctx.fillText(player.nickname,drawX,y-72*scale,132);ctx.restore();
+      ctx.lineWidth=3;ctx.strokeStyle="rgba(5,9,27,.82)";ctx.strokeText(player.nickname,drawX,y+53*scale,136);ctx.fillText(player.nickname,drawX,y+53*scale,136);ctx.restore();
     });
     requestAnimationFrame(drawScene);
   }
@@ -683,7 +697,8 @@
     if(relativeY>=.55&&relativeY<=.97){
       closeProfile();
       const targetX=Math.max(.04,Math.min(.96,x/state.width)),targetY=Math.max(.60,Math.min(.86,relativeY));
-      socket.emit("player:move",{x:targetX,y:targetY},result=>{if(!result?.ok)showToast(result?.error||"Не удалось переместить персонажа.");});
+      state.moveTarget={x:targetX,y:targetY,until:Date.now()+900};
+      socket.emit("player:move",{x:targetX,y:targetY},result=>{if(!result?.ok){state.moveTarget=null;showToast(result?.error||"Не удалось переместить персонажа.");}});
     }else closeProfile();
   });
 
@@ -732,7 +747,7 @@
       button.classList.toggle("active",opening);
       button.setAttribute("aria-expanded",String(opening));
       closeRoomFlyouts();
-      if(opening)setTimeout(()=>$("#chat-input").focus(),80);
+      if(opening){state.unreadChat=0;renderHistory();setTimeout(()=>$("#chat-input").focus(),80);}
       return;
     }
     const chatDrawer = $("#chat-drawer");
@@ -792,7 +807,7 @@
     $("#profile-aura").textContent = player.auraEnabled ? "Аура активна" : "Аура выключена";
     $("#profile-online-status").textContent = "● В этой комнате";
     const ownProfile = String(player.id) === String(state.me?.id);
-    ["#dm-open-button","#whisper-button","#gift-button","#friend-button"].forEach(selector => $(selector).classList.toggle("hidden", ownProfile));
+    ["#dm-open-button","#whisper-button","#gift-button","#friend-button","#block-user-button"].forEach(selector => $(selector).classList.toggle("hidden", ownProfile));
     $("#my-profile-context").classList.toggle("hidden", !ownProfile);
     $("#profile-menu").classList.remove("hidden");
     $("#character-action-list").classList.toggle("hidden",ownProfile);
@@ -828,6 +843,15 @@
       if (!result?.ok) showToast(result?.error || "Не удалось отправить.");
     });
     closeProfile();
+  });
+  $("#block-user-button").addEventListener("click",async()=>{
+    const targetId=state.selected;
+    if(!targetId||String(targetId)===String(state.me?.id))return;
+    if(!window.confirm("Заблокировать этого игрока? Он исчезнет из ваших социальных взаимодействий."))return;
+    try{
+      await socialApi("/blocks/"+encodeURIComponent(targetId),{method:"POST"});
+      closeProfile();await refreshSocial();showToast("Игрок заблокирован.");
+    }catch(error){showToast(error.message);}
   });
   $("#friend-button").addEventListener("click", async () => {
     if (!state.selected) return closeProfile();
@@ -932,6 +956,22 @@
     if (chatButton) { chatButton.classList.remove("active"); chatButton.setAttribute("aria-expanded","false"); }
   });
 
+
+  document.querySelectorAll("[data-chat-view]").forEach(button=>button.addEventListener("click",()=>{
+    const view=button.dataset.chatView;
+    document.querySelectorAll("[data-chat-view]").forEach(tab=>tab.classList.toggle("active",tab===button));
+    if(view==="general"){
+      $("#chat-drawer").classList.remove("hidden");
+      $("#social-panel").classList.add("hidden");
+      $("#chat-online-label").textContent="Все игроки этой планеты";
+      state.unreadChat=0;renderHistory();
+      return;
+    }
+    $("#chat-drawer").classList.add("hidden");
+    const chatButton=$("#room-toolbar [data-room-toggle=\"chat\"]");
+    if(chatButton){chatButton.classList.remove("active");chatButton.setAttribute("aria-expanded","false");}
+    openSocialTab(view==="messages"?"messages":"friends");
+  }));
 
   // Persistent user-created planets: catalog, owner identity and room transitions.
   const planetThemes = {

@@ -38,6 +38,12 @@ jobs:
             ['aura quality setting', html.includes('id="aura-quality-action"') && js.includes('nexora-aura-quality')],
             ['existing Socket.IO chat', js.includes('socket.emit("chat:send"')],
             ['chat emoji picker', html.includes('id="chat-emoji-picker"') && js.includes('data-chat-emoji')],
+            ['top global chat tabs', html.includes('data-chat-view="general"') && html.includes('data-chat-view="messages"') && html.includes('data-chat-view="friends"')],
+            ['unread chat badge and scroll preservation', html.includes('id="chat-new-count"') && js.includes('renderHistory(wasAtBottom)')],
+            ['nickname below avatar', js.includes('y+53*scale')],
+            ['room walkable boundary guides', js.includes('Visible perspective frame around the walkable floor')],
+            ['player block quick action', html.includes('id="block-user-button"') && js.includes('socialApi("/blocks/"+encodeURIComponent(targetId)')],
+            ['aura body anchor', js.includes('const auraCenterY=y-28*scale') && js.includes('drawAuraHalo(ctx,drawX,auraCenterY')],
           ];
           for (const [name, ok] of checks) {
             console.log((ok ? 'PASS ' : 'FAIL ') + name);
