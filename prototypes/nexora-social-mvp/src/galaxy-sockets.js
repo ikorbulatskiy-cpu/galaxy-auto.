@@ -29,11 +29,16 @@ function attachGalaxySockets(io, { pool, auth, planets, normalizeAvatar }) {
     } catch (error) { next(error); }
   });
 
-  const emitState = socket => {
+  const emitState = async socket => {
     const player = socket.data.player;
     if (!player) return;
     const list = [...players.values()].filter(item => item.planet === player.planet).map(publicPlayer);
-    socket.emit("planet:state", { planet: player.planet, players: list, history: [] });
+    const result = await pool.query(
+      "SELECT id,account_id AS \"playerId\",nickname,message AS text,created_at FROM nexora_social_world.planet_chat_messages WHERE planet_key=$1 ORDER BY id DESC LIMIT 80",
+      [player.planet]
+    );
+    const history = result.rows.reverse().map(row => ({id:String(row.id),playerId:String(row.playerId),nickname:row.nickname,text:row.text,time:new Date(row.created_at).getTime()}));
+    socket.emit("planet:state", {planet:player.planet,players:list,history});
   };
 
   galaxy.on("connection", socket => {
@@ -42,6 +47,14 @@ function attachGalaxySockets(io, { pool, auth, planets, normalizeAvatar }) {
     socket.on("player:join", async (_payload, ack = () => {}) => {
       try {
         const account = socket.data.account;
+        for (const [oldSocketId, oldPlayer] of players) {
+          if (String(oldPlayer.accountId) === String(account.id)) {
+            galaxy.to(roomName(oldPlayer.planet)).emit("player:left", { id: oldPlayer.id });
+            players.delete(oldSocketId);
+            const oldSocket = galaxy.sockets.get(oldSocketId);
+            if (oldSocket && oldSocket.id !== socket.id) oldSocket.disconnect(true);
+          }
+        }
         const result = await pool.query(
           "SELECT nickname,avatar,planet,position_x,position_y,authority,authority_title,aura_enabled FROM nexora_social_world.characters WHERE account_id=$1",
           [account.id]
@@ -77,7 +90,7 @@ function attachGalaxySockets(io, { pool, auth, planets, normalizeAvatar }) {
         players.set(socket.id, player);
         socket.data.player = player;
         socket.join(roomName(planet));
-        emitState(socket);
+        await emitState(socket);
         socket.to(roomName(planet)).emit("player:joined", publicPlayer(player));
         ack({ ok: true, player: publicPlayer(player) });
       } catch (error) {
@@ -94,16 +107,17 @@ function attachGalaxySockets(io, { pool, auth, planets, normalizeAvatar }) {
       const requestedX = Number(payload?.x), requestedY = Number(payload?.y ?? player.y);
       if (!Number.isFinite(requestedX) || !Number.isFinite(requestedY)) return ack({ ok: false, error: "Некорректная позиция." });
       let x = Math.max(.04, Math.min(.96, requestedX));
-      let y = Math.max(.60, Math.min(.86, requestedY));
-      if (Math.hypot(x - player.x, y - player.y) > .12) return ack({ ok: false, error: "Перемещение слишком быстрое." });
-      for (const other of players.values()) {
-        if (other.id === player.id || other.planet !== player.planet) continue;
-        const dx=x-other.x, dy=y-other.y, distance=Math.hypot(dx,dy);
-        if (distance < .045) {
-          const angle=distance>.0001?Math.atan2(dy,dx):(Number(player.id)%2?0:Math.PI);
-          x=Math.max(.04,Math.min(.96,other.x+Math.cos(angle)*.047));
-          y=Math.max(.60,Math.min(.86,other.y+Math.sin(angle)*.047));
-        }
+      const y = .82;
+      if (Math.abs(x - player.x) > .12) return ack({ ok: false, error: "Перемещение слишком быстрое." });
+      const occupied = [...players.values()].filter(other => other.id !== player.id && other.planet === player.planet);
+      for (let pass = 0; pass < occupied.length + 1; pass++) {
+        const collision = occupied.find(other => Math.abs(x - other.x) < .045);
+        if (!collision) break;
+        const left = Math.max(.04, collision.x - .047), right = Math.min(.96, collision.x + .047);
+        const leftFree = occupied.every(other => other.id === collision.id || Math.abs(left - other.x) >= .045);
+        const rightFree = occupied.every(other => other.id === collision.id || Math.abs(right - other.x) >= .045);
+        if (!leftFree && !rightFree) return ack({ ok: false, error: "В этой части линии нет свободного места." });
+        x = leftFree && rightFree ? (Math.abs(left-requestedX)<=Math.abs(right-requestedX)?left:right) : leftFree ? left : right;
       }
       player.x=x;player.y=y;player.lastMoveAt=now;
       galaxy.to(roomName(player.planet)).emit("player:moved",{id:player.id,x,y,serverTime:now});
@@ -111,15 +125,18 @@ function attachGalaxySockets(io, { pool, auth, planets, normalizeAvatar }) {
       ack({ok:true,x,y});
     });
 
-    socket.on("chat:send", (payload, ack = () => {}) => {
+    socket.on("chat:send", async (payload, ack = () => {}) => {
       const player=players.get(socket.id);
       if(!player)return ack({ok:false,error:"Персонаж не подключён."});
       const text=clean(payload?.text);
       if(!text)return ack({ok:false,error:"Введите сообщение."});
-      const message={id:socket.id+":"+Date.now(),playerId:player.id,nickname:player.nickname,text,time:Date.now()};
-      galaxy.to(roomName(player.planet)).emit("chat:message",message);
-      galaxy.to(roomName(player.planet)).emit("player:bubble",{id:player.id,text:message.text,time:message.time});
-      ack({ok:true});
+      try{
+        const saved=await pool.query("INSERT INTO nexora_social_world.planet_chat_messages(planet_key,account_id,nickname,message) VALUES($1,$2,$3,$4) RETURNING id,created_at",[player.planet,player.accountId,player.nickname,text]);
+        const row=saved.rows[0],message={id:String(row.id),playerId:player.id,nickname:player.nickname,text,time:new Date(row.created_at).getTime()};
+        galaxy.to(roomName(player.planet)).emit("chat:message",message);
+        galaxy.to(roomName(player.planet)).emit("player:bubble",{id:player.id,text:message.text,time:message.time});
+        ack({ok:true,id:message.id});
+      }catch(error){console.error("Galaxy chat save failed:",error);ack({ok:false,error:"Не удалось сохранить сообщение. Попробуйте ещё раз."});}
     });
 
     socket.on("emotion:play",(payload,ack=()=>{})=>{
@@ -166,7 +183,7 @@ function attachGalaxySockets(io, { pool, auth, planets, normalizeAvatar }) {
       player.planet=nextPlanet;player.x=.5;player.y=.82;socket.join(roomName(nextPlanet));
       await pool.query("UPDATE nexora_social_world.characters SET planet=$1,position_x=.5,position_y=.82,updated_at=NOW() WHERE account_id=$2",[nextPlanet,player.accountId]);
       if(customId){await pool.query("INSERT INTO nexora_social_world.planet_members(planet_id,account_id) VALUES($1,$2) ON CONFLICT DO NOTHING",[customId,player.accountId]);}
-      emitState(socket);socket.to(roomName(nextPlanet)).emit("player:joined",publicPlayer(player));ack({ok:true,planet:nextPlanet});
+      await emitState(socket);socket.to(roomName(nextPlanet)).emit("player:joined",publicPlayer(player));ack({ok:true,planet:nextPlanet});
     });
 
     socket.on("disconnect",()=>{
