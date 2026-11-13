@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101633">
+  <meta name="description" content="NEXORA — космический социальный 2D-мир">
+  <title>NEXORA — Social World</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <main id="app">
+    <section id="login-screen" class="login-screen">
+      <div class="login-card">
+        <div class="brand-mark">✦</div>
+        <p class="eyebrow">ТВОЯ ВСЕЛЕННАЯ</p>
+        <h1>NEXORA</h1>
+        <p class="muted">Знакомься. Общайся. Исследуй планеты.</p>
+
+        <label class="field-label" for="nickname">Твой ник</label>
+        <input id="nickname" maxlength="18" autocomplete="nickname" placeholder="Например, КосмоКот">
+
+        <div class="preview-wrap">
+          <canvas id="preview-canvas" width="180" height="210" aria-label="Предпросмотр персонажа"></canvas>
+        </div>
+
+        <div class="custom-grid">
+          <label>Пол
+            <select id="gender">
+              <option value="male">Мужской</option>
+              <option value="female">Женский</option>
+            </select>
+          </label>
+          <label>Кожа
+            <select id="skin">
+              <option value="#f4c7a1">Светлая</option>
+              <option value="#c9875b">Смуглая</option>
+              <option value="#75452f">Тёмная</option>
+            </select>
+          </label>
+          <label>Причёска
+            <select id="hair">
+              <option value="short">Короткая</option>
+              <option value="long">Длинная</option>
+              <option value="spiky">Взъерошенная</option>
+            </select>
+          </label>
+          <label>Костюм
+            <select id="suit">
+              <option value="#6d7cff">Синий</option>
+              <option value="#ef6c9b">Розовый</option>
+              <option value="#35bca5">Бирюзовый</option>
+            </select>
+          </label>
+        </div>
+        <button id="enter-button" class="primary-button">Войти на планету <span>→</span></button>
+        <p id="login-error" class="error-text" role="alert"></p>
+      </div>
+    </section>
+
+    <section id="game-screen" class="game-screen hidden">
+      <header class="topbar">
+        <div class="top-brand"><span>✦</span> NEXORA</div>
+        <div class="online-pill"><i></i><span id="online-count">1</span> онлайн</div>
+        <button id="planets-button" class="glass-button">🪐 Планеты</button>
+      </header>
+
+      <div class="planet-picker hidden" id="planet-picker">
+        <button data-planet="starter">🌌 Стартовая</button>
+        <button data-planet="club">🎵 Клуб</button>
+        <button data-planet="beach">🏝️ Пляж</button>
+      </div>
+
+      <div class="scene-wrap">
+        <canvas id="world-canvas"></canvas>
+        <div class="scene-caption">
+          <span id="planet-title">Стартовая</span>
+          <small>Коснись поверхности, чтобы переместиться</small>
+        </div>
+        <div id="gift-layer" class="gift-layer"></div>
+      </div>
+
+      <div class="game-controls">
+        <div class="action-row">
+          <button class="action-button" data-emotion="wave">👋 <span>Помахать</span></button>
+          <button class="action-button" data-emotion="kiss">💋 <span>Поцелуй</span></button>
+          <button class="action-button" data-emotion="dance">💃 <span>Танец</span></button>
+          <button id="history-button" class="action-button history-action">☰ <span>Чат</span></button>
+        </div>
+        <form id="chat-form" class="chat-form">
+          <input id="chat-input" maxlength="240" placeholder="Написать сообщение..." autocomplete="off">
+          <button type="submit" aria-label="Отправить сообщение">➤</button>
+        </form>
+      </div>
+
+      <aside id="chat-drawer" class="chat-drawer hidden">
+        <div class="drawer-head"><strong>Общий чат</strong><button id="close-history" aria-label="Закрыть">×</button></div>
+        <div id="chat-history" class="chat-history"></div>
+      </aside>
+
+      <div id="profile-menu" class="profile-menu hidden">
+        <button class="menu-close" id="close-profile" aria-label="Закрыть">×</button>
+        <div class="profile-avatar" id="profile-avatar">✦</div>
+        <strong id="profile-name">Игрок</strong>
+        <span id="profile-rank" class="profile-rank">Новичок</span>
+        <button id="whisper-button">💬 Шепнуть</button>
+        <button id="gift-button">🎁 Подарить подарок</button>
+        <button id="friend-button">⭐ Добавить в друзья</button>
+        <div id="gift-options" class="gift-options hidden">
+          <button data-gift="rose">🌹 Роза</button>
+          <button data-gift="cocktail">🍹 Коктейль</button>
+          <button data-gift="heart">💖 Сердце</button>
+        </div>
+      </div>
+
+      <div id="toast" class="toast hidden" role="status"></div>
+    </section>
+  </main>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/client.js"></script>
+</body>
+</html>
