@@ -1,0 +1,171 @@
+name: NEXORA legacy account migration
+
+on:
+  pull_request:
+    branches: [nexora-social-mvp]
+    paths:
+      - "database/migrations/015_legacy_social_world_import.sql"
+      - "scripts/migrate.js"
+      - "src/auth.js"
+      - "src/game.js"
+      - "src/world.js"
+      - "test/fixtures/legacy-social-world.sql"
+      - ".github/workflows/nexora-legacy-import-ci.yml"
+  workflow_dispatch:
+
+jobs:
+  legacy-import:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://nexora:nexora@localhost:5432/nexora_test
+      NODE_ENV: test
+      DATABASE_SSL: "false"
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: nexora
+          POSTGRES_PASSWORD: nexora
+          POSTGRES_DB: nexora_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nexora -d nexora_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install full NEXORA dependencies
+        run: npm install --ignore-scripts
+      - name: Create the previous Social World schema
+        run: |
+          for file in prototypes/nexora-social-mvp/migrations/*.sql; do
+            echo "Applying legacy fixture schema: $file"
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$file"
+          done
+      - name: Seed two existing accounts and their saved world data
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f test/fixtures/legacy-social-world.sql
+          node <<'NODE'
+          const { Pool } = require("pg");
+          const bcrypt = require("bcryptjs");
+          (async () => {
+            const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+            try {
+              const hash = await bcrypt.hash("legacy5678", 8);
+              await pool.query(
+                "UPDATE nexora_social_world.accounts SET recovery_code_hash=$1,recovery_code_lookup_hash=NULL WHERE id=900002",
+                [hash]
+              );
+            } finally { await pool.end(); }
+          })().catch(error => { console.error(error); process.exit(1); });
+          NODE
+      - name: Apply the full NEXORA schema and import legacy accounts
+        run: npm run db:migrate
+      - name: Verify migration idempotency
+        run: npm run db:migrate
+      - name: Verify migrated identities, sessions, world and social data
+        run: |
+          node <<'NODE'
+          const assert = require("node:assert/strict");
+          const crypto = require("node:crypto");
+          const { Pool } = require("pg");
+          (async () => {
+            const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+            try {
+              const users = await pool.query(
+                "SELECT id,username,role,legacy_social_account_id,character_code_hash,legacy_recovery_code_hash FROM users WHERE legacy_social_account_id IN (900001,900002) ORDER BY legacy_social_account_id"
+              );
+              assert.equal(users.rowCount, 2, "both old accounts must be imported");
+              assert.equal(users.rows[0].role, "developer", "developer role must be retained");
+              assert.equal(users.rows[0].character_code_hash, crypto.createHash("sha256").update("legacy1234").digest("hex"), "legacy recovery lookup hash must be preserved");
+              assert.ok(users.rows[1].legacy_recovery_code_hash, "bcrypt-only legacy recovery code must be retained");
+              const sessions = await pool.query("SELECT COUNT(*)::int AS count FROM sessions s JOIN users u ON u.id=s.user_id WHERE u.legacy_social_account_id=900001");
+              assert.equal(sessions.rows[0].count, 1, "active legacy session must be retained");
+              const characters = await pool.query("SELECT COUNT(*)::int AS count FROM characters c JOIN users u ON u.id=c.user_id WHERE u.legacy_social_account_id IN (900001,900002)");
+              assert.equal(characters.rows[0].count, 2, "characters must be retained");
+              const wallet = await pool.query("SELECT coins FROM wallet_balances w JOIN users u ON u.id=w.user_id WHERE u.legacy_social_account_id=900001");
+              assert.equal(Number(wallet.rows[0].coins), 1234, "wallet balance must be retained");
+              const friendship = await pool.query("SELECT COUNT(*)::int AS count FROM friendships f JOIN users a ON a.id=f.requester_id JOIN users b ON b.id=f.addressee_id WHERE f.status='accepted' AND a.legacy_social_account_id=900001 AND b.legacy_social_account_id=900002");
+              assert.equal(friendship.rows[0].count, 1, "friendship must be retained");
+              const dm = await pool.query("SELECT COUNT(*)::int AS count FROM messages m JOIN users u ON u.id=m.sender_id WHERE u.legacy_social_account_id=900001 AND m.body='Старое личное сообщение'");
+              assert.equal(dm.rows[0].count, 1, "private message history must be retained");
+              const planet = await pool.query("SELECT id,owner_user_id,settings->>'legacy_access_mode' AS access_mode FROM planets WHERE slug='custom-90001'");
+              assert.equal(planet.rowCount, 1, "custom planet must be imported");
+              assert.equal(planet.rows[0].access_mode, "invite", "custom planet access mode must be retained");
+              const staff = await pool.query("SELECT COUNT(*)::int AS count FROM planet_access pa JOIN users u ON u.id=pa.user_id WHERE pa.planet_id=$1 AND u.legacy_social_account_id=900002 AND pa.access_level='staff'", [planet.rows[0].id]);
+              assert.equal(staff.rows[0].count, 1, "planet staff permission must be retained");
+              const roomMessages = await pool.query("SELECT COUNT(*)::int AS count FROM room_messages m JOIN rooms r ON r.id=m.room_id JOIN planets p ON p.id=r.planet_id WHERE p.slug='custom-90001' AND m.body='История чата тоже переносится.'");
+              assert.equal(roomMessages.rows[0].count, 1, "planet chat history must be retained");
+              const gifts = await pool.query("SELECT COUNT(*)::int AS count FROM gifts g JOIN users u ON u.id=g.receiver_user_id WHERE u.legacy_social_account_id=900002");
+              assert.equal(gifts.rows[0].count, 1, "gift history must be retained");
+              const oldRows = await pool.query("SELECT COUNT(*)::int AS count FROM nexora_social_world.accounts");
+              assert.equal(oldRows.rows[0].count, 2, "the original account table must remain intact");
+              console.log("Legacy import data assertions passed.");
+            } finally { await pool.end(); }
+          })().catch(error => { console.error(error); process.exit(1); });
+          NODE
+      - name: Check application JavaScript
+        run: npm run check
+      - name: Start the full NEXORA server
+        run: |
+          npm start > /tmp/nexora-server.log 2>&1 &
+          echo $! > /tmp/nexora-server.pid
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3000/api/status > /tmp/nexora-status.json; then
+              cat /tmp/nexora-status.json
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/nexora-server.log
+          exit 1
+      - name: Verify existing recovery codes and sessions still log in
+        run: |
+          node <<'NODE'
+          const assert = require("node:assert/strict");
+          const base = "http://127.0.0.1:3000";
+          async function login(code) {
+            const response = await fetch(base + "/api/auth/login", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ characterCode: code })
+            });
+            assert.equal(response.status, 200, "legacy recovery code must still log in: " + code);
+            return response.headers.get("set-cookie").split(";")[0];
+          }
+          (async () => {
+            const ownerCookie = await login("legacy1234");
+            const owner = await fetch(base + "/api/auth/me", { headers: { cookie: ownerCookie } });
+            assert.equal(owner.status, 200);
+            const ownerData = await owner.json();
+            assert.equal(ownerData.user.role, "developer");
+            const profile = await fetch(base + "/api/world/me", { headers: { cookie: ownerCookie } });
+            assert.equal(profile.status, 200);
+            const profileData = await profile.json();
+            assert.equal(Number(profileData.profile.coins), 1234);
+            assert.equal(profileData.profile.planet_slug, "custom-90001");
+
+            const staffCookie = await login("legacy5678");
+            const planetsResponse = await fetch(base + "/api/game/planets", { headers: { cookie: staffCookie } });
+            assert.equal(planetsResponse.status, 200);
+            const planets = await planetsResponse.json();
+            assert.ok(planets.planets.some(planet => planet.slug === "custom-90001"), "planet staff must retain access");
+            const travel = await fetch(base + "/api/world/travel", {
+              method: "POST",
+              headers: { "content-type": "application/json", cookie: staffCookie },
+              body: JSON.stringify({ planetSlug: "custom-90001" })
+            });
+            assert.equal(travel.status, 200, "planet staff must still be able to travel to their planet");
+
+            const oldSession = await fetch(base + "/api/auth/me", {
+              headers: { cookie: "nexora_session=old-session-token" }
+            });
+            assert.equal(oldSession.status, 200, "active legacy cookie session must be retained");
+            console.log("Legacy recovery-code login, staff access and active session checks passed.");
+          })().catch(error => { console.error(error); process.exit(1); });
+          NODE
