@@ -31,7 +31,8 @@ jobs:
           node --check server.js
           node --check src/db.js
           node --check src/auth.js
-          node --check src/social.js src/profile.js
+          node --check src/social.js
+          node --check src/profile.js
           node --check public/client.js
       - name: Verify migration sequence and social repair tables
         run: |
@@ -42,7 +43,7 @@ jobs:
           const files = fs.readdirSync(dir)
             .filter(name => /^\d+.*\.sql$/i.test(name))
             .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-          for (const required of ["001_nexora_social_world.sql", "002_social_messaging.sql", "003_repair_social_graph.sql"]) {
+          for (const required of ["001_nexora_social_world.sql", "002_social_messaging.sql", "003_repair_social_graph.sql", "004_profile_progression.sql"]) {
             if (!files.includes(required)) throw new Error("Missing migration: " + required);
           }
           const repair = fs.readFileSync(path.join(dir, "003_repair_social_graph.sql"), "utf8");
@@ -54,4 +55,4 @@ jobs:
           console.log("Migration sequence verified:", files.join(", "));
           NODE
       - name: Verify social module loads
-        run: node -e "require('./src/social')"
+        run: node -e "require('./src/social'); require('./src/profile')"
