@@ -211,7 +211,7 @@ router.put("/planets/:planetSlug/objects",requireSession,async(req,res,next)=>{
   rotation:z.number().min(-360).max(360).default(0),
   scale:z.number().min(0.5).max(2).default(1),
   properties:z.record(z.unknown()).optional()
- }).strict()).max(100)}).strict().safeParse(req.body);
+ })).max(100)}).strict().safeParse(req.body);
  if(!parsed.success)return res.status(400).json({error:"Проверьте объекты и их координаты. Лимит: 100 объектов."});
  const client=await pool.connect();
  try{
