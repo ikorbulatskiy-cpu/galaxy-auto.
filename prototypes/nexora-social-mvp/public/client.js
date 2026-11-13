@@ -1028,11 +1028,11 @@
       frame.src = "/galaxy?embedded=1";
     }
   }
-  $("#integrated-galaxy-back")?.addEventListener("click", () => {
-    const view = $("#integrated-galaxy-view");
+  window.addEventListener("message", event => {
     const frame = $("#integrated-galaxy-frame");
+    if (event.origin !== location.origin || event.source !== frame?.contentWindow || event.data?.type !== "nexora:galaxy-close") return;
     if (frame) frame.src = "about:blank";
-    view?.classList.add("hidden");
+    $("#integrated-galaxy-view")?.classList.add("hidden");
   });
   document.querySelectorAll("[data-room-emotion]").forEach(button => button.addEventListener("click",() => {
     socket.emit("emotion:play",{emotion:button.dataset.roomEmotion});
