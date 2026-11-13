@@ -45,3 +45,6 @@
 .context-actions button{min-height:35px;padding:8px 10px}
 @keyframes context-open{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:600px){.context-menu{min-width:205px;max-width:calc(100vw - 16px)}.context-menu button{min-height:42px;font-size:13px}}
+
+.embedded-back{border:1px solid #527fc4;background:#17243d;color:#edf5ff;border-radius:9px;padding:8px 11px;font-size:12px;font-weight:800;white-space:nowrap}
+.embedded-back[hidden]{display:none!important}
