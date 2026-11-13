@@ -5,7 +5,7 @@
   let ready = false;
   let failed = false;
   const reducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-  atlas.onload = () => { ready = true; };
+  atlas.onload = () => { ready = true; window.dispatchEvent(new Event("nexora:sprites-ready")); };
   atlas.onerror = () => { failed = true; };
   atlas.src = "/assets/sprites/characters/nexora-avatar-atlas.svg";
 
