@@ -336,16 +336,17 @@
 }
 
 
-/* NEXORA FIX (mobile): контейнер аватаров заканчивается ровно у верхней
-   кромки пола. Unified CSS ранее задавал inset:0!important, из-за чего
-   персонажи привязывались к нижнему краю всей сцены, а не к площадке. */
+/* NEXORA FIX: keep the avatar stage attached to the visible room floor. */
 #dashboard > #tab-world .nx-avatars{
   inset:auto 0 39px 0!important;
   height:116px!important;
   min-height:0!important;
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:center!important;
   overflow:visible!important;
+  scroll-snap-type:none!important;
 }
-/* Собственный персонаж находится по центру сцены и стоит на линии пола. */
 #dashboard > #tab-world .nx-avatars > .nx-avatar-card.me{
   position:absolute!important;
   left:50%!important;
@@ -355,8 +356,15 @@
   flex:none!important;
   margin:0!important;
   transform:translateX(-50%)!important;
-  z-index:5!important;
+  z-index:6!important;
   scroll-snap-align:none!important;
+}
+#dashboard > #tab-world .nx-avatar-card.me canvas[data-nexora-sprite],
+#dashboard > #tab-world .nx-avatar-card.me canvas,
+#dashboard > #tab-world .nx-avatar-card.me svg,
+#dashboard > #tab-world .nx-avatar-card.me img{
+  object-fit:contain!important;
+  object-position:center bottom!important;
 }
 @media (max-height:740px) and (max-width:600px){
   #dashboard > #tab-world .nx-avatars{height:108px!important;bottom:39px!important}
