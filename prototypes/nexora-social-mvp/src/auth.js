@@ -42,7 +42,8 @@ async function register(req, res) {
     await client.query("INSERT INTO nexora_social_world.wallets(account_id,balance) VALUES($1,0)", [account.id]);
     await client.query("COMMIT");
     const token = await issueSession(account.id);
-    res.cookie("nexora_session", token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: SESSION_DAYS * 86400000 });\n    res.status(201).json({ ok: true, account: { id: account.id, nickname }, recoveryCode: code });
+    res.cookie("nexora_session", token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: SESSION_DAYS * 86400000 });
+    res.status(201).json({ ok: true, account: { id: account.id, nickname }, recoveryCode: code });
   } catch (error) {
     await client.query("ROLLBACK");
     if (error.code === "23505") return res.status(409).json({ error: "Этот ник уже занят." });
