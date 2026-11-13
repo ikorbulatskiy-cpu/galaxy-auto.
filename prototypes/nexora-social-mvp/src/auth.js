@@ -56,28 +56,28 @@ const LOGIN_WINDOW_MINUTES = 15;
 
 async function recordLoginFailure(ipHash) {
   const result = await pool.query(
-    `INSERT INTO nexora_social_world.auth_login_attempts AS current
+    `INSERT INTO nexora_social_world.auth_login_attempts AS existing
        (ip_hash, attempts, window_started_at, locked_until, updated_at)
      VALUES ($1, 1, NOW(), NULL, NOW())
      ON CONFLICT (ip_hash) DO UPDATE SET
        attempts = CASE
-         WHEN current.window_started_at <= NOW() - INTERVAL '15 minutes' THEN 1
-         ELSE current.attempts + 1
+         WHEN existing.window_started_at <= NOW() - make_interval(mins => $3::int) THEN 1
+         ELSE existing.attempts + 1
        END,
        window_started_at = CASE
-         WHEN current.window_started_at <= NOW() - INTERVAL '15 minutes' THEN NOW()
-         ELSE current.window_started_at
+         WHEN existing.window_started_at <= NOW() - make_interval(mins => $3::int) THEN NOW()
+         ELSE existing.window_started_at
        END,
        locked_until = CASE
          WHEN (CASE
-           WHEN current.window_started_at <= NOW() - INTERVAL '15 minutes' THEN 1
-           ELSE current.attempts + 1
-         END) >= $2 THEN NOW() + INTERVAL '15 minutes'
+           WHEN existing.window_started_at <= NOW() - make_interval(mins => $3::int) THEN 1
+           ELSE existing.attempts + 1
+         END) >= $2 THEN NOW() + make_interval(mins => $3::int)
          ELSE NULL
        END,
        updated_at = NOW()
      RETURNING attempts, locked_until`,
-    [ipHash, MAX_LOGIN_FAILURES]
+    [ipHash, MAX_LOGIN_FAILURES, LOGIN_WINDOW_MINUTES]
   );
   return result.rows[0];
 }
@@ -98,7 +98,7 @@ async function login(req, res) {
     "SELECT locked_until FROM nexora_social_world.auth_login_attempts WHERE ip_hash=$1",
     [ipHash]
   );
-  const lockedUntil = current.rows[0]?.locked_until;
+  const lockedUntil = existing.rows[0]?.locked_until;
   if (lockedUntil && new Date(lockedUntil).getTime() > Date.now()) {
     return respondLoginFailure(res, 429, "", lockedUntil);
   }
