@@ -1538,7 +1538,7 @@
               remove.textContent = "Удалить персонажа";
               remove.className = "danger-button";
               remove.addEventListener("click", async () => {
-                const confirmation = prompt("ВНИМАНИЕ: будет навсегда удалён персонаж и его аккаунт вместе со связанными данными. Для подтверждения введи ник: " + p.nickname);
+                const confirmation = prompt("ВНИМАНИЕ: будет удалён персонаж и аккаунт, включая друзей, переписки, Koins и инвентарь. Для подтверждения введи ник: " + p.nickname);
                 if (confirmation === null) return;
                 const reason = prompt("Причина удаления персонажа:");
                 if (!reason?.trim()) return;
