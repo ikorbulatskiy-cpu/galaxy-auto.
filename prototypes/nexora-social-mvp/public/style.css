@@ -1135,3 +1135,11 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
  .planet-card-body>p {font-size:9px}
 }
 @media(prefers-reduced-motion:reduce){.planet-card-art i{animation:none}}
+
+
+.planet-owner-visitors {display:grid;gap:6px;max-height:125px;overflow:auto;margin:8px 0}
+.planet-owner-visitor {padding:8px 10px;border:1px solid #ffffff13;border-radius:9px;background:#ffffff08;color:#dce2ff;font-size:10px}
+.planet-create-form h3 {margin:14px 0 7px;font-size:12px}
+.planet-owner-actions {display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.planet-owner-actions button,#planet-owner-save {border:1px solid #b5a5ff44;border-radius:10px;background:#8e80ef22;padding:10px;color:#fff;font-size:10px;font-weight:800}
+#planet-owner-error {min-height:15px;color:#ffb3c0;font-size:10px}
