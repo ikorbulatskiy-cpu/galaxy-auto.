@@ -183,6 +183,20 @@ async function run() {
   assert.equal(result.body.profile.avatar.hair, "curly", "new hairstyle is validated and persisted");
   assert.equal(result.body.profile.avatar.shoes, "sandals", "new shoe style is validated and persisted");
 
+  result = await json(await request("/api/profile/" + targetId, owner.token));
+  assert.equal(result.status, 200, "public player profile can be opened");
+  assert.equal(result.body.profile.id, targetId, "public profile resolves the requested player");
+  assert.equal(Object.hasOwn(result.body.profile, "koins"), false, "public profile does not expose private wallet balance");
+
+  result = await json(await request("/api/profile/rating?category=level", owner.token));
+  assert.equal(result.status, 200, "level leaderboard responds");
+  assert.ok(result.body.entries.some(item => item.id === ownerId), "leaderboard includes the current player position");
+
+  result = await json(await request("/api/social/users?q=CI", owner.token));
+  assert.equal(result.status, 200, "extended player search responds");
+  assert.ok(result.body.users.some(user => user.id === targetId), "player search returns matching accounts");
+  assert.ok(result.body.users.every(user => Number.isInteger(user.level)), "search results include public character level");
+
   result = await json(await request("/api/social/requests", owner.token, {
     method: "POST",
     headers: { "content-type": "application/json" },
