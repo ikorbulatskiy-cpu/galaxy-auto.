@@ -206,37 +206,104 @@
   }
 
   function drawAvatar(target,x,y,scale,avatar,facing=1,emotion=null,moving=false){
-    const skin=avatar?.skin||skins[0],suit=avatar?.suit||suits[0],female=avatar?.gender==="female",hair=avatar?.hair||"short",hairColor=avatar?.hairColor||"#30233d",shoes=avatar?.shoes||"sneakers",accessory=avatar?.accessory||"none",time=Date.now()/1000,phase=moving?Math.sin(time*13):0,bob=emotion==="dance"?Math.sin(time*9)*3:moving?Math.abs(Math.sin(time*13))*1.8:Math.sin(time*2.2)*1.1;
+    const skin=avatar?.skin||skins[0],suit=avatar?.suit||suits[0],female=avatar?.gender==="female",hair=avatar?.hair||"short",hairColor=avatar?.hairColor||"#30233d",shoes=avatar?.shoes||"sneakers",accessory=avatar?.accessory||"none",time=Date.now()/1000,phase=moving?Math.sin(time*13):0,bob=emotion==="dance"?Math.sin(time*9)*2.8:moving?Math.abs(Math.sin(time*13))*1.5:Math.sin(time*2.2)*.65;
+    const shade=(hex,amount)=>{const raw=String(hex).replace("#","");if(!/^[0-9a-f]{6}$/i.test(raw))return hex;const n=parseInt(raw,16),r=Math.max(0,Math.min(255,(n>>16)+amount)),g=Math.max(0,Math.min(255,((n>>8)&255)+amount)),b=Math.max(0,Math.min(255,(n&255)+amount));return "#"+[r,g,b].map(v=>v.toString(16).padStart(2,"0")).join("");};
+    const path=(points,fill,stroke="#222642",line=1.2)=>{target.beginPath();points.forEach((p,i)=>i?target.lineTo(p[0],p[1]):target.moveTo(p[0],p[1]));target.closePath();if(fill){target.fillStyle=fill;target.fill();}if(stroke){target.lineWidth=line;target.strokeStyle=stroke;target.stroke();}};
+    const rounded=(x1,y1,w,h,r,fill,stroke=null,line=1)=>{target.beginPath();target.roundRect(x1,y1,w,h,r);if(fill){target.fillStyle=fill;target.fill();}if(stroke){target.lineWidth=line;target.strokeStyle=stroke;target.stroke();}};
+    const gradient=(x1,y1,x2,y2,a,b)=>{const g=target.createLinearGradient(x1,y1,x2,y2);g.addColorStop(0,a);g.addColorStop(1,b);return g;};
     target.save();target.translate(x,y+bob);target.scale(scale*facing,scale);
-    target.fillStyle="rgba(3,7,24,.48)";target.beginPath();target.ellipse(0,40,19+Math.abs(phase),5,0,0,Math.PI*2);target.fill();
-    target.strokeStyle="#20294f";target.lineCap="round";target.lineWidth=7;target.beginPath();target.moveTo(-7,17);target.lineTo(-8-phase*4,33);target.moveTo(7,17);target.lineTo(8+phase*4,33);target.stroke();
-    target.fillStyle=shoes==="boots"?"#30364f":shoes==="heels"?"#8f466f":"#dfe7ff";target.beginPath();target.roundRect(-14-phase*4,32,12,shoes==="boots"?7:5,2);target.roundRect(2+phase*4,32,12,shoes==="boots"?7:5,2);target.fill();
-    target.strokeStyle=skin;target.lineCap="round";target.lineWidth=7;target.beginPath();
-    if(emotion==="wave"){target.moveTo(-11,1);target.lineTo(-18,17);target.moveTo(11,1);target.lineTo(19,-13);}
-    else {target.moveTo(-11,1);target.lineTo(-18,17+phase*3);target.moveTo(11,1);target.lineTo(18,16-phase*3);}
+    // Ground shadow and soft character rim light.
+    target.fillStyle="rgba(3,7,24,.42)";target.beginPath();target.ellipse(0,40,17+Math.abs(phase)*.8,4.5,0,0,Math.PI*2);target.fill();
+    target.save();target.globalAlpha=.22;target.shadowColor=suit;target.shadowBlur=15;target.strokeStyle=suit;target.lineWidth=2;target.beginPath();target.ellipse(0,-1,19,39,0,0,Math.PI*2);target.stroke();target.restore();
+
+    // Legs, shaped trousers and articulated shoes.
+    const legSwing=moving?phase*3:emotion==="dance"?Math.sin(time*9)*2:0;
+    target.lineCap="round";target.lineJoin="round";
+    target.strokeStyle="#20243c";target.lineWidth=9;target.beginPath();target.moveTo(-6,16);target.lineTo(-7-legSwing,31);target.moveTo(6,16);target.lineTo(7+legSwing,31);target.stroke();
+    target.strokeStyle=gradient(-8,15,8,31,shade(suit,-45),shade(suit,-68));target.lineWidth=7;target.beginPath();target.moveTo(-6,16);target.lineTo(-7-legSwing,30);target.moveTo(6,16);target.lineTo(7+legSwing,30);target.stroke();
+    target.fillStyle=shoes==="boots"?"#34394e":shoes==="heels"?"#a74f7e":"#e9edff";
+    target.strokeStyle="#252a45";target.lineWidth=1.1;
+    target.beginPath();target.roundRect(-15-legSwing,29,13,7,shoes==="heels"?3:4);target.roundRect(2+legSwing,29,13,7,shoes==="heels"?3:4);target.fill();target.stroke();
+    target.fillStyle="rgba(255,255,255,.55)";target.fillRect(-12-legSwing,30,6,1.2);target.fillRect(5+legSwing,30,6,1.2);
+    if(shoes==="boots"){target.strokeStyle="#8d9abb";target.lineWidth=1;target.beginPath();target.moveTo(-12-legSwing,33);target.lineTo(-6-legSwing,33);target.moveTo(5+legSwing,33);target.lineTo(11+legSwing,33);target.stroke();}
+    if(shoes==="heels"){target.strokeStyle="#f2c4dd";target.lineWidth=1.5;target.beginPath();target.moveTo(-5-legSwing,34);target.lineTo(-4-legSwing,37);target.moveTo(12+legSwing,34);target.lineTo(13+legSwing,37);target.stroke();}
+
+    // Arms are drawn behind the jacket, with sleeves and cuffs.
+    const waving=emotion==="wave",armLift=waving?1:0;
+    target.lineCap="round";target.strokeStyle="#282b48";target.lineWidth=8;target.beginPath();
+    target.moveTo(-11,-2);target.lineTo(-18,13+phase*2);target.moveTo(11,-2);target.lineTo(waving?19:18,waving?-17:13-phase*2);target.stroke();
+    target.strokeStyle=gradient(-18,-2,18,17,shade(suit,20),shade(suit,-35));target.lineWidth=6;
+    target.beginPath();target.moveTo(-11,-2);target.lineTo(-18,12+phase*2);target.moveTo(11,-2);target.lineTo(waving?19:18,waving?-16:12-phase*2);target.stroke();
+    target.strokeStyle=shade(suit,-48);target.lineWidth=2;target.beginPath();target.moveTo(-15,6+phase);target.lineTo(-20,12+phase*2);if(!waving){target.moveTo(15,6-phase);target.lineTo(20,12-phase*2);}target.stroke();
+
+    // Neck, jacket silhouette, inner shirt and waist details.
+    rounded(-4,-12,8,13,3,shade(skin,-8),"#6c4b4d",.8);
+    path([[-13,-7],[13,-7],[16,17],[10,23],[-10,23],[-16,17]],gradient(-16,-8,16,23,shade(suit,28),shade(suit,-42)),"#252943",1.5);
+    path([[-8,-6],[0,1],[8,-6],[5,12],[0,17],[-5,12]],"#f5f0ff","#b8b6d5",.8);
+    path([[-3,-4],[0,3],[3,-4],[1,10],[0,13],[-1,10]],"#d9c9ff",null);
+    target.strokeStyle="rgba(255,255,255,.35)";target.lineWidth=1.1;target.beginPath();target.moveTo(-12,-2);target.lineTo(-10,15);target.moveTo(12,-2);target.lineTo(10,15);target.stroke();
+    target.fillStyle="#f5d58a";target.beginPath();target.arc(0,8,1.5,0,Math.PI*2);target.fill();
+    rounded(-11,17,22,3,1.5,shade(suit,-32),"rgba(255,255,255,.2)",.6);
+    rounded(-3,18,6,4,1,"#d7b76d","#705a42",.7);
+    if(female){
+      path([[-12,-5],[12,-5],[18,20],[13,24],[-13,24],[-18,20]],gradient(-15,-4,15,24,shade(suit,28),shade(suit,-38)),"#252943",1.4);
+      target.strokeStyle="rgba(255,255,255,.22)";target.lineWidth=1;target.beginPath();target.moveTo(-11,1);target.lineTo(-14,18);target.moveTo(11,1);target.lineTo(14,18);target.stroke();
+      target.fillStyle="#f3d7eb";target.beginPath();target.arc(0,21,1.2,0,Math.PI*2);target.fill();
+    }
+    // Hands and fingers.
+    target.fillStyle=skin;target.strokeStyle=shade(skin,-35);target.lineWidth=.8;
+    target.beginPath();target.arc(-19,14+phase*2,3.8,0,Math.PI*2);target.arc(waving?20:18,waving?-18:14-phase*2,3.8,0,Math.PI*2);target.fill();target.stroke();
+    if(waving){target.strokeStyle=skin;target.lineWidth=1.5;target.beginPath();for(let i=0;i<3;i++){target.moveTo(19+i*1.2,-19);target.lineTo(17+i*2,-24-i*1.4);}target.stroke();}
+
+    // Head, ears and face shading.
+    target.fillStyle=shade(skin,-28);target.beginPath();target.arc(-12,-19,3.7,0,Math.PI*2);target.arc(12,-19,3.7,0,Math.PI*2);target.fill();
+    target.fillStyle=skin;target.beginPath();target.ellipse(0,-21,13.2,15.2,0,0,Math.PI*2);target.fill();target.strokeStyle=shade(skin,-32);target.lineWidth=1;target.stroke();
+    const faceShade=target.createLinearGradient(-10,-32,10,-7);faceShade.addColorStop(0,"rgba(255,255,255,.22)");faceShade.addColorStop(1,"rgba(89,43,38,.13)");target.fillStyle=faceShade;target.beginPath();target.ellipse(0,-21,12.2,14.2,0,0,Math.PI*2);target.fill();
+    target.fillStyle="rgba(255,255,255,.32)";target.beginPath();target.ellipse(-5,-29,4,2.4,-.45,0,Math.PI*2);target.fill();
+    // Eyebrows, eyes, pupils and catchlights.
+    target.strokeStyle=shade(hairColor,-12);target.lineWidth=1.4;target.lineCap="round";target.beginPath();target.moveTo(-8,-26);target.quadraticCurveTo(-5,-28,-2.5,-26);target.moveTo(2.5,-26);target.quadraticCurveTo(5,-28,8,-26);target.stroke();
+    target.fillStyle="#fff";target.beginPath();target.ellipse(-4.5,-22,2.5,3.1,0,0,Math.PI*2);target.ellipse(4.5,-22,2.5,3.1,0,0,Math.PI*2);target.fill();
+    target.fillStyle="#493a48";target.beginPath();target.ellipse(-4.2,-21.5,1.25,2.1,0,0,Math.PI*2);target.ellipse(4.2,-21.5,1.25,2.1,0,0,Math.PI*2);target.fill();
+    target.fillStyle="#fff";target.beginPath();target.arc(-4.7,-22.5,.65,0,Math.PI*2);target.arc(3.7,-22.5,.65,0,Math.PI*2);target.fill();
+    target.strokeStyle=shade(skin,-34);target.lineWidth=.8;target.beginPath();target.moveTo(0,-20);target.quadraticCurveTo(-1,-16,1,-16);target.stroke();
+    target.fillStyle="rgba(242,111,139,.25)";target.beginPath();target.ellipse(-8,-15,2.6,1.4,0,0,Math.PI*2);target.ellipse(8,-15,2.6,1.4,0,0,Math.PI*2);target.fill();
+    target.strokeStyle="#914e59";target.lineWidth=1.25;target.beginPath();
+    if(emotion==="sad")target.arc(0,-10,3,Math.PI+.15,Math.PI*2-.15);
+    else if(emotion==="surprise")target.ellipse(0,-11,1.7,2.4,0,0,Math.PI*2);
+    else if(emotion==="angry"){target.moveTo(-2,-11);target.quadraticCurveTo(0,-9,2,-11);}
+    else target.arc(0,-13,3,.18,Math.PI-.18);
     target.stroke();
-    target.strokeStyle=suit;target.lineWidth=8;target.beginPath();
-    if(emotion==="wave"){target.moveTo(-12,1);target.lineTo(-16,10);target.moveTo(12,1);target.lineTo(18,-9);}
-    else {target.moveTo(-12,1);target.lineTo(-16,10+phase*2);target.moveTo(12,1);target.lineTo(16,9-phase*2);}
-    target.stroke();
-    target.fillStyle=skin;target.beginPath();target.arc(-18,18+phase*2,3.5,0,Math.PI*2);target.arc(emotion==="wave"?19:18,emotion==="wave"?-13:17-phase*2,3.5,0,Math.PI*2);target.fill();
-    target.fillStyle="rgba(3,7,24,.38)";target.beginPath();target.roundRect(-15,-5,30,30,8);target.fill();target.fillStyle=suit;target.beginPath();
-    if(female){target.moveTo(-12,-3);target.lineTo(12,-3);target.lineTo(18,23);target.lineTo(-18,23);}else target.roundRect(-14,-4,28,28,7);target.closePath();target.fill();
-    target.fillStyle="rgba(255,255,255,.22)";target.beginPath();target.roundRect(-9,-1,18,3,2);target.fill();target.fillStyle="rgba(8,14,39,.3)";target.fillRect(-2,2,4,17);
-    target.fillStyle="#e5d8ff";target.beginPath();target.moveTo(-4,-2);target.lineTo(0,5);target.lineTo(4,-2);target.closePath();target.fill();
-    target.fillStyle=skin;target.beginPath();target.roundRect(-4,-10,8,10,3);target.fill();target.beginPath();target.arc(-12,-15,3.2,0,Math.PI*2);target.arc(12,-15,3.2,0,Math.PI*2);target.fill();target.beginPath();target.ellipse(0,-16,12.5,14.5,0,0,Math.PI*2);target.fill();
-    target.fillStyle="rgba(255,255,255,.18)";target.beginPath();target.ellipse(-4,-22,4,3,-.4,0,Math.PI*2);target.fill();target.fillStyle="#25203b";target.beginPath();target.ellipse(-4.2,-16,1.35,2,0,0,Math.PI*2);target.ellipse(4.2,-16,1.35,2,0,0,Math.PI*2);target.fill();
-    target.strokeStyle="#8b4d50";target.lineWidth=1.2;target.beginPath();if(emotion==="sad")target.arc(0,-8,3,Math.PI+.2,Math.PI*2-.2);else if(emotion==="surprise")target.ellipse(0,-9,1.6,2.2,0,0,Math.PI*2);else target.arc(0,-11,3,.2,Math.PI-.2);target.stroke();
-    target.fillStyle=hairColor;
-    if(hair==="long"){target.beginPath();target.arc(0,-19,14,Math.PI,Math.PI*2);target.lineTo(14,9);target.quadraticCurveTo(9,13,8,4);target.lineTo(8,-9);target.lineTo(-8,-9);target.lineTo(-8,4);target.quadraticCurveTo(-10,13,-14,9);target.closePath();target.fill();}
-    else if(hair==="spiky"){target.beginPath();target.moveTo(-13,-17);target.lineTo(-15,-27);target.lineTo(-6,-23);target.lineTo(0,-32);target.lineTo(6,-23);target.lineTo(15,-27);target.lineTo(13,-12);target.closePath();target.fill();}
-    else{target.beginPath();target.arc(0,-19,14,Math.PI,Math.PI*2);target.lineTo(13,-10);target.quadraticCurveTo(6,-16,0,-12);target.quadraticCurveTo(-7,-18,-13,-10);target.closePath();target.fill();}
-    target.strokeStyle="rgba(255,255,255,.16)";target.lineWidth=1;target.beginPath();target.arc(-2,-20,10,Math.PI*1.08,Math.PI*1.7);target.stroke();target.fillStyle="#f4d88b";target.beginPath();target.arc(0,7,1.5,0,Math.PI*2);target.fill();
-    if(female){target.fillStyle="#f4b5dc";target.beginPath();target.arc(10,-27,2.2,0,Math.PI*2);target.fill();}
-    if(accessory==="glasses"){target.strokeStyle="#26324f";target.lineWidth=1.5;target.beginPath();target.roundRect(-8,-19,7,6,2);target.roundRect(1,-19,7,6,2);target.moveTo(-1,-16);target.lineTo(1,-16);target.stroke();}
-    else if(accessory==="headphones"){target.strokeStyle="#aab7e8";target.lineWidth=3;target.beginPath();target.arc(0,-17,15,Math.PI,Math.PI*2);target.stroke();target.fillStyle="#7788c9";target.fillRect(-15,-17,4,8);target.fillRect(11,-17,4,8);}
-    else if(accessory==="crown"){target.fillStyle="#ffd76a";target.beginPath();target.moveTo(-9,-28);target.lineTo(-7,-37);target.lineTo(-2,-32);target.lineTo(2,-38);target.lineTo(7,-32);target.lineTo(9,-28);target.closePath();target.fill();}
-    const icons={wave:"👋",kiss:"💋",dance:"♪",smile:"😊",sad:"😢",laugh:"😂",surprise:"😮",love:"💗",angry:"💢",blush:"☺",sleep:"💤",music:"♫"};if(emotion&&icons[emotion]){target.font="15px sans-serif";target.textAlign="center";target.fillText(icons[emotion],18,-31);}target.restore();
+
+    // Hair base and three supported silhouettes.
+    target.fillStyle=hairColor;target.strokeStyle=shade(hairColor,-35);target.lineWidth=1;
+    if(hair==="long"){
+      target.beginPath();target.moveTo(-12,-24);target.quadraticCurveTo(-16,-38,0,-38);target.quadraticCurveTo(16,-37,13,-22);target.lineTo(15,8);target.quadraticCurveTo(11,13,8,5);target.lineTo(7,-9);target.lineTo(-8,-9);target.lineTo(-9,6);target.quadraticCurveTo(-14,13,-15,5);target.closePath();target.fill();target.stroke();
+      target.fillStyle=hairColor;target.beginPath();target.arc(0,-31,13,Math.PI,Math.PI*2);target.quadraticCurveTo(12,-29,8,-25);target.quadraticCurveTo(2,-30,-2,-26);target.quadraticCurveTo(-8,-29,-13,-23);target.closePath();target.fill();target.stroke();
+      target.strokeStyle="rgba(255,255,255,.22)";target.lineWidth=1;target.beginPath();target.moveTo(-11,-10);target.quadraticCurveTo(-13,-1,-11,4);target.moveTo(10,-10);target.quadraticCurveTo(12,-1,11,4);target.stroke();
+    }else if(hair==="spiky"){
+      path([[-13,-22],[-16,-34],[-8,-30],[-3,-40],[2,-31],[10,-37],[14,-25],[11,-17],[5,-25],[0,-22],[-6,-25]],hairColor,shade(hairColor,-35),1);
+      target.strokeStyle="rgba(255,255,255,.25)";target.lineWidth=1;target.beginPath();target.moveTo(-8,-31);target.lineTo(-3,-37);target.moveTo(3,-30);target.lineTo(9,-34);target.stroke();
+    }else{
+      target.beginPath();target.arc(0,-26,14,Math.PI,Math.PI*2);target.quadraticCurveTo(15,-24,12,-15);target.quadraticCurveTo(7,-22,2,-18);target.quadraticCurveTo(-5,-24,-12,-16);target.quadraticCurveTo(-15,-23,-13,-29);target.closePath();target.fill();target.stroke();
+      target.strokeStyle="rgba(255,255,255,.25)";target.lineWidth=1.1;target.beginPath();target.arc(-2,-28,9,Math.PI*1.08,Math.PI*1.62);target.stroke();
+    }
+
+    // Jewelry and selected accessory.
+    if(female){target.fillStyle="#f4b5dc";target.strokeStyle="#9e5f94";target.lineWidth=.6;target.beginPath();target.arc(-12,-16,1.8,0,Math.PI*2);target.arc(12,-16,1.8,0,Math.PI*2);target.fill();target.stroke();}
+    if(accessory==="glasses"){
+      target.strokeStyle="#29304d";target.lineWidth=1.5;target.fillStyle="rgba(153,211,255,.18)";
+      target.beginPath();target.roundRect(-9,-25,8,7,2);target.roundRect(1,-25,8,7,2);target.moveTo(-1,-22);target.lineTo(1,-22);target.stroke();target.fill();
+    }else if(accessory==="headphones"){
+      target.strokeStyle="#b8c9ff";target.lineWidth=3;target.beginPath();target.arc(0,-22,16,Math.PI,Math.PI*2);target.stroke();rounded(-16,-23,4,9,2,"#7588d5","#d7e1ff",.8);rounded(12,-23,4,9,2,"#7588d5","#d7e1ff",.8);
+    }else if(accessory==="crown"){
+      target.shadowColor="#ffdb74";target.shadowBlur=7;path([[-10,-34],[-8,-43],[-3,-37],[0,-45],[4,-37],[9,-42],[10,-33]],gradient(-10,-45,10,-33,"#fff2a7","#d99a27"),"#8a5a25",1);target.shadowBlur=0;
+      target.fillStyle="#fff3c3";target.beginPath();target.arc(0,-40,1.5,0,Math.PI*2);target.fill();
+    }
+    // Collar pin and animated emotion marker.
+    target.fillStyle="#f7dc91";target.beginPath();target.arc(0,3,1.2,0,Math.PI*2);target.fill();
+    const icons={wave:"👋",kiss:"💋",dance:"♪",smile:"😊",sad:"😢",laugh:"😂",surprise:"😮",love:"💗",angry:"💢",blush:"☺",sleep:"💤",music:"♫"};
+    if(emotion&&icons[emotion]){target.save();target.font="15px sans-serif";target.textAlign="center";target.shadowColor="#11152f";target.shadowBlur=4;target.fillText(icons[emotion],19,-35);target.restore();}
+    target.restore();
   }
 
   function preview() {
