@@ -2340,3 +2340,10 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 .public-profile-owner-actions{display:flex;flex-wrap:wrap;gap:7px}
 .public-profile-owner-actions>button{flex:1 1 145px;min-width:0}
 .owner-code-result code{display:block;overflow-wrap:anywhere;padding:8px;margin:7px 0;border-radius:8px;background:#090914;color:#d8c7ff;font-size:15px;letter-spacing:.12em}
+
+
+/* NEXORA: dedicated main-menu search view */
+.room-search-title{display:flex;align-items:center;gap:10px;color:#f1f2ff}
+.room-search-title strong{font-size:15px;font-weight:850}
+.room-search-title button{width:31px;height:31px;display:grid;place-items:center;border:1px solid rgba(174,163,255,.25);border-radius:9px;background:rgba(143,128,245,.13);color:#fff;font-size:22px;line-height:1}
+.room-global-search:not(.hidden){display:grid}
