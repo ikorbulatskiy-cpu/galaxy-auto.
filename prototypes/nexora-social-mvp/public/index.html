@@ -79,7 +79,7 @@
       <header class="topbar">
         <div class="top-brand"><span>✦</span> NEXORA</div>
         <div class="online-pill"><i></i><span id="online-count">1</span> онлайн</div>
-        <div class="topbar-actions"><button id="my-profile" class="glass-button" type="button">👤 Профиль</button><button id="developer-open" class="glass-button hidden" type="button">🛠️ Панель</button><button id="social-open" class="glass-button" type="button" aria-label="Друзья, сообщения и уведомления" title="Социальное меню">👥</button><button id="planets-button" class="glass-button">🪐 Планеты</button><button id="exit-room" class="glass-button" type="button">Выход</button></div>
+        <div class="topbar-actions"><button id="my-profile" class="glass-button" type="button">👤 Профиль</button><button id="shop-open" class="glass-button shop-open-button" type="button">🛍️ Магазин</button><button id="developer-open" class="glass-button hidden" type="button">🛠️ Панель</button><button id="social-open" class="glass-button" type="button" aria-label="Друзья, сообщения и уведомления" title="Социальное меню">👥</button><button id="planets-button" class="glass-button">🪐 Планеты</button><button id="exit-room" class="glass-button" type="button">Выход</button></div>
       </header>
 
       <div class="planet-picker hidden" id="planet-picker">
@@ -178,6 +178,31 @@
         <p id="profile-editor-error" class="profile-editor-error" role="status"></p>
         <button id="profile-save" class="profile-save-button" type="button">Сохранить изменения</button>
       </aside>
+      <aside id="shop-panel" class="shop-panel hidden" aria-label="Магазин и инвентарь">
+  <div class="shop-topline">
+    <div><span class="shop-kicker">NEXORA UNIVERSE</span><h2>Магазин</h2><p>Собери свой уникальный образ</p></div>
+    <div class="shop-balance"><span>ТВОЙ БАЛАНС</span><strong id="shop-koins">… <small>✦</small></strong></div>
+    <button id="shop-close" class="shop-close" type="button" aria-label="Закрыть магазин">×</button>
+  </div>
+  <div class="shop-tabs">
+    <button type="button" data-shop-tab="store" class="active">✦ Магазин</button>
+    <button type="button" data-shop-tab="inventory">🎒 Инвентарь</button>
+    <button type="button" data-shop-tab="character">🧍 Персонаж</button>
+  </div>
+  <section id="shop-store-view" class="shop-view">
+    <div class="shop-hero"><div><span>ТВОЯ ВСЕЛЕННАЯ. ТВОИ ПРАВИЛА.</span><strong>Открой новый уровень<br>самовыражения</strong><small>Костюмы, питомцы и редкие эффекты</small></div><div class="shop-hero-art">✦</div></div>
+    <div class="shop-categories" id="shop-categories" aria-label="Категории магазина"></div>
+    <div class="shop-section-heading"><div><span>КОЛЛЕКЦИЯ NEXORA</span><h3 id="shop-category-title">Популярное</h3></div><span class="shop-count" id="shop-item-count"></span></div>
+    <div class="shop-grid" id="shop-items"></div>
+    <p class="shop-notice">Витрина уже доступна. Покупки, списание Koins и выдача предметов будут включены после подключения серверной экономики. Деньги не списываются, фиктивных покупок нет.</p>
+  </section>
+  <section id="shop-inventory-view" class="shop-view hidden">
+    <div class="shop-empty-state"><div>🎒</div><h3>Инвентарь</h3><p>Предметы будут отображаться здесь после подключения серверного каталога и системы владения. Сейчас данные инвентаря не изменяются.</p></div>
+  </section>
+  <section id="shop-character-view" class="shop-view hidden">
+    <div class="shop-character-card"><div class="shop-character-preview"><canvas id="shop-character-canvas" width="220" height="260" aria-label="Предпросмотр персонажа"></canvas></div><div><span class="shop-kicker">ТВОЙ АВАТАР</span><h3 id="shop-character-name">Персонаж NEXORA</h3><p>Текущий образ загружается из сохранённого профиля. Редактирование внешности доступно в разделе «Профиль».</p><button id="shop-edit-profile" type="button">Настроить персонажа</button></div></div>
+  </section>
+</aside>
       <aside id="developer-panel" class="developer-panel hidden" aria-label="Панель разработчика"><div class="developer-head"><div><span class="developer-kicker">NEXORA CONTROL</span><strong>Панель управления</strong></div><button id="developer-close" type="button" aria-label="Закрыть">×</button></div><div class="developer-tabs"><button type="button" data-developer-tab="overview" class="active">Обзор</button><button type="button" data-developer-tab="players">Игроки</button><button type="button" data-developer-tab="moderation">Модерация</button><button type="button" data-developer-tab="world">Мир</button><button type="button" data-developer-tab="audit">Журнал</button><button type="button" data-developer-tab="roles" id="developer-roles-tab" class="hidden">Роли</button></div><div id="developer-content" class="developer-content"><p class="developer-muted">Загрузка панели…</p></div></aside><div id="toast" class="toast hidden" role="status"></div>
     </section>
   </main>

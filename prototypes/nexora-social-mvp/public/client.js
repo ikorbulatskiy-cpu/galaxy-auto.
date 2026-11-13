@@ -968,4 +968,92 @@
     window.Telegram.WebApp.ready();
     window.Telegram.WebApp.expand();
   }
+
+  // Premium shop UI. Catalog is presentation-only until server-side economy endpoints exist.
+  const SHOP_CATEGORIES = [
+    { id:"featured", label:"✦ Популярное" }, { id:"vip", label:"👑 VIP" },
+    { id:"quests", label:"🎯 Задания" }, { id:"gifts", label:"🎁 Подарки" },
+    { id:"chests", label:"📦 Сундуки" }, { id:"authority", label:"⭐ Авторитет" },
+    { id:"pets", label:"🐾 Питомцы" }, { id:"clothes", label:"👕 Одежда" },
+    { id:"auras", label:"✨ Ауры" }, { id:"teleports", label:"🌀 Телепорты" },
+    { id:"planets", label:"🪐 Планеты" }, { id:"banners", label:"🖼️ Баннеры" }
+  ];
+  const SHOP_ITEMS = [
+    {cat:"featured",icon:"👑",name:"VIP статус",desc:"Особый статус и визуальные привилегии",price:"Скоро",badge:"ХИТ"},
+    {cat:"featured",icon:"🐉",name:"Дракон-компаньон",desc:"Редкий спутник для твоего персонажа",price:"Скоро",badge:"RARE"},
+    {cat:"featured",icon:"🌌",name:"Космическая аура",desc:"Мягкое сияние вокруг аватара",price:"Скоро",badge:"NEW"},
+    {cat:"vip",icon:"👑",name:"VIP на 30 дней",desc:"Премиальный статус NEXORA",price:"Скоро",badge:"VIP"},
+    {cat:"vip",icon:"💎",name:"VIP навсегда",desc:"Постоянный премиальный статус",price:"Скоро"},
+    {cat:"quests",icon:"🎯",name:"Ежедневные задания",desc:"Набор игровых испытаний и наград",price:"Бесплатно",badge:"DAILY"},
+    {cat:"gifts",icon:"🌹",name:"Букет роз",desc:"Подарок другому игроку",price:"Скоро"},
+    {cat:"gifts",icon:"💝",name:"Сердце",desc:"Покажи внимание друзьям",price:"Скоро"},
+    {cat:"chests",icon:"🎁",name:"Таинственный сундук",desc:"Содержимое будет определяться сервером",price:"Скоро",badge:"MYSTERY"},
+    {cat:"authority",icon:"⭐",name:"Звёздный статус",desc:"Предметы прогресса авторитета",price:"Скоро"},
+    {cat:"pets",icon:"🦊",name:"Лисёнок",desc:"Питомец-компаньон",price:"Скоро",badge:"NEW"},
+    {cat:"pets",icon:"🐈",name:"Космический кот",desc:"Питомец с особым обликом",price:"Скоро"},
+    {cat:"clothes",icon:"🧥",name:"Неоновый костюм",desc:"Новый образ для персонажа",price:"Скоро"},
+    {cat:"clothes",icon:"👟",name:"Кроссовки Nova",desc:"Деталь твоего стиля",price:"Скоро"},
+    {cat:"auras",icon:"💫",name:"Сияние Nova",desc:"Эффект вокруг персонажа",price:"Скоро"},
+    {cat:"auras",icon:"🔥",name:"Пламенная аура",desc:"Редкий визуальный эффект",price:"Скоро"},
+    {cat:"teleports",icon:"🌀",name:"Портал домой",desc:"Быстрый переход между локациями",price:"Скоро"},
+    {cat:"planets",icon:"🪐",name:"Новая планета",desc:"Дополнительная игровая локация",price:"Скоро"},
+    {cat:"banners",icon:"🌠",name:"Звёздный баннер",desc:"Оформление карточки профиля",price:"Скоро"}
+  ];
+  let activeShopCategory = "featured";
+  function renderShopCategories() {
+    const box = $("#shop-categories");
+    box.replaceChildren();
+    SHOP_CATEGORIES.forEach(category => {
+      const button = document.createElement("button");
+      button.type = "button"; button.className = "shop-category" + (category.id === activeShopCategory ? " active" : "");
+      button.textContent = category.label;
+      button.addEventListener("click", () => { activeShopCategory = category.id; renderShopCategories(); renderShopItems(); });
+      box.append(button);
+    });
+  }
+  function renderShopItems() {
+    const box = $("#shop-items"); box.replaceChildren();
+    const items = activeShopCategory === "featured" ? SHOP_ITEMS.filter(item => item.cat === "featured") : SHOP_ITEMS.filter(item => item.cat === activeShopCategory);
+    const category = SHOP_CATEGORIES.find(item => item.id === activeShopCategory);
+    $("#shop-category-title").textContent = category ? category.label.replace(/^\S+\s/,"") : "Популярное";
+    $("#shop-item-count").textContent = items.length + " предмета";
+    items.forEach(item => {
+      const card = document.createElement("article"); card.className = "shop-item";
+      const art = document.createElement("div"); art.className = "shop-item-art"; art.textContent = item.icon;
+      if (item.badge) { const badge = document.createElement("span"); badge.className = "shop-item-badge"; badge.textContent = item.badge; art.append(badge); }
+      const body = document.createElement("div"); body.className = "shop-item-body";
+      const name = document.createElement("strong"); name.textContent = item.name;
+      const desc = document.createElement("p"); desc.textContent = item.desc;
+      const price = document.createElement("div"); price.className = "shop-item-price"; price.textContent = item.price;
+      const button = document.createElement("button"); button.type = "button"; button.textContent = "Скоро в продаже"; button.disabled = true;
+      body.append(name,desc,price,button); card.append(art,body); box.append(card);
+    });
+    if (!items.length) { const empty = document.createElement("p"); empty.className = "shop-notice"; empty.textContent = "Новые предметы этой категории появятся позже."; box.append(empty); }
+  }
+  async function openShop() {
+    $("#shop-panel").classList.remove("hidden");
+    $("#profile-editor").classList.add("hidden");
+    $("#developer-panel").classList.add("hidden");
+    activeShopCategory = "featured"; renderShopCategories(); renderShopItems();
+    $("#shop-character-name").textContent = state.me?.nickname || "Персонаж NEXORA";
+    const shopCanvas = $("#shop-character-canvas"), shopCtx = shopCanvas.getContext("2d");
+    shopCtx.clearRect(0,0,shopCanvas.width,shopCanvas.height);
+    drawAvatar(shopCtx,110,165,3.0,state.me?.avatar || {},1,null);
+    $("#shop-koins").textContent = "— ✦";
+    try {
+      const response = await fetch("/api/profile",{credentials:"same-origin"});
+      const data = await response.json().catch(()=>({}));
+      if (response.ok && data.profile) $("#shop-koins").textContent = Number(data.profile.koins || 0).toLocaleString("ru-RU") + " ✦";
+      else $("#shop-koins").textContent = "— ✦";
+    } catch (_error) { $("#shop-koins").textContent = "— ✦"; }
+  }
+  $("#shop-open").addEventListener("click",openShop);
+  $("#shop-close").addEventListener("click",() => $("#shop-panel").classList.add("hidden"));
+  document.querySelectorAll("[data-shop-tab]").forEach(button => button.addEventListener("click",() => {
+    const tab = button.dataset.shopTab;
+    document.querySelectorAll("[data-shop-tab]").forEach(item => item.classList.toggle("active",item === button));
+    ["store","inventory","character"].forEach(name => $("#shop-"+name+"-view").classList.toggle("hidden",name !== tab));
+  }));
+  $("#shop-edit-profile").addEventListener("click",() => { $("#shop-panel").classList.add("hidden"); openMyProfile(); });
+
 })();
