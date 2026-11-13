@@ -246,6 +246,16 @@
         ctx.textAlign = "start";
       }
 
+      if (String(state.selected) === String(player.id)) {
+        ctx.save();
+        ctx.strokeStyle = "#e7dcff"; ctx.lineWidth = 2; ctx.shadowColor = "#a58cff"; ctx.shadowBlur = 16;
+        ctx.beginPath(); ctx.ellipse(drawX,y + moveOffset + 1,25,46,0,0,Math.PI*2); ctx.stroke();
+        ctx.shadowBlur = 0; ctx.fillStyle = "rgba(10,15,42,.9)";
+        roundRect(ctx,drawX-48,y-77,96,19,8); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.font = "bold 9px sans-serif"; ctx.textAlign = "center";
+        ctx.fillText(player.nickname,drawX,y-64,88); ctx.textAlign = "start";
+        ctx.restore();
+      }
       drawAura(ctx, drawX, y + moveOffset, .95, player.auraType, player.auraEnabled);
       drawAvatar(ctx, drawX, y + moveOffset, .95, player.avatar, player.facing || 1, emotion);
       ctx.textAlign = "center";
