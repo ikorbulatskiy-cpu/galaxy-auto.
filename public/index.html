@@ -103,11 +103,12 @@ $("#auth-form").addEventListener("submit",async e=>{
   form.reset();$("#auth-modal").classList.remove("open");
   if(result.characterCode)window.alert("Персонаж создан! Сохрани код для следующих входов:\n\n"+result.characterCode+"\n\nБез этого кода войти в персонажа не получится.");
   toast(mode==="register"?"Персонаж создан.":"Вход выполнен.");
+  localStorage.setItem("nexora-session-active","1");
   await loadApp();
  }catch(err){toast(err.message)}
  finally{if(submit)submit.disabled=false}
 });
-async function loadApp(){try{const data=await api("/api/auth/me");currentUser=data.user;const adminNav=$('[data-tab="admin"]');if(adminNav)adminNav.hidden=!["admin","developer","moderator"].includes(currentUser.role);if(currentUser.role==="moderator")$("#load-admin-logs").hidden=true;$("#landing").classList.add("hidden");$("#dashboard").classList.remove("hidden");$("#top-actions").classList.add("hidden");$("#welcome").textContent="Привет, "+currentUser.username+"!";if($("#nx-greeting"))$("#nx-greeting").textContent=$("#welcome").textContent;$("#account-label").textContent=data.characterCode?"Сохрани код персонажа: "+data.characterCode:"Вход по коду персонажа";if(data.characterCode)window.alert("Для следующих входов сохрани код персонажа:\n\n"+data.characterCode);switchTab("world");await Promise.allSettled([loadProfile(),loadFriends(),loadConversations()])}catch(err){if(err.status===401||err.status===403)return;toast(err.message)}}
+async function loadApp(){try{const data=await api("/api/auth/me");currentUser=data.user;const adminNav=$('[data-tab="admin"]');if(adminNav)adminNav.hidden=!["admin","developer","moderator"].includes(currentUser.role);if(currentUser.role==="moderator")$("#load-admin-logs").hidden=true;$("#landing").classList.add("hidden");$("#dashboard").classList.remove("hidden");$("#top-actions").classList.add("hidden");$("#welcome").textContent="Привет, "+currentUser.username+"!";if($("#nx-greeting"))$("#nx-greeting").textContent=$("#welcome").textContent;$("#account-label").textContent=data.characterCode?"Сохрани код персонажа: "+data.characterCode:"Вход по коду персонажа";if(data.characterCode)window.alert("Для следующих входов сохрани код персонажа:\n\n"+data.characterCode);switchTab("world");await Promise.allSettled([loadProfile(),loadFriends(),loadConversations()])}catch(err){if(err.status===401||err.status===403){localStorage.removeItem("nexora-session-active");return;}toast(err.message)}}
 function switchTab(tab){
  $$("#dashboard [data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
  $$("#dashboard .tabpane").forEach(p=>p.classList.toggle("hidden",p.id!=="tab-"+tab));
@@ -149,7 +150,7 @@ async function openConversation(userId){try{const d=await api("/api/social/conve
 async function showConversation(id,userId,name){activeConversation=id;activeChatUser=userId;$("#chat-title").textContent=name;$("#chat-hint").textContent="Личный диалог";$("#send-form").classList.remove("hidden");switchTab("messages");await refreshMessages();if(poller)clearInterval(poller);poller=setInterval(()=>{if(activeConversation)refreshMessages()},5000)}
 async function refreshMessages(){if(!activeConversation)return;try{const d=await api("/api/social/conversations/"+activeConversation+"/messages");$("#chatbox").innerHTML=d.messages.map(m=>'<div class="msg '+(m.sender_id===currentUser.id?"mine":"")+'">'+escapeHtml(m.body)+'<small>'+escapeHtml(m.username)+' · '+new Date(m.created_at).toLocaleString()+'</small></div>').join("")||'<div class="muted">Начни разговор первым.</div>';$("#chatbox").scrollTop=$("#chatbox").scrollHeight}catch(err){toast(err.message)}}
 $("#send-form").addEventListener("submit",async e=>{e.preventDefault();if(!activeConversation)return;const input=e.currentTarget.elements.body;const body=input.value.trim();if(!body)return;try{await api("/api/social/conversations/"+activeConversation+"/messages",{method:"POST",body:JSON.stringify({body})});input.value="";await refreshMessages();await loadConversations()}catch(err){toast(err.message)}});
-$("#logout").onclick=async()=>{closeRoomSocket();try{await api("/api/auth/logout",{method:"POST",body:"{}"})}catch{}currentUser=null;activeConversation=null;if(poller)clearInterval(poller);$("#dashboard").classList.add("hidden");$("#landing").classList.remove("hidden");$("#top-actions").classList.remove("hidden");toast("Вы вышли из аккаунта.")};
+$("#logout").onclick=async()=>{closeRoomSocket();try{await api("/api/auth/logout",{method:"POST",body:"{}"})}catch{}localStorage.removeItem("nexora-session-active");currentUser=null;activeConversation=null;if(poller)clearInterval(poller);$("#dashboard").classList.add("hidden");$("#landing").classList.remove("hidden");$("#top-actions").classList.remove("hidden");toast("Вы вышли из аккаунта.")};
 
 let activeRoom=null, roomSocket=null, roomShouldReconnect=false, roomReconnectTimer=null, roomReconnectAttempts=0, roomGeneration=0, roomPresenceTimer=null;
 function closeRoomSocket(){roomGeneration++;roomShouldReconnect=false;activeRoom=null;if(roomPresenceTimer){clearInterval(roomPresenceTimer);roomPresenceTimer=null}if(roomReconnectTimer){clearTimeout(roomReconnectTimer);roomReconnectTimer=null}if(roomSocket){const socket=roomSocket;roomSocket=null;socket.close()}}
@@ -353,7 +354,7 @@ $("#load-admin-logs").onclick=async()=>{try{const d=await api("/api/features/adm
 
 // Проверяем существующую сессию: авторизованный игрок сразу попадает в игровой мир.
 // Для нового посетителя остаётся стартовая страница с входом и регистрацией.
-if(window.NexoraAPI?.mockEnabled()){currentUser={id:"mock-user",username:"pilot"};$("#landing").classList.add("hidden");$("#dashboard").classList.remove("hidden");$("#top-actions").classList.add("hidden");switchTab("world");}else loadApp();
+if(window.NexoraAPI?.mockEnabled()){currentUser={id:"mock-user",username:"pilot"};$("#landing").classList.add("hidden");$("#dashboard").classList.remove("hidden");$("#top-actions").classList.add("hidden");switchTab("world");}else if(localStorage.getItem("nexora-session-active")==="1"){loadApp();}
 </script>
 <script src="/avatar-motion.js?v=20261113-2" defer></script>
 <script src="/nexora-social-sections.js?v=20261113-2" defer></script>
@@ -361,4 +362,5 @@ if(window.NexoraAPI?.mockEnabled()){currentUser={id:"mock-user",username:"pilot"
 <script src="/nexora-room-cleanup.js?v=20261113-2" defer></script>
 
 
+<script src="/nexora-safari-boot.js?v=20261113-3" defer></script>
 </body></html>
