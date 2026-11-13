@@ -110,6 +110,43 @@
         </form>
       </div>
 
+      <nav id="room-toolbar" class="room-toolbar" aria-label="Игровое управление">
+        <button type="button" data-room-toggle="menu" aria-expanded="false">☰<span>Меню</span></button>
+        <button type="button" data-room-toggle="chat">💬<span>Чат</span></button>
+        <button type="button" data-room-toggle="emotions">😊<span>Эмоции</span></button>
+        <button type="button" data-room-toggle="players">👥<span>Игроки</span></button>
+      </nav>
+
+      <aside id="room-main-menu" class="room-flyout hidden" aria-label="Главное меню">
+        <div class="room-flyout-head"><div><small>NEXORA WORLD</small><strong>Главное меню</strong></div><button type="button" data-room-close="menu" aria-label="Закрыть">×</button></div>
+        <div class="room-menu-grid">
+          <button type="button" data-room-action="profile">👤<span>Мой профиль</span></button>
+          <button type="button" data-room-action="chat">💬<span>Сказать в чат</span></button>
+          <button type="button" data-room-action="friends">👥<span>Друзья</span></button>
+          <button type="button" data-room-action="messages">✉️<span>Сообщения</span></button>
+          <button type="button" data-room-action="gifts">🎁<span>Подарки</span></button>
+          <button type="button" data-room-action="shop">🛍️<span>Магазин</span></button>
+          <button type="button" data-room-action="authority">⭐<span>Звания и ауры</span></button>
+          <button type="button" data-room-action="planets">🪐<span>Планеты</span></button>
+          <button type="button" data-room-action="developer" id="room-developer-action" class="hidden">🛠️<span>Разработчик</span></button>
+          <button type="button" data-room-action="exit">↪<span>Выйти</span></button>
+        </div>
+      </aside>
+
+      <aside id="room-emotions-panel" class="room-flyout room-emotions-panel hidden" aria-label="Эмоции">
+        <div class="room-flyout-head"><div><small>QUICK ACTIONS</small><strong>Эмоции</strong></div><button type="button" data-room-close="emotions" aria-label="Закрыть">×</button></div>
+        <div class="room-emotion-grid">
+          <button type="button" data-room-emotion="wave">👋<span>Помахать</span></button>
+          <button type="button" data-room-emotion="kiss">💋<span>Поцелуй</span></button>
+          <button type="button" data-room-emotion="dance">💃<span>Танец</span></button>
+        </div>
+      </aside>
+
+      <aside id="room-players-panel" class="room-flyout room-players-panel hidden" aria-label="Игроки комнаты">
+        <div class="room-flyout-head"><div><small>ROOM MEMBERS</small><strong>Игроки комнаты <span id="room-player-count">0</span></strong></div><button type="button" data-room-close="players" aria-label="Закрыть">×</button></div>
+        <div id="room-player-list" class="room-player-list"></div>
+      </aside>
+
       <aside id="chat-drawer" class="chat-drawer hidden">
         <div class="drawer-head"><strong>Общий чат</strong><button id="close-history" aria-label="Закрыть">×</button></div>
         <div id="chat-history" class="chat-history"></div>
@@ -124,6 +161,7 @@
         <button id="whisper-button">💭 Шепнуть</button>
         <button id="gift-button">🎁 Подарить подарок</button>
         <button id="friend-button">⭐ Добавить в друзья</button>
+        <button id="my-profile-context" class="hidden" type="button">👤 Открыть мой профиль</button>
         <div id="gift-options" class="gift-options hidden">
           <button data-gift="rose">🌹 Роза</button>
           <button data-gift="cocktail">🍹 Коктейль</button>
