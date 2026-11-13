@@ -10,9 +10,6 @@ const GENDERS = ["male", "female"];
 function cleanText(value, max) {
   return String(value ?? "").replace(/[<>\u0000-\u001f]/g, "").trim().slice(0, max);
 }
-function normalizeNickname(value) {
-  return String(value ?? "").trim().replace(/[^\p{L}\p{N}_-]/gu, "").slice(0, 18);
-}
 function normalizeAvatar(input) {
   return {
     gender: GENDERS.includes(input?.gender) ? input.gender : "male",
@@ -64,39 +61,17 @@ function createProfileRouter({ pool, auth, io }) {
   }));
 
   router.patch("/", asyncRoute(async (req, res) => {
-    const nickname = normalizeNickname(req.body?.nickname);
-    if (nickname.length < 2) return res.status(400).json({ error: "Ник должен содержать от 2 до 18 букв или цифр." });
     const status = cleanText(req.body?.status, 80);
     const bio = cleanText(req.body?.bio, 240);
     const avatar = normalizeAvatar(req.body?.avatar);
-    const client = await pool.connect();
-    try {
-      await client.query("BEGIN");
-      const updated = await client.query(
-        `UPDATE nexora_social_world.accounts
-            SET nickname=$1,nickname_normalized=$2
-          WHERE id=$3
-          RETURNING id`,
-        [nickname, nickname.toLocaleLowerCase("ru-RU"), req.account.id]
-      );
-      if (!updated.rowCount) {
-        await client.query("ROLLBACK");
-        return res.status(404).json({ error: "Аккаунт не найден." });
-      }
-      await client.query(
-        `UPDATE nexora_social_world.characters
-            SET nickname=$1,profile_status=$2,profile_bio=$3,avatar=$4::jsonb,updated_at=NOW()
-          WHERE account_id=$5`,
-        [nickname, status, bio, JSON.stringify(avatar), req.account.id]
-      );
-      await client.query("COMMIT");
-    } catch (error) {
-      await client.query("ROLLBACK");
-      if (error.code === "23505") return res.status(409).json({ error: "Этот ник уже занят." });
-      throw error;
-    } finally {
-      client.release();
-    }
+    const updated = await pool.query(
+      `UPDATE nexora_social_world.characters
+          SET profile_status=$1,profile_bio=$2,avatar=$3::jsonb,updated_at=NOW()
+        WHERE account_id=$4
+        RETURNING account_id`,
+      [status, bio, JSON.stringify(avatar), req.account.id]
+    );
+    if (!updated.rowCount) return res.status(404).json({ error: "Профиль не найден." });
 
     const profile = await loadProfile(req.account.id);
     const room = io.sockets.adapter.rooms.get("account:" + req.account.id);
@@ -105,7 +80,6 @@ function createProfileRouter({ pool, auth, io }) {
         const socket = io.sockets.sockets.get(socketId);
         const player = socket?.data?.player;
         if (!player) continue;
-        player.nickname = profile.nickname;
         player.avatar = profile.avatar;
         io.to("planet:" + player.planet).emit("profile:updated", {
           id: String(player.accountId), nickname: player.nickname, avatar: player.avatar,

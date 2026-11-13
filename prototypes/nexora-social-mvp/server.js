@@ -9,6 +9,7 @@ const { createSocialRouter } = require("./src/social");
 const { createProfileRouter } = require("./src/profile");
 
 const app = express();
+app.set("trust proxy", 1);
 const server = http.createServer(app);
 const io = new Server(server, { pingInterval: 25000, pingTimeout: 20000 });
 const PORT = Number(process.env.PORT) || 3000;

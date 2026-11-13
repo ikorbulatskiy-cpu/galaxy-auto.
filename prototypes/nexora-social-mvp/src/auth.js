@@ -51,11 +51,64 @@ async function register(req, res) {
     client.release();
   }
 }
+const MAX_LOGIN_FAILURES = 8;
+const LOGIN_WINDOW_MINUTES = 15;
+
+async function recordLoginFailure(ipHash) {
+  const result = await pool.query(
+    `INSERT INTO nexora_social_world.auth_login_attempts AS current
+       (ip_hash, attempts, window_started_at, locked_until, updated_at)
+     VALUES ($1, 1, NOW(), NULL, NOW())
+     ON CONFLICT (ip_hash) DO UPDATE SET
+       attempts = CASE
+         WHEN current.window_started_at <= NOW() - INTERVAL '15 minutes' THEN 1
+         ELSE current.attempts + 1
+       END,
+       window_started_at = CASE
+         WHEN current.window_started_at <= NOW() - INTERVAL '15 minutes' THEN NOW()
+         ELSE current.window_started_at
+       END,
+       locked_until = CASE
+         WHEN (CASE
+           WHEN current.window_started_at <= NOW() - INTERVAL '15 minutes' THEN 1
+           ELSE current.attempts + 1
+         END) >= $2 THEN NOW() + INTERVAL '15 minutes'
+         ELSE NULL
+       END,
+       updated_at = NOW()
+     RETURNING attempts, locked_until`,
+    [ipHash, MAX_LOGIN_FAILURES]
+  );
+  return result.rows[0];
+}
+
+function respondLoginFailure(res, status, message, lockedUntil) {
+  if (lockedUntil) {
+    const seconds = Math.max(1, Math.ceil((new Date(lockedUntil).getTime() - Date.now()) / 1000));
+    res.set("Retry-After", String(seconds));
+    return res.status(429).json({ error: "Слишком много попыток. Повторите через " + Math.ceil(seconds / 60) + " мин." });
+  }
+  return res.status(status).json({ error: message });
+}
+
 async function login(req, res) {
+  const ip = String(req.ip || req.socket?.remoteAddress || "unknown");
+  const ipHash = hashToken("nexora-login:" + ip);
+  const current = await pool.query(
+    "SELECT locked_until FROM nexora_social_world.auth_login_attempts WHERE ip_hash=$1",
+    [ipHash]
+  );
+  const lockedUntil = current.rows[0]?.locked_until;
+  if (lockedUntil && new Date(lockedUntil).getTime() > Date.now()) {
+    return respondLoginFailure(res, 429, "", lockedUntil);
+  }
+
   const code = String(req.body?.recoveryCode || "").trim().toLowerCase();
   if (!/^[a-z0-9]{10}$/.test(code)) {
-    return res.status(400).json({ error: "Введите корректный 10-символьный код восстановления." });
+    const failure = await recordLoginFailure(ipHash);
+    return respondLoginFailure(res, 400, "Введите корректный 10-символьный код восстановления.", failure.locked_until);
   }
+
   const result = await pool.query(
     "SELECT id,nickname,recovery_code_hash FROM nexora_social_world.accounts WHERE recovery_code_lookup_hash=$1",
     [hashToken(code)]
@@ -76,7 +129,12 @@ async function login(req, res) {
       }
     }
   }
-  if (!account) return res.status(401).json({ error: "Неверный код восстановления." });
+  if (!account) {
+    const failure = await recordLoginFailure(ipHash);
+    return respondLoginFailure(res, 401, "Неверный код восстановления.", failure.locked_until);
+  }
+
+  await pool.query("DELETE FROM nexora_social_world.auth_login_attempts WHERE ip_hash=$1", [ipHash]);
   await pool.query("UPDATE nexora_social_world.accounts SET last_login_at=NOW() WHERE id=$1", [account.id]);
   const token = await issueSession(account.id);
   res.cookie("nexora_session", token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: SESSION_DAYS * 86400000 });

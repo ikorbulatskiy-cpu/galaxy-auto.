@@ -66,7 +66,7 @@ async function migrate() {
     const requiredTables = [
       "accounts", "sessions", "characters", "friends", "messages", "gifts",
       "wallets", "inventory", "friend_requests", "user_blocks",
-      "conversations", "direct_messages", "notifications"
+      "conversations", "direct_messages", "notifications", "auth_login_attempts"
     ];
     const verification = await client.query(
       `SELECT table_name
@@ -79,9 +79,8 @@ async function migrate() {
         verification.rows.map(row => row.table_name).join(", "));
     }
 
-    await client.query(
-      "DELETE FROM nexora_social_world.sessions WHERE expires_at < NOW()"
-    );
+    await client.query("DELETE FROM nexora_social_world.sessions WHERE expires_at < NOW()");
+    await client.query("DELETE FROM nexora_social_world.auth_login_attempts WHERE updated_at < NOW() - INTERVAL '30 days'");
     console.log("NEXORA PostgreSQL connected; social schema migrations and verification completed.");
   } finally {
     if (lockAcquired) {

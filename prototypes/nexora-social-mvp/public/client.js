@@ -562,7 +562,7 @@
       $("#profile-gifts-count").textContent = p.giftsReceived;
       $("#profile-authority").textContent = p.authority;
       $("#profile-koins").textContent = p.koins;
-      $("#profile-nickname").value = p.nickname;
+      $("#profile-nickname-display").textContent = p.nickname;
       $("#profile-status").value = p.status || "";
       $("#profile-bio").value = p.bio || "";
       const avatar = p.avatar || {};
@@ -590,7 +590,6 @@
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nickname: $("#profile-nickname").value,
           status: $("#profile-status").value,
           bio: $("#profile-bio").value,
           avatar: editorAvatarSettings()
@@ -599,7 +598,6 @@
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Не удалось сохранить профиль.");
       $("#profile-editor-nickname").textContent = data.profile.nickname;
-      if (state.me) state.me.nickname = data.profile.nickname;
       showToast("Профиль сохранён.");
       $("#profile-editor").classList.add("hidden");
     } catch (error) {
