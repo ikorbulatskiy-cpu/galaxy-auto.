@@ -78,7 +78,7 @@ app.get("/health", async (_req, res) => {
 });
 app.use("/api/social", createSocialRouter({ pool, auth, io }));
 app.use("/api/profile", createProfileRouter({ pool, auth, io }));
-app.use("/api/developer", createDeveloperRouter({ pool, auth, players, planets: PLANETS }));
+app.use("/api/developer", createDeveloperRouter({ pool, auth, players, planets: PLANETS, io }));
 app.use("/api/authority", createAuthorityRouter({ pool, auth, io, players }));
 app.use("/api/planets", createPlanetsRouter({ pool, auth, io, players }));
 app.use("/api/economy", createEconomyRouter({ pool, auth, io }));
