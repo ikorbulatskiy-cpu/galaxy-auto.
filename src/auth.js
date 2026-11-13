@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 const express = require("express");
 const { z } = require("zod");
 const { pool } = require("./db");
@@ -119,17 +120,35 @@ router.post("/login", async (req, res, next) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Введите код персонажа." });
   const normalizedCode = normalizeCharacterCode(parsed.data.characterCode);
-  if (!/^(?:[A-Z0-9]{9}|NXR[A-Z0-9]{16})$/.test(normalizedCode)) {
+  if (!/^(?:[A-Z0-9]{9}|[A-Z0-9]{10}|NXR[A-Z0-9]{16})$/.test(normalizedCode)) {
     return res.status(401).json({ error: "Неверный код персонажа." });
   }
   let client;
   try {
     client = await pool.connect();
+    const hashes = [...new Set([hashToken(normalizedCode), hashToken(normalizedCode.toLowerCase())])];
     const result = await client.query(
-      "SELECT id,username,role,status FROM users WHERE character_code_hash=$1",
-      [hashToken(normalizedCode)]
+      "SELECT id,username,role,status FROM users WHERE character_code_hash = ANY($1::text[]) LIMIT 1",
+      [hashes]
     );
-    const user = result.rows[0];
+    let user = result.rows[0] || null;
+    // Compatibility with legacy accounts whose recovery code was stored only
+    // as bcrypt. On the first successful login, upgrade it to the current hash.
+    if (!user) {
+      const legacyCandidates = await client.query(
+        "SELECT id,username,role,status,legacy_recovery_code_hash FROM users WHERE legacy_recovery_code_hash IS NOT NULL"
+      );
+      for (const candidate of legacyCandidates.rows) {
+        if (await bcrypt.compare(normalizedCode.toLowerCase(), candidate.legacy_recovery_code_hash)) {
+          user = candidate;
+          await client.query(
+            "UPDATE users SET character_code_hash=$1,legacy_recovery_code_hash=NULL,updated_at=NOW() WHERE id=$2",
+            [hashToken(normalizedCode), candidate.id]
+          );
+          break;
+        }
+      }
+    }
     if (!user || user.status !== "active") return res.status(401).json({ error: "Неверный код персонажа." });
     const token = randomToken();
     await client.query(
@@ -148,8 +167,8 @@ router.post("/login", async (req, res, next) => {
 router.get("/me", requireSession, async (req, res, next) => {
   try {
     let characterCode = null;
-    const found = await pool.query("SELECT character_code_hash FROM users WHERE id=$1", [req.user.id]);
-    if (!found.rows[0].character_code_hash) {
+    const found = await pool.query("SELECT character_code_hash,legacy_recovery_code_hash FROM users WHERE id=$1", [req.user.id]);
+    if (!found.rows[0].character_code_hash && !found.rows[0].legacy_recovery_code_hash) {
       characterCode = createCharacterCode();
       await pool.query("UPDATE users SET character_code_hash=$1 WHERE id=$2 AND character_code_hash IS NULL", [
         hashToken(normalizeCharacterCode(characterCode)), req.user.id
