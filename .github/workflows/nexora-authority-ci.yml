@@ -1,0 +1,56 @@
+name: NEXORA Authority System CI
+
+on:
+  push:
+    branches: [nexora-social-mvp]
+    paths:
+      - "prototypes/nexora-social-mvp/**"
+      - ".github/workflows/nexora-authority-ci.yml"
+  pull_request:
+    branches: [nexora-social-mvp]
+  workflow_dispatch:
+
+jobs:
+  verify-authority:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check JavaScript syntax
+        run: |
+          node --check prototypes/nexora-social-mvp/server.js
+          node --check prototypes/nexora-social-mvp/src/authority.js
+          node --check prototypes/nexora-social-mvp/src/profile.js
+          node --check prototypes/nexora-social-mvp/src/developer.js
+          node --check prototypes/nexora-social-mvp/public/client.js
+      - name: Verify authority migration is additive
+        run: |
+          ! grep -Eiq 'DROP[[:space:]]+(TABLE|SCHEMA|COLUMN)|TRUNCATE[[:space:]]|DELETE[[:space:]]+FROM[[:space:]]+nexora_social_world\.(accounts|characters|wallets)' prototypes/nexora-social-mvp/migrations/008_authority_aura_system.sql
+          grep -q "ADD COLUMN IF NOT EXISTS authority_title" prototypes/nexora-social-mvp/migrations/008_authority_aura_system.sql
+          grep -q "CREATE TABLE IF NOT EXISTS nexora_social_world.authority_purchases" prototypes/nexora-social-mvp/migrations/008_authority_aura_system.sql
+      - name: Verify server-side purchase and sync protections
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const root = "prototypes/nexora-social-mvp/";
+          const authority = fs.readFileSync(root + "src/authority.js", "utf8");
+          const server = fs.readFileSync(root + "server.js", "utf8");
+          const client = fs.readFileSync(root + "public/client.js", "utf8");
+          const developer = fs.readFileSync(root + "src/developer.js", "utf8");
+          const checks = [
+            [authority.includes("BEGIN") && authority.includes("COMMIT"), "purchase transaction"],
+            [authority.includes("balance >= $1"), "server-side balance check"],
+            [authority.includes("idempotency_key"), "idempotency"],
+            [authority.includes("authority_history"), "authority history"],
+            [server.includes('createAuthorityRouter({ pool, auth, io, players })'), "authority API mount"],
+            [server.includes("authority_title,aura_enabled"), "persisted multiplayer state"],
+            [client.includes("function drawAura"), "canvas aura renderer"],
+            [!client.includes('ctx.fillText(player.title || "Новичок"'), "rank removed from overhead label"],
+            [developer.includes('"authority.assign"') && developer.includes('"authority.remove"'), "developer permissions"]
+          ];
+          const failed = checks.filter(([ok]) => !ok);
+          for (const [ok, name] of checks) console.log((ok ? "PASS " : "FAIL ") + name);
+          if (failed.length) process.exit(1);
+          NODE
