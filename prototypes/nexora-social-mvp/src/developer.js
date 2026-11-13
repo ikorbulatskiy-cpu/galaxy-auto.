@@ -208,7 +208,6 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
         await audit(client,current,planet.rows[0].owner_account_id,"planet."+action,reason,{planetId:id});
         await client.query("COMMIT");
       }catch(error){await client.query("ROLLBACK");throw error;}finally{client.release();}
-      if(["block","delete"].includes(action))for(const player of players.values())if(player.planet==="custom-"+id){const sock=require("socket.io");}
       res.json({ok:true});
     }catch(error){next(error);}
   });
