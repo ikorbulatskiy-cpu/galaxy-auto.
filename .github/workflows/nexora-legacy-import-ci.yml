@@ -178,7 +178,7 @@ jobs:
             assert.equal(editObjects.status, 200, "planet owner must be able to edit decorations");
             const inventoryResponse = await fetch(base + "/api/features/inventory", { headers: { cookie: ownerCookie } });
             const inventoryData = await inventoryResponse.json();
-            const oldCrown = inventoryData.items.find(item => item.name === "legacy_crown");
+            const oldCrown = inventoryData.items.find(item => item.name === "Старая корона");
             assert.ok(oldCrown && Number(oldCrown.quantity) === 3 && oldCrown.equippable, "old shop inventory and quantity must remain usable");
             const reportResponse = await fetch(base + "/api/features/admin/reports", { headers: { cookie: ownerCookie } });
             const reportData = await reportResponse.json();
