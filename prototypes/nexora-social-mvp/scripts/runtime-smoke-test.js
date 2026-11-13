@@ -383,7 +383,7 @@ async function run() {
   assert.equal(result.body.role, "HELPER", "assigned developer role is applied");
 
   const wallet = await pool.query("SELECT balance::text FROM nexora_social_world.wallets WHERE account_id=$1", [ownerId]);
-  assert.equal(wallet.rows[0].balance, "880", "database wallet balance matches purchase history");
+  assert.equal(wallet.rows[0].balance, "780", "database wallet balance matches shop and authority purchases");
   console.log("PASS NEXORA runtime smoke tests: registration, recovery login, profile, shop, idempotency, inventory, reports, planet search/decorations, friends, DMs, notifications, blocking and wallet history");
 }
 
