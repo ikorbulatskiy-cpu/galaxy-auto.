@@ -474,6 +474,33 @@ BEGIN
     JOIN users u ON u.legacy_social_account_id=h.account_id
   $q$;
 
+  -- Imported historical activity must not trigger new-account achievement rewards.
+  EXECUTE $q$
+    DELETE FROM user_achievements ua
+    USING users u,achievements a
+    WHERE ua.user_id=u.id AND ua.achievement_id=a.id
+      AND u.legacy_social_account_id IS NOT NULL
+      AND a.slug IN ('first-steps','social-butterfly')
+  $q$;
+
+  EXECUTE $q$
+    DELETE FROM wallet_ledger l
+    USING users u
+    WHERE l.user_id=u.id AND u.legacy_social_account_id IS NOT NULL
+      AND l.reason IN ('Награда: first-steps','Награда: social-butterfly')
+  $q$;
+
+  -- Restore the exact legacy balance after import-trigger side effects.
+  EXECUTE $q$
+    INSERT INTO wallet_balances(user_id,coins,diamonds)
+    SELECT u.id,GREATEST(0,COALESCE(w.balance,0)),0
+    FROM nexora_social_world.accounts a
+    JOIN users u ON u.legacy_social_account_id=a.id
+    LEFT JOIN nexora_social_world.wallets w ON w.account_id=a.id
+    ON CONFLICT (user_id) DO UPDATE SET
+      coins=EXCLUDED.coins,diamonds=0,updated_at=NOW()
+  $q$;
+
   RAISE NOTICE 'Legacy Social World accounts and supported data imported. Original schema retained.';
 END
 $migration$;
