@@ -58,6 +58,37 @@ header.wrap.top,#landing,#landing .hero,#landing .hero-cta,#top-actions{position
     } catch (_) {}
   }
   report("NEXORA inline interaction fallback ready");
+  /* Diagnose the actual iPhone tap target and open auth on pointerdown as a fallback. */
+  document.addEventListener("pointerdown", function (event) {
+    var target = event.target;
+    var trigger = target && target.closest ? target.closest("[data-open]") : null;
+    var top = document.elementFromPoint ? document.elementFromPoint(event.clientX, event.clientY) : target;
+    var details = {
+      target: target && target.tagName,
+      targetId: target && target.id,
+      targetClass: target && typeof target.className === "string" ? target.className.slice(0, 100) : "",
+      top: top && top.tagName,
+      topId: top && top.id,
+      topClass: top && typeof top.className === "string" ? top.className.slice(0, 100) : "",
+      trigger: trigger && trigger.getAttribute("data-open")
+    };
+    report("Pointerdown: " + JSON.stringify(details));
+    if (!trigger) return;
+    var modal = document.getElementById("auth-modal");
+    var register = document.getElementById("register-wizard");
+    var login = document.getElementById("login-fields");
+    if (!modal || !register || !login) {
+      report("Pointerdown auth elements missing");
+      return;
+    }
+    event.preventDefault();
+    var isLogin = trigger.getAttribute("data-open") === "restore";
+    register.classList.toggle("hidden", isLogin);
+    login.classList.toggle("hidden", !isLogin);
+    modal.classList.add("open");
+    report("Pointerdown opened auth: " + (isLogin ? "login" : "register"));
+    event.stopImmediatePropagation();
+  }, true);
   document.addEventListener("click", function (event) {
     var target = event.target;
     var trigger = target && target.closest ? target.closest("[data-open]") : null;
