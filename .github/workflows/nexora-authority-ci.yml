@@ -44,9 +44,15 @@ jobs:
             [authority.includes("balance >= $1"), "server-side balance check"],
             [authority.includes("idempotency_key"), "idempotency"],
             [authority.includes("authority_history"), "authority history"],
+            [authority.includes('router.get("/admin/players"') && authority.includes('"authority.view"'), "permission-scoped developer player search"],
+            [authority.includes('"authority.configure"') && authority.includes("authority.configure"), "developer config audit"],
+            [authority.includes("authority_purchases p"), "purchase history endpoint"],
             [server.includes('createAuthorityRouter({ pool, auth, io, players })'), "authority API mount"],
             [server.includes("authority_title,aura_enabled"), "persisted multiplayer state"],
+            [server.includes('io.to(roomName(target.planet)).emit("profile:updated"'), "gift authority sync to planet"],
             [client.includes("function drawAura"), "canvas aura renderer"],
+            [client.includes("authority-aura-preview"), "developer aura preview"],
+            [client.includes('authorityApi("/admin/players?q="'), "developer search uses authority permission"],
             [!client.includes('ctx.fillText(player.title || "Новичок"'), "rank removed from overhead label"],
             [developer.includes('"authority.assign"') && developer.includes('"authority.remove"'), "developer permissions"]
           ];
