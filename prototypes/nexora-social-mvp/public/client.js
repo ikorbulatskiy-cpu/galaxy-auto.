@@ -639,6 +639,21 @@
   document.querySelectorAll("[data-emotion]").forEach((button) => {
     button.addEventListener("click", () => socket.emit("emotion:play", { emotion: button.dataset.emotion }));
   });
+  $("#chat-emoji-button").addEventListener("click", () => {
+    const picker = $("#chat-emoji-picker");
+    const opening = picker.classList.contains("hidden");
+    picker.classList.toggle("hidden", !opening);
+    $("#chat-emoji-button").setAttribute("aria-expanded", String(opening));
+  });
+  document.querySelectorAll("[data-chat-emoji]").forEach(button => button.addEventListener("click", () => {
+    const input = $("#chat-input");
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+    input.setRangeText(button.dataset.chatEmoji, start, end, "end");
+    input.focus();
+    $("#chat-emoji-picker").classList.add("hidden");
+    $("#chat-emoji-button").setAttribute("aria-expanded", "false");
+  }));
   $("#chat-form").addEventListener("submit", (event) => {
     event.preventDefault();
     const input = $("#chat-input");
@@ -648,6 +663,7 @@
       if (!result?.ok) showToast(result?.error || "Сообщение не отправлено.");
     });
     input.value = "";
+    $("#chat-emoji-picker").classList.add("hidden");
   });
 
   $("#exit-room").addEventListener("click", async () => {
