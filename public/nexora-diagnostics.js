@@ -42,4 +42,33 @@
     const reason = event.reason;
     report("unhandledrejection", reason && (reason.stack || reason.message) || String(reason || "Unhandled promise rejection"), "", 0, 0);
   });
+
+  let interactions = 0;
+  const describe = element => {
+    if (!element || !element.tagName) return null;
+    const style = getComputedStyle(element);
+    return {
+      tag: element.tagName.toLowerCase(),
+      id: String(element.id || "").slice(0, 80),
+      className: typeof element.className === "string" ? element.className.slice(0, 120) : "",
+      role: element.getAttribute("role"),
+      pointerEvents: style.pointerEvents,
+      position: style.position,
+      zIndex: style.zIndex
+    };
+  };
+  document.addEventListener("pointerdown", event => {
+    if (interactions >= 5) return;
+    interactions += 1;
+    const top = document.elementFromPoint(event.clientX, event.clientY);
+    const path = typeof event.composedPath === "function" ? event.composedPath() : [event.target];
+    const details = {
+      target: describe(event.target),
+      topAtPoint: describe(top),
+      ancestors: path.filter(node => node && node.tagName).slice(0, 5).map(describe),
+      x: Math.round(event.clientX),
+      y: Math.round(event.clientY)
+    };
+    report("interaction", JSON.stringify(details), "", 0, 0);
+  }, true);
 })();
