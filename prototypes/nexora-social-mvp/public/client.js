@@ -833,10 +833,20 @@
         });
         const title=document.createElement("select");
         data.titles.forEach(item=>{const option=document.createElement("option");option.value=item.title_key;option.textContent=item.title_label;title.append(option);});
+        const auraPreview=document.createElement("div");auraPreview.className="authority-aura-preview";
+        const auraPreviewOrb=document.createElement("span");auraPreviewOrb.className="authority-aura-preview-orb";
+        const auraPreviewText=document.createElement("strong");
+        auraPreview.append(auraPreviewOrb,auraPreviewText);
+        const refreshAuraPreview=()=>{
+          const selected=data.titles.find(item=>item.title_key===title.value);
+          auraPreview.dataset.aura=selected?.aura_type||"NONE";
+          auraPreviewText.textContent=(selected?.title_label||"Новичок")+" · "+(selected?.aura_type||"NONE");
+        };
+        title.addEventListener("change",refreshAuraPreview);refreshAuraPreview();
         const reason=document.createElement("input");reason.maxLength=500;reason.required=true;reason.placeholder="Причина выдачи / изменения";
         const auraLabel=document.createElement("label");const aura=document.createElement("input");aura.type="checkbox";aura.checked=true;auraLabel.append(aura,document.createTextNode("Включить ауру"));
         const submit=document.createElement("button");submit.type="submit";submit.textContent="Выдать звание";
-        form.append(searchInput,searchButton,searchResults,account,title,reason,auraLabel,submit);content.append(form);
+        form.append(searchInput,searchButton,searchResults,account,title,auraPreview,reason,auraLabel,submit);content.append(form);
         if(!developerPermissions.includes("authority.assign"))form.classList.add("hidden");
         if(developerPermissions.includes("authority.remove")){
           const removeButton=document.createElement("button");removeButton.type="button";removeButton.textContent="Снять звание · вернуть Новичка";
