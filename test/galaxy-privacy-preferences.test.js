@@ -20,7 +20,9 @@ test("changing Galaxy preferences reconnects the room using fresh server-side se
   const worldUi = read("public/nexora-world.js");
   assert.match(socialUi, /nexora:galaxy-preferences/);
   assert.match(worldUi, /window\.addEventListener\("nexora:galaxy-preferences"/);
-  assert.match(worldUi, /const room=rooms\.find\(item=>item\.id===activeRoom\)/);\n  assert.match(worldUi, /socket\?\.readyState===WebSocket\.OPEN\)join\(room\)/);\n  assert.match(worldUi, /galaxyPrefs=\{\.\.\.galaxyPrefs,\.\.\.\(event\.detail\|\|\{\}\)\}/);
+  assert.match(worldUi, /const room=rooms\.find\(item=>item\.id===activeRoom\)/);
+  assert.match(worldUi, /socket\?\.readyState===WebSocket\.OPEN\)join\(room\)/);
+  assert.match(worldUi, /galaxyPrefs=\{\.\.\.galaxyPrefs,\.\.\.\(event\.detail\|\|\{\}\)\}/);
 });
 
 test("recipient friends-only preference is enforced when sending an existing DM", () => {
