@@ -23,12 +23,13 @@ function createProfileRouter({ pool, auth, io }) {
   async function loadProfile(accountId) {
     const result = await pool.query(
       `SELECT a.id,a.nickname,a.created_at,c.profile_status,c.profile_bio,c.avatar,c.authority,c.authority_title,c.aura_enabled,
-              c.level,c.experience,w.balance,
+              c.level,c.experience,w.balance,dr.role AS developer_role,
               (SELECT COUNT(*)::int FROM nexora_social_world.friends f WHERE f.account_id=a.id) AS friends_count,
               (SELECT COUNT(*)::int FROM nexora_social_world.gifts g WHERE g.to_account_id=a.id) AS gifts_received
          FROM nexora_social_world.accounts a
          JOIN nexora_social_world.characters c ON c.account_id=a.id
          LEFT JOIN nexora_social_world.wallets w ON w.account_id=a.id
+         LEFT JOIN nexora_social_world.developer_role_assignments dr ON dr.account_id=a.id
         WHERE a.id=$1`,
       [accountId]
     );
@@ -40,7 +41,7 @@ function createProfileRouter({ pool, auth, io }) {
       authority: row.authority, authorityTitle: row.authority_title || "NOVICE",
       auraEnabled: Boolean(row.aura_enabled), level: row.level, experience: row.experience,
       friendsCount: row.friends_count, giftsReceived: row.gifts_received,
-      koins: row.balance ?? 0
+      koins: row.balance ?? 0, isDeveloper: String(row.id) === String(process.env.NEXORA_OWNER_ACCOUNT_ID || "") || row.developer_role === "DEVELOPER"
     };
   }
 
