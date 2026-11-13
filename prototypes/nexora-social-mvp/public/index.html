@@ -79,7 +79,7 @@
       <header class="topbar">
         <div class="top-brand"><span>✦</span> NEXORA</div>
         <div class="online-pill"><i></i><span id="online-count">1</span> онлайн</div>
-        <div class="topbar-actions"><button id="planets-button" class="glass-button">🪐 Планеты</button><button id="exit-room" class="glass-button" type="button">↩ Выход</button></div>
+        <div class="topbar-actions"><button id="social-open" class="glass-button" type="button">👥 Социальное</button><button id="planets-button" class="glass-button">🪐 Планеты</button><button id="exit-room" class="glass-button" type="button">Выход</button></div>
       </header>
 
       <div class="planet-picker hidden" id="planet-picker">
@@ -120,7 +120,8 @@
         <div class="profile-avatar" id="profile-avatar">✦</div>
         <strong id="profile-name">Игрок</strong>
         <span id="profile-rank" class="profile-rank">Новичок</span>
-        <button id="whisper-button">💬 Шепнуть</button>
+        <button id="dm-open-button">💬 Сообщение</button>
+        <button id="whisper-button">💭 Шепнуть</button>
         <button id="gift-button">🎁 Подарить подарок</button>
         <button id="friend-button">⭐ Добавить в друзья</button>
         <div id="gift-options" class="gift-options hidden">
@@ -130,6 +131,26 @@
         </div>
       </div>
 
+      <aside id="social-panel" class="social-panel hidden" aria-label="Социальное меню">
+        <div class="social-head"><strong id="social-title">Друзья</strong><button id="social-close" aria-label="Закрыть">×</button></div>
+        <div class="social-tabs">
+          <button data-social-tab="friends" class="active">Друзья</button>
+          <button data-social-tab="messages">Сообщения</button>
+          <button data-social-tab="notifications">Уведомления <span id="notification-count"></span></button>
+        </div>
+        <section id="social-friends-view" class="social-view">
+          <input id="social-search" type="search" maxlength="18" placeholder="Найти игрока по нику">
+          <div id="social-search-results" class="social-list"></div>
+          <h4>Входящие заявки</h4><div id="social-requests" class="social-list"></div>
+          <h4>Мои друзья</h4><div id="social-friends" class="social-list"></div>
+        </section>
+        <section id="social-messages-view" class="social-view hidden">
+          <div id="social-conversations" class="social-list"></div>
+          <div id="social-thread" class="social-thread"><p class="social-empty">Выберите диалог или откройте профиль друга.</p></div>
+          <form id="social-message-form" class="social-message-form"><input id="social-message-input" maxlength="2000" placeholder="Личное сообщение..." autocomplete="off"><button type="submit">➤</button></form>
+        </section>
+        <section id="social-notifications-view" class="social-view hidden"><div id="social-notifications" class="social-list"></div></section>
+      </aside>
       <div id="toast" class="toast hidden" role="status"></div>
     </section>
   </main>
