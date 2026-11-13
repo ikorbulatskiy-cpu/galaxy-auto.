@@ -1046,6 +1046,11 @@
       loginError.textContent = "";
       gameScreen.classList.add("hidden");
       loginScreen.classList.remove("hidden");
+      $("#auth-home").classList.remove("hidden");
+      $("#register-mode").classList.add("hidden");
+      $("#login-mode").classList.add("hidden");
+      $("#age-confirm-modal").classList.add("hidden");
+      $("#recovery-success-modal").classList.add("hidden");
       button.disabled = false;
     }
   });
