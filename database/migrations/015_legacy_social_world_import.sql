@@ -99,6 +99,16 @@ BEGIN
     ON CONFLICT (legacy_social_account_id) DO NOTHING
   $q$;
 
+  -- Reuse active HttpOnly sessions so users do not have to log in again.
+  EXECUTE $q$
+    INSERT INTO sessions(user_id,token_hash,expires_at,created_at)
+    SELECT u.id,s.token_hash,s.expires_at,s.created_at
+    FROM nexora_social_world.sessions s
+    JOIN users u ON u.legacy_social_account_id=s.account_id
+    WHERE s.expires_at>NOW()
+    ON CONFLICT (token_hash) DO NOTHING
+  $q$;
+
   -- A stable UUID lets all related legacy rows be imported without changing
   -- the original bigint identifiers in the retained source schema.
   EXECUTE $q$
