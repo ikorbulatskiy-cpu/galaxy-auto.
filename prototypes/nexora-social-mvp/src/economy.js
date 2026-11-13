@@ -64,6 +64,8 @@ function createEconomyRouter({ pool, auth, io }) {
       if(!item.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Предмет больше не продаётся."});}
       const wallet=await client.query("SELECT balance FROM nexora_social_world.wallets WHERE account_id=$1 FOR UPDATE",[req.account.id]);
       if(!wallet.rowCount){await client.query("ROLLBACK");return res.status(409).json({error:"Кошелёк не найден."});}
+      const alreadyOwned=await client.query("SELECT 1 FROM nexora_social_world.inventory WHERE account_id=$1 AND item_code=$2 AND quantity>0",[req.account.id,code]);
+      if(alreadyOwned.rowCount){await client.query("ROLLBACK");return res.status(409).json({error:"Этот предмет уже есть в инвентаре."});}
       const price=BigInt(item.rows[0].price),balance=BigInt(wallet.rows[0].balance);
       if(balance<price){await client.query("ROLLBACK");return res.status(409).json({error:"Недостаточно Koins."});}
       const nextBalance=balance-price;
