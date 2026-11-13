@@ -100,15 +100,16 @@ function createDeveloperRouter({ pool, auth, players, planets, io }) {
       const targetId = String(req.params.id);
       const reason = String(req.body?.reason || "").trim().slice(0, 500);
       const confirmation = String(req.body?.confirmNickname || "").trim();
-      if (!/^\\d+$/.test(targetId) || !reason || !confirmation) return res.status(400).json({ error: "Укажите причину и точный ник персонажа для подтверждения удаления." });
+      if (!/^\d+$/.test(targetId) || !reason || !confirmation) return res.status(400).json({ error: "Укажите причину и точный ник персонажа для подтверждения удаления." });
       if (targetId === String(current.account.id) || (ownerId() && targetId === ownerId())) return res.status(403).json({ error: "Нельзя удалить собственный аккаунт или OWNER." });
       const client = await pool.connect();
       let deleted;
       try {
         await client.query("BEGIN");
-        const target = await client.query("SELECT a.id,a.nickname,r.role FROM nexora_social_world.accounts a LEFT JOIN nexora_social_world.developer_role_assignments r ON r.account_id=a.id WHERE a.id=$1 FOR UPDATE OF a", [targetId]);
+        const target = await client.query("SELECT a.id,a.nickname,r.role,EXISTS(SELECT 1 FROM nexora_social_world.custom_planets cp WHERE cp.owner_account_id=a.id) AS owns_planets FROM nexora_social_world.accounts a LEFT JOIN nexora_social_world.developer_role_assignments r ON r.account_id=a.id WHERE a.id=$1 FOR UPDATE OF a", [targetId]);
         if (!target.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ error: "Персонаж не найден." }); }
         const player = target.rows[0];
+        if (player.owns_planets) { await client.query("ROLLBACK"); return res.status(409).json({ error: "У персонажа есть собственные планеты. Сначала передайте их другому владельцу или удалите отдельно." }); }
         if (confirmation !== player.nickname) { await client.query("ROLLBACK"); return res.status(400).json({ error: "Ник не совпадает. Удаление отменено." }); }
         if (["OWNER", "DEVELOPER", "ADMIN"].includes(player.role) || (ownerId() && targetId === ownerId())) { await client.query("ROLLBACK"); return res.status(403).json({ error: "Нельзя удалить аккаунт владельца или другого сотрудника." }); }
         await audit(client, current, targetId, "player.delete", reason, { nickname: player.nickname, deletedAccountId: targetId, deletedCharacterAndAccount: true });
