@@ -521,16 +521,6 @@ BEGIN
   $q$;
 
   EXECUTE $q$
-    INSERT INTO wallet_ledger(user_id,currency,amount,reason,reference_id,created_at)
-    SELECT u.id,'coins',-tx.amount,LEFT('Покупка из старого магазина: '||tx.item_code,120),
-      p.id,tx.created_at
-    FROM nexora_social_world.wallet_transactions tx
-    JOIN users u ON u.legacy_social_account_id=tx.account_id
-    JOIN purchases p ON p.idempotency_key=md5('nexora-legacy-purchase:'||tx.id::text)::uuid
-    WHERE tx.amount>0
-  $q$;
-
-  EXECUTE $q$
     INSERT INTO reports(id,reporter_id,target_user_id,category,details,status,created_at)
     SELECT md5('nexora-legacy-player-report:'||r.id::text)::uuid,reporter.id,target.id,
       r.category,LEFT(r.details,1000),
