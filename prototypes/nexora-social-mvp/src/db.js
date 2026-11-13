@@ -66,6 +66,7 @@ async function migrate() {
     const requiredTables = [
       "accounts", "sessions", "characters", "friends", "messages", "gifts",
       "wallets", "inventory", "friend_requests", "user_blocks",
+      "shop_catalog", "wallet_transactions", "player_reports", "custom_planet_objects",
       "conversations", "direct_messages", "notifications", "auth_login_attempts"
     ];
     const verification = await client.query(
