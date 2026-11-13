@@ -151,7 +151,7 @@ io.on("connection", (socket) => {
         id: String(account.id), socketId: socket.id, accountId: account.id,
         nickname: saved.nickname, avatar: normalizeAvatar(saved.avatar), planet,
         x: Math.max(0.04, Math.min(0.96, Number(saved.position_x))),
-        y: Math.max(0.60, Math.min(0.94, Number(saved.position_y ?? .82))), authority: saved.authority,
+        y: Math.max(0.60, Math.min(0.86, Number(saved.position_y ?? .82))), authority: saved.authority,
         authorityTitle: saved.authority_title || "NOVICE", auraEnabled: Boolean(saved.aura_enabled),
         bubble: null, emotion: null, friendsCount: friendCount.rows[0].count
       };
@@ -171,7 +171,7 @@ io.on("connection", (socket) => {
     if(now-(player.lastMoveAt||0)<85)return ack({ok:false,error:"Слишком быстро. Попробуй ещё раз."});
     const requestedX=Number(payload?.x),requestedY=Number(payload?.y);
     if(!Number.isFinite(requestedX)||!Number.isFinite(requestedY))return ack({ok:false,error:"Некорректная точка перемещения."});
-    let x=Math.max(.04,Math.min(.96,requestedX)),y=Math.max(.60,Math.min(.94,requestedY));
+    let x=Math.max(.04,Math.min(.96,requestedX)),y=Math.max(.60,Math.min(.86,requestedY));
     // Keep a small personal space between avatars at their destination.
     for(const other of players.values()){
       if(other.id===player.id||other.planet!==player.planet)continue;
@@ -179,7 +179,7 @@ io.on("connection", (socket) => {
       if(distance<.045){
         const angle=distance>.0001?Math.atan2(dy,dx):(Number(player.id)%2?0:Math.PI);
         x=Math.max(.04,Math.min(.96,other.x+Math.cos(angle)*.047));
-        y=Math.max(.60,Math.min(.94,(other.y??.82)+Math.sin(angle)*.047));
+        y=Math.max(.60,Math.min(.86,(other.y??.82)+Math.sin(angle)*.047));
       }
     }
     player.x=x;player.y=y;player.lastMoveAt=now;
