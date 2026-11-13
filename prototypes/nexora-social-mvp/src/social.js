@@ -23,10 +23,21 @@ function createSocialRouter({ pool, auth, io }) {
     const q = clean(req.query.q, 18);
     if (q.length < 2) return res.json({ users: [] });
     const result = await pool.query(
-      "SELECT a.id,a.nickname FROM nexora_social_world.accounts a WHERE a.id<>$1 AND a.nickname ILIKE $2 AND NOT EXISTS (SELECT 1 FROM nexora_social_world.user_blocks b WHERE (b.account_id=$1 AND b.blocked_account_id=a.id) OR (b.account_id=a.id AND b.blocked_account_id=$1)) ORDER BY a.nickname LIMIT 20",
+      `SELECT a.id,a.nickname,c.avatar,c.planet,c.profile_status,c.authority,c.authority_title,c.aura_enabled,c.level,c.experience
+         FROM nexora_social_world.accounts a
+         LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
+        WHERE a.id<>$1 AND a.nickname ILIKE $2
+          AND NOT EXISTS (SELECT 1 FROM nexora_social_world.user_blocks b WHERE (b.account_id=$1 AND b.blocked_account_id=a.id) OR (b.account_id=a.id AND b.blocked_account_id=$1))
+        ORDER BY a.nickname LIMIT 20`,
       [req.account.id, "%" + q + "%"]
     );
-    res.json({ users: result.rows });
+    const users = result.rows.map(row => ({
+      ...row,id:String(row.id),online:Boolean(io.sockets.adapter.rooms.get("account:"+row.id)?.size),
+      authority:Number(row.authority||0),level:Number(row.level||1),
+      title:({NOVICE:"Новичок",BEDA:"Беда",PAPA:"Папа",ANGEL:"Ангел",CREATOR:"Создатель"})[row.authority_title]||"Новичок",
+      auraEnabled:Boolean(row.aura_enabled)
+    }));
+    res.json({ users });
   }));
 
   router.get("/friends", asyncRoute(async (req, res) => {
