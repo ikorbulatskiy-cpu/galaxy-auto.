@@ -104,11 +104,8 @@ function publicPlayer(player) {
 const roomName = (planet) => "planet:" + planet;
 async function sendPlanetState(socket, planet) {
   const list = [...players.values()].filter((p) => p.planet === planet).map(publicPlayer);
-  const history = await pool.query(
-    "SELECT id,account_id AS \"playerId\",nickname,message_text AS text,EXTRACT(EPOCH FROM created_at)*1000 AS time FROM nexora_social_world.messages WHERE planet=$1 ORDER BY created_at DESC LIMIT 50",
-    [planet]
-  );
-  socket.emit("planet:state", { planet, players: list, history: history.rows.reverse().map(m => ({...m, id: String(m.id), time: Number(m.time)})) });
+  // Public chat is intentionally ephemeral. Joining clients receive no backlog.
+  socket.emit("planet:state", { planet, players: list, history: [] });
 }
 function broadcastPlayer(player, event) { io.to(roomName(player.planet)).emit(event, publicPlayer(player)); }
 
@@ -191,22 +188,23 @@ io.on("connection", (socket) => {
     ack({ok:true,x,y});
   });
 
-  socket.on("chat:send", async (payload, ack = () => {}) => {
+  socket.on("chat:send", (payload, ack = () => {}) => {
     const player = players.get(socket.id);
-    if (!player) return;
+    if (!player) return ack({ ok: false, error: "Персонаж не подключён." });
     const messageText = cleanText(payload?.text, 240);
     if (!messageText) return ack({ ok: false, error: "Введите сообщение." });
-    try {
-      const saved = await pool.query(
-        "INSERT INTO nexora_social_world.messages(planet,account_id,nickname,message_text) VALUES($1,$2,$3,$4) RETURNING id,created_at",
-        [player.planet, player.accountId, player.nickname, messageText]
-      );
-      const message = { id: String(saved.rows[0].id), playerId: player.id, nickname: player.nickname, text: messageText, time: Date.now() };
-      player.bubble = { text: messageText, until: Date.now() + 5000 };
-      io.to(roomName(player.planet)).emit("chat:message", message);
-      io.to(roomName(player.planet)).emit("player:bubble", { id: player.id, bubble: player.bubble });
-      ack({ ok: true });
-    } catch (error) { console.error("chat save failed:", error); ack({ ok: false, error: "Не удалось сохранить сообщение." }); }
+    // Keep public messages in connected clients only; never write them to PostgreSQL.
+    const message = {
+      id: socket.id + ":" + Date.now(),
+      playerId: player.id,
+      nickname: player.nickname,
+      text: messageText,
+      time: Date.now()
+    };
+    player.bubble = { text: messageText, until: Date.now() + 5000 };
+    io.to(roomName(player.planet)).emit("chat:message", message);
+    io.to(roomName(player.planet)).emit("player:bubble", { id: player.id, bubble: player.bubble });
+    ack({ ok: true });
   });
 
   socket.on("emotion:play", (payload) => {

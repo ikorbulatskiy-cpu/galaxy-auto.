@@ -67,6 +67,9 @@ jobs:
             [html.includes('id="outfit"') && html.includes('id="edit-outfit"') && ['hoodie','jacket','dress','beach','club'].every(value=>html.includes('value="'+value+'"')), "avatar editors expose outfit styles"],
             [fs.readFileSync(root + "public/sprite-engine.js", "utf8").includes("nexora:sprites-ready") && client.includes("nexora:sprites-ready"), "avatar previews refresh when sprite atlas loads"],
 
+            [html.includes('id="clear-chat-button"') && client.includes('$("#clear-chat-button")?.addEventListener') && client.includes("state.chat = state.chat.filter(message => message.whisper)"), "clear button removes public chat only in the current browser"],
+            [server.includes('socket.emit("planet:state", { planet, players: list, history: [] })') && !server.includes("nexora_social_world.messages"), "public room chat is ephemeral and never reads or writes message history"],
+            [css.includes("width:min(370px,calc(100vw - 24px))") && css.includes(".chat-clear-button"), "room chat is wider, viewport-bounded and has a compact clear control"],
             [html.includes('id="world-canvas"') && html.includes('id="room-events-panel"'), "world canvas and event panel exist"],
             [html.includes('data-room-toggle="events"') && html.includes('id="room-player-search"'), "events control and player search exist"],
             [client.includes("function drawPlanetBackdrop") && client.includes("function drawAvatar"), "planet and character renderers exist"],
