@@ -216,8 +216,9 @@ router.put("/planets/:planetSlug/objects",requireSession,async(req,res,next)=>{
  const client=await pool.connect();
  try{
   await client.query("BEGIN");
-  const p=await client.query("SELECT id,owner_user_id FROM planets WHERE slug=$1 AND is_active=TRUE FOR UPDATE",[req.params.planetSlug]);
+  const p=await client.query("SELECT id,owner_user_id,EXISTS(SELECT 1 FROM planet_bans pb WHERE pb.planet_id=planets.id AND pb.user_id=$2 AND (pb.expires_at IS NULL OR pb.expires_at>NOW())) AS is_banned FROM planets WHERE slug=$1 AND is_active=TRUE FOR UPDATE",[req.params.planetSlug,req.user.id]);
   if(!p.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Планета не найдена."})}
+  if(p.rows[0].is_banned){await client.query("ROLLBACK");return res.status(403).json({error:"Доступ к планете закрыт."})}
   const staff=await client.query("SELECT 1 FROM planet_access WHERE planet_id=$1 AND user_id=$2 AND access_level='staff' AND (expires_at IS NULL OR expires_at>NOW())",[p.rows[0].id,req.user.id]);
   if(String(p.rows[0].owner_user_id)!==String(req.user.id)&&!staff.rowCount&&!["admin","developer"].includes(req.user.role)){
    await client.query("ROLLBACK");return res.status(403).json({error:"Нет прав редактировать декорации этой планеты."});
