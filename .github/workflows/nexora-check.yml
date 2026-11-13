@@ -5,10 +5,12 @@ on:
   push:
     branches:
       - love-galaxy-redesign
+      - nexora-galaxy-social-module
   pull_request:
     branches:
       - love-galaxy-redesign
       - nexora-stage1-game-screen
+      - nexora-galaxy-social-module
 
 jobs:
   syntax:
