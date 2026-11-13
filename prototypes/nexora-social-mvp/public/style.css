@@ -1733,3 +1733,24 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 .toast { width:max-content; max-width:calc(100vw - 28px); white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.35; }
 .social-tabs { grid-template-columns:repeat(2,minmax(0,1fr)); }
 .social-tabs button { min-width:0; white-space:normal; overflow-wrap:anywhere; }
+
+
+/* NEXORA 19.0: keep the chat drawer fully inside the viewport */
+.chat-drawer {
+  position: fixed !important;
+  left: 50% !important;
+  right: auto !important;
+  width: min(440px, calc(100vw - 20px)) !important;
+  max-width: calc(100vw - 20px) !important;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+}
+@media (max-width: 600px) {
+  .chat-drawer {
+    left: 50% !important;
+    right: auto !important;
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    transform: translateX(-50%);
+  }
+}
