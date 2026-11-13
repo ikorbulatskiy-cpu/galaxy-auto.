@@ -47,6 +47,27 @@ VALUES (90001,900002,NOW()-INTERVAL '8 days');
 INSERT INTO nexora_social_world.planet_chat_messages(planet_key,account_id,nickname,message,created_at)
 VALUES ('custom-90001',900001,'LegacyOwner','История чата тоже переносится.',NOW()-INTERVAL '30 minutes');
 
+INSERT INTO nexora_social_world.custom_planet_objects(planet_id,object_code,x,y,rotation,scale,properties)
+VALUES (90001,'tree',0.18,0.82,12,1.1,'{"variant":"pine"}'::jsonb);
+
+INSERT INTO nexora_social_world.planet_favorites(planet_id,account_id,created_at)
+VALUES (90001,900001,NOW()-INTERVAL '2 days');
+
+INSERT INTO nexora_social_world.planet_visits(planet_id,account_id,visited_at)
+VALUES (90001,900001,NOW()-INTERVAL '1 day');
+
+INSERT INTO nexora_social_world.planet_audit_logs(planet_id,actor_account_id,target_account_id,action,details,created_at)
+VALUES (90001,900001,900002,'planet_settings_updated','{"theme":"nebula"}'::jsonb,NOW()-INTERVAL '1 day');
+
+INSERT INTO nexora_social_world.player_reports(reporter_account_id,target_account_id,category,details,status,created_at)
+VALUES (900001,900002,'spam','Тестовая жалоба для проверки переноса.','open',NOW()-INTERVAL '1 day');
+
+INSERT INTO nexora_social_world.shop_catalog(item_code,name,description,category,icon,price,metadata,enabled)
+VALUES ('legacy_crown','Старая корона','Корона из прежнего магазина.','accessories','👑',250,'{"avatarPatch":{"accessory":"crown"}}'::jsonb,TRUE);
+
+INSERT INTO nexora_social_world.wallet_transactions(account_id,request_id,item_code,amount,balance_after,created_at)
+VALUES (900001,'legacy-purchase-1','legacy_crown',250,1234,NOW()-INTERVAL '3 days');
+
 INSERT INTO nexora_social_world.gifts(from_account_id,to_account_id,gift_type,authority_added,created_at)
 VALUES (900001,900002,'rose',5,NOW()-INTERVAL '6 hours');
 
