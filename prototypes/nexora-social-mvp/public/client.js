@@ -859,6 +859,27 @@
       });
       return button;
     };
+    const itemRow = item => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "room-global-search-row";
+      const icon = document.createElement("span");
+      icon.className = "room-global-search-icon";
+      icon.textContent = item.icon || "✦";
+      const meta = document.createElement("span");
+      meta.className = "room-global-search-meta";
+      const name = document.createElement("strong");
+      name.textContent = item.name;
+      const detail = document.createElement("small");
+      detail.textContent = "Магазин · " + item.category + " · " + Number(item.price || 0).toLocaleString("ru-RU") + " Koins";
+      meta.append(name, detail);
+      button.append(icon, meta);
+      button.addEventListener("click", () => {
+        closeRoomFlyouts();
+        openShop();
+      });
+      return button;
+    };
     const planetRow = planet => {
       const button = document.createElement("button");
       button.type = "button";
@@ -887,6 +908,7 @@
     ].filter(planet => planet.name.toLocaleLowerCase("ru-RU").includes(query.toLocaleLowerCase("ru-RU")));
     addSection("ПЕРСОНАЖИ", data.characters || [], characterRow);
     addSection("ПЛАНЕТЫ", [...builtin, ...(data.planets || []).map(planet => ({...planet,key:"custom-"+planet.id,builtin:false}))], planetRow);
+    addSection("МАГАЗИН", data.items || [], itemRow);
     if (!box.children.length) {
       const empty = document.createElement("p");
       empty.textContent = "Ничего не найдено. Попробуй другой запрос.";
