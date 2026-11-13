@@ -199,12 +199,11 @@ function attachMovement(server) {
           if (!peers.has(joinedRoom)) peers.set(joinedRoom, new Set());
           peers.get(joinedRoom).add(socket);
           const current = await pool.query(
-            `SELECT DISTINCT ON (p.user_id) p.user_id,u.username,COALESCE(ch.name,u.username) AS character_name,p.x,p.y
+            `SELECT DISTINCT ON (p.user_id) p.user_id,u.username,p.x,p.y
              FROM room_player_positions p
              JOIN room_presence rp ON rp.room_id=p.room_id AND rp.user_id=p.user_id
                AND rp.connected_at>NOW()-INTERVAL '2 minutes'
              JOIN users u ON u.id=p.user_id AND u.status='active'
-             LEFT JOIN characters ch ON ch.user_id=u.id AND ch.is_active=TRUE
              WHERE p.room_id=$1
                AND NOT EXISTS(SELECT 1 FROM blocks b
                  WHERE (b.blocker_id=$2 AND b.blocked_id=p.user_id)
