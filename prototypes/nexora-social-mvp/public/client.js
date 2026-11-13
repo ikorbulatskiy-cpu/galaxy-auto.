@@ -531,12 +531,15 @@
       const isMe = String(player.id) === String(state.me?.id);
       const emotion = player.emotion?.until > Date.now() ? player.emotion.type : null;
       if(player.bubble?.until>Date.now()){
-        const bubbleText=player.bubble.text;ctx.font="11px sans-serif";
-        const bubbleWidth=Math.min(w-24,Math.max(70,ctx.measureText(bubbleText).width+20));
-        const bubbleX=Math.max(8,Math.min(w-bubbleWidth-8,drawX-bubbleWidth/2));
-        const bubbleY=Math.max(8,y-119*scale);ctx.fillStyle="rgba(255,255,255,.96)";
-        roundRect(ctx,bubbleX,bubbleY,bubbleWidth,29,10);ctx.fill();
-        ctx.fillStyle="#1a2146";ctx.textAlign="center";ctx.fillText(bubbleText,bubbleX+bubbleWidth/2,bubbleY+18,bubbleWidth-12);ctx.textAlign="start";
+        const bubbleText=String(player.bubble.text||"");ctx.save();ctx.font="11px sans-serif";
+        const maxTextWidth=Math.max(48,Math.min(220,w-44));const words=bubbleText.split(/\s+/);const lines=[];let line="";
+        words.forEach(word=>{const next=line?line+" "+word:word;if(ctx.measureText(next).width>maxTextWidth&&line){lines.push(line);line=word;}else line=next;});
+        if(line)lines.push(line);const visibleLines=lines.slice(0,3);if(lines.length>3)visibleLines[2]=visibleLines[2].replace(/\s+$/,"")+"…";
+        const bubbleWidth=Math.min(w-20,Math.max(76,...visibleLines.map(item=>ctx.measureText(item).width+20)));
+        const bubbleHeight=18+visibleLines.length*14;const bubbleX=Math.max(10,Math.min(w-bubbleWidth-10,drawX-bubbleWidth/2));
+        const bubbleY=Math.max(8,Math.min(h-bubbleHeight-8,y-119*scale-bubbleHeight+29));
+        ctx.fillStyle="rgba(255,255,255,.97)";roundRect(ctx,bubbleX,bubbleY,bubbleWidth,bubbleHeight,10);ctx.fill();
+        ctx.fillStyle="#1a2146";ctx.textAlign="center";visibleLines.forEach((item,index)=>ctx.fillText(item,bubbleX+bubbleWidth/2,bubbleY+15+index*14,maxTextWidth));ctx.textAlign="start";ctx.restore();
       }
       if(String(state.selected)===String(player.id)){
         ctx.save();ctx.strokeStyle="#e7dcff";ctx.lineWidth=2;ctx.shadowColor="#a58cff";ctx.shadowBlur=16;
@@ -769,6 +772,13 @@
   function renderRoomPlayers(){const box=$("#room-player-list");if(!box)return;const query=($("#room-player-search")?.value||"").trim().toLocaleLowerCase("ru-RU");const rows=[...state.players.values()].filter(p=>!query||p.nickname.toLocaleLowerCase("ru-RU").includes(query)).sort((a,b)=>{if(String(a.id)===String(state.me?.id))return -1;if(String(b.id)===String(state.me?.id))return 1;return String(a.nickname).localeCompare(String(b.nickname),"ru");});$("#room-player-count").textContent=String(state.players.size);box.replaceChildren();if(!rows.length){const empty=document.createElement("p");empty.className="developer-muted";empty.textContent=query?"Игроки не найдены.":"В комнате пока никого нет.";box.append(empty);return;}rows.forEach(player=>{const row=document.createElement("button");row.type="button";row.className="room-player-row"+(String(state.selected)===String(player.id)?" selected":"");const avatar=document.createElement("canvas");avatar.className="room-player-avatar";avatar.width=64;avatar.height=72;drawAvatar(avatar.getContext("2d"),32,54,.78,player.avatar,1,null);const meta=document.createElement("span");meta.className="room-player-meta";const name=document.createElement("strong");name.textContent=player.nickname+(String(player.id)===String(state.me?.id)?" · Вы":"");const rank=document.createElement("small");rank.textContent=(player.title||"Новичок")+(player.auraEnabled?" · Аура активна":"");meta.append(name,rank);const status=document.createElement("i");status.className="room-player-status";row.append(avatar,meta,status);row.addEventListener("click",()=>{openProfile(player);closeRoomFlyouts("players");});box.append(row);});}
   $("#room-player-search")?.addEventListener("input",renderRoomPlayers);
 
+  function closeCompetingPanels(except = "") {
+    const panels = ["#profile-menu","#social-panel","#public-profile","#profile-editor","#authority-panel","#shop-panel","#developer-panel","#planets-panel","#chat-drawer","#room-main-menu","#room-emotions-panel","#room-players-panel","#room-events-panel"];
+    panels.forEach(selector => { if (selector !== except) $(selector)?.classList.add("hidden"); });
+    gameScreen.classList.remove("chat-open");
+    document.querySelectorAll("[data-room-toggle]").forEach(button => { button.classList.remove("active"); button.setAttribute("aria-expanded","false"); });
+  }
+
   function closeRoomFlyouts(except = "") {
     const panels = {menu:"#room-main-menu",emotions:"#room-emotions-panel",players:"#room-players-panel",events:"#room-events-panel"};
     Object.entries(panels).forEach(([key,selector]) => {
@@ -780,6 +790,7 @@
   function toggleRoomFlyout(name) {
     const panels = {menu:"#room-main-menu",emotions:"#room-emotions-panel",players:"#room-players-panel",events:"#room-events-panel"};
     const panel = $(panels[name]); const shouldOpen = panel.classList.contains("hidden");
+    closeCompetingPanels(shouldOpen ? panels[name] : "");
     closeRoomFlyouts(shouldOpen ? name : "");
     panel.classList.toggle("hidden",!shouldOpen);
     const button = document.querySelector('[data-room-toggle="'+name+'"]');
@@ -790,6 +801,7 @@
     const name = button.dataset.roomToggle;
     if(name==="chat"){
       const opening=$("#chat-drawer").classList.contains("hidden");
+      closeCompetingPanels(opening ? "#chat-drawer" : "");
       $("#chat-drawer").classList.toggle("hidden",!opening);
       gameScreen.classList.toggle("chat-open",opening);
       button.classList.toggle("active",opening);
@@ -842,6 +854,7 @@
 
 
   function openProfile(player) {
+    closeCompetingPanels("#profile-menu");
     state.selected = player.id;
     $("#profile-name").textContent = player.nickname;
     $("#profile-rank").textContent = (player.title || "Новичок") + " · Авторитет " + (player.authority ?? 0);
@@ -1158,6 +1171,7 @@
     } catch(error){showToast(error.message);}
   }
   async function openPlanetsPanel() {
+    closeCompetingPanels("#planets-panel");
     $("#planets-panel").classList.remove("hidden");
     $("#planet-create-form").classList.add("hidden");
     $("#planet-catalog").classList.remove("hidden");
@@ -1305,6 +1319,7 @@
   ["edit-gender","edit-skin","edit-hair","edit-outfit","edit-suit","edit-hair-color","edit-shoes","edit-accessory"].forEach(id=>$("#"+id).addEventListener("change",drawProfilePreview));
 
   async function openMyProfile() {
+    closeCompetingPanels("#profile-editor");
     const panel = $("#profile-editor");
     const save = $("#profile-save");
     const errorBox = $("#profile-editor-error");
@@ -1369,6 +1384,7 @@
     return data;
   }
   async function openAuthorityPanel() {
+    closeCompetingPanels("#authority-panel");
     const panel=$("#authority-panel"),list=$("#authority-title-list"),message=$("#authority-message");
     panel.classList.remove("hidden");$("#profile-editor").classList.add("hidden");
     $("#developer-panel").classList.add("hidden");$("#shop-panel").classList.add("hidden");
@@ -1815,6 +1831,7 @@
     } catch (error) { content.textContent = error.message; }
   }
   $("#developer-open").addEventListener("click", () => {
+    closeCompetingPanels("#developer-panel");
     $("#developer-panel").classList.remove("hidden");
     $("#profile-editor").classList.add("hidden");
     loadDeveloperTab("overview");
@@ -2018,6 +2035,7 @@
     });
   }
   async function openPublicProfile(id) {
+    closeCompetingPanels("#public-profile");
     const panel=$("#public-profile");
     panel.classList.remove("hidden");
     $("#public-profile-name").textContent="Загрузка...";
@@ -2087,6 +2105,7 @@
   document.querySelectorAll("[data-rating-category]").forEach(button=>button.addEventListener("click",()=>loadRating(button.dataset.ratingCategory).catch(error=>showToast(error.message))));
 
   function openSocialTab(tab, customTitle = "") {
+    closeCompetingPanels("#social-panel");
     $("#social-panel").classList.remove("hidden");
     const labels = { friends: "Друзья и социальное", messages: "Личные сообщения", notifications: "Социальное", rating: "Рейтинг игроков" };
     $("#social-title").textContent = customTitle || labels[tab] || "Социальное";
@@ -2221,6 +2240,7 @@
     });
   }
   async function openShop(){
+    closeCompetingPanels("#shop-panel");
     $("#shop-panel").classList.remove("hidden");$("#profile-editor").classList.add("hidden");$("#developer-panel").classList.add("hidden");
     $("#shop-character-name").textContent=state.me?.nickname||"Персонаж NEXORA";
     const canvas=$("#shop-character-canvas"),ctx=canvas.getContext("2d");
