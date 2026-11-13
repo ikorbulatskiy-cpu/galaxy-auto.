@@ -1843,6 +1843,7 @@
     if (!friends.friends.length) emptySocial(friendsBox, "Пока нет друзей.");
     friends.friends.forEach(friend => {
       friendsBox.append(makeSocialRow(friend.nickname, (friend.online ? "В сети" : "Не в сети") + (friend.planet ? " · " + friend.planet : "") + (friend.profile_status ? " · " + friend.profile_status : ""), [
+        { text: "Профиль", run: () => openPublicProfile(friend.id) },
         { text: "Написать", run: async () => {
           try {
             const result = await socialApi("/conversations", { method: "POST", body: JSON.stringify({ peerId: friend.id }) });
@@ -1887,15 +1888,18 @@
       const result = await socialApi("/users?q=" + encodeURIComponent(query.trim()));
       box.replaceChildren();
       if (!result.users.length) return emptySocial(box, "Игроки не найдены.");
-      result.users.forEach(user => box.append(makeSocialRow(user.nickname, "Игрок NEXORA", [
-        { text: "Добавить", run: async () => {
-          try {
-            await socialApi("/requests", { method: "POST", body: JSON.stringify({ targetId: user.id }) });
-            showToast("Заявка отправлена: " + user.nickname);
-            await loadFriends();
-          } catch (error) { showToast(error.message); }
-        }}
-      ])));
+      result.users.forEach(user => box.append(makeSocialRow(user.nickname,
+        (user.online ? "● В сети" : "○ Не в сети") + " · " + (user.title || "Новичок") + " · Ур. " + user.level,
+        [
+          { text: "Инфо", run: () => openPublicProfile(user.id) },
+          { text: "Добавить", run: async () => {
+            try {
+              await socialApi("/requests", { method: "POST", body: JSON.stringify({ targetId: user.id }) });
+              showToast("Заявка отправлена: " + user.nickname);
+              await loadFriends();
+            } catch (error) { showToast(error.message); }
+          }}
+        ])));
     } catch (error) { showToast(error.message); }
   }
   async function loadConversations() {
@@ -1946,6 +1950,67 @@
       box.append(makeSocialRow(title, actor + (item.read_at ? "" : " · Новое")));
     });
   }
+  async function openPublicProfile(id) {
+    const panel=$("#public-profile");
+    panel.classList.remove("hidden");
+    $("#public-profile-name").textContent="Загрузка...";
+    try{
+      const response=await fetch("/api/profile/"+encodeURIComponent(id),{credentials:"same-origin"});
+      const data=await response.json().catch(()=>({}));
+      if(!response.ok)throw new Error(data.error||"Не удалось загрузить профиль.");
+      const p=data.profile;
+      $("#public-profile-name").textContent=p.nickname;
+      $("#public-profile-presence").textContent=p.online?"● Сейчас в сети":"○ Не в сети";
+      $("#public-profile-joined").textContent="В NEXORA с "+new Date(p.createdAt).toLocaleDateString("ru-RU");
+      $("#public-profile-title").textContent=(p.authorityTitle==="NOVICE"?"Новичок":({BEDA:"Беда",PAPA:"Папа",ANGEL:"Ангел",CREATOR:"Создатель"})[p.authorityTitle]||"Новичок")+" · Авторитет "+p.authority;
+      $("#public-profile-aura").textContent=p.auraEnabled?"✦ Аура активна":"Аура выключена";
+      $("#public-profile-level").textContent=String(p.level);
+      $("#public-profile-authority").textContent=String(p.authority);
+      $("#public-profile-friends").textContent=String(p.friendsCount);
+      $("#public-profile-gifts").textContent=String(p.giftsReceived);
+      $("#public-profile-status").textContent=p.status||"";
+      $("#public-profile-bio").textContent=p.bio||"Игрок пока ничего не рассказал о себе.";
+      const avatar=$("#public-profile-avatar"),avatarCtx=avatar.getContext("2d");
+      avatarCtx.clearRect(0,0,avatar.width,avatar.height);
+      drawAvatar(avatarCtx,90,105,1.8,p.avatar||{},1,null);
+      const friendButton=$("#public-profile-friend"),messageButton=$("#public-profile-message");
+      friendButton.classList.toggle("hidden",p.isMe||p.isFriend||p.requestPending);
+      friendButton.textContent=p.requestIncoming?"Принять заявку":"Добавить в друзья";
+      friendButton.disabled=Boolean(p.requestIncoming);
+      messageButton.classList.toggle("hidden",p.isMe||!p.isFriend);
+      friendButton.onclick=async()=>{
+        try{await socialApi("/requests",{method:"POST",body:JSON.stringify({targetId:p.id})});friendButton.disabled=true;friendButton.textContent="Заявка отправлена";showToast("Заявка отправлена.");}
+        catch(error){showToast(error.message);}
+      };
+      messageButton.onclick=async()=>{
+        try{const result=await socialApi("/conversations",{method:"POST",body:JSON.stringify({peerId:p.id})});panel.classList.add("hidden");openSocialTab("messages");await loadConversations();await openConversation(result.conversationId);}
+        catch(error){showToast(error.message);}
+      };
+    }catch(error){panel.classList.add("hidden");showToast(error.message);}
+  }
+  $("#public-profile-close").addEventListener("click",()=>$("#public-profile").classList.add("hidden"));
+
+  async function loadRating(category="authority") {
+    const box=$("#social-rating-list");
+    box.dataset.category=category;
+    document.querySelectorAll("[data-rating-category]").forEach(button=>button.classList.toggle("active",button.dataset.ratingCategory===category));
+    const result=await socialApi("/../profile/rating?category="+encodeURIComponent(category)).catch(async()=>{
+      const response=await fetch("/api/profile/rating?category="+encodeURIComponent(category),{credentials:"same-origin"});
+      const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||"Не удалось загрузить рейтинг.");return data;
+    });
+    box.replaceChildren();
+    if(!result.entries.length)emptySocial(box,"Пока нет игроков в рейтинге.");
+    result.entries.filter(item=>item.position<=50).forEach(item=>{
+      const row=makeSocialRow("#"+item.position+" · "+item.nickname,
+        category==="authority"?"Авторитет "+item.score:category==="level"?"Уровень "+item.score:"Популярность "+item.score,
+        [{text:"Инфо",run:()=>openPublicProfile(item.id)}]);
+      row.classList.toggle("rating-top-three",item.position<=3);
+      box.append(row);
+    });
+    $("#social-rating-me").textContent=result.me?"Ваше место: #"+result.me.position+" · "+result.me.nickname:"Ваш рейтинг пока не сформирован.";
+  }
+  document.querySelectorAll("[data-rating-category]").forEach(button=>button.addEventListener("click",()=>loadRating(button.dataset.ratingCategory).catch(error=>showToast(error.message))));
+
   function openSocialTab(tab) {
     $("#social-panel").classList.remove("hidden");
     const labels = { friends: "Друзья", messages: "Сообщения", notifications: "Уведомления" };
@@ -1954,8 +2019,10 @@
     $("#social-friends-view").classList.toggle("hidden", tab !== "friends");
     $("#social-messages-view").classList.toggle("hidden", tab !== "messages");
     $("#social-notifications-view").classList.toggle("hidden", tab !== "notifications");
+    $("#social-rating-view").classList.toggle("hidden", tab !== "rating");
     if (tab === "friends") loadFriends().catch(error => showToast(error.message));
     if (tab === "messages") loadConversations().catch(error => showToast(error.message));
+    if (tab === "rating") loadRating($("#social-rating-list").dataset.category || "authority").catch(error => showToast(error.message));
     if (tab === "notifications") {
       loadNotifications().then(() => socialApi("/notifications/read", { method: "POST" })).then(loadNotifications).catch(error => showToast(error.message));
     }
