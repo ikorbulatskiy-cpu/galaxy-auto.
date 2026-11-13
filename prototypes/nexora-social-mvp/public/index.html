@@ -20,21 +20,19 @@
 <div class="gender-choice-grid">
 <button class="gender-choice" type="button" data-gender="male" aria-pressed="false"><span class="gender-preview"><canvas id="gender-male-preview" width="110" height="132"></canvas></span><strong>Мужской</strong><span class="gender-check">✓</span></button>
 <button class="gender-choice" type="button" data-gender="female" aria-pressed="false"><span class="gender-preview"><canvas id="gender-female-preview" width="110" height="132"></canvas></span><strong>Женский</strong><span class="gender-check">✓</span></button>
-</div><select id="gender" class="visually-hidden" aria-label="Пол персонажа"><option value="">Выберите пол</option><option value="male">Мужской</option><option value="female">Женский</option></select>
+</div>
+<div class="appearance-builder" aria-label="Настройка внешности">
+  <div class="appearance-preview"><canvas id="preview-canvas" width="180" height="170" aria-label="Предпросмотр персонажа"></canvas></div>
+  <div class="appearance-picker-row"><div class="appearance-picker"><span>ГОЛОВА</span><div><button id="head-prev" type="button" aria-label="Предыдущая голова">‹</button><strong id="head-style-name">Классика</strong><button id="head-next" type="button" aria-label="Следующая голова">›</button></div></div>
+  <div class="appearance-picker"><span>ТЕЛО</span><div><button id="body-prev" type="button" aria-label="Предыдущее тело">‹</button><strong id="body-style-name">Повседневное</strong><button id="body-next" type="button" aria-label="Следующее тело">›</button></div></div></div>
+  <p class="appearance-note">Голову и тело можно менять стрелками. Аксессуары будут отдельными предметами в магазине.</p>
+</div>
+<select id="gender" class="visually-hidden" aria-label="Пол персонажа"><option value="">Выберите пол</option><option value="male">Мужской</option><option value="female">Женский</option></select>
 <div class="registration-step-actions"><button id="register-next" class="primary-button auth-submit" type="button" disabled>ДАЛЕЕ <span>→</span></button><button class="secondary-button register-cancel" type="button">ОТМЕНА</button></div></div>
 <div id="register-step-two" class="onboarding-step hidden"><div class="step-progress"><span>ШАГ 2 ИЗ 2</span><i><b style="width:100%"></b></i></div><h2>Придумай ник</h2><p class="onboarding-hint">Имя можно будет изменить позже в профиле.</p>
 <label class="field-label" for="nickname">Твой ник</label><input id="nickname" maxlength="18" minlength="2" autocomplete="nickname" placeholder="Напиши свой ник"><p class="nickname-note">Можно пропустить или добавить позже.</p>
 <label class="consent-line"><input id="personal-data-consent" type="checkbox"><span>Я соглашаюсь на обработку персональных данных согласно <a href="/legal.html#privacy" target="_blank" rel="noopener">Политике конфиденциальности</a>.</span></label>
-<details class="appearance-options"><summary>Настроить внешность персонажа</summary><div class="appearance-preview"><canvas id="preview-canvas" width="180" height="170" aria-label="Предпросмотр персонажа"></canvas></div>
-<div class="custom-grid">
-<label>Кожа<select id="skin"><option value="#f4c7a1">Светлая</option><option value="#c9875b">Смуглая</option><option value="#75452f">Тёмная</option></select></label>
-<label>Причёска<select id="hair"><option value="short">Короткая</option><option value="long">Длинная</option><option value="spiky">Взъерошенная</option><option value="bob">Каре</option><option value="ponytail">Хвост</option><option value="curly">Кудри</option></select></label>
-<label>Стиль одежды<select id="outfit"><option value="casual">Повседневный</option><option value="hoodie">Худи</option><option value="jacket">Куртка</option><option value="dress">Платье</option><option value="beach">Пляжный</option><option value="club">Клубный</option></select></label>
-<label>Цвет костюма<select id="suit"><option value="#6d7cff">Синий</option><option value="#ef6c9b">Розовый</option><option value="#35bca5">Бирюзовый</option></select></label>
-<label>Цвет волос<select id="hair-color"><option value="#30233d">Тёмный</option><option value="#6b432c">Каштановый</option><option value="#e5c07b">Блонд</option><option value="#e9eef8">Серебристый</option><option value="#bd5de5">Фиолетовый</option></select></label>
-<label>Обувь<select id="shoes"><option value="sneakers">Кроссовки</option><option value="boots">Ботинки</option><option value="heels">Туфли</option><option value="sandals">Сандалии</option></select></label>
-<label>Аксессуар<select id="accessory"><option value="none">Без аксессуара</option><option value="glasses">Очки</option><option value="headphones">Наушники</option><option value="crown">Корона</option><option value="flower">Цветок</option><option value="cap">Кепка</option><option value="scarf">Шарф</option></select></label>
-</div></details>
+
 <button id="register-button" class="primary-button auth-submit" type="button">СОЗДАТЬ ПЕРСОНАЖА <span>✦</span></button><button id="skip-nickname" class="text-button skip-nickname" type="button">ВОЙТИ БЕЗ НИКА</button><div class="registration-footer-actions"><button id="register-back" class="text-button" type="button">← Назад</button><button class="secondary-button register-cancel" type="button">ОТМЕНА</button></div>
 </div></div>
 <div class="auth-mode hidden" id="login-mode"><p class="auth-caption">УЖЕ ЕСТЬ ПЕРСОНАЖ</p><label class="field-label" for="recovery-code">Код восстановления</label><input id="recovery-code" maxlength="10" minlength="10" inputmode="text" autocapitalize="none" spellcheck="false" autocomplete="one-time-code" placeholder="Введите код восстановления"><div class="auth-actions-row"><button id="login-cancel" class="secondary-button" type="button">Отмена</button><button id="login-button" class="primary-button" type="button">Войти <span>→</span></button></div></div>
