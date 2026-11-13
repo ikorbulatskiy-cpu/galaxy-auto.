@@ -200,7 +200,7 @@ function createAuthorityRouter({ pool, auth, io, players }) {
            LEFT JOIN nexora_social_world.wallets w ON w.account_id=a.id
           WHERE ($1='' OR a.nickname ILIKE $2 OR a.id::text=$1)
           ORDER BY a.created_at DESC LIMIT 30`,
-        [query,"%"+query.replace(/[\\%_]/g,"\\\\  router.get("/admin/config", async (req, res, next) => {")+"%"]
+        [query, "%" + query.replace(/[\\%_]/g, character => "\\" + character) + "%"]
       );
       res.json({ok:true,players:result.rows.map(row=>({...row,id:String(row.id)}))});
     } catch(error) { next(error); }
