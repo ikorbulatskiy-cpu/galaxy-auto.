@@ -143,6 +143,19 @@ async function login(req, res) {
     return respondLoginFailure(res, 401, "Неверный код восстановления.", failure.locked_until);
   }
 
+  const activeBan = await pool.query(
+    `SELECT reason,expires_at FROM nexora_social_world.moderation_actions
+      WHERE target_account_id=$1 AND action_type='BAN' AND revoked_at IS NULL
+        AND (expires_at IS NULL OR expires_at>NOW())
+      ORDER BY created_at DESC LIMIT 1`,
+    [account.id]
+  );
+  if (activeBan.rowCount) {
+    const ban = activeBan.rows[0];
+    const until = ban.expires_at ? " до " + new Date(ban.expires_at).toLocaleString("ru-RU") : " бессрочно";
+    return res.status(403).json({ error: "Персонаж заблокирован" + until + ". Причина: " + (ban.reason || "не указана") + ". Обратитесь к администрации." });
+  }
+
   await pool.query("DELETE FROM nexora_social_world.auth_login_attempts WHERE ip_hash=$1", [ipHash]);
   await pool.query("UPDATE nexora_social_world.accounts SET last_login_at=NOW() WHERE id=$1", [account.id]);
   const token = await issueSession(account.id);
