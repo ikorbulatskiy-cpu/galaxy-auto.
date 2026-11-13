@@ -822,28 +822,18 @@
       chatButton.setAttribute("aria-expanded", "false");
     }
     if (action === "profile") openMyProfile();
+    else if (action === "rating") openSocialTab("rating");
     else if (action === "chat") { $("#room-toolbar [data-room-toggle=\"chat\"]").click(); }
     else if (action === "friends") openSocialTab("friends");
     else if (action === "messages") openSocialTab("messages");
     else if (action === "gifts") { if (state.selected && String(state.selected) !== String(state.me?.id)) { $("#gift-options").classList.remove("hidden"); $("#profile-menu").classList.remove("hidden"); } else showToast("Выбери игрока в комнате, чтобы отправить подарок."); }
     else if (action === "shop") openShop();
-    else if (action === "authority") openAuthorityPanel();
     else if (action === "planets") $("#planets-button").click();
     else if (action === "developer") $("#developer-open").click();
     else if (action === "exit") $("#exit-room").click();
-    else if (action === "emotions") toggleRoomFlyout("emotions");
     else if (action === "players") toggleRoomFlyout("players");
     else if (action === "events") toggleRoomFlyout("events");
-    else if (action === "aura-quality") {
-      state.auraQuality = state.auraQuality === "high" ? "low" : "high";
-      localStorage.setItem("nexora-aura-quality", state.auraQuality);
-      const label = $("#aura-quality-action span");
-      if (label) label.textContent = "Качество аур: " + (state.auraQuality === "high" ? "высокое" : "экономное");
-      showToast("Качество аур: " + (state.auraQuality === "high" ? "высокое" : "экономное"));
-    }
   }));
-  const auraQualityLabel = $("#aura-quality-action span");
-  if (auraQualityLabel) auraQualityLabel.textContent = "Качество аур: " + (state.auraQuality === "high" ? "высокое" : "экономное");
   document.querySelectorAll("[data-room-emotion]").forEach(button => button.addEventListener("click",() => {
     socket.emit("emotion:play",{emotion:button.dataset.roomEmotion});
     closeRoomFlyouts();
@@ -860,6 +850,7 @@
     const ownProfile = String(player.id) === String(state.me?.id);
     ["#dm-open-button","#whisper-button","#gift-button","#friend-button","#block-user-button"].forEach(selector => $(selector).classList.toggle("hidden", ownProfile));
     $("#my-profile-context").classList.toggle("hidden", !ownProfile);
+    $("#my-character-actions").classList.toggle("hidden", !ownProfile);
     $("#profile-menu").classList.remove("hidden");
     $("#character-action-list").classList.toggle("hidden",ownProfile);
     $("#gift-options").classList.add("hidden");
@@ -925,12 +916,21 @@
     $("#profile-menu").classList.add("hidden");
     $("#character-action-list").classList.add("hidden");
     $("#my-profile-context").classList.add("hidden");
+    $("#my-character-actions").classList.add("hidden");
     $("#developer-player-actions")?.classList.add("hidden");
     ["#dm-open-button","#whisper-button","#gift-button","#friend-button","#report-user-button"].forEach(selector => $(selector).classList.remove("hidden"));
     renderRoomPlayers();
   }
   $("#close-profile").addEventListener("click", closeProfile);
   $("#my-profile-context").addEventListener("click", () => { closeProfile(); openMyProfile(); });
+  document.querySelectorAll("[data-my-context]").forEach(button => button.addEventListener("click", () => {
+    const action = button.dataset.myContext;
+    closeProfile();
+    if (action === "friends") openSocialTab("friends", "Друзья");
+    else if (action === "messages") openSocialTab("messages");
+    else if (action === "social") openSocialTab("friends", "Социальное");
+    else if (action === "emotions") toggleRoomFlyout("emotions");
+  }));
   $("#gift-button").addEventListener("click", () => $("#gift-options").classList.toggle("hidden"));
   $("#dm-open-button").addEventListener("click", async () => {
     const peerId = state.selected;
@@ -1421,6 +1421,17 @@
   $("#authority-close").addEventListener("click",()=>$("#authority-panel").classList.add("hidden"));
   $("#my-profile").addEventListener("click", openMyProfile);
   $("#profile-editor-close").addEventListener("click", () => $("#profile-editor").classList.add("hidden"));
+  function syncAuraQualityLabel() {
+    const button = $("#profile-aura-quality-toggle");
+    if (button) button.textContent = "✨ Качество аур: " + (state.auraQuality === "high" ? "высокое" : "экономное");
+  }
+  $("#profile-aura-quality-toggle").addEventListener("click", () => {
+    state.auraQuality = state.auraQuality === "high" ? "low" : "high";
+    localStorage.setItem("nexora-aura-quality", state.auraQuality);
+    syncAuraQualityLabel();
+    showToast("Качество аур: " + (state.auraQuality === "high" ? "высокое" : "экономное"));
+  });
+  syncAuraQualityLabel();
   $("#profile-save").addEventListener("click", async () => {
     const button = $("#profile-save");
     const errorBox = $("#profile-editor-error");
@@ -2061,8 +2072,12 @@
     box.replaceChildren();
     if(!result.entries.length)emptySocial(box,"Пока нет игроков в рейтинге.");
     result.entries.filter(item=>item.position<=50).forEach(item=>{
-      const row=makeSocialRow("#"+item.position+" · "+item.nickname,
-        category==="authority"?"Авторитет "+item.score:category==="level"?"Уровень "+item.score:"Популярность "+item.score,
+      const rankName = item.title || item.authorityTitle || item.authority_title || "Звание не назначено";
+      const auraState = item.auraEnabled || item.aura_enabled ? "Аура активна" : "Аура не активна";
+      const detail = category === "authority"
+        ? rankName + " · Авторитет " + item.score + " · " + auraState
+        : category === "level" ? "Уровень " + item.score : "Популярность " + item.score;
+      const row=makeSocialRow("#"+item.position+" · "+item.nickname, detail,
         [{text:"Инфо",run:()=>openPublicProfile(item.id)}]);
       row.classList.toggle("rating-top-three",item.position<=3);
       box.append(row);
@@ -2071,10 +2086,10 @@
   }
   document.querySelectorAll("[data-rating-category]").forEach(button=>button.addEventListener("click",()=>loadRating(button.dataset.ratingCategory).catch(error=>showToast(error.message))));
 
-  function openSocialTab(tab) {
+  function openSocialTab(tab, customTitle = "") {
     $("#social-panel").classList.remove("hidden");
-    const labels = { friends: "Социальное", messages: "Сообщения", notifications: "Социальное", rating: "Рейтинг игроков" };
-    $("#social-title").textContent = labels[tab] || "Социальное";
+    const labels = { friends: "Друзья и социальное", messages: "Личные сообщения", notifications: "Социальное", rating: "Рейтинг игроков" };
+    $("#social-title").textContent = customTitle || labels[tab] || "Социальное";
     document.querySelectorAll("[data-social-tab]").forEach(button => button.classList.toggle("active", button.dataset.socialTab === tab));
     $("#social-friends-view").classList.toggle("hidden", tab !== "friends");
     $("#social-messages-view").classList.toggle("hidden", tab !== "messages");

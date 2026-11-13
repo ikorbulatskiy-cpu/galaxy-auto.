@@ -99,7 +99,6 @@
       <nav id="room-toolbar" class="room-toolbar" aria-label="Главное управление">
         <button type="button" data-room-toggle="menu" aria-expanded="false">☰<span>Меню</span></button>
         <button type="button" class="active" data-room-toggle="chat" aria-expanded="true">💬<span>Чат</span></button>
-        <button type="button" data-room-action="friends">👥<span>Социальное</span></button>
         <button type="button" data-room-toggle="players">🧑‍🤝‍🧑<span>Игроки</span></button>
         <button type="button" data-room-action="profile">👤<span>Профиль</span></button>
       </nav>
@@ -109,10 +108,8 @@
         <div class="room-menu-grid">
           <button type="button" data-room-action="shop">🛍️<span>Магазин</span></button>
           <button type="button" data-room-action="planets">🪐<span>Планеты</span></button>
-          <button type="button" data-room-action="authority">✦<span>Звания и ауры</span></button>
-          <button type="button" data-room-action="emotions">😊<span>Эмоции</span></button>
+          <button type="button" data-room-action="rating">🏆<span>Рейтинг</span></button>
           <button type="button" data-room-toggle="events" aria-expanded="false">🔔<span>События</span></button>
-          <button type="button" data-room-action="aura-quality" id="aura-quality-action">✨<span>Качество аур: высокое</span></button>
           <button type="button" data-room-action="developer" id="room-developer-action" class="hidden">🛠️<span>Разработчик</span></button>
           <button type="button" data-room-action="exit">↪<span>Выйти из комнаты</span></button>
         </div>
@@ -135,7 +132,7 @@
 
       <aside id="chat-drawer" class="chat-drawer" aria-label="Общий чат планеты">
         <div class="drawer-head"><div class="chat-title"><strong>Чат планеты</strong><span id="chat-online-label">Общение со всеми игроками</span></div><div class="chat-head-actions"><span id="chat-connection-status" class="chat-connection-status" data-state="connecting"><i></i><span>Подключение</span></span><span id="chat-new-count" class="chat-new-count hidden">0 новых</span><button id="close-history" type="button" aria-label="Свернуть чат">⌄</button></div></div>
-        <nav class="chat-tabs" aria-label="Разделы общения"><button type="button" class="active" data-chat-view="general">🌐 Общий</button><button type="button" data-chat-view="messages">✉️ Личные</button><button type="button" data-chat-view="friends">⭐ Друзья</button></nav>
+        <nav class="chat-tabs" aria-label="Разделы общения"><button type="button" class="active" data-chat-view="general">🌐 Общий чат</button></nav>
         <div id="chat-history" class="chat-history" aria-live="polite"></div>
         <div id="chat-emoji-picker" class="chat-emoji-picker hidden" aria-label="Эмодзи"><button type="button" data-chat-emoji="😊">😊</button><button type="button" data-chat-emoji="😂">😂</button><button type="button" data-chat-emoji="😍">😍</button><button type="button" data-chat-emoji="😘">😘</button><button type="button" data-chat-emoji="❤️">❤️</button><button type="button" data-chat-emoji="🔥">🔥</button><button type="button" data-chat-emoji="✨">✨</button><button type="button" data-chat-emoji="👋">👋</button></div>
         <form id="chat-form" class="chat-form"><input id="chat-input" maxlength="240" placeholder="Написать сообщение..." autocomplete="off" aria-label="Сообщение в общий чат" enterkeyhint="send"><button id="chat-emoji-button" class="chat-emoji-button" type="button" aria-label="Добавить эмодзи" aria-expanded="false">😊</button><button type="submit" aria-label="Отправить сообщение">➤</button></form>
@@ -149,6 +146,12 @@
         <span id="profile-aura" class="profile-aura">Аура выключена</span>
         <span id="profile-online-status" class="profile-online-status">● В этой комнате</span>
         <div id="character-action-list" class="character-action-list hidden" aria-label="Действия с персонажем"><button type="button" data-character-action="wave">👋<span>Привет</span></button><button type="button" data-character-action="hug">🤗<span>Обнять</span></button><button type="button" data-character-action="kiss">💋<span>Поцелуй</span></button><button type="button" data-character-action="dance">💃<span>Танец</span></button><button type="button" data-character-action="flower">🌹<span>Цветок</span></button></div>
+        <div id="my-character-actions" class="my-character-actions hidden" aria-label="Мои быстрые действия">
+          <button type="button" data-my-context="friends">👥<span>Друзья</span></button>
+          <button type="button" data-my-context="messages">✉️<span>Личные сообщения</span></button>
+          <button type="button" data-my-context="social">🌐<span>Социальное</span></button>
+          <button type="button" data-my-context="emotions">😊<span>Эмоции</span></button>
+        </div>
         <button id="profile-info-button" type="button">ℹ️ Информация о персонаже</button>
         <button id="dm-open-button">💬 Сообщение</button>
         <button id="whisper-button">💭 Шепнуть</button>
@@ -167,9 +170,8 @@
       <aside id="social-panel" class="social-panel hidden" aria-label="Социальное меню">
         <div class="social-head"><strong id="social-title">Друзья</strong><button id="social-close" aria-label="Закрыть">×</button></div>
         <div class="social-tabs">
-          <button data-social-tab="friends" class="active">👥 Социальное</button>
-          <button data-social-tab="messages">💬 Сообщения</button>
-          <button data-social-tab="rating">🏆 Рейтинг</button>
+          <button data-social-tab="friends" class="active">👥 Друзья и социальное</button>
+          <button data-social-tab="messages">💬 Личные сообщения</button>
         </div>
         <section id="social-friends-view" class="social-view">
           <input id="social-search" type="search" maxlength="18" placeholder="Найти игрока по нику">
@@ -188,8 +190,9 @@
         </section>
         <section id="social-notifications-view" class="social-view hidden"></section>
         <section id="social-rating-view" class="social-view hidden">
+          <button id="authority-open" class="rating-authority-link" type="button">✦ Каталог званий и аур</button>
           <div class="rating-categories" role="group" aria-label="Категория рейтинга">
-            <button type="button" data-rating-category="authority" class="active">Авторитет</button>
+            <button type="button" data-rating-category="authority" class="active">Звания и ауры</button>
             <button type="button" data-rating-category="level">Уровень</button>
             <button type="button" data-rating-category="popularity">Популярность</button>
           </div>
@@ -235,11 +238,11 @@
           <p id="profile-authority-aura">Без активной ауры</p>
           <div class="authority-progress"><i id="profile-authority-progress"></i></div>
           <small id="profile-authority-next">Следующее звание: Беда</small>
-          <button id="authority-open" type="button">Звания и ауры</button>
         </section>
         <div class="profile-field"><span>Никнейм</span><strong id="profile-nickname-display">Игрок</strong></div>
         <label class="profile-field">Статус<input id="profile-status" maxlength="80" placeholder="Чем занят?"></label>
         <label class="profile-field">О себе<textarea id="profile-bio" maxlength="240" rows="3" placeholder="Расскажи немного о себе"></textarea></label>
+        <button id="profile-aura-quality-toggle" class="profile-aura-quality-toggle" type="button">✨ Качество аур: высокое</button>
         <div class="profile-section-title">Внешность персонажа</div>
         <div class="profile-editor-grid">
           <label>Пол<select id="edit-gender"><option value="male">Мужской</option><option value="female">Женский</option></select></label>
