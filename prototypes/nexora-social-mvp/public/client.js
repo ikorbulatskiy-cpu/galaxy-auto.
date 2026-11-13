@@ -281,7 +281,7 @@
       if (!response.ok) throw new Error(data.error || "Ошибка авторизации.");
       if (data.recoveryCode) {
         const box = $("#recovery-result");
-        box.textContent = "АККАУНТ СОЗДАН. ТВОЙ КОД: " + data.recoveryCode + ". Сохрани его, затем введи этот код в поле выше и нажми «Войти по коду». В комнату ты попадёшь только после проверки кода.";
+        box.textContent = "АККАУНТ СОЗДАН. ТВОЙ КОД: " + data.recoveryCode + ". Сохрани его, затем введи этот код в поле выше и нажми «Войти». В комнату ты попадёшь только после проверки кода.";
         box.classList.remove("hidden");
         $("#recovery-code").value = "";
         $("#register-mode").classList.add("hidden");
