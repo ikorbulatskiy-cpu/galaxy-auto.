@@ -544,7 +544,7 @@
     if (!chatDrawer.classList.contains("hidden")) {
       chatDrawer.classList.add("hidden");
       gameScreen.classList.remove("chat-open");
-      const chatButton = $("#room-toolbar [data-room-toggle="chat"]");
+      const chatButton = $('#room-toolbar [data-room-toggle="chat"]');
       if (chatButton) {
         chatButton.classList.remove("active");
         chatButton.setAttribute("aria-expanded", "false");
@@ -558,7 +558,7 @@
     closeRoomFlyouts();
     $("#chat-drawer").classList.add("hidden");
     gameScreen.classList.remove("chat-open");
-    const chatButton = $("#room-toolbar [data-room-toggle="chat"]");
+    const chatButton = $('#room-toolbar [data-room-toggle="chat"]');
     if (chatButton) {
       chatButton.classList.remove("active");
       chatButton.setAttribute("aria-expanded", "false");
