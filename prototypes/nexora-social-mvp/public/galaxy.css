@@ -34,3 +34,14 @@
 @keyframes planet-float{0%,100%{translate:0 0}50%{translate:0 -7px}}
 @keyframes flight-in{from{opacity:0}to{opacity:1}}@keyframes stars-warp{to{background-position:0 180px,0 -230px}}@keyframes flight-pulse{to{transform:scale(1.22);filter:brightness(1.5)}}
 @media(max-width:680px){.planet-map{padding:14px 10px}.planet-map-body{grid-template-columns:1fr;min-height:0}.planet-orbit-map{min-height:340px}.planet-detail{min-height:185px;padding:16px}.planet-detail-art{width:130px;height:130px;right:-15px;top:4px}.planet-detail h3{font-size:20px}.planet-map-footer{align-items:stretch}.planet-visit{padding:11px 14px}.planet-node{min-width:64px}.planet-globe{width:54px}.planet-node strong{font-size:10px}}
+
+/* Character action submenu */
+.context-menu{min-width:214px;padding:8px;background:linear-gradient(155deg,#182946f5,#0c172cf7);border:1px solid #7198d477;box-shadow:0 16px 42px #000c,0 0 24px #4e80cf22;backdrop-filter:blur(14px)}
+.context-menu button{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:39px;padding:9px 11px;font-size:12px;border-radius:8px;transition:background .15s,transform .15s}
+.context-menu button:hover{background:linear-gradient(90deg,#467bd455,#8160d955);transform:translateX(2px)}
+.context-title{padding:7px 10px 10px;margin-bottom:4px;font-size:13px}
+.context-chevron{color:#9ebcff;font-size:18px}
+.context-actions{margin:5px 0 2px;padding:5px;border:1px solid #8ba9e533;border-radius:10px;background:#070f20a8;animation:context-open .16s ease-out}
+.context-actions button{min-height:35px;padding:8px 10px}
+@keyframes context-open{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.context-menu{min-width:205px;max-width:calc(100vw - 16px)}.context-menu button{min-height:42px;font-size:13px}}

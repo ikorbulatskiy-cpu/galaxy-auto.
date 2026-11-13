@@ -113,6 +113,7 @@ jobs:
             [galaxyHtml.includes('id="galaxy-canvas"') && galaxyHtml.includes('id="chat-form"') && galaxyHtml.includes('id="planet-select"'), "standalone Galaxy HUD, canvas and planet chat are present"],
             [galaxySockets.includes('io.of("/galaxy")') && galaxySockets.includes("auth.authenticateToken") && galaxySockets.includes('socket.on("player:move"'), "Galaxy sockets use authenticated sessions and server-validated movement"],
             [galaxyClient.includes('io("/galaxy"') && galaxyClient.includes('socket.emit("chat:send"') && galaxyClient.includes('socket.emit("planet:change"'), "Galaxy client supports chat and planet travel"],
+            [galaxyHtml.includes('id="context-actions-toggle"') && galaxyHtml.includes('data-action-choice="flower"') && !galaxyHtml.includes('id="emote"') && galaxyClient.includes('function playCharacterAction') && galaxyScene.includes('this.onSelect?.(hit,e.clientX,e.clientY)'), "character action menu is contextual, mobile-positioned and replaces the old emotion toolbar button"],
             [galaxyScene.includes("NexoraSpriteEngine.draw") && galaxyScene.includes("this.camera"), "Galaxy scene uses the existing sprite atlas and pannable stage"],
             [galaxyCss.includes("rgba(16,22,38,.9)") && galaxyCss.includes("#3b82f6"), "Galaxy UI uses the requested cosmic panel palette"]
           ];
