@@ -1792,3 +1792,65 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
     transform: translateX(-50%) !important;
   }
 }
+
+
+/* NEXORA 20.0: keep the character quick card compact and inside the viewport */
+#profile-menu {
+  position: fixed !important;
+  left: 50% !important;
+  right: auto !important;
+  top: 50% !important;
+  bottom: auto !important;
+  width: min(276px, calc(100vw - 24px)) !important;
+  max-width: calc(100vw - 24px) !important;
+  max-height: calc(100dvh - max(16px, env(safe-area-inset-top)) - max(16px, env(safe-area-inset-bottom))) !important;
+  height: auto !important;
+  padding: 9px 10px !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  transform: translate(-50%, -50%) !important;
+}
+
+#profile-menu *,
+#profile-menu button {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+#profile-menu .profile-avatar {
+  width: 38px !important;
+  height: 38px !important;
+  margin: 0 auto 4px !important;
+}
+
+#profile-menu .my-character-actions {
+  gap: 5px !important;
+  margin: 5px 0 !important;
+  padding: 6px !important;
+}
+
+#profile-menu .my-character-actions button,
+#profile-menu .character-action-list button,
+#profile-menu > button:not(.menu-close),
+#profile-menu .gift-options button {
+  min-height: 30px !important;
+  margin-top: 3px !important;
+  padding: 5px 7px !important;
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  overflow-wrap: anywhere;
+}
+
+@media (max-height: 620px) {
+  #profile-menu {
+    max-height: calc(100dvh - 12px) !important;
+    padding: 7px 9px !important;
+  }
+  #profile-menu .profile-avatar {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}
