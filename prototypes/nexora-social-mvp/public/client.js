@@ -905,8 +905,8 @@
     if (action === "profile") openMyProfile();
     else if (action === "rating") openSocialTab("rating");
     else if (action === "chat") { $("#room-toolbar [data-room-toggle=\"chat\"]").click(); }
-    else if (action === "friends") openSocialTab("friends");
-    else if (action === "messages") openSocialTab("messages");
+    else if (action === "friends") openMyProfile("friends");
+    else if (action === "messages") openMyProfile("messages");
     else if (action === "gifts") { if (state.selected && String(state.selected) !== String(state.me?.id)) { $("#gift-options").classList.remove("hidden"); $("#profile-menu").classList.remove("hidden"); } else showToast("Выбери игрока в комнате, чтобы отправить подарок."); }
     else if (action === "shop") openShop();
     else if (action === "planets") $("#planets-button").click();
@@ -1008,9 +1008,9 @@
   document.querySelectorAll("[data-my-context]").forEach(button => button.addEventListener("click", () => {
     const action = button.dataset.myContext;
     closeProfile();
-    if (action === "friends") openSocialTab("friends", "Друзья");
-    else if (action === "messages") openSocialTab("messages");
-    else if (action === "social") openSocialTab("friends", "Социальное");
+    if (action === "friends") openMyProfile("friends");
+    else if (action === "messages") openMyProfile("messages");
+    else if (action === "social") openMyProfile("friends");
     else if (action === "emotions") toggleRoomFlyout("emotions");
   }));
   $("#gift-button").addEventListener("click", () => $("#gift-options").classList.toggle("hidden"));
@@ -1020,7 +1020,7 @@
     try {
       const result = await socialApi("/conversations", { method: "POST", body: JSON.stringify({ peerId }) });
       closeProfile();
-      openSocialTab("messages");
+      openMyProfile("messages");
       await loadConversations();
       await openConversation(result.conversationId);
     } catch (error) { showToast(error.message); }
@@ -1387,11 +1387,36 @@
   window.addEventListener("nexora:sprites-ready",()=>{preview();if(!$("#profile-editor").classList.contains("hidden"))drawProfilePreview();});
   ["edit-gender","edit-skin","edit-hair","edit-outfit","edit-suit","edit-hair-color","edit-shoes","edit-accessory"].forEach(id=>$("#"+id).addEventListener("change",drawProfilePreview));
 
-  async function openMyProfile() {
+  function showProfileSocialTab(tab) {
+    if (!["friends","messages"].includes(tab)) return;
+    const panel = $("#profile-editor");
+    panel.classList.add("social-mode");
+    $("#profile-social-title").textContent = tab === "friends" ? "Друзья и социальное" : "Личные сообщения";
+    $("#social-friends-view").classList.toggle("hidden", tab !== "friends");
+    $("#social-messages-view").classList.toggle("hidden", tab !== "messages");
+    document.querySelectorAll("[data-profile-social-tab]").forEach(button => button.classList.toggle("active", button.dataset.profileSocialTab === tab));
+    if (tab === "friends") {
+      loadFriends().catch(error => showToast(error.message));
+      loadNotifications().then(() => socialApi("/notifications/read", { method: "POST" })).then(loadNotifications).catch(error => showToast(error.message));
+    } else {
+      loadConversations().catch(error => showToast(error.message));
+    }
+  }
+  document.querySelectorAll("[data-profile-social-tab]").forEach(button => button.addEventListener("click", () => showProfileSocialTab(button.dataset.profileSocialTab)));
+  $("#profile-social-back").addEventListener("click", () => {
+    $("#profile-editor").classList.remove("social-mode");
+    $("#social-friends-view").classList.add("hidden");
+    $("#social-messages-view").classList.add("hidden");
+  });
+
+  async function openMyProfile(socialTab = "") {
     closeCompetingPanels("#profile-editor");
     const panel = $("#profile-editor");
     const save = $("#profile-save");
     const errorBox = $("#profile-editor-error");
+    panel.classList.remove("social-mode");
+    $("#social-friends-view").classList.add("hidden");
+    $("#social-messages-view").classList.add("hidden");
     errorBox.textContent = "";
     panel.classList.remove("hidden");
     save.disabled = true;
@@ -1424,6 +1449,7 @@
       $("#edit-accessory").value = avatar.accessory || "none";
       drawProfilePreview();
       save.disabled = false;
+      if (socialTab) showProfileSocialTab(socialTab);
     } catch (error) {
       errorBox.textContent = error.message;
       save.disabled = true;
@@ -1967,7 +1993,7 @@
         { text: "Написать", run: async () => {
           try {
             const result = await socialApi("/conversations", { method: "POST", body: JSON.stringify({ peerId: friend.id }) });
-            openSocialTab("messages"); await loadConversations(); await openConversation(result.conversationId);
+            openMyProfile("messages"); await loadConversations(); await openConversation(result.conversationId);
           } catch (error) { showToast(error.message); }
         }},
         { text: "Удалить", run: async () => {
@@ -2142,7 +2168,7 @@
         }catch(error){showToast(error.message);}
       };
       messageButton.onclick=async()=>{
-        try{const result=await socialApi("/conversations",{method:"POST",body:JSON.stringify({peerId:p.id})});panel.classList.add("hidden");openSocialTab("messages");await loadConversations();await openConversation(result.conversationId);}
+        try{const result=await socialApi("/conversations",{method:"POST",body:JSON.stringify({peerId:p.id})});panel.classList.add("hidden");openMyProfile("messages");await loadConversations();await openConversation(result.conversationId);}
         catch(error){showToast(error.message);}
       };
     }catch(error){panel.classList.add("hidden");showToast(error.message);}
@@ -2173,24 +2199,17 @@
   }
   document.querySelectorAll("[data-rating-category]").forEach(button=>button.addEventListener("click",()=>loadRating(button.dataset.ratingCategory).catch(error=>showToast(error.message))));
 
-  function openSocialTab(tab, customTitle = "") {
+  function openSocialTab(tab) {
+    if (tab === "friends" || tab === "messages") return openMyProfile(tab);
+    if (tab !== "rating") return;
     closeCompetingPanels("#social-panel");
     $("#social-panel").classList.remove("hidden");
-    const labels = { friends: "Друзья и социальное", messages: "Личные сообщения", notifications: "Социальное", rating: "Рейтинг игроков" };
-    $("#social-title").textContent = customTitle || labels[tab] || "Социальное";
-    document.querySelectorAll("[data-social-tab]").forEach(button => button.classList.toggle("active", button.dataset.socialTab === tab));
-    $("#social-friends-view").classList.toggle("hidden", tab !== "friends");
-    $("#social-messages-view").classList.toggle("hidden", tab !== "messages");
-    $("#social-notifications-view").classList.toggle("hidden", tab !== "notifications");
-    $("#social-rating-view").classList.toggle("hidden", tab !== "rating");
-    if (tab === "friends") loadFriends().catch(error => showToast(error.message));
-    if (tab === "messages") loadConversations().catch(error => showToast(error.message));
-    if (tab === "rating") loadRating($("#social-rating-list").dataset.category || "authority").catch(error => showToast(error.message));
-    if (tab === "friends") loadNotifications().then(() => socialApi("/notifications/read", { method: "POST" })).then(loadNotifications).catch(error => showToast(error.message));
+    $("#social-title").textContent = "Рейтинг игроков";
+    $("#social-rating-view").classList.remove("hidden");
+    loadRating($("#social-rating-list").dataset.category || "authority").catch(error => showToast(error.message));
   }
-  $("#social-open").addEventListener("click", () => openSocialTab("friends"));
+  $("#social-open").addEventListener("click", () => openMyProfile("friends"));
   $("#social-close").addEventListener("click", () => $("#social-panel").classList.add("hidden"));
-  document.querySelectorAll("[data-social-tab]").forEach(button => button.addEventListener("click", () => openSocialTab(button.dataset.socialTab)));
   $("#social-search").addEventListener("input", event => searchSocialUsers(event.target.value));
   $("#message-player-search").addEventListener("input", event => searchMessagePlayers(event.target.value));
   $("#social-message-form").addEventListener("submit", async event => {
@@ -2213,7 +2232,7 @@
     socialUnread += 1;
     $("#notification-count").textContent = String(socialUnread);
     showToast("🔔 Новое уведомление");
-    if (!$("#social-panel").classList.contains("hidden")) loadNotifications().catch(() => {});
+    if (!$("#profile-editor").classList.contains("hidden") && $("#profile-editor").classList.contains("social-mode") && !$("#social-friends-view").classList.contains("hidden")) loadNotifications().catch(() => {});
   });
 
   if (window.Telegram?.WebApp) {
