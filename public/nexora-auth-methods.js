@@ -10,7 +10,7 @@
   const regEmail=el("input",{class:"field",type:"email",name:"registerEmail",placeholder:"Email",autocomplete:"email",maxlength:"254"});
   const regPass=el("input",{class:"field",type:"password",name:"registerPassword",placeholder:"Пароль (минимум 10 символов)",autocomplete:"new-password",minlength:"10",maxlength:"128"});
   reg.insertBefore(el("label",{},"Email для входа"),reg.querySelector(".nx-consent"));
-  reg.insertBefore(regEmail,reg.querySelector(".nx-consent"));reg.insertBefore(regPass,reg.querySelector(".nx-consent"));
+  reg.insertBefore(regEmail,reg.querySelector(".nx-consent"));reg.insertBefore(regPass,reg.querySelector(".nx-consent"));regEmail.required=true;regPass.required=true;
   const switcher=el("div",{class:"nx-auth-switcher"});
   const emailTab=el("button",{type:"button",class:"btn small"},"Email и пароль");
   const codeTab=el("button",{type:"button",class:"btn small"},"Код персонажа");
