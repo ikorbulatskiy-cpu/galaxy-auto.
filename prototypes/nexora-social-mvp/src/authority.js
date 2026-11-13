@@ -248,10 +248,10 @@ function createAuthorityRouter({ pool, auth, io, players }) {
     if (!current) return;
     const targetId = String(req.body?.accountId || "");
     const key = String(req.body?.titleKey || "").toUpperCase();
-    const reason = String(req.body?.reason || "").trim().slice(0,500);
+    const reason = String(req.body?.reason || "").trim().slice(0,500) || "Выдано разработчиком через панель";
     const auraEnabled = req.body?.auraEnabled !== false;
-    if (!/^\d+$/.test(targetId) || !TITLES.includes(key) || !reason) {
-      return res.status(400).json({error:"Укажите ID игрока, звание и причину."});
+    if (!/^\d+$/.test(targetId) || !TITLES.includes(key)) {
+      return res.status(400).json({error:"Укажите игрока и корректное звание."});
     }
     if (ownerId() && targetId === ownerId() && current.role !== "OWNER") {
       return res.status(403).json({error:"Изменять звание владельца может только OWNER."});
@@ -291,8 +291,8 @@ function createAuthorityRouter({ pool, auth, io, players }) {
     let current;
     try { current=await requireAuthorityPermission(req,res,"authority.remove"); } catch(error) { return next(error); }
     if(!current)return;
-    const targetId=String(req.params.id),reason=String(req.body?.reason||"").trim().slice(0,500);
-    if(!/^\d+$/.test(targetId)||!reason)return res.status(400).json({error:"Укажите ID игрока и причину снятия звания."});
+    const targetId=String(req.params.id),reason=String(req.body?.reason||"").trim().slice(0,500)||"Звание снято разработчиком через панель";
+    if(!/^\d+$/.test(targetId))return res.status(400).json({error:"Некорректный игрок."});
     if(ownerId()&&targetId===ownerId()&&current.role!=="OWNER")return res.status(403).json({error:"Снимать звание владельца может только OWNER."});
     const client=await pool.connect();
     try{
