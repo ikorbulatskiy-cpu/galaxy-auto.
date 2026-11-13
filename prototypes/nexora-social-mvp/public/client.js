@@ -1020,7 +1020,7 @@
     try {
       const result = await socialApi("/conversations", { method: "POST", body: JSON.stringify({ peerId }) });
       closeProfile();
-      openMyProfile("messages");
+      await openMyProfile("messages");
       await loadConversations();
       await openConversation(result.conversationId);
     } catch (error) { showToast(error.message); }
@@ -1993,7 +1993,7 @@
         { text: "Написать", run: async () => {
           try {
             const result = await socialApi("/conversations", { method: "POST", body: JSON.stringify({ peerId: friend.id }) });
-            openMyProfile("messages"); await loadConversations(); await openConversation(result.conversationId);
+            await openMyProfile("messages"); await loadConversations(); await openConversation(result.conversationId);
           } catch (error) { showToast(error.message); }
         }},
         { text: "Удалить", run: async () => {
@@ -2168,7 +2168,7 @@
         }catch(error){showToast(error.message);}
       };
       messageButton.onclick=async()=>{
-        try{const result=await socialApi("/conversations",{method:"POST",body:JSON.stringify({peerId:p.id})});panel.classList.add("hidden");openMyProfile("messages");await loadConversations();await openConversation(result.conversationId);}
+        try{const result=await socialApi("/conversations",{method:"POST",body:JSON.stringify({peerId:p.id})});panel.classList.add("hidden");await openMyProfile("messages");await loadConversations();await openConversation(result.conversationId);}
         catch(error){showToast(error.message);}
       };
     }catch(error){panel.classList.add("hidden");showToast(error.message);}
