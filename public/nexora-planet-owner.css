@@ -5,3 +5,6 @@
 .nx-avatar-card.planet-owner .nx-avatar-name{border-color:#ffd46c;color:#ffe3a2;box-shadow:0 0 8px #ffd46b55}
 .nx-scene-meta{max-width:min(520px,calc(100% - 32px));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:700px){.nx-create-planet-button{font-size:9px;padding:5px 6px;flex:0 0 auto}.nx-planet-tools{flex-wrap:wrap}.nx-planet-select{flex:1 1 42%;min-width:120px}.nx-room-select{flex:1 1 25%}.nx-scene-meta{max-width:calc(100% - 20px);font-size:9px}}
+
+.nx-avatar-card.offline{opacity:.78;filter:saturate(.78)}
+.nx-avatar-card.offline .nx-avatar-name:after{content:' · владелец';font-size:8px;color:#d6c28d}
