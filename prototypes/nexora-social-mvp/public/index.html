@@ -56,13 +56,10 @@
               <option value="spiky">Взъерошенная</option>
             </select>
           </label>
-          <label>Костюм
-            <select id="suit">
-              <option value="#6d7cff">Синий</option>
-              <option value="#ef6c9b">Розовый</option>
-              <option value="#35bca5">Бирюзовый</option>
-            </select>
-          </label>
+          <label>Костюм<select id="suit"><option value="#6d7cff">Синий</option><option value="#ef6c9b">Розовый</option><option value="#35bca5">Бирюзовый</option></select></label>
+          <label>Цвет волос<select id="hair-color"><option value="#30233d">Тёмный</option><option value="#6b432c">Каштановый</option><option value="#e5c07b">Блонд</option><option value="#e9eef8">Серебристый</option><option value="#bd5de5">Фиолетовый</option></select></label>
+          <label>Обувь<select id="shoes"><option value="sneakers">Кроссовки</option><option value="boots">Ботинки</option><option value="heels">Туфли</option></select></label>
+          <label>Аксессуар<select id="accessory"><option value="none">Без аксессуара</option><option value="glasses">Очки</option><option value="headphones">Наушники</option><option value="crown">Корона</option></select></label>
           </div>
         </div>
           <button id="register-button" class="primary-button auth-submit" type="button">Создать аккаунт <span>✦</span></button>
@@ -224,6 +221,9 @@
           <label>Кожа<select id="edit-skin"><option value="#f4c7a1">Светлая</option><option value="#c9875b">Смуглая</option><option value="#75452f">Тёмная</option></select></label>
           <label>Причёска<select id="edit-hair"><option value="short">Короткая</option><option value="long">Длинная</option><option value="spiky">Взъерошенная</option></select></label>
           <label>Костюм<select id="edit-suit"><option value="#6d7cff">Синий</option><option value="#ef6c9b">Розовый</option><option value="#35bca5">Бирюзовый</option></select></label>
+          <label>Цвет волос<select id="edit-hair-color"><option value="#30233d">Тёмный</option><option value="#6b432c">Каштановый</option><option value="#e5c07b">Блонд</option><option value="#e9eef8">Серебристый</option><option value="#bd5de5">Фиолетовый</option></select></label>
+          <label>Обувь<select id="edit-shoes"><option value="sneakers">Кроссовки</option><option value="boots">Ботинки</option><option value="heels">Туфли</option></select></label>
+          <label>Аксессуар<select id="edit-accessory"><option value="none">Без аксессуара</option><option value="glasses">Очки</option><option value="headphones">Наушники</option><option value="crown">Корона</option></select></label>
         </div>
         <p id="profile-editor-error" class="profile-editor-error" role="status"></p>
         <button id="profile-save" class="profile-save-button" type="button">Сохранить изменения</button>
