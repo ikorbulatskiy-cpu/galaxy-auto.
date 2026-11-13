@@ -1,0 +1,46 @@
+name: NEXORA Room UI CI
+
+on:
+  push:
+    branches: [nexora-6-galaxy-room-redesign]
+    paths:
+      - "prototypes/nexora-social-mvp/public/**"
+      - ".github/workflows/nexora-room-ui-ci.yml"
+  pull_request:
+    branches: [nexora-social-mvp]
+    paths:
+      - "prototypes/nexora-social-mvp/public/**"
+      - ".github/workflows/nexora-room-ui-ci.yml"
+
+jobs:
+  room-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check client JavaScript syntax
+        run: node --check prototypes/nexora-social-mvp/public/client.js
+      - name: Verify room structure
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('prototypes/nexora-social-mvp/public/index.html', 'utf8');
+          const js = fs.readFileSync('prototypes/nexora-social-mvp/public/client.js', 'utf8');
+          const checks = [
+            ['chat drawer', html.includes('id="chat-drawer"')],
+            ['chat form inside drawer', html.indexOf('id="chat-drawer"') < html.indexOf('id="chat-form"') && html.indexOf('id="chat-form"') < html.indexOf('id="profile-menu"')],
+            ['eight room controls', (html.match(/data-room-toggle=|data-room-action=/g) || []).length >= 8],
+            ['Koins balance display', html.includes('id="topbar-koins"') && js.includes('refreshTopbarWallet')],
+            ['aura quality setting', html.includes('id="aura-quality-action"') && js.includes('nexora-aura-quality')],
+            ['existing Socket.IO chat', js.includes('socket.emit("chat:send"')],
+            ['chat emoji picker', html.includes('id="chat-emoji-picker"') && js.includes('data-chat-emoji')],
+          ];
+          for (const [name, ok] of checks) {
+            console.log((ok ? 'PASS ' : 'FAIL ') + name);
+            if (!ok) process.exitCode = 1;
+          }
+          NODE

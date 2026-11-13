@@ -674,3 +674,141 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 @media(min-width:700px){.topbar{left:18px;right:18px}.topbar-actions .shop-open-button,.topbar-actions #exit-room{display:inline-flex}.room-toolbar{width:min(560px,calc(100% - 36px))}.room-toolbar button{min-height:46px}}
 @media(max-width:430px){.topbar{left:7px;right:7px;gap:5px;padding:4px 6px}.top-brand{font-size:10px}.room-location strong{font-size:10px}.room-location small{font-size:7px}.topbar-status{gap:3px}.topbar-status .connection-pill{max-width:57px;overflow:hidden}.topbar-actions{gap:2px}.topbar-actions .glass-button{min-width:27px;min-height:28px;padding:4px 5px;font-size:12px}.room-toolbar{width:calc(100% - 12px)}.room-toolbar button{min-height:42px;font-size:16px}.room-toolbar button span{font-size:7px}}
 @media(max-width:350px){.topbar-status .connection-pill{display:none}.topbar{gap:4px}.room-toolbar button span{font-size:6px}}
+
+
+/* NEXORA 6.0 — unified room, chat and aura polish */
+:root { --nxo-glass:rgba(8,14,39,.88); --nxo-stroke:rgba(190,190,255,.2); }
+.topbar {
+  left:clamp(8px,2vw,24px); right:clamp(8px,2vw,24px);
+  height:46px; padding:5px 10px; gap:10px;
+  border:1px solid var(--nxo-stroke); border-radius:16px;
+  background:linear-gradient(110deg,rgba(8,14,39,.91),rgba(22,26,67,.78));
+  box-shadow:0 9px 30px rgba(0,0,0,.26),inset 0 1px rgba(255,255,255,.08);
+}
+.top-brand { font-size:12px; letter-spacing:.1em; white-space:nowrap; }
+.room-location { min-width:0; display:grid; gap:2px; line-height:1.05; }
+.room-location strong { font-size:11px; }
+.room-location small { font-size:8px; opacity:.76; }
+.topbar-status { display:flex; align-items:center; gap:7px; margin-left:auto; }
+.topbar-koins {
+  display:inline-flex; align-items:center; gap:5px; padding:6px 9px;
+  border:1px solid rgba(255,207,116,.26); border-radius:999px;
+  background:rgba(78,54,32,.38); color:#ffdf91; font-size:10px; white-space:nowrap;
+}
+.topbar-koins strong { color:#fff4d0; font-size:10px; }
+.topbar-actions { gap:5px; }
+.topbar-actions #social-open,.topbar-actions #shop-open,.topbar-actions #planets-button,.topbar-actions #exit-room { display:none!important; }
+.topbar-actions #my-profile { display:none!important; }
+.topbar-actions #developer-open:not(.hidden) { display:inline-flex!important; }
+.game-controls { display:none!important; }
+.chat-drawer {
+  left:clamp(10px,2vw,24px); right:clamp(10px,2vw,24px);
+  bottom:calc(max(66px,env(safe-area-inset-bottom) + 60px));
+  width:min(460px,calc(100% - 24px)); max-height:min(54dvh,470px);
+  margin:0 auto; padding:0; display:flex; flex-direction:column; gap:0;
+  overflow:hidden; border:1px solid rgba(177,169,255,.28); border-radius:20px;
+  background:linear-gradient(155deg,rgba(13,19,51,.98),rgba(7,12,34,.97));
+  box-shadow:0 22px 70px rgba(0,0,0,.48),inset 0 1px rgba(255,255,255,.07);
+  backdrop-filter:blur(22px);
+}
+.chat-drawer.hidden { display:none!important; }
+.drawer-head {
+  flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.09);
+}
+.drawer-head>div { display:grid; gap:3px; }
+.drawer-head strong { font-size:13px; }
+.drawer-head span { color:#929fc8; font-size:9px; }
+.drawer-head button {
+  width:30px; height:30px; border:1px solid #ffffff18; border-radius:10px;
+  background:#ffffff0b; color:#fff; font-size:20px;
+}
+.chat-history {
+  flex:1 1 auto; min-height:90px; max-height:none; overflow:auto;
+  padding:10px 12px; overscroll-behavior:contain;
+}
+.history-message {
+  display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:start;
+  gap:5px 8px; margin:0 0 8px; padding:8px 10px;
+  border:1px solid rgba(255,255,255,.07); border-radius:12px;
+  background:linear-gradient(120deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+  color:#e9edff; font-size:11px; line-height:1.4; overflow-wrap:anywhere;
+}
+.history-message .history-author { color:#c6b8ff; font-size:10px; white-space:nowrap; }
+.history-message time { color:#8793ba; font-size:8px; white-space:nowrap; }
+.chat-form {
+  flex:0 0 auto; display:flex; gap:8px; margin:0; padding:9px;
+  border:0; border-top:1px solid rgba(255,255,255,.09); border-radius:0;
+  background:rgba(5,10,29,.72); box-shadow:none;
+}
+.chat-form input { min-width:0; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.07); font-size:12px; }
+.chat-form button { width:42px; flex:0 0 42px; border-radius:12px; background:linear-gradient(135deg,#8879ff,#6d8df5); box-shadow:0 5px 16px #6d75ef55; }
+.room-toolbar {
+  width:min(640px,calc(100% - 20px)); grid-template-columns:repeat(8,minmax(0,1fr));
+  gap:4px; padding:6px; border-color:rgba(184,178,255,.24);
+  background:linear-gradient(115deg,rgba(8,13,37,.96),rgba(20,23,62,.92));
+  box-shadow:0 12px 38px rgba(0,0,0,.4),inset 0 1px rgba(255,255,255,.08);
+}
+.room-toolbar button { min-height:46px; border:1px solid transparent; border-radius:12px; transition:background .18s,border-color .18s,transform .18s; }
+.room-toolbar button span { font-size:8px; letter-spacing:.01em; }
+.room-toolbar button.active,.room-toolbar button:focus-visible {
+  border-color:rgba(174,157,255,.32); background:linear-gradient(145deg,rgba(147,123,255,.28),rgba(83,167,235,.13));
+  box-shadow:inset 0 1px rgba(255,255,255,.08),0 0 18px rgba(135,115,255,.13);
+}
+.room-toolbar button:active { transform:scale(.96); }
+.room-flyout { width:min(430px,calc(100% - 22px)); bottom:calc(max(66px,env(safe-area-inset-bottom) + 60px)); }
+.room-menu-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.profile-menu { max-height:min(76dvh,560px); overflow-y:auto; }
+@media(min-width:700px) {
+  .topbar { left:22px; right:22px; }
+  .chat-drawer { left:24px; right:auto; width:min(420px,calc(100% - 48px)); margin:0; }
+  .room-toolbar { width:min(640px,calc(100% - 40px)); }
+}
+@media(max-width:520px) {
+  .topbar { left:7px; right:7px; height:40px; gap:5px; padding:4px 6px; }
+  .top-brand { font-size:9px; letter-spacing:.06em; }
+  .room-location strong { font-size:9px; }
+  .room-location small { font-size:7px; }
+  .topbar-status { gap:4px; }
+  .topbar-status .online-pill { padding:5px 7px; font-size:8px; }
+  .topbar-koins { padding:5px 7px; gap:3px; font-size:8px; }
+  .topbar-koins strong { font-size:8px; }
+  .topbar-actions { display:none!important; }
+  .room-toolbar { width:calc(100% - 10px); gap:2px; padding:4px; bottom:max(5px,env(safe-area-inset-bottom)); }
+  .room-toolbar button { min-height:42px; font-size:15px; }
+  .room-toolbar button span { font-size:7px; }
+  .chat-drawer { left:8px; right:8px; bottom:calc(max(58px,env(safe-area-inset-bottom) + 54px)); width:auto; max-height:min(56dvh,440px); }
+  .room-flyout { width:calc(100% - 16px); bottom:calc(max(58px,env(safe-area-inset-bottom) + 54px)); max-height:min(60dvh,480px); }
+}
+@media(max-width:360px) {
+  .topbar { gap:3px; }
+  .top-brand { font-size:8px; }
+  .room-location small { display:none; }
+  .room-toolbar button span { font-size:6px; }
+  .room-toolbar button { min-height:39px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .room-toolbar button { transition:none; }
+}
+
+.chat-form { align-items:center; }
+.chat-emoji-button {
+  width:38px; flex:0 0 38px; min-height:38px; border:1px solid rgba(255,255,255,.1);
+  border-radius:11px; background:rgba(255,255,255,.07); color:#fff; font-size:17px;
+}
+.chat-emoji-picker {
+  position:absolute; z-index:3; right:10px; bottom:calc(100% + 7px);
+  display:grid; grid-template-columns:repeat(8,34px); gap:4px; padding:7px;
+  border:1px solid rgba(180,170,255,.25); border-radius:13px;
+  background:rgba(8,13,37,.98); box-shadow:0 12px 34px #0008;
+}
+.chat-emoji-picker.hidden { display:none!important; }
+.chat-emoji-picker button {
+  width:34px; height:34px; border:0; border-radius:9px; background:#ffffff0b; font-size:17px;
+}
+.chat-emoji-picker button:active { background:#9787ff44; }
+@media(max-width:430px) {
+  .chat-emoji-picker { grid-template-columns:repeat(8,31px); gap:3px; right:7px; }
+  .chat-emoji-picker button { width:31px; height:31px; }
+  .chat-emoji-button { width:34px; flex-basis:34px; min-height:36px; }
+}
