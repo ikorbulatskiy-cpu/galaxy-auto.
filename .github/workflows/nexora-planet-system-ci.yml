@@ -1,0 +1,35 @@
+name: NEXORA Planet System CI
+on:
+  pull_request:
+    paths:
+      - "prototypes/nexora-social-mvp/**"
+      - ".github/workflows/nexora-planet-system-ci.yml"
+  push:
+    branches: ["nexora-social-mvp", "nexora-planet-system-8"]
+    paths:
+      - "prototypes/nexora-social-mvp/**"
+      - ".github/workflows/nexora-planet-system-ci.yml"
+jobs:
+  planet-system:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Syntax check
+        working-directory: prototypes/nexora-social-mvp
+        run: |
+          node --check server.js
+          node --check src/planets.js
+          node --check src/db.js
+          node --check public/client.js
+      - name: Verify additive migration
+        working-directory: prototypes/nexora-social-mvp
+        run: |
+          test -f migrations/010_planet_creator.sql
+          grep -q "CREATE TABLE IF NOT EXISTS nexora_social_world.planets" migrations/010_planet_creator.sql
+          grep -q "CREATE TABLE IF NOT EXISTS nexora_social_world.planet_staff" migrations/010_planet_creator.sql
+          grep -q "CREATE TABLE IF NOT EXISTS nexora_social_world.planet_bans" migrations/010_planet_creator.sql
+          grep -q "CREATE TABLE IF NOT EXISTS nexora_social_world.planet_invites" migrations/010_planet_creator.sql
+          grep -q "CREATE TABLE IF NOT EXISTS nexora_social_world.planet_visits" migrations/010_planet_creator.sql
