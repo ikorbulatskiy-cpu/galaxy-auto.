@@ -1,4 +1,6 @@
 const express = require("express");
+const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 
 const PERMISSIONS = new Set([
   "players.view", "players.ban", "players.unban", "players.warn", "players.delete",
@@ -83,7 +85,8 @@ function createDeveloperRouter({ pool, auth, players, planets, io }) {
       if (!/^\d+$/.test(String(req.params.id))) return res.status(400).json({ error: "Некорректный ID." });
       const result = await pool.query(
         `SELECT a.id,a.nickname,a.created_at,a.last_login_at,c.avatar,c.planet,c.level,c.experience,c.authority,
-                COALESCE(w.balance,0)::text AS balance
+                COALESCE(w.balance,0)::text AS balance,
+                EXISTS(SELECT 1 FROM nexora_social_world.moderation_actions m WHERE m.target_account_id=a.id AND m.action_type='BAN' AND m.revoked_at IS NULL AND (m.expires_at IS NULL OR m.expires_at>NOW())) AS banned
            FROM nexora_social_world.accounts a
            LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
            LEFT JOIN nexora_social_world.wallets w ON w.account_id=a.id
@@ -125,6 +128,46 @@ function createDeveloperRouter({ pool, auth, players, planets, io }) {
       } catch (error) { await client.query("ROLLBACK"); throw error; }
       finally { client.release(); }
       res.json({ ok: true, deleted: Boolean(deleted?.rowCount) });
+    } catch (error) { next(error); }
+  });
+  router.post("/players/:id/access-code/reset", async (req, res, next) => {
+    try {
+      const current = await requirePermission(req, res, "players.view");
+      if (!current) return;
+      if (current.role !== "OWNER") return res.status(403).json({ error: "Сброс кода доступен только главному разработчику." });
+      const targetId = String(req.params.id);
+      if (!/^\d+$/.test(targetId)) return res.status(400).json({ error: "Некорректный ID персонажа." });
+      if (ownerId() && targetId === ownerId()) return res.status(403).json({ error: "Нельзя сбрасывать собственный код владельца." });
+      const code = crypto.randomBytes(8).toString("hex").slice(0, 10);
+      const codeHash = await bcrypt.hash(code, 12);
+      const lookupHash = crypto.createHash("sha256").update(code).digest("hex");
+      const client = await pool.connect();
+      let nickname;
+      try {
+        await client.query("BEGIN");
+        const target = await client.query("SELECT id,nickname FROM nexora_social_world.accounts WHERE id=$1 FOR UPDATE", [targetId]);
+        if (!target.rowCount) {
+          await client.query("ROLLBACK");
+          return res.status(404).json({ error: "Персонаж не найден." });
+        }
+        nickname = target.rows[0].nickname;
+        await client.query("UPDATE nexora_social_world.accounts SET recovery_code_hash=$2,recovery_code_lookup_hash=$3 WHERE id=$1", [targetId, codeHash, lookupHash]);
+        await client.query("DELETE FROM nexora_social_world.sessions WHERE account_id=$1", [targetId]);
+        await audit(client, current, targetId, "player.access_code.reset", "Сброс кода доступа главным разработчиком", { nickname });
+        await client.query("COMMIT");
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
+      }
+      for (const [socketId, onlinePlayer] of players.entries()) {
+        if (String(onlinePlayer.accountId) !== targetId) continue;
+        io?.to("planet:" + onlinePlayer.planet).emit("player:left", { id: targetId });
+        io?.sockets?.sockets?.get(socketId)?.disconnect(true);
+        players.delete(socketId);
+      }
+      res.json({ ok: true, nickname, code, shownOnce: true });
     } catch (error) { next(error); }
   });
   router.post("/players/:id/ban", async (req, res, next) => {
