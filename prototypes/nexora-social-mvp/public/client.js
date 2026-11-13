@@ -63,15 +63,21 @@
     target.restore();
   }
 
-  function drawAvatar(target,x,y,scale,avatar,facing=1,emotion=null){
-    const skin=avatar?.skin||skins[0],suit=avatar?.suit||suits[0],female=avatar?.gender==="female",hair=avatar?.hair||"short",hairColor=avatar?.hairColor||"#30233d",shoes=avatar?.shoes||"sneakers",accessory=avatar?.accessory||"none",time=Date.now()/1000,bob=emotion==="dance"?Math.sin(time*9)*3:Math.sin(time*2.2)*1.1;
+  function drawAvatar(target,x,y,scale,avatar,facing=1,emotion=null,moving=false){
+    const skin=avatar?.skin||skins[0],suit=avatar?.suit||suits[0],female=avatar?.gender==="female",hair=avatar?.hair||"short",hairColor=avatar?.hairColor||"#30233d",shoes=avatar?.shoes||"sneakers",accessory=avatar?.accessory||"none",time=Date.now()/1000,phase=moving?Math.sin(time*13):0,bob=emotion==="dance"?Math.sin(time*9)*3:moving?Math.abs(Math.sin(time*13))*1.8:Math.sin(time*2.2)*1.1;
     target.save();target.translate(x,y+bob);target.scale(scale*facing,scale);
-    target.fillStyle="rgba(3,7,24,.48)";target.beginPath();target.ellipse(0,40,19,5,0,0,Math.PI*2);target.fill();
-    target.fillStyle="#20294f";target.beginPath();target.roundRect(-11,19,8,19,3);target.roundRect(3,19,8,19,3);target.fill();
-    target.fillStyle=shoes==="boots"?"#30364f":shoes==="heels"?"#8f466f":"#dfe7ff";target.beginPath();target.roundRect(-13,35,11,shoes==="boots"?7:5,2);target.roundRect(2,35,12,shoes==="boots"?7:5,2);target.fill();
-    target.strokeStyle=skin;target.lineCap="round";target.lineWidth=7;target.beginPath();target.moveTo(-11,1);target.lineTo(-18,17);target.moveTo(11,1);target.lineTo(18,16);target.stroke();
-    target.strokeStyle=suit;target.lineWidth=8;target.beginPath();target.moveTo(-12,1);target.lineTo(-16,10);target.moveTo(12,1);target.lineTo(16,9);target.stroke();
-    target.fillStyle=skin;target.beginPath();target.arc(-18,18,3.5,0,Math.PI*2);target.arc(18,17,3.5,0,Math.PI*2);target.fill();
+    target.fillStyle="rgba(3,7,24,.48)";target.beginPath();target.ellipse(0,40,19+Math.abs(phase),5,0,0,Math.PI*2);target.fill();
+    target.strokeStyle="#20294f";target.lineCap="round";target.lineWidth=7;target.beginPath();target.moveTo(-7,17);target.lineTo(-8-phase*4,33);target.moveTo(7,17);target.lineTo(8+phase*4,33);target.stroke();
+    target.fillStyle=shoes==="boots"?"#30364f":shoes==="heels"?"#8f466f":"#dfe7ff";target.beginPath();target.roundRect(-14-phase*4,32,12,shoes==="boots"?7:5,2);target.roundRect(2+phase*4,32,12,shoes==="boots"?7:5,2);target.fill();
+    target.strokeStyle=skin;target.lineCap="round";target.lineWidth=7;target.beginPath();
+    if(emotion==="wave"){target.moveTo(-11,1);target.lineTo(-18,17);target.moveTo(11,1);target.lineTo(19,-13);}
+    else {target.moveTo(-11,1);target.lineTo(-18,17+phase*3);target.moveTo(11,1);target.lineTo(18,16-phase*3);}
+    target.stroke();
+    target.strokeStyle=suit;target.lineWidth=8;target.beginPath();
+    if(emotion==="wave"){target.moveTo(-12,1);target.lineTo(-16,10);target.moveTo(12,1);target.lineTo(18,-9);}
+    else {target.moveTo(-12,1);target.lineTo(-16,10+phase*2);target.moveTo(12,1);target.lineTo(16,9-phase*2);}
+    target.stroke();
+    target.fillStyle=skin;target.beginPath();target.arc(-18,18+phase*2,3.5,0,Math.PI*2);target.arc(emotion==="wave"?19:18,emotion==="wave"?-13:17-phase*2,3.5,0,Math.PI*2);target.fill();
     target.fillStyle="rgba(3,7,24,.38)";target.beginPath();target.roundRect(-15,-5,30,30,8);target.fill();target.fillStyle=suit;target.beginPath();
     if(female){target.moveTo(-12,-3);target.lineTo(12,-3);target.lineTo(18,23);target.lineTo(-18,23);}else target.roundRect(-14,-4,28,28,7);target.closePath();target.fill();
     target.fillStyle="rgba(255,255,255,.22)";target.beginPath();target.roundRect(-9,-1,18,3,2);target.fill();target.fillStyle="rgba(8,14,39,.3)";target.fillRect(-2,2,4,17);
@@ -240,7 +246,7 @@
         ctx.restore();
       }
       drawAura(ctx, drawX, y + moveOffset, .95, player.auraType, player.auraEnabled);
-      drawAvatar(ctx, drawX, y + moveOffset, .95, player.avatar, player.facing || 1, emotion);
+      drawAvatar(ctx, drawX, y + moveOffset, .95, player.avatar, player.facing || 1, emotion, Boolean(player.moving));
       if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20,y-58-Math.sin(Date.now()/120)*3);ctx.restore();}
       ctx.textAlign = "center";
       ctx.font = isMe ? "bold 11px sans-serif" : "10px sans-serif";
