@@ -26,7 +26,7 @@ const profileSchema = z.object({
 router.get("/planets", async (_req, res, next) => {
   try {
     const result = await pool.query(
-      "SELECT slug,name,description,access_type,ticket_price,settings FROM planets WHERE is_active = TRUE ORDER BY name"
+      "SELECT slug,name,description,access_type,ticket_price,settings FROM planets WHERE is_active = TRUE AND access_type <> 'vip' ORDER BY name"
     );
     res.json({ planets: result.rows });
   } catch (error) { next(error); }
@@ -128,7 +128,14 @@ router.post("/travel", requireSession, async (req, res, next) => {
       return res.status(403).json({ error: "Перелёты недоступны во время игрового заключения." });
     }
     const destination = await client.query(
-      "SELECT id,slug,name,access_type,ticket_price FROM planets WHERE slug=$1 AND is_active=TRUE",
+      `SELECT p.id,p.slug,p.name,p.access_type,p.ticket_price,p.owner_user_id,
+        EXISTS(SELECT 1 FROM planet_access pa WHERE pa.planet_id=p.id AND pa.user_id=$2
+          AND (pa.expires_at IS NULL OR pa.expires_at>NOW())
+          AND (COALESCE(p.settings->>'legacy_access_mode','')<>'private' OR pa.access_level='staff')) AS has_legacy_access,
+        EXISTS(SELECT 1 FROM planet_bans pb WHERE pb.planet_id=p.id AND pb.user_id=$2
+          AND (pb.expires_at IS NULL OR pb.expires_at>NOW())) AS is_planet_banned
+       FROM planets p WHERE p.slug=$1 AND p.is_active=TRUE`,
+      [parsed.data.planetSlug,req.user.id]
       [parsed.data.planetSlug]
     );
     if (!destination.rowCount) {
@@ -136,9 +143,13 @@ router.post("/travel", requireSession, async (req, res, next) => {
       return res.status(404).json({ error: "Планета не найдена." });
     }
     const planet = destination.rows[0];
-    if (planet.access_type === "vip") {
+    if (planet.is_planet_banned) {
       await client.query("ROLLBACK");
-      return res.status(403).json({ error: "Эта планета пока закрыта: VIP-доступ ещё не подключён." });
+      return res.status(403).json({ error: "Доступ к этой планете закрыт её администрацией." });
+    }
+    if (planet.access_type === "vip" && String(planet.owner_user_id) !== String(req.user.id) && !planet.has_legacy_access) {
+      await client.query("ROLLBACK");
+      return res.status(403).json({ error: "Для этой планеты требуется приглашение или специальный доступ." });
     }
     const current = await client.query("SELECT planet_id FROM user_locations WHERE user_id=$1 FOR UPDATE", [req.user.id]);
     const fromPlanetId = current.rows[0]?.planet_id || null;
