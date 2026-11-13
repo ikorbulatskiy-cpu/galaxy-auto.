@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "db:migrate": "node scripts/migrate.js",
-    "check": "node --check server.js && for file in src/*.js scripts/*.js public/*.js; do node --check \"$file\"; done",
+    "check": "node --check server.js && for file in src/*.js scripts/*.js public/*.js; do node --check \"$file\"; done && for file in public/galaxy/*.js; do node --input-type=module --check < \"$file\"; done",
     "test": "node --test"
   },
   "engines": {
