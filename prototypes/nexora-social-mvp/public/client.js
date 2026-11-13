@@ -822,7 +822,7 @@
         searchButton.addEventListener("click",async()=>{
           searchButton.disabled=true;searchResults.replaceChildren();
           try{
-            const found=await developerRequest("/players?q="+encodeURIComponent(searchInput.value.trim()));
+            const found=await authorityApi("/admin/players?q="+encodeURIComponent(searchInput.value.trim()));
             if(!found.players.length){const empty=document.createElement("p");empty.textContent="Игроки не найдены.";searchResults.append(empty);}
             found.players.forEach(player=>{
               const pick=document.createElement("button");pick.type="button";pick.textContent=player.nickname+" · ID "+player.id;
