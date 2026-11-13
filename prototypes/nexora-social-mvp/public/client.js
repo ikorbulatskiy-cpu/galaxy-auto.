@@ -1727,19 +1727,34 @@
             const label = document.createElement("strong"); label.textContent = p.nickname + " · ID " + p.id + (p.banned ? " · ЗАБЛОКИРОВАН" : "");
             const detail = document.createElement("span"); detail.textContent = (p.online ? "В сети" : "Не в сети") + " · " + p.planet + " · Koins: " + p.balance;
             row.append(label, detail);
-            const warn = document.createElement("button"); warn.type = "button"; warn.textContent = "Предупредить";
-            warn.addEventListener("click", async () => { const reason = prompt("Причина предупреждения"); if (!reason) return; try { await developerRequest("/players/"+p.id+"/warn",{method:"POST",body:JSON.stringify({reason})}); showToast("Предупреждение выдано."); } catch(error){showToast(error.message);} });
-            row.append(warn);
-            const ban = document.createElement("button"); ban.type = "button"; ban.textContent = p.banned ? "Разблокировать персонажа" : "Заблокировать персонажа";
-            ban.addEventListener("click", async () => {
-              const reason = prompt(p.banned ? "Причина разблокировки" : "Причина блокировки"); if (!reason) return;
-              try {
-                if (p.banned) await developerRequest("/players/"+p.id+"/ban",{method:"DELETE",body:JSON.stringify({reason})});
-                else { const duration = prompt("Срок в часах. Оставь пустым для постоянной блокировки.","24"); if (duration===null) return; await developerRequest("/players/"+p.id+"/ban",{method:"POST",body:JSON.stringify({reason,hours:duration===""?null:Number(duration)})}); }
-                showToast("Действие модерации выполнено."); loadDeveloperTab("players");
-              } catch(error){showToast(error.message);}
-            });
-            row.append(ban);
+            if (developerPermissions.includes("players.warn")) {
+              const warn = document.createElement("button"); warn.type = "button"; warn.textContent = "Предупредить";
+              warn.addEventListener("click", async () => { const reason = prompt("Причина предупреждения"); if (!reason) return; try { await developerRequest("/players/"+p.id+"/warn",{method:"POST",body:JSON.stringify({reason})}); showToast("Предупреждение выдано."); } catch(error){showToast(error.message);} });
+              row.append(warn);
+            }
+            const canBan = developerPermissions.includes("players.ban");
+            const canUnban = developerPermissions.includes("players.unban");
+            if ((!p.banned && canBan) || (p.banned && canUnban)) {
+              const ban = document.createElement("button"); ban.type = "button"; ban.textContent = p.banned ? "🔓 Разблокировать персонажа" : "🔒 Заблокировать персонажа";
+              ban.addEventListener("click", async () => {
+                const reason = prompt(p.banned ? "Причина разблокировки" : "Причина блокировки"); if (!reason?.trim()) return;
+                ban.disabled = true;
+                try {
+                  if (p.banned) {
+                    const result = await developerRequest("/players/"+p.id+"/ban",{method:"DELETE",body:JSON.stringify({reason})});
+                    if (!result.revoked) throw new Error("Активная блокировка не найдена.");
+                    showToast("Персонаж разблокирован. Теперь он может войти в NEXORA.");
+                  } else {
+                    const duration = prompt("Срок в часах. Оставь пустым для постоянной блокировки.","24");
+                    if (duration===null) return;
+                    await developerRequest("/players/"+p.id+"/ban",{method:"POST",body:JSON.stringify({reason,hours:duration===""?null:Number(duration)})});
+                    showToast("Персонаж заблокирован.");
+                  }
+                  loadDeveloperTab("players");
+                } catch(error){showToast(error.message);ban.disabled=false;}
+              });
+              row.append(ban);
+            }
             if (developerPermissions.includes("players.delete")) {
               const remove = document.createElement("button");
               remove.type = "button";
