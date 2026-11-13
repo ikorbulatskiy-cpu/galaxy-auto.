@@ -2156,3 +2156,12 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
   .chat-drawer .chat-head-actions { gap:4px; }
   .chat-clear-button { min-width:55px; min-height:24px; padding:0 6px; font-size:8px; }
 }
+
+
+/* NEXORA 26.0: compact developer access controls in own character card */
+.developer-player-actions { min-width:0; }
+.developer-player-actions > button { min-height:36px; }
+.developer-admin-search { width:100%; min-height:42px; margin:8px 0; padding:10px 12px; border:1px solid rgba(174,163,255,.24); border-radius:11px; background:#101735; color:#fff; }
+#developer-admins-tab { border-color:rgba(255,198,87,.28); color:#ffdc91; }
+#developer-admins-tab.active { background:rgba(255,190,70,.13); }
+@media(max-width:600px) { .developer-player-actions { padding:8px; } .developer-player-actions > button { min-height:34px; font-size:10px; } }

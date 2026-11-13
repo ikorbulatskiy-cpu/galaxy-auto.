@@ -19,12 +19,13 @@ function createDeveloperRouter({ pool, auth, players, planets, io }) {
   async function context(req) {
     const account = await auth.authenticateToken(req.cookies?.nexora_session);
     if (!account) return null;
-    if (ownerId() && String(account.id) === ownerId()) return { account, role: "OWNER", permissions: [...PERMISSIONS] };
     const result = await pool.query("SELECT role, permissions FROM nexora_social_world.developer_role_assignments WHERE account_id=$1", [account.id]);
-    const assignment = result.rows[0];
-    if (!assignment) return { account, role: "USER", permissions: [] };
+    const assignment = result.rows[0] || null;
+    const adminAssigned = assignment?.role === "ADMIN";
+    if (ownerId() && String(account.id) === ownerId()) return { account, role: "OWNER", permissions: [...PERMISSIONS], adminAssigned };
+    if (!assignment) return { account, role: "USER", permissions: [], adminAssigned: false };
     const permissions = Array.isArray(assignment.permissions) ? assignment.permissions.filter(p => PERMISSIONS.has(p)) : [];
-    return { account, role: assignment.role, permissions };
+    return { account, role: assignment.role, permissions, adminAssigned };
   }
   async function requirePermission(req, res, permission) {
     const current = await context(req);
@@ -46,7 +47,7 @@ function createDeveloperRouter({ pool, auth, players, planets, io }) {
     try {
       const current = await context(req);
       if (!current) return res.status(401).json({ error: "Требуется вход." });
-      res.json({ ok: true, allowed: current.role === "OWNER" || current.permissions.length > 0, role: current.role, permissions: current.permissions });
+      res.json({ ok: true, accountId: String(current.account.id), allowed: current.role === "OWNER" || current.permissions.length > 0, isOwner: current.role === "OWNER", adminAssigned: Boolean(current.adminAssigned), role: current.role, permissions: current.permissions });
     } catch (error) { next(error); }
   });
   router.get("/overview", async (req, res, next) => {
@@ -268,6 +269,37 @@ function createDeveloperRouter({ pool, auth, players, planets, io }) {
       const current = await requirePermission(req, res, "roles.manage"); if (!current) return;
       const result = await pool.query(`SELECT r.account_id AS id,a.nickname,r.role,r.permissions,r.updated_at FROM nexora_social_world.developer_role_assignments r JOIN nexora_social_world.accounts a ON a.id=r.account_id ORDER BY r.updated_at DESC LIMIT 100`);
       res.json({ ok: true, assignments: result.rows });
+    } catch (error) { next(error); }
+  });
+  // Only the environment-configured OWNER may grant or revoke ordinary ADMIN access.
+  // The preset excludes role management and all developer/owner capabilities.
+  router.post("/roles/admin", async (req, res, next) => {
+    try {
+      const current = await context(req);
+      if (!current) return res.status(401).json({ error: "Требуется вход." });
+      if (current.role !== "OWNER") return res.status(403).json({ error: "Выдавать и снимать админку может только главный разработчик." });
+      const accountId = String(req.body?.accountId || "").trim();
+      const action = String(req.body?.action || "").trim().toLowerCase();
+      const reason = String(req.body?.reason || "").trim().slice(0, 500) || (action === "grant" ? "Выдача админки" : "Снятие админки");
+      if (!/^\d+$/.test(accountId) || !["grant", "revoke"].includes(action)) return res.status(400).json({ error: "Укажи корректный ID и действие." });
+      const target = await pool.query("SELECT a.id,a.nickname,r.role AS current_role FROM nexora_social_world.accounts a LEFT JOIN nexora_social_world.developer_role_assignments r ON r.account_id=a.id WHERE a.id=$1", [accountId]);
+      if (!target.rowCount) return res.status(404).json({ error: "Аккаунт не найден." });
+      if (["DEVELOPER", "OWNER"].includes(target.rows[0].current_role)) return res.status(409).json({ error: "Нельзя менять права главного разработчика или разработчика через обычную админку." });
+      const adminPermissions = ["players.view","players.ban","players.unban","players.warn","moderation.view","reports.manage","world.view","economy.view","system.view","logs.view","authority.view","authority.assign","authority.remove"];
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+        if (action === "grant") {
+          await client.query("INSERT INTO nexora_social_world.developer_role_assignments(account_id,role,permissions,assigned_by) VALUES($1,'ADMIN',$2::jsonb,$3) ON CONFLICT(account_id) DO UPDATE SET role='ADMIN',permissions=EXCLUDED.permissions,assigned_by=EXCLUDED.assigned_by,updated_at=NOW()", [accountId, JSON.stringify(adminPermissions), current.account.id]);
+          await audit(client, current, accountId, "admin.grant", reason, { role: "ADMIN", permissions: adminPermissions });
+        } else {
+          const removed = await client.query("DELETE FROM nexora_social_world.developer_role_assignments WHERE account_id=$1 AND role='ADMIN' RETURNING account_id", [accountId]);
+          if (removed.rowCount) await audit(client, current, accountId, "admin.revoke", reason, { role: "ADMIN" });
+        }
+        await client.query("COMMIT");
+      } catch (error) { await client.query("ROLLBACK"); throw error; }
+      finally { client.release(); }
+      res.json({ ok: true, accountId, nickname: target.rows[0].nickname, action, adminAssigned: action === "grant" });
     } catch (error) { next(error); }
   });
   router.post("/roles", async (req, res, next) => {
