@@ -1,0 +1,57 @@
+name: NEXORA Galaxy social module checks
+
+on:
+  push:
+    branches:
+      - nexora-galaxy-social-module
+    paths:
+      - "src/**"
+      - "public/nexora-galaxy-social.*"
+      - "database/migrations/**"
+      - "scripts/migrate.js"
+      - "server.js"
+      - "package.json"
+      - ".github/workflows/nexora-galaxy-social-ci.yml"
+  pull_request:
+    branches:
+      - nexora-social-mvp
+    paths:
+      - "src/**"
+      - "public/nexora-galaxy-social.*"
+      - "database/migrations/**"
+      - "scripts/migrate.js"
+      - "server.js"
+      - "package.json"
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+      - name: JavaScript syntax
+        run: npm run check
+      - name: Unit and integration tests
+        run: npm test
+      - name: Verify Galaxy migration and API contract
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const migration = fs.readFileSync("database/migrations/014_galaxy_preferences.sql", "utf8");
+          const social = fs.readFileSync("src/social.js", "utf8");
+          const client = fs.readFileSync("public/nexora-galaxy-social.js", "utf8");
+          for (const column of ["chat_bubbles", "sound_enabled", "friends_only_messages", "invisible", "system_messages"]) {
+            if (!migration.includes(column) || !social.includes(column) || !client.includes(column)) {
+              throw new Error("Galaxy preference missing in migration/API/UI: " + column);
+            }
+          }
+          for (const route of ['router.get("/blocks"', 'router.post("/blocks/:userId"', 'router.delete("/blocks/:userId"', 'router.get("/preferences"', 'router.patch("/preferences"']) {
+            if (!social.includes(route)) throw new Error("Missing social route: " + route);
+          }
+          console.log("Galaxy social migration, API and UI contract verified.");
+          NODE
