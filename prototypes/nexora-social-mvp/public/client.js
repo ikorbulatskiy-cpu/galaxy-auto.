@@ -1562,7 +1562,7 @@
           selectedCard.classList.remove("hidden");
           selectedName.textContent=selectedPlayer.nickname+" · ID "+selectedPlayer.id;
           const rank=selectedPlayer.authority_title||"NOVICE";
-          selectedStatus.textContent=labelFor(rank)+" · "+(selectedPlayer.aura_enabled?"Аура включена":(data.titles.find(item=>item.title_key===rank)?.aura_type||"NONE"));
+          selectedStatus.textContent=labelFor(rank)+" · "+(rank==="NOVICE"?"NONE":(selectedPlayer.aura_enabled?"Аура включена":"Аура выключена"));
           if([...title.options].some(option=>option.value===rank))title.value=rank;
           aura.checked=rank!=="NOVICE"&&Boolean(selectedPlayer.aura_enabled);
           submit.disabled=!developerPermissions.includes("authority.assign");
@@ -1580,7 +1580,7 @@
             found.players.forEach(player=>{
               const pick=document.createElement("button");pick.type="button";
               const rank=player.authority_title||"NOVICE";
-              pick.textContent=player.nickname+" · "+labelFor(rank)+" · "+(player.aura_enabled?"Аура":"NONE");
+              pick.textContent=player.nickname+" · "+labelFor(rank)+" · "+(rank==="NOVICE"?"NONE":(player.aura_enabled?"Аура включена":"Аура выключена"));
               pick.addEventListener("click",()=>{
                 selectedPlayer={...player};
                 searchResults.replaceChildren();
