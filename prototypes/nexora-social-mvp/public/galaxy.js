@@ -62,12 +62,10 @@
   $("#rejoin").addEventListener("click",()=>{if(socket.connected){socket.disconnect();setTimeout(()=>socket.connect(),180)}else socket.connect()});
   $("#planet-select").addEventListener("change",e=>{const next=e.target.value;socket.emit("planet:change",{planet:next},result=>{if(!result?.ok){toast(result?.error||"Перелёт не выполнен");e.target.value=roomPlanet;return}roomPlanet=next;$("#planet-name").textContent=planetName(next);$("#online-room-name").textContent=planetName(next)})});
   $("#context-menu").addEventListener("click",e=>{const action=e.target.dataset.action;if(!action)return;if(action==="info")openInfo();if(action==="move"){closeContext();beginMove()}if(action==="emote"){closeContext();socket.emit("emotion:play",{emotion:"wave"})}if(action==="rejoin"){closeContext();$("#rejoin").click()}if(action==="wave"&&selected){socket.emit("player:action",{targetId:selected.id,action:"wave"},r=>{if(!r?.ok)toast(r?.error||"Действие не выполнено")});closeContext()}});
-  document.addEventListener("click",e=>{if(!e.target.closest("#context-menu,.galaxy-player"))closeContext()});
+  document.addEventListener("click",e=>{if(!e.target.closest("#context-menu")&&!e.target.closest("#scene-viewport"))closeContext()});
   $("#profile-modal").addEventListener("click",e=>{if(e.target===e.currentTarget||e.target.closest("[data-close]"))$("#profile-modal").hidden=true});
   $("#planet-list").addEventListener("click",()=>$("#planet-select").focus());
-  $("#rejoin").addEventListener("click",()=>{if(socket.connected){socket.disconnect();setTimeout(()=>socket.connect(),180)}else socket.connect()});
-  $("#context-info").addEventListener("click",openInfo);
-  $("#context-wave").addEventListener("click",()=>{if(selected&&String(selected.id)!==String(me.id))socket.emit("player:action",{targetId:selected.id,action:"wave"});else socket.emit("emotion:play",{emotion:"wave"});closeContext()});
+  $("#emote").addEventListener("click",()=>socket.emit("emotion:play",{emotion:"dance"}));
   async function start(){
     try{const d=await api("/api/me");me.id=String(d.account.id);me.nickname=d.account.nickname;roomPlanet=d.character.planet||"starter";await loadPlanets();$("#planet-select").value=roomPlanet;socket.connect();$("#connection-state").textContent="Подключение…"}
     catch(error){toast(error.message);$("#connection-state").textContent="Нужен вход";setTimeout(()=>location.href="/",1200)}
