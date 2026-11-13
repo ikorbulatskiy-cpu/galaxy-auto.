@@ -15,14 +15,22 @@ const pool = new Pool({
 });
 
 async function migrate() {
-  const sql = fs.readFileSync(
-    path.join(__dirname, "..", "migrations", "001_nexora_social_world.sql"),
-    "utf8"
-  );
-  await pool.query(sql);
+  const directory = path.join(__dirname, "..", "migrations");
+  const files = fs.readdirSync(directory).filter((name) => /^\\d+.*\\.sql$/.test(name)).sort();
+  for (const file of files) {
+    const sql = fs.readFileSync(path.join(directory, file), "utf8");
+    await pool.query("BEGIN");
+    try {
+      await pool.query(sql);
+      await pool.query("COMMIT");
+      console.log("NEXORA migration applied:", file);
+    } catch (error) {
+      await pool.query("ROLLBACK");
+      throw new Error("Migration " + file + " failed: " + error.message);
+    }
+  }
   await pool.query("DELETE FROM nexora_social_world.sessions WHERE expires_at < NOW()");
-  const check = await pool.query("SELECT current_schema() AS schema");
-  console.log("NEXORA PostgreSQL connected; social schema migration completed.");
+  console.log("NEXORA PostgreSQL connected; social schema migrations completed.");
 }
 
 module.exports = { pool, migrate };
