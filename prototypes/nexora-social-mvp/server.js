@@ -154,13 +154,14 @@ io.on("connection", (socket) => {
           `SELECT p.id,p.status,p.access_mode,p.owner_account_id,
             EXISTS(SELECT 1 FROM nexora_social_world.planet_staff s WHERE s.planet_id=p.id AND s.account_id=$2) AS staff,
             EXISTS(SELECT 1 FROM nexora_social_world.planet_bans b WHERE b.planet_id=p.id AND b.account_id=$2 AND (b.expires_at IS NULL OR b.expires_at>NOW())) AS banned,
-            EXISTS(SELECT 1 FROM nexora_social_world.planet_invites i WHERE i.planet_id=p.id AND i.invited_account_id=$2 AND i.expires_at>NOW()) AS invited
+            EXISTS(SELECT 1 FROM nexora_social_world.planet_invites i WHERE i.planet_id=p.id AND i.invited_account_id=$2 AND i.expires_at>NOW()) AS invited,
+            EXISTS(SELECT 1 FROM nexora_social_world.planet_members m WHERE m.planet_id=p.id AND m.account_id=$2) AS member
            FROM nexora_social_world.planets p WHERE p.id=$1`, [customId[1],account.id]
         );
         const p = custom.rows[0];
         if (!p || p.status !== "active" || p.banned ||
           (p.access_mode === "private" && String(p.owner_account_id) !== String(account.id) && !p.staff) ||
-          (p.access_mode === "invite" && String(p.owner_account_id) !== String(account.id) && !p.staff && !p.invited)) planet = "starter";
+          (p.access_mode === "invite" && String(p.owner_account_id) !== String(account.id) && !p.staff && !p.invited && !p.member)) planet = "starter";
       }
       const friendCount = await pool.query("SELECT COUNT(*)::int AS count FROM nexora_social_world.friends WHERE account_id=$1", [account.id]);
       const player = {
@@ -295,7 +296,8 @@ io.on("connection", (socket) => {
           `SELECT p.id,p.capacity,p.access_mode,p.owner_account_id,p.status,
             EXISTS(SELECT 1 FROM nexora_social_world.planet_bans b WHERE b.planet_id=p.id AND b.account_id=$2 AND (b.expires_at IS NULL OR b.expires_at>NOW())) AS banned,
             EXISTS(SELECT 1 FROM nexora_social_world.planet_staff s WHERE s.planet_id=p.id AND s.account_id=$2) AS staff,
-            EXISTS(SELECT 1 FROM nexora_social_world.planet_invites i WHERE i.planet_id=p.id AND i.invited_account_id=$2 AND i.used_at IS NULL AND i.expires_at>NOW()) AS invited
+            EXISTS(SELECT 1 FROM nexora_social_world.planet_invites i WHERE i.planet_id=p.id AND i.invited_account_id=$2 AND i.expires_at>NOW()) AS invited,
+            EXISTS(SELECT 1 FROM nexora_social_world.planet_members m WHERE m.planet_id=p.id AND m.account_id=$2) AS member
            FROM nexora_social_world.planets p WHERE p.id=$1`, [match[1],player.accountId]
         );
         const p = check.rows[0];
