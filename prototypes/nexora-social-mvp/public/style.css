@@ -1360,3 +1360,12 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
   .public-profile-summary strong { font-size:16px; }
   .rating-categories button { font-size:10px; }
 }
+
+/* NEXORA social simplification and developer identity */
+.social-tabs { grid-template-columns:repeat(3,minmax(0,1fr)); }
+#social-friends-view, #social-messages-view { display:flex; flex-direction:column; gap:5px; }
+#social-friends-view h4, #social-messages-view h4 { margin-top:12px; }
+#message-player-results:empty, #social-search-results:empty { display:none; }
+.developer-profile-badge { display:inline-flex!important; width:max-content; align-items:center; gap:5px; padding:5px 9px; border:1px solid rgba(255,198,87,.45); border-radius:999px; color:#ffd36e!important; background:rgba(255,180,45,.12); font-size:10px!important; font-weight:800; letter-spacing:.08em; }
+.developer-profile-badge.hidden { display:none!important; }
+@media(max-width:600px){ .social-tabs button { padding:10px 4px; font-size:10px; } }

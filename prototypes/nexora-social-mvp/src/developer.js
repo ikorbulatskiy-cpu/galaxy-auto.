@@ -1,7 +1,7 @@
 const express = require("express");
 
 const PERMISSIONS = new Set([
-  "players.view", "players.ban", "players.unban", "players.warn",
+  "players.view", "players.ban", "players.unban", "players.warn", "players.delete",
   "moderation.view", "world.view", "world.manage", "economy.view",
   "economy.manage", "items.view", "items.manage", "system.view",
   "roles.manage", "logs.view", "reports.manage",
@@ -13,7 +13,7 @@ function ownerId() {
   const value = String(process.env.NEXORA_OWNER_ACCOUNT_ID || "").trim();
   return /^\d+$/.test(value) ? value : "";
 }
-function createDeveloperRouter({ pool, auth, players, planets }) {
+function createDeveloperRouter({ pool, auth, players, planets, io }) {
   const router = express.Router();
   const requestTimes = new Map();
   async function context(req) {
@@ -92,6 +92,38 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
       const inventory = await pool.query("SELECT item_code,quantity,metadata FROM nexora_social_world.inventory WHERE account_id=$1 ORDER BY item_code", [req.params.id]);
       const punishments = await pool.query("SELECT action_type,reason,expires_at,created_at,revoked_at FROM nexora_social_world.moderation_actions WHERE target_account_id=$1 ORDER BY created_at DESC LIMIT 30", [req.params.id]);
       res.json({ ok: true, player: result.rows[0], inventory: inventory.rows, punishments: punishments.rows });
+    } catch (error) { next(error); }
+  });
+  router.delete("/players/:id", async (req, res, next) => {
+    try {
+      const current = await requirePermission(req, res, "players.delete"); if (!current) return;
+      const targetId = String(req.params.id);
+      const reason = String(req.body?.reason || "").trim().slice(0, 500);
+      const confirmation = String(req.body?.confirmNickname || "").trim();
+      if (!/^\d+$/.test(targetId) || !reason || !confirmation) return res.status(400).json({ error: "Укажите причину и точный ник персонажа для подтверждения удаления." });
+      if (targetId === String(current.account.id) || (ownerId() && targetId === ownerId())) return res.status(403).json({ error: "Нельзя удалить собственный аккаунт или OWNER." });
+      const client = await pool.connect();
+      let deleted;
+      try {
+        await client.query("BEGIN");
+        const target = await client.query("SELECT a.id,a.nickname,r.role,EXISTS(SELECT 1 FROM nexora_social_world.custom_planets cp WHERE cp.owner_account_id=a.id) AS owns_planets FROM nexora_social_world.accounts a LEFT JOIN nexora_social_world.developer_role_assignments r ON r.account_id=a.id WHERE a.id=$1 FOR UPDATE OF a", [targetId]);
+        if (!target.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ error: "Персонаж не найден." }); }
+        const player = target.rows[0];
+        if (player.owns_planets) { await client.query("ROLLBACK"); return res.status(409).json({ error: "У персонажа есть собственные планеты. Сначала передайте их другому владельцу или удалите отдельно." }); }
+        if (confirmation !== player.nickname) { await client.query("ROLLBACK"); return res.status(400).json({ error: "Ник не совпадает. Удаление отменено." }); }
+        if (["OWNER", "DEVELOPER", "ADMIN"].includes(player.role) || (ownerId() && targetId === ownerId())) { await client.query("ROLLBACK"); return res.status(403).json({ error: "Нельзя удалить аккаунт владельца или другого сотрудника." }); }
+        await audit(client, current, targetId, "player.delete", reason, { nickname: player.nickname, deletedAccountId: targetId, deletedCharacterAndAccount: true });
+        deleted = await client.query("DELETE FROM nexora_social_world.accounts WHERE id=$1 RETURNING id", [targetId]);
+        await client.query("COMMIT");
+        for (const [socketId, onlinePlayer] of players.entries()) {
+          if (String(onlinePlayer.accountId) === targetId) {
+            io?.sockets?.sockets?.get(socketId)?.disconnect(true);
+            players.delete(socketId);
+          }
+        }
+      } catch (error) { await client.query("ROLLBACK"); throw error; }
+      finally { client.release(); }
+      res.json({ ok: true, deleted: Boolean(deleted?.rowCount) });
     } catch (error) { next(error); }
   });
   router.post("/players/:id/ban", async (req, res, next) => {
