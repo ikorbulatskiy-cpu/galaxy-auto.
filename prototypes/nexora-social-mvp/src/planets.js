@@ -45,7 +45,7 @@ function createPlanetsRouter({ pool, auth, players, io }) {
       );
       const onlineCounts = new Map();
       for (const player of players.values()) if (String(player.planet).startsWith("custom-")) onlineCounts.set(String(player.planet).slice(7),(onlineCounts.get(String(player.planet).slice(7))||0)+1);
-      res.json({ok:true,planets:rows.rows.map(p=>({...p,id:String(p.id),ownerId:String(p.ownerId),onlineCount:onlineCounts.get(String(p.id))||0}))});
+      res.json({ok:true,planets:rows.rows.map(p=>({...p,id:String(p.id),ownerId:String(p.ownerId),isOwner:String(p.ownerId)===String(me.id),onlineCount:onlineCounts.get(String(p.id))||0}))});
     } catch(e){next(e);}
   });
   router.post("/", async (req,res,next) => {
@@ -172,7 +172,6 @@ function createPlanetsRouter({ pool, auth, players, io }) {
       await pool.query("INSERT INTO nexora_social_world.planet_members(planet_id,account_id) VALUES($1,$2) ON CONFLICT DO NOTHING",[req.params.id,me.id]);
       await pool.query("INSERT INTO nexora_social_world.planet_visits(planet_id,account_id) VALUES($1,$2)",[req.params.id,me.id]);
       await pool.query("UPDATE nexora_social_world.planets SET total_visits=total_visits+1 WHERE id=$1",[req.params.id]);
-      if(req.body?.inviteId)await pool.query("UPDATE nexora_social_world.planet_invites SET used_at=NOW() WHERE id=$1 AND planet_id=$2 AND invited_account_id=$3",[req.body.inviteId,req.params.id,me.id]);
       res.json({ok:true,key:planetKey(req.params.id),planet:result.planet});
     }catch(e){next(e);}
   });
