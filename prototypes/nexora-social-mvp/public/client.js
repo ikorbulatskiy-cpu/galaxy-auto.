@@ -402,7 +402,7 @@
   function drawScene() {
     if (gameScreen.classList.contains("hidden")) return;
     const w = state.width, h = state.height;
-    const palette = PLANETS[state.planet];
+    const palette = PLANETS[state.planet] || { name: "Авторская планета", location: "Космическое пространство", sky: ["#11183b", "#29245f"], ground: "#51458a", glow: "#a28cff" };
     const gradient = ctx.createLinearGradient(0, 0, 0, h);
     gradient.addColorStop(0, palette.sky[0]);
     gradient.addColorStop(1, palette.sky[1]);
@@ -501,8 +501,8 @@
         pushRoomEvent("Добро пожаловать","Вы вошли на планету "+(PLANETS[state.planet]?.name||state.planet)+".","✦");
         loginScreen.classList.add("hidden");
         gameScreen.classList.remove("hidden");
-        $("#planet-title").textContent = PLANETS[state.planet].name;
-    $("#room-location-title").textContent = PLANETS[state.planet].location;
+        $("#planet-title").textContent = (PLANETS[state.planet] || {name:"Авторская планета"}).name;
+    $("#room-location-title").textContent = (PLANETS[state.planet] || {location:"Космическое пространство"}).location;
         resize();
         requestAnimationFrame(drawScene);
         refreshSocial();
@@ -568,8 +568,8 @@
     data.players.forEach((player) => state.players.set(player.id, { ...player, y: player.y ?? .82, renderX: player.x, renderY: player.y ?? .82 }));
     state.chat = data.history || [];
     renderHistory();
-    $("#planet-title").textContent = PLANETS[state.planet].name;
-    $("#room-location-title").textContent = PLANETS[state.planet].location;
+    $("#planet-title").textContent = (PLANETS[state.planet] || {name:"Авторская планета"}).name;
+    $("#room-location-title").textContent = (PLANETS[state.planet] || {location:"Космическое пространство"}).location;
     updateOnline();
   });
   socket.on("player:joined",player=>{state.players.set(player.id,{...player,y:player.y??.82,renderX:player.x,renderY:player.y??.82});updateOnline();pushRoomEvent("Игрок вошёл",player.nickname+" присоединился к планете.","✦");});
@@ -868,7 +868,7 @@
     }
   });
 
-  $("#planets-button").addEventListener("click", () => $("#planet-picker").classList.toggle("hidden"));
+  $("#planets-button").addEventListener("click", openPlanetsPanel);
   $("#planet-picker").querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", () => {
       socket.emit("planet:change", { planet: button.dataset.planet }, (result) => {
@@ -882,6 +882,162 @@
     gameScreen.classList.remove("chat-open");
     const chatButton = $("#room-toolbar [data-room-toggle=\"chat\"]");
     if (chatButton) { chatButton.classList.remove("active"); chatButton.setAttribute("aria-expanded","false"); }
+  });
+
+
+  // Persistent user-created planets: catalog, owner identity and room transitions.
+  const planetThemes = {
+    nebula:["#11183b","#29245f","#51458a","#a28cff"],
+    aurora:["#092d3d","#145d69","#286d76","#69f0d1"],
+    sunset:["#3c183d","#8b3d62","#a85c65","#ff9a8b"],
+    ocean:["#052b49","#087b91","#287b91","#63e7ef"],
+    violet:["#20113f","#54318a","#694ca2","#c19aff"],
+    emerald:["#092c2c","#17604c","#36775c","#76e6a8"]
+  };
+  let planetSearchTimer = null;
+  function planetRequest(url, options={}) {
+    return fetch(url,{credentials:"same-origin",headers:{"Content-Type":"application/json",...(options.headers||{})},...options}).then(async response=>{
+      const data=await response.json().catch(()=>({}));
+      if(!response.ok)throw new Error(data.error||"Не удалось выполнить запрос.");
+      return data;
+    });
+  }
+  function planetAvatar(value) {
+    const gender=value?.gender;
+    return gender==="female"?"👑":"✦";
+  }
+  async function loadPlanetCatalog() {
+    const box=$("#planet-catalog");box.replaceChildren();
+    const query=$("#planet-search").value.trim(),category=$("#planet-category").value;
+    try {
+      const data=await planetRequest("/api/planets?q="+encodeURIComponent(query)+"&category="+encodeURIComponent(category));
+      const builtin=[
+        {id:"starter",key:"starter",name:"Стартовая",description:"Главная площадь NEXORA",category:"social",theme:"nebula",access_mode:"public",memberCount:0,onlineCount:0,capacity:"∞",ownerNickname:"NEXORA",builtin:true},
+        {id:"club",key:"club",name:"Клуб",description:"Музыка, танцы и общение",category:"music",theme:"violet",access_mode:"public",memberCount:0,onlineCount:0,capacity:"∞",ownerNickname:"NEXORA",builtin:true},
+        {id:"beach",key:"beach",name:"Пляж",description:"Отдых у океана",category:"social",theme:"ocean",access_mode:"public",memberCount:0,onlineCount:0,capacity:"∞",ownerNickname:"NEXORA",builtin:true}
+      ].filter(p=>!query||p.name.toLowerCase().includes(query.toLowerCase()));
+      const items=[...builtin,...data.planets];
+      if(!items.length){const empty=document.createElement("p");empty.className="planet-empty";empty.textContent="Планеты не найдены. Создай первую собственную планету.";box.append(empty);return;}
+      items.forEach(p=>{
+        const theme=planetThemes[p.theme]||planetThemes.nebula;
+        const card=document.createElement("article");card.className="planet-card";
+        const art=document.createElement("div");art.className="planet-card-art";art.style.setProperty("--planet-a",theme[0]);art.style.setProperty("--planet-b",theme[1]);art.style.setProperty("--planet-glow",theme[3]);
+        const orb=document.createElement("i");orb.textContent="✦";art.append(orb);
+        const body=document.createElement("div");body.className="planet-card-body";
+        const title=document.createElement("strong");title.textContent=p.name;
+        const desc=document.createElement("p");desc.textContent=p.description||"Новый мир NEXORA";
+        const owner=document.createElement("div");owner.className="planet-owner";owner.textContent="👑 "+(p.ownerNickname||"NEXORA");
+        const meta=document.createElement("small");meta.textContent=(p.onlineCount||0)+" онлайн · "+(p.capacity||"∞")+" мест · "+(p.access_mode==="private"?"Приватная":p.access_mode==="invite"?"По приглашению":"Открытая");
+        const enter=document.createElement("button");enter.type="button";enter.textContent="Перейти";enter.addEventListener("click",()=>enterPlanet(p));
+        body.append(title,desc,owner,meta,enter);
+        if(p.isOwner){const manage=document.createElement("button");manage.type="button";manage.textContent="⚙ Управлять";manage.addEventListener("click",()=>openPlanetOwnerTools(p.id));body.append(manage);}
+        card.append(art,body);box.append(card);
+      });
+    } catch(error) { const empty=document.createElement("p");empty.className="planet-empty";empty.textContent=error.message;box.append(empty); }
+  }
+  async function enterPlanet(planet) {
+    try {
+      if(planet.builtin){socket.emit("planet:change",{planet:planet.key},result=>{if(!result?.ok)showToast(result?.error||"Переход не выполнен.");else $("#planets-panel").classList.add("hidden");});return;}
+      await planetRequest("/api/planets/"+encodeURIComponent(planet.id)+"/visit",{method:"POST",body:JSON.stringify({})});
+      socket.emit("planet:change",{planet:"custom-"+planet.id},result=>{
+        if(!result?.ok){showToast(result?.error||"Переход не выполнен.");return;}
+        $("#planets-panel").classList.add("hidden");
+        showToast("🪐 Вы прибыли на планету "+planet.name);
+      });
+    } catch(error){showToast(error.message);}
+  }
+  async function openPlanetsPanel() {
+    $("#planets-panel").classList.remove("hidden");
+    $("#planet-create-form").classList.add("hidden");
+    $("#planet-catalog").classList.remove("hidden");
+    await loadPlanetCatalog();
+  }
+  $("#planets-close").addEventListener("click",()=>$("#planets-panel").classList.add("hidden"));
+  $("#planet-search").addEventListener("input",()=>{clearTimeout(planetSearchTimer);planetSearchTimer=setTimeout(loadPlanetCatalog,180);});
+  $("#planet-category").addEventListener("change",loadPlanetCatalog);
+  $("#planet-create-open").addEventListener("click",()=>{
+    $("#planet-catalog").classList.add("hidden");
+    $("#planet-create-form").classList.remove("hidden");
+    $("#planet-create-error").textContent="";
+  });
+  $("#planet-create-cancel").addEventListener("click",()=>{
+    $("#planet-create-form").classList.add("hidden");
+    $("#planet-catalog").classList.remove("hidden");
+  });
+  $("#planet-create-submit").addEventListener("click",async()=>{
+    const button=$("#planet-create-submit"),error=$("#planet-create-error");
+    button.disabled=true;error.textContent="";
+    try{
+      const payload={
+        name:$("#planet-new-name").value.trim(),description:$("#planet-new-description").value.trim(),
+        category:$("#planet-new-category").value,theme:$("#planet-new-theme").value,
+        accessMode:$("#planet-new-access").value,capacity:Number($("#planet-new-capacity").value),
+        welcomeMessage:$("#planet-new-welcome").value.trim()
+      };
+      const created=await planetRequest("/api/planets",{method:"POST",body:JSON.stringify(payload)});
+      $("#planet-new-name").value="";$("#planet-new-description").value="";$("#planet-new-welcome").value="";
+      await enterPlanet({id:created.planet.id,key:created.planet.key,name:created.planet.name});
+    }catch(e){error.textContent=e.message;}finally{button.disabled=false;}
+  });
+
+  async function openPlanetOwnerTools(id) {
+    try{
+      const data=await planetRequest("/api/planets/"+encodeURIComponent(id));
+      const p=data.planet;
+      if(!p.isOwner&&!p.isStaff)throw new Error("У вас нет прав управления этой планетой.");
+      $("#planet-catalog").classList.add("hidden");
+      $("#planet-create-form").classList.add("hidden");
+      $("#planet-owner-tools").classList.remove("hidden");
+      $("#planet-owner-id").value=String(id);
+      $("#planet-edit-name").value=p.name||"";
+      $("#planet-edit-description").value=p.description||"";
+      $("#planet-edit-welcome").value=p.welcome_message||"";
+      $("#planet-edit-access").value=p.access_mode||"public";
+      $("#planet-edit-category").value=p.category||"social";
+      $("#planet-edit-theme").value=p.theme||"nebula";
+      $("#planet-edit-capacity").value=p.capacity||30;
+      $("#planet-owner-error").textContent="";
+      const visitors=await planetRequest("/api/planets/"+encodeURIComponent(id)+"/visitors");
+      const list=$("#planet-owner-visitors");list.replaceChildren();
+      if(!visitors.visitors.length){const empty=document.createElement("p");empty.className="planet-empty";empty.textContent="Сейчас посетителей нет.";list.append(empty);}
+      visitors.visitors.forEach(v=>{const row=document.createElement("div");row.className="planet-owner-visitor";row.textContent=v.nickname+" · ID "+v.id;list.append(row);});
+    }catch(e){showToast(e.message);}
+  }
+  $("#planet-owner-back").addEventListener("click",()=>{ $("#planet-owner-tools").classList.add("hidden");$("#planet-catalog").classList.remove("hidden");loadPlanetCatalog(); });
+  $("#planet-owner-save").addEventListener("click",async()=>{
+    const id=$("#planet-owner-id").value;
+    try{
+      await planetRequest("/api/planets/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify({
+        name:$("#planet-edit-name").value,description:$("#planet-edit-description").value,welcomeMessage:$("#planet-edit-welcome").value,
+        accessMode:$("#planet-edit-access").value,category:$("#planet-edit-category").value,theme:$("#planet-edit-theme").value,capacity:Number($("#planet-edit-capacity").value)
+      })});
+      showToast("Настройки планеты сохранены.");loadPlanetCatalog();
+    }catch(e){$("#planet-owner-error").textContent=e.message;}
+  });
+  $("#planet-owner-invite").addEventListener("click",async()=>{
+    try{const id=$("#planet-owner-id").value,accountId=$("#planet-invite-account").value.trim();await planetRequest("/api/planets/"+encodeURIComponent(id)+"/invite",{method:"POST",body:JSON.stringify({accountId})});$("#planet-owner-error").textContent="Приглашение создано на 7 дней.";}
+    catch(e){$("#planet-owner-error").textContent=e.message;}
+  });
+  $("#planet-owner-ban").addEventListener("click",async()=>{
+    try{const id=$("#planet-owner-id").value,accountId=$("#planet-ban-account").value.trim(),reason=$("#planet-ban-reason").value;await planetRequest("/api/planets/"+encodeURIComponent(id)+"/ban",{method:"POST",body:JSON.stringify({accountId,reason})});$("#planet-owner-error").textContent="Доступ игрока ограничен на 24 часа.";}
+    catch(e){$("#planet-owner-error").textContent=e.message;}
+  });
+
+  socket.on("planet:access-revoked",event=>{
+    showToast(event?.message||"Доступ к планете закрыт.");
+    socket.emit("planet:change",{planet:"starter"},()=>{});
+  });
+  socket.on("planet:state",async data=>{
+    if(!String(data.planet).startsWith("custom-"))return;
+    const id=String(data.planet).slice(7);
+    try{
+      const result=await planetRequest("/api/planets/"+encodeURIComponent(id));
+      const p=result.planet,theme=planetThemes[p.theme]||planetThemes.nebula;
+      PLANETS[data.planet]={name:p.name,location:"Владелец: "+p.owner_nickname,sky:theme.slice(0,2),ground:theme[2],glow:theme[3],ownerId:String(p.ownerId),ownerNickname:p.owner_nickname};
+      $("#planet-title").textContent=p.name;
+      $("#room-location-title").textContent="👑 "+p.owner_nickname;
+      drawScene();
+    }catch(_error){}
   });
 
   socket.on("connect",()=>setConnectionStatus("online","На связи"));
@@ -1070,6 +1226,7 @@
     $("#room-developer-action").classList.toggle("hidden", !data.allowed);
       $("#developer-roles-tab").classList.toggle("hidden", !developerPermissions.includes("roles.manage"));
       $("#developer-authority-tab").classList.toggle("hidden", !developerPermissions.some(permission => permission.startsWith("authority.")));
+      $("#developer-planets-tab").classList.toggle("hidden", !developerPermissions.includes("planets.view"));
     } catch (_error) { $("#developer-open").classList.add("hidden"); }
   }
   function developerRender(title, rows) {
@@ -1147,6 +1304,30 @@
         const d = await developerRequest("/world");
         developerRender("Планеты и комнаты", d.world.map(p => ({ title: p.title, detail: p.online + " онлайн · " + p.rooms + " комнат" })));
 
+      } else if (tab === "planets") {
+        if(!developerPermissions.includes("planets.view"))throw new Error("Недостаточно прав.");
+        const d=await developerRequest("/planets");
+        content.replaceChildren();
+        const heading=document.createElement("h3");heading.textContent="Управление пользовательскими планетами";content.append(heading);
+        d.planets.forEach(p=>{
+          const row=document.createElement("div");row.className="developer-row";
+          const title=document.createElement("strong");title.textContent=p.name+" · ID "+p.id+" · "+p.owner_nickname;
+          const detail=document.createElement("span");detail.textContent=p.status+" · "+p.online+" онлайн · "+p.total_visits+" посещений · "+p.access_mode;
+          row.append(title,detail);
+          if(developerPermissions.includes("planets.manage")){
+            const action=document.createElement("select");["hide","block","restore","transfer","delete"].forEach(value=>{const option=document.createElement("option");option.value=value;option.textContent=({hide:"Скрыть",block:"Заблокировать",restore:"Восстановить",transfer:"Передать владельца",delete:"Удалить"})[value];action.append(option);});
+            const run=document.createElement("button");run.type="button";run.textContent="Применить";
+            run.addEventListener("click",async()=>{
+              const value=action.value,reason=prompt("Причина действия")||"";if(!reason)return;
+              const accountId=value==="transfer"?prompt("ID нового владельца"):"";if(value==="transfer"&&!accountId)return;
+              if(value==="delete"&&!confirm("Удалить планету "+p.name+"? Это действие необратимо."))return;
+              try{const response=await fetch("/api/developer/planets/"+p.id+"/action",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:value,reason,accountId})});const result=await response.json();if(!response.ok)throw new Error(result.error||"Ошибка");showToast("Действие выполнено.");loadDeveloperTab("planets");}
+              catch(error){showToast(error.message);}
+            });
+            row.append(action,run);
+          }
+          content.append(row);
+        });
       } else if (tab === "authority") {
         if (!developerPermissions.some(permission => permission.startsWith("authority."))) throw new Error("Недостаточно прав.");
         const data=await authorityApi("/");
@@ -1268,7 +1449,7 @@
         reason.maxLength = 500; reason.placeholder = "Причина назначения";
         const permissionWrap = document.createElement("div");
         permissionWrap.className = "developer-permission-grid";
-        const available = ["players.view","players.ban","players.unban","players.warn","moderation.view","world.view","world.manage","economy.view","economy.manage","items.view","items.manage","system.view","logs.view","authority.view","authority.assign","authority.remove","authority.configure","authority.history"];
+        const available = ["players.view","players.ban","players.unban","players.warn","moderation.view","world.view","world.manage","economy.view","economy.manage","items.view","items.manage","system.view","logs.view","authority.view","authority.assign","authority.remove","authority.configure","authority.history","planets.view","planets.manage"];
         available.forEach(value => {
           const label = document.createElement("label");
           const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.value = value;

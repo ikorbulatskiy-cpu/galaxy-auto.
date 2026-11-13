@@ -9,6 +9,7 @@ const { createSocialRouter } = require("./src/social");
 const { createProfileRouter } = require("./src/profile");
 const { createDeveloperRouter } = require("./src/developer");
 const { createAuthorityRouter } = require("./src/authority");
+const { createPlanetsRouter } = require("./src/planets");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -77,6 +78,7 @@ app.use("/api/social", createSocialRouter({ pool, auth, io }));
 app.use("/api/profile", createProfileRouter({ pool, auth, io }));
 app.use("/api/developer", createDeveloperRouter({ pool, auth, players, planets: PLANETS }));
 app.use("/api/authority", createAuthorityRouter({ pool, auth, io, players }));
+app.use("/api/planets", createPlanetsRouter({ pool, auth, io, players }));
 app.use((error, _req, res, _next) => {
   console.error("API error:", error);
   if (!res.headersSent) res.status(500).json({ error: "Внутренняя ошибка сервера." });
@@ -145,7 +147,22 @@ io.on("connection", (socket) => {
       );
       const saved = result.rows[0];
       if (!saved) return ack({ ok: false, error: "Персонаж не найден." });
-      const planet = Object.hasOwn(PLANETS, saved.planet) ? saved.planet : "starter";
+      const customId = /^custom-(\\d+)$/.exec(String(saved.planet || ""));
+      let planet = Object.hasOwn(PLANETS, saved.planet) ? saved.planet : customId ? saved.planet : "starter";
+      if (customId) {
+        const custom = await pool.query(
+          `SELECT p.id,p.status,p.access_mode,p.owner_account_id,
+            EXISTS(SELECT 1 FROM nexora_social_world.planet_staff s WHERE s.planet_id=p.id AND s.account_id=$2) AS staff,
+            EXISTS(SELECT 1 FROM nexora_social_world.planet_bans b WHERE b.planet_id=p.id AND b.account_id=$2 AND (b.expires_at IS NULL OR b.expires_at>NOW())) AS banned,
+            EXISTS(SELECT 1 FROM nexora_social_world.planet_invites i WHERE i.planet_id=p.id AND i.invited_account_id=$2 AND i.expires_at>NOW()) AS invited,
+            EXISTS(SELECT 1 FROM nexora_social_world.planet_members m WHERE m.planet_id=p.id AND m.account_id=$2) AS member
+           FROM nexora_social_world.planets p WHERE p.id=$1`, [customId[1],account.id]
+        );
+        const p = custom.rows[0];
+        if (!p || p.status !== "active" || p.banned ||
+          (p.access_mode === "private" && String(p.owner_account_id) !== String(account.id) && !p.staff) ||
+          (p.access_mode === "invite" && String(p.owner_account_id) !== String(account.id) && !p.staff && !p.invited && !p.member)) planet = "starter";
+      }
       const friendCount = await pool.query("SELECT COUNT(*)::int AS count FROM nexora_social_world.friends WHERE account_id=$1", [account.id]);
       const player = {
         id: String(account.id), socketId: socket.id, accountId: account.id,
@@ -269,8 +286,29 @@ io.on("connection", (socket) => {
 
   socket.on("planet:change", async (payload, ack = () => {}) => {
     const player = players.get(socket.id);
-    const nextPlanet = payload?.planet;
-    if (!player || !Object.hasOwn(PLANETS, nextPlanet)) return ack({ ok: false, error: "Планета не найдена." });
+    const nextPlanet = String(payload?.planet || "");
+    if (!player) return ack({ ok: false, error: "Персонаж не подключён." });
+    let valid = Object.hasOwn(PLANETS, nextPlanet);
+    if (!valid) {
+      const match = /^custom-(\\d+)$/.exec(nextPlanet);
+      if (match) {
+        const check = await pool.query(
+          `SELECT p.id,p.capacity,p.access_mode,p.owner_account_id,p.status,
+            EXISTS(SELECT 1 FROM nexora_social_world.planet_bans b WHERE b.planet_id=p.id AND b.account_id=$2 AND (b.expires_at IS NULL OR b.expires_at>NOW())) AS banned,
+            EXISTS(SELECT 1 FROM nexora_social_world.planet_staff s WHERE s.planet_id=p.id AND s.account_id=$2) AS staff,
+            EXISTS(SELECT 1 FROM nexora_social_world.planet_invites i WHERE i.planet_id=p.id AND i.invited_account_id=$2 AND i.expires_at>NOW()) AS invited,
+            EXISTS(SELECT 1 FROM nexora_social_world.planet_members m WHERE m.planet_id=p.id AND m.account_id=$2) AS member
+           FROM nexora_social_world.planets p WHERE p.id=$1`, [match[1],player.accountId]
+        );
+        const p = check.rows[0];
+        if (p && p.status === "active" && !p.banned &&
+          (p.access_mode === "public" || String(p.owner_account_id) === String(player.accountId) || p.staff || p.invited)) {
+          const online = [...players.values()].filter(x => x.planet === nextPlanet && x.id !== player.id).length;
+          valid = online < Number(p.capacity);
+        }
+      }
+    }
+    if (!valid) return ack({ ok: false, error: "Планета недоступна: проверьте приглашение, блокировку и свободные места." });
     if (player.planet === nextPlanet) return ack({ ok: true });
     const oldPlanet = player.planet;
     socket.to(roomName(oldPlanet)).emit("player:left", { id: player.id });
@@ -278,6 +316,11 @@ io.on("connection", (socket) => {
     player.planet = nextPlanet;
     socket.join(roomName(nextPlanet));
     await pool.query("UPDATE nexora_social_world.characters SET planet=$1,updated_at=NOW() WHERE account_id=$2", [nextPlanet,player.accountId]);
+    if (nextPlanet.startsWith("custom-")) {
+      const id = nextPlanet.slice(7);
+      await pool.query("INSERT INTO nexora_social_world.planet_members(planet_id,account_id) VALUES($1,$2) ON CONFLICT DO NOTHING", [id,player.accountId]);
+      await pool.query("UPDATE nexora_social_world.planet_invites SET used_at=NOW() WHERE planet_id=$1 AND invited_account_id=$2 AND used_at IS NULL AND expires_at>NOW()", [id,player.accountId]);
+    }
     await sendPlanetState(socket, nextPlanet);
     socket.to(roomName(nextPlanet)).emit("player:joined", publicPlayer(player));
     ack({ ok: true, planet: nextPlanet });
