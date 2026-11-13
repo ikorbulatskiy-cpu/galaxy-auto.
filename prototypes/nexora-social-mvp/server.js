@@ -217,20 +217,8 @@ io.on("connection", (socket) => {
     } catch (error) { console.error("gift save failed:", error); ack({ ok: false, error: "Не удалось сохранить подарок." }); }
   });
 
-  socket.on("friend:add", async (payload, ack = () => {}) => {
-    const sender = players.get(socket.id);
-    const target = [...players.values()].find(p => p.id === String(payload?.targetId || ""));
-    if (!sender || !target || sender.id === target.id) return ack({ ok: false, error: "Игрок не найден." });
-    try {
-      await pool.query("INSERT INTO nexora_social_world.friends(account_id,friend_account_id) VALUES($1,$2),($2,$1) ON CONFLICT DO NOTHING", [sender.accountId,target.accountId]);
-      const counts = await pool.query("SELECT account_id,COUNT(*)::int AS count FROM nexora_social_world.friends WHERE account_id=ANY($1::bigint[]) GROUP BY account_id", [[sender.accountId,target.accountId]]);
-      for (const row of counts.rows) {
-        const online = [...players.values()].find(p => p.accountId === row.account_id);
-        if (online) online.friendsCount = row.count;
-      }
-      ack({ ok: true, nickname: target.nickname });
-      io.to(target.socketId).emit("friend:notice", { nickname: sender.nickname });
-    } catch (error) { console.error("friend save failed:", error); ack({ ok: false, error: "Не удалось сохранить друга." }); }
+  socket.on("friend:add", (_payload, ack = () => {}) => {
+    ack({ ok: false, error: "Используйте отправку заявки в разделе «Друзья»." });
   });
 
   socket.on("planet:change", async (payload, ack = () => {}) => {
