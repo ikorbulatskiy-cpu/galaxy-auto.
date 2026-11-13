@@ -337,45 +337,81 @@
   function pushRoomEvent(title,detail,icon="✦"){state.roomEvents.unshift({title:String(title||"Событие"),detail:String(detail||""),icon,time:Date.now()});if(state.roomEvents.length>40)state.roomEvents.length=40;if($("#room-events-panel")?.classList.contains("hidden"))state.unreadEvents+=1;renderRoomEvents();}
   function setConnectionStatus(status,label){const pill=$("#connection-status");if(!pill)return;pill.dataset.state=status;const text=pill.querySelector("span");if(text)text.textContent=label;}
 
+  function createHistoryRow(message) {
+    const row = document.createElement("article");
+    const isSelf = String(message.playerId) === String(state.me?.id);
+    row.className = "history-message" + (isSelf ? " is-self" : "") + (message.system ? " is-system" : "") + (message.whisper ? " is-whisper" : "");
+
+    const name = document.createElement("button");
+    name.type = "button";
+    name.className = "history-author";
+    name.textContent = message.whisper ? "Личное" : (message.system ? "✦ NEXORA" : String(message.nickname || "Игрок"));
+    if (!message.whisper && !message.system) {
+      name.addEventListener("click", () => {
+        const player = [...state.players.values()].find(item => item.nickname === message.nickname);
+        if (player) openProfile(player);
+      });
+    } else {
+      name.disabled = true;
+    }
+
+    const body = document.createElement("span");
+    body.className = "history-text";
+    body.textContent = String(message.text || "");
+
+    const time = document.createElement("time");
+    const timestamp = Number(message.time);
+    time.textContent = new Date(Number.isFinite(timestamp) ? timestamp : Date.now()).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+    row.append(name, body, time);
+    return row;
+  }
+
+  function updateChatUnread() {
+    const badge = $("#chat-new-count");
+    if (!badge) return;
+    badge.textContent = state.unreadChat + " новых";
+    badge.classList.toggle("hidden", state.unreadChat < 1);
+  }
+
   function addHistory(message, whisper = false) {
     const container = $("#chat-history");
-    const wasAtBottom = !container || container.scrollHeight - container.scrollTop - container.clientHeight < 28;
-    state.chat.push({ ...message, whisper });
+    if (!container) return;
+    const entry = { ...message, whisper };
+    if (entry.id && state.chat.some(item => String(item.id) === String(entry.id))) return;
+    const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 32;
+    state.chat.push(entry);
     if (state.chat.length > 80) state.chat.shift();
-    if (!wasAtBottom && String(message.playerId) !== String(state.me?.id)) state.unreadChat += 1;
-    renderHistory(wasAtBottom);
+    container.append(createHistoryRow(entry));
+    while (container.children.length > 80) container.firstElementChild.remove();
+    if (wasAtBottom) {
+      container.scrollTop = container.scrollHeight;
+      state.unreadChat = 0;
+    } else if (String(entry.playerId) !== String(state.me?.id)) {
+      state.unreadChat += 1;
+    }
+    updateChatUnread();
   }
 
   function renderHistory(keepBottom = true) {
     const container = $("#chat-history");
     if (!container) return;
-    container.replaceChildren();
-    state.chat.forEach((message) => {
-      const row = document.createElement("div");
-      row.className = "history-message";
-      const name = document.createElement("button");
-      name.type = "button";
-      name.className = "history-author";
-      name.textContent = message.whisper ? "Шёпот" : (message.system ? "✦ NEXORA" : message.nickname);
-      if(message.system)name.classList.add("system-author");
-      if (!message.whisper) name.addEventListener("click", () => {
-        const player = [...state.players.values()].find(item => item.nickname === message.nickname);
-        if (player) openProfile(player);
-      });
-      const text = document.createElement("span");
-      text.textContent = message.text;
-      const time = document.createElement("time");
-      time.textContent = new Date(message.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      row.append(name, text, time);
-      container.append(row);
-    });
-    if (keepBottom) container.scrollTop = container.scrollHeight;
-    const badge = $("#chat-new-count");
-    if (badge) {
-      badge.textContent = state.unreadChat + " новых";
-      badge.classList.toggle("hidden", state.unreadChat < 1);
+    const fragment = document.createDocumentFragment();
+    state.chat.slice(-80).forEach(message => fragment.append(createHistoryRow(message)));
+    container.replaceChildren(fragment);
+    if (keepBottom) {
+      container.scrollTop = container.scrollHeight;
+      state.unreadChat = 0;
     }
+    updateChatUnread();
   }
+
+  $("#chat-history")?.addEventListener("scroll", () => {
+    const container = $("#chat-history");
+    if (container.scrollHeight - container.scrollTop - container.clientHeight < 24) {
+      state.unreadChat = 0;
+      updateChatUnread();
+    }
+  }, { passive: true });
 
   function resize() {
     const rect = canvas.getBoundingClientRect();
@@ -615,11 +651,26 @@
     $("#recovery-code").focus();
   });
 
+
+  socket.on("connect", () => {
+    const status = $("#chat-connection-status");
+    if (status) { status.dataset.state = "online"; status.lastChild.textContent = "В сети"; }
+  });
+  socket.on("disconnect", () => {
+    const status = $("#chat-connection-status");
+    if (status) { status.dataset.state = "offline"; status.lastChild.textContent = "Нет связи"; }
+  });
+  socket.on("connect_error", () => {
+    const status = $("#chat-connection-status");
+    if (status) { status.dataset.state = "offline"; status.lastChild.textContent = "Переподключение"; }
+  });
+
   socket.on("planet:state", (data) => {
     state.planet = data.planet;
     state.players.clear();
     data.players.forEach((player) => state.players.set(player.id, { ...player, y: player.y ?? .82, renderX: player.x, renderY: player.y ?? .82 }));
-    state.chat = data.history || [];
+    state.chat = (data.history || []).slice(-80);
+    state.unreadChat = 0;
     renderHistory();
     $("#planet-title").textContent = (PLANETS[state.planet] || {name:"Авторская планета"}).name;
     $("#room-location-title").textContent = (PLANETS[state.planet] || {location:"Космическое пространство"}).location;
@@ -901,14 +952,31 @@
   }));
   $("#chat-form").addEventListener("submit", (event) => {
     event.preventDefault();
+    const form = event.currentTarget;
     const input = $("#chat-input");
-    const text = input.value.trim();
-    if (!text) return;
-    socket.emit("chat:send", { text }, (result) => {
-      if (!result?.ok) showToast(result?.error || "Сообщение не отправлено.");
+    const sendButton = form.querySelector('button[type="submit"]');
+    const messageText = input.value.trim();
+    if (!messageText || sendButton.disabled) return;
+    if (!socket.connected) {
+      showToast("Нет соединения. Сообщение осталось в поле ввода.");
+      return;
+    }
+    sendButton.disabled = true;
+    sendButton.classList.add("is-sending");
+    sendButton.textContent = "…";
+    socket.timeout(8000).emit("chat:send", { text: messageText }, (error, result) => {
+      sendButton.disabled = false;
+      sendButton.classList.remove("is-sending");
+      sendButton.textContent = "➤";
+      if (error || !result?.ok) {
+        showToast(result?.error || "Не удалось отправить. Текст сохранён в поле ввода.");
+        return;
+      }
+      if (input.value.trim() === messageText) input.value = "";
+      $("#chat-emoji-picker").classList.add("hidden");
+      $("#chat-emoji-button").setAttribute("aria-expanded", "false");
+      input.focus();
     });
-    input.value = "";
-    $("#chat-emoji-picker").classList.add("hidden");
   });
 
   $("#exit-room").addEventListener("click", async () => {
