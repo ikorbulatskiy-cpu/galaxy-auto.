@@ -69,7 +69,7 @@ function createEconomyRouter({ pool, auth, io }) {
       const nextBalance=balance-price;
       await client.query("UPDATE nexora_social_world.wallets SET balance=$1,updated_at=NOW() WHERE account_id=$2",[nextBalance.toString(),req.account.id]);
       await client.query(
-        "INSERT INTO nexora_social_world.inventory(account_id,item_code,quantity,metadata) VALUES($1,$2,1,$3::jsonb) ON CONFLICT(account_id,item_code) DO UPDATE SET quantity=nexora_social_world.inventory.quantity+1",
+        "INSERT INTO nexora_social_world.inventory(account_id,item_code,quantity,metadata) VALUES($1,$2,1,$3::jsonb) ON CONFLICT(account_id,item_code) DO UPDATE SET quantity=inventory.quantity+1",
         [req.account.id,code,JSON.stringify(item.rows[0].metadata||{})]
       );
       await client.query(
