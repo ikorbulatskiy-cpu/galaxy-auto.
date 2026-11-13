@@ -39,78 +39,166 @@
   function drawAura(target, x, y, scale, type, enabled, quality = "high") {
     if (!enabled || !type || type === "NONE") return;
     const palette = {
-      GOLD_SOFT: ["#fff3a6", "#ffbd45", "#ff8a35"],
-      GOLD_PREMIUM: ["#fff9c4", "#ffd34e", "#ff9d32"],
-      GREEN: ["#d4ffd9", "#5cffaa", "#20c9a0"],
-      FIRE_RED: ["#ffe0a3", "#ff765e", "#ed315f"],
-      VIOLET: ["#f1c8ff", "#b36bff", "#713cff"],
-      CYAN: ["#d0ffff", "#55eaff", "#398aff"],
-      PINK: ["#ffe0f4", "#ff78c8", "#b64dff"]
+      GOLD_SOFT: ["#fff9bd", "#ffd34f", "#f59a2d"],
+      GOLD_PREMIUM: ["#fffde0", "#ffd044", "#ff8a24"],
+      GREEN: ["#e1ffe8", "#64ff9e", "#16c88b"],
+      FIRE_RED: ["#fff0bd", "#ff815f", "#e52c69"],
+      VIOLET: ["#f8dcff", "#c17aff", "#713bff"],
+      CYAN: ["#e0ffff", "#60edff", "#397cff"],
+      PINK: ["#ffe8f8", "#ff83d0", "#bd54ff"]
     };
     const colors = palette[type] || palette.GOLD_SOFT;
-    const now = Date.now();
-    const time = now / 420;
+    const t = Date.now() / 1000;
     const reduced = quality === "low" || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-    const pulse = reduced ? 1 : .88 + Math.sin(time * 1.7) * .12;
+    const pulse = reduced ? 1 : .91 + Math.sin(t * 2.2) * .09;
+    const premium = type === "GOLD_PREMIUM" || type === "VIOLET" || type === "FIRE_RED";
     target.save();
     target.translate(x, y);
     target.scale(scale, scale);
     target.globalCompositeOperation = "lighter";
 
-    const glow = target.createRadialGradient(0, 0, 5, 0, 0, 54);
-    glow.addColorStop(0, colors[1] + "38");
-    glow.addColorStop(.55, colors[1] + "19");
-    glow.addColorStop(1, colors[1] + "00");
-    target.fillStyle = glow;
-    target.globalAlpha = pulse;
-    target.beginPath();
-    target.ellipse(0, 5, 35, 53, 0, 0, Math.PI * 2);
-    target.fill();
-
-    target.shadowColor = colors[0];
-    target.shadowBlur = reduced ? 9 : (type === "FIRE_RED" || type === "GOLD_PREMIUM" ? 25 : 19);
-    target.strokeStyle = colors[0];
-    target.globalAlpha = .56 + (reduced ? 0 : Math.sin(time * 2) * .12);
-    target.lineWidth = type === "GOLD_PREMIUM" ? 2.8 : 2.2;
-    target.beginPath();
-    target.ellipse(0, 3, 25 + (reduced ? 0 : Math.sin(time) * 2), 45 + (reduced ? 0 : Math.cos(time * .8) * 2), 0, 0, Math.PI * 2);
-    target.stroke();
-
-    if (type === "GOLD_PREMIUM" || type === "FIRE_RED" || type === "GREEN") {
-      target.shadowBlur = 13;
-      target.strokeStyle = colors[1];
-      target.globalAlpha = .36;
-      target.lineWidth = 1.3;
+    // Layered volumetric cloud around the full character silhouette.
+    for (let layer = 0; layer < (reduced ? 3 : 5); layer++) {
+      const drift = reduced ? 0 : Math.sin(t * 1.15 + layer * 1.7) * 3;
+      const width = 28 + layer * 5 + (reduced ? 0 : Math.sin(t * 1.8 + layer) * 2);
+      const height = 43 + layer * 4;
+      const cloud = target.createRadialGradient(0, 0, 5, 0, 0, 58 + layer * 3);
+      cloud.addColorStop(0, colors[0] + (layer === 0 ? "45" : "24"));
+      cloud.addColorStop(.48, colors[1] + "25");
+      cloud.addColorStop(1, colors[1] + "00");
+      target.fillStyle = cloud;
+      target.globalAlpha = pulse * (layer === 0 ? .9 : .72 - layer * .07);
       target.beginPath();
-      target.ellipse(0, 5, 31, 49, reduced ? 0 : time * .12, 0, Math.PI * 2);
-      target.stroke();
-    }
-
-    const count = reduced ? 4 : (type === "FIRE_RED" || type === "GOLD_PREMIUM" ? 16 : 11);
-    target.shadowBlur = 9;
-    for (let i = 0; i < count; i++) {
-      const phase = reduced ? i * .8 : time * (type === "FIRE_RED" ? 1.3 : .72) + i * 2.17;
-      const angle = i * 2.399 + (reduced ? 0 : time * .16);
-      const rise = reduced ? 10 + i * 8 : ((phase * 8 + i * 7) % 58);
-      const px = Math.cos(angle) * (15 + rise * .15);
-      const py = 29 - rise;
-      target.globalAlpha = .25 + (1 - rise / 58) * .68;
-      target.fillStyle = i % 3 === 0 ? colors[2] : (i % 2 ? colors[0] : colors[1]);
-      target.beginPath();
-      target.arc(px, py, type === "FIRE_RED" ? 1.5 + (i % 3) * .55 : 1.1 + (i % 2) * .65, 0, Math.PI * 2);
+      target.ellipse(drift, 1, width, height, Math.sin(t + layer) * .035, 0, Math.PI * 2);
       target.fill();
     }
 
-    if (!reduced && (type === "FIRE_RED" || type === "GOLD_PREMIUM")) {
+    // Fine contour ribbons give the aura a visible, drawn silhouette.
+    target.shadowColor = colors[1];
+    target.shadowBlur = reduced ? 8 : (premium ? 24 : 17);
+    for (let ribbon = 0; ribbon < (reduced ? 1 : 3); ribbon++) {
+      target.globalAlpha = .34 + ribbon * .09;
+      target.strokeStyle = ribbon === 0 ? colors[0] : colors[1];
+      target.lineWidth = ribbon === 0 ? 2.2 : 1.25;
+      target.beginPath();
+      for (let step = 0; step <= 48; step++) {
+        const a = step / 48 * Math.PI * 2;
+        const wobble = reduced ? 0 : Math.sin(a * 5 + t * 2 + ribbon) * 2.2;
+        const rx = 25 + ribbon * 4 + wobble;
+        const ry = 43 + ribbon * 3 + wobble * .8;
+        const px = Math.cos(a) * rx + (reduced ? 0 : Math.sin(t + a * 2 + ribbon) * 2);
+        const py = Math.sin(a) * ry + 2;
+        if (step === 0) target.moveTo(px, py); else target.lineTo(px, py);
+      }
+      target.closePath();
+      target.stroke();
+    }
+
+    // Orbiting sparks and short energy streaks rise around the body.
+    const sparks = reduced ? 5 : (premium ? 22 : 16);
+    target.shadowBlur = reduced ? 5 : 12;
+    for (let i = 0; i < sparks; i++) {
+      const phase = reduced ? i * .8 : t * (type === "FIRE_RED" ? 1.2 : .72) + i * 2.17;
+      const rise = reduced ? 7 + i * 8 : ((phase * 12 + i * 11) % 66);
+      const side = i % 2 ? 1 : -1;
+      const px = side * (17 + Math.sin(phase * .8) * 11);
+      const py = 30 - rise;
+      target.globalAlpha = .28 + (1 - rise / 66) * .68;
+      target.strokeStyle = i % 3 ? colors[0] : colors[2];
+      target.fillStyle = target.strokeStyle;
+      if (i % 3 === 0) {
+        target.lineWidth = 1.5;
+        target.beginPath();
+        target.moveTo(px, py + 4);
+        target.lineTo(px + side * 2, py - 4);
+        target.stroke();
+      } else {
+        target.beginPath();
+        target.arc(px, py, 1.1 + (i % 3) * .55, 0, Math.PI * 2);
+        target.fill();
+      }
+    }
+
+    // Premium ranks receive flowing flame-like side wisps.
+    if (!reduced && premium) {
       for (const side of [-1, 1]) {
-        const flicker = Math.sin(time * 1.8 + side) * 5;
-        target.globalAlpha = .38;
+        const sway = Math.sin(t * 2.1 + side) * 5;
+        target.globalAlpha = .42;
         target.fillStyle = colors[2];
         target.beginPath();
-        target.moveTo(side * 17, 25);
-        target.quadraticCurveTo(side * (31 + flicker), 4, side * (21 + flicker), -19);
-        target.quadraticCurveTo(side * 35, -3, side * 25, 23);
+        target.moveTo(side * 19, 27);
+        target.bezierCurveTo(side * (34 + sway), 12, side * (19 - sway), -7, side * 29, -28);
+        target.bezierCurveTo(side * 25, -8, side * 40, 12, side * 19, 27);
         target.closePath();
+        target.fill();
+      }
+    }
+    target.restore();
+  }
+
+  function drawAuraHalo(target, x, y, scale, type, enabled, quality = "high") {
+    if (!enabled || !type || type === "NONE") return;
+    const palette = {
+      GOLD_SOFT: ["#fffbd0", "#ffd45c"],
+      GOLD_PREMIUM: ["#fffde7", "#ffc52f"],
+      GREEN: ["#effff1", "#70ffad"],
+      FIRE_RED: ["#fff0c4", "#ff735f"],
+      VIOLET: ["#fff0ff", "#c27aff"],
+      CYAN: ["#e8ffff", "#61eaff"],
+      PINK: ["#fff0fa", "#ff82d2"]
+    };
+    const colors = palette[type] || palette.GOLD_SOFT;
+    const t = Date.now() / 1000;
+    const reduced = quality === "low" || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    const count = type === "GOLD_SOFT" ? 1 : type === "GOLD_PREMIUM" ? 2 : type === "GREEN" ? 2 : 3;
+    target.save();
+    target.translate(x, y);
+    target.scale(scale, scale);
+    target.globalCompositeOperation = "lighter";
+    target.shadowColor = colors[1];
+    target.shadowBlur = reduced ? 8 : 20;
+
+    // Distinct, polished golden halo rings floating above the head.
+    for (let ring = count - 1; ring >= 0; ring--) {
+      const bob = reduced ? 0 : Math.sin(t * 2 + ring * .85) * 2.1;
+      const tilt = reduced ? 0 : Math.sin(t * 1.25 + ring) * .12;
+      const rx = 12 + ring * 3.7;
+      const ry = 4.1 + ring * .8;
+      const cy = -49 - ring * 6.3 + bob;
+      target.save();
+      target.translate(0, cy);
+      target.rotate(tilt);
+      target.globalAlpha = .9 - ring * .12;
+      target.lineWidth = ring === 0 ? 2.6 : 1.8;
+      target.strokeStyle = colors[0];
+      target.beginPath();
+      target.ellipse(0, 0, rx + 2, ry + 1.2, 0, 0, Math.PI * 2);
+      target.stroke();
+      target.globalAlpha = .92 - ring * .14;
+      target.lineWidth = 1.2;
+      target.strokeStyle = colors[1];
+      target.beginPath();
+      target.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+      target.stroke();
+      target.globalAlpha = .7;
+      target.fillStyle = colors[0];
+      target.beginPath();
+      target.arc(-rx * .72, -.4, 1.15, 0, Math.PI * 2);
+      target.arc(rx * .72, .4, 1.15, 0, Math.PI * 2);
+      target.fill();
+      target.restore();
+    }
+
+    // Tiny glints travel around the upper halo.
+    if (!reduced) {
+      for (let i = 0; i < 4; i++) {
+        const a = t * .9 + i * Math.PI / 2;
+        const px = Math.cos(a) * 20;
+        const py = -52 + Math.sin(a) * 5;
+        target.globalAlpha = .45 + (Math.sin(t * 3 + i) + 1) * .25;
+        target.fillStyle = colors[0];
+        target.beginPath();
+        target.arc(px, py, 1.1, 0, Math.PI * 2);
         target.fill();
       }
     }
@@ -305,11 +393,12 @@
       }
       drawAura(ctx,drawX,y,scale,player.auraType,player.auraEnabled,state.auraQuality);
       drawAvatar(ctx,drawX,y,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
+      drawAuraHalo(ctx,drawX,y,scale,player.auraType,player.auraEnabled,state.auraQuality);
       if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20*scale,y-58*scale-Math.sin(Date.now()/120)*3);ctx.restore();}
       // Only the nickname stays above the avatar. Rank and authority belong in the info card.
       ctx.save();ctx.textAlign="center";ctx.font=(isMe?"700 ":"600 ")+Math.max(10,11*scale)+"px Inter,sans-serif";
       ctx.fillStyle=isMe?"#fff1b8":"#fff";ctx.shadowColor="#080b20";ctx.shadowBlur=7;
-      ctx.fillText(player.nickname,drawX,y-48*scale,132);ctx.restore();
+      ctx.fillText(player.nickname,drawX,y-72*scale,132);ctx.restore();
     });
     requestAnimationFrame(drawScene);
   }
