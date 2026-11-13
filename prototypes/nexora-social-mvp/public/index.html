@@ -74,6 +74,13 @@
           <button type="button" data-room-action="developer" id="room-developer-action" class="hidden">🛠️<span>Разработчик</span></button>
           <button type="button" data-room-action="exit">↪<span>Выйти из комнаты</span></button>
         </div>
+        <section class="room-global-search" aria-label="Поиск по серверу">
+          <label for="room-global-search-input">⌕ Поиск по NEXORA</label>
+          <input id="room-global-search-input" type="search" maxlength="40" autocomplete="off" placeholder="Персонажи, планеты и другое">
+          <div id="room-global-search-results" class="room-global-search-results" aria-live="polite">
+            <p>Начни вводить ник или название планеты.</p>
+          </div>
+        </section>
       </aside>
 
       <aside id="room-emotions-panel" class="room-flyout room-emotions-panel hidden" aria-label="Эмоции">
