@@ -19,7 +19,8 @@
   const suits = ["#6d7cff", "#ef6c9b", "#35bca5"];
   const state = {
     me: null, players: new Map(), planet: "starter", selected: null,
-    stars: [], chat: [], roomEvents: [], unreadEvents: 0, width: 0, height: 0, dpr: 1, toastTimer: null, movementFrame: 0
+    stars: [], chat: [], roomEvents: [], unreadEvents: 0, width: 0, height: 0, dpr: 1, toastTimer: null, movementFrame: 0,
+    auraQuality: localStorage.getItem("nexora-aura-quality") === "low" ? "low" : "high"
   };
 
   function avatarSettings() {
@@ -35,30 +36,83 @@
   }
 
 
-  function drawAura(target, x, y, scale, type, enabled) {
+  function drawAura(target, x, y, scale, type, enabled, quality = "high") {
     if (!enabled || !type || type === "NONE") return;
-    const palette = { GOLD_SOFT:["#ffe27a","#ffbd45"], GOLD_PREMIUM:["#fff0a0","#ffb52e"], GREEN:["#a1ffc0","#39d879"], FIRE_RED:["#ff9b65","#ff342d"] };
-    const colors = palette[type]; if (!colors) return;
-    const time = Date.now() / 260;
-    target.save(); target.translate(x,y); target.scale(scale,scale); target.globalCompositeOperation="lighter";
-    target.shadowColor=colors[0]; target.shadowBlur=type==="FIRE_RED"?19:13;
-    target.strokeStyle=colors[0]; target.globalAlpha=.34+Math.sin(time)*.08; target.lineWidth=type==="GOLD_PREMIUM"?3:2;
-    target.beginPath(); target.ellipse(0,3,23+Math.sin(time*.7)*2,43+Math.cos(time*.8)*2,0,0,Math.PI*2); target.stroke();
-    for(let i=0;i<(type==="FIRE_RED"?15:9);i++){
-      const phase=time+i*2.17, angle=i*2.399, rise=((phase*(type==="FIRE_RED"?1.25:.55)+i*7)%54);
-      const px=Math.cos(angle+time*.22)*(13+rise*.16), py=27-rise;
-      target.globalAlpha=.25+(1-rise/54)*.7; target.fillStyle=i%2?colors[0]:colors[1];
-      target.beginPath();target.arc(px,py,type==="FIRE_RED"?1.2+(i%3)*.65:1+(i%2)*.7,0,Math.PI*2);target.fill();
+    const palette = {
+      GOLD_SOFT: ["#fff3a6", "#ffbd45", "#ff8a35"],
+      GOLD_PREMIUM: ["#fff9c4", "#ffd34e", "#ff9d32"],
+      GREEN: ["#d4ffd9", "#5cffaa", "#20c9a0"],
+      FIRE_RED: ["#ffe0a3", "#ff765e", "#ed315f"],
+      VIOLET: ["#f1c8ff", "#b36bff", "#713cff"],
+      CYAN: ["#d0ffff", "#55eaff", "#398aff"],
+      PINK: ["#ffe0f4", "#ff78c8", "#b64dff"]
+    };
+    const colors = palette[type] || palette.GOLD_SOFT;
+    const now = Date.now();
+    const time = now / 420;
+    const reduced = quality === "low" || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    const pulse = reduced ? 1 : .88 + Math.sin(time * 1.7) * .12;
+    target.save();
+    target.translate(x, y);
+    target.scale(scale, scale);
+    target.globalCompositeOperation = "lighter";
+
+    const glow = target.createRadialGradient(0, 0, 5, 0, 0, 54);
+    glow.addColorStop(0, colors[1] + "38");
+    glow.addColorStop(.55, colors[1] + "19");
+    glow.addColorStop(1, colors[1] + "00");
+    target.fillStyle = glow;
+    target.globalAlpha = pulse;
+    target.beginPath();
+    target.ellipse(0, 5, 35, 53, 0, 0, Math.PI * 2);
+    target.fill();
+
+    target.shadowColor = colors[0];
+    target.shadowBlur = reduced ? 9 : (type === "FIRE_RED" || type === "GOLD_PREMIUM" ? 25 : 19);
+    target.strokeStyle = colors[0];
+    target.globalAlpha = .56 + (reduced ? 0 : Math.sin(time * 2) * .12);
+    target.lineWidth = type === "GOLD_PREMIUM" ? 2.8 : 2.2;
+    target.beginPath();
+    target.ellipse(0, 3, 25 + (reduced ? 0 : Math.sin(time) * 2), 45 + (reduced ? 0 : Math.cos(time * .8) * 2), 0, 0, Math.PI * 2);
+    target.stroke();
+
+    if (type === "GOLD_PREMIUM" || type === "FIRE_RED" || type === "GREEN") {
+      target.shadowBlur = 13;
+      target.strokeStyle = colors[1];
+      target.globalAlpha = .36;
+      target.lineWidth = 1.3;
+      target.beginPath();
+      target.ellipse(0, 5, 31, 49, reduced ? 0 : time * .12, 0, Math.PI * 2);
+      target.stroke();
     }
-    if(type==="FIRE_RED"){
-      for(const side of [-1,1]){
-        const flicker=Math.sin(time*1.8+side)*4;target.globalAlpha=.42;target.fillStyle=colors[1];
-        target.beginPath();target.moveTo(side*17,24);target.quadraticCurveTo(side*(30+flicker),5,side*(20+flicker),-17);target.quadraticCurveTo(side*34,-3,side*25,22);target.closePath();target.fill();
-        target.globalAlpha=.75;target.fillStyle="#ffd2a1";target.beginPath();target.arc(side*(20+flicker),-15+Math.sin(time+side)*3,1.4,0,Math.PI*2);target.fill();
+
+    const count = reduced ? 4 : (type === "FIRE_RED" || type === "GOLD_PREMIUM" ? 16 : 11);
+    target.shadowBlur = 9;
+    for (let i = 0; i < count; i++) {
+      const phase = reduced ? i * .8 : time * (type === "FIRE_RED" ? 1.3 : .72) + i * 2.17;
+      const angle = i * 2.399 + (reduced ? 0 : time * .16);
+      const rise = reduced ? 10 + i * 8 : ((phase * 8 + i * 7) % 58);
+      const px = Math.cos(angle) * (15 + rise * .15);
+      const py = 29 - rise;
+      target.globalAlpha = .25 + (1 - rise / 58) * .68;
+      target.fillStyle = i % 3 === 0 ? colors[2] : (i % 2 ? colors[0] : colors[1]);
+      target.beginPath();
+      target.arc(px, py, type === "FIRE_RED" ? 1.5 + (i % 3) * .55 : 1.1 + (i % 2) * .65, 0, Math.PI * 2);
+      target.fill();
+    }
+
+    if (!reduced && (type === "FIRE_RED" || type === "GOLD_PREMIUM")) {
+      for (const side of [-1, 1]) {
+        const flicker = Math.sin(time * 1.8 + side) * 5;
+        target.globalAlpha = .38;
+        target.fillStyle = colors[2];
+        target.beginPath();
+        target.moveTo(side * 17, 25);
+        target.quadraticCurveTo(side * (31 + flicker), 4, side * (21 + flicker), -19);
+        target.quadraticCurveTo(side * 35, -3, side * 25, 23);
+        target.closePath();
+        target.fill();
       }
-    } else if(type==="GOLD_PREMIUM"){
-      target.globalAlpha=.8;target.fillStyle="#fff3bd";
-      for(let i=0;i<4;i++){const a=time+i*Math.PI/2;target.fillRect(Math.cos(a)*27-1,Math.sin(a)*28-3,2,2);}
     }
     target.restore();
   }
@@ -249,7 +303,7 @@
         ctx.save();ctx.strokeStyle="#e7dcff";ctx.lineWidth=2;ctx.shadowColor="#a58cff";ctx.shadowBlur=16;
         ctx.beginPath();ctx.ellipse(drawX,y+2,25*scale,46*scale,0,0,Math.PI*2);ctx.stroke();ctx.restore();
       }
-      drawAura(ctx,drawX,y,scale,player.auraType,player.auraEnabled);
+      drawAura(ctx,drawX,y,scale,player.auraType,player.auraEnabled,state.auraQuality);
       drawAvatar(ctx,drawX,y,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
       if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20*scale,y-58*scale-Math.sin(Date.now()/120)*3);ctx.restore();}
       // Only the nickname stays above the avatar. Rank and authority belong in the info card.
@@ -286,6 +340,7 @@
         }
         state.me = result.player;
         state.planet = result.player.planet;
+        refreshTopbarWallet();
         setConnectionStatus("online","На связи");
         pushRoomEvent("Добро пожаловать","Вы вошли на планету "+(PLANETS[state.planet]?.name||state.planet)+".","✦");
         loginScreen.classList.add("hidden");
@@ -437,6 +492,17 @@
     }else closeProfile();
   });
 
+  async function refreshTopbarWallet() {
+    const balance = $("#topbar-koins");
+    if (!balance) return;
+    try {
+      const response = await fetch("/api/profile", { credentials: "same-origin" });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && data.profile) balance.textContent = Number(data.profile.koins || 0).toLocaleString("ru-RU");
+      else balance.textContent = "—";
+    } catch (_) { balance.textContent = "—"; }
+  }
+
   function updateOnline() {
     $("#online-count").textContent = String(state.players.size);
     renderRoomPlayers();
@@ -466,8 +532,13 @@
     const name = button.dataset.roomToggle;
     if(name==="chat"){
       const opening=$("#chat-drawer").classList.contains("hidden");
-      $("#chat-drawer").classList.toggle("hidden",!opening);gameScreen.classList.toggle("chat-open",opening);closeRoomFlyouts();
-      if(opening)setTimeout(()=>$("#chat-input").focus(),80);return;
+      $("#chat-drawer").classList.toggle("hidden",!opening);
+      gameScreen.classList.toggle("chat-open",opening);
+      button.classList.toggle("active",opening);
+      button.setAttribute("aria-expanded",String(opening));
+      closeRoomFlyouts();
+      if(opening)setTimeout(()=>$("#chat-input").focus(),80);
+      return;
     }
     toggleRoomFlyout(name);
   }));
@@ -485,7 +556,16 @@
     else if (action === "planets") $("#planets-button").click();
     else if (action === "developer") $("#developer-open").click();
     else if (action === "exit") $("#exit-room").click();
+    else if (action === "aura-quality") {
+      state.auraQuality = state.auraQuality === "high" ? "low" : "high";
+      localStorage.setItem("nexora-aura-quality", state.auraQuality);
+      const label = $("#aura-quality-action span");
+      if (label) label.textContent = "Качество аур: " + (state.auraQuality === "high" ? "высокое" : "экономное");
+      showToast("Качество аур: " + (state.auraQuality === "high" ? "высокое" : "экономное"));
+    }
   }));
+  const auraQualityLabel = $("#aura-quality-action span");
+  if (auraQualityLabel) auraQualityLabel.textContent = "Качество аур: " + (state.auraQuality === "high" ? "высокое" : "экономное");
   document.querySelectorAll("[data-room-emotion]").forEach(button => button.addEventListener("click",() => {
     socket.emit("emotion:play",{emotion:button.dataset.roomEmotion});
     closeRoomFlyouts();
@@ -608,8 +688,12 @@
       });
     });
   });
-  $("#history-button").addEventListener("click", () => $("#chat-drawer").classList.toggle("hidden"));
-  $("#close-history").addEventListener("click",()=>{$("#chat-drawer").classList.add("hidden");gameScreen.classList.remove("chat-open");});
+  $("#close-history").addEventListener("click",()=>{
+    $("#chat-drawer").classList.add("hidden");
+    gameScreen.classList.remove("chat-open");
+    const chatButton = $("#room-toolbar [data-room-toggle=\"chat\"]");
+    if (chatButton) { chatButton.classList.remove("active"); chatButton.setAttribute("aria-expanded","false"); }
+  });
 
   socket.on("connect",()=>setConnectionStatus("online","На связи"));
   socket.on("reconnect_attempt",()=>setConnectionStatus("reconnecting","Переподключение"));
