@@ -34,18 +34,41 @@
   customObjectAtlas.onload = () => { if (state.customPlanetObjects.length) drawScene(); };
   customObjectAtlas.src = "/assets/sprites/props/nexora-world-props-atlas.svg";
 
+  const HEAD_PRESETS = [
+    { name: "Классика", skin: "#f4c7a1", hair: "short", hairColor: "#30233d" },
+    { name: "Каштан", skin: "#c9875b", hair: "short", hairColor: "#6b432c" },
+    { name: "Блонд", skin: "#f4c7a1", hair: "long", hairColor: "#e5c07b" },
+    { name: "Каре", skin: "#f4c7a1", hair: "bob", hairColor: "#bd5de5" },
+    { name: "Кудри", skin: "#75452f", hair: "curly", hairColor: "#30233d" },
+    { name: "Хвост", skin: "#c9875b", hair: "ponytail", hairColor: "#e9eef8" }
+  ];
+  const BODY_PRESETS = [
+    { name: "Повседневное", outfit: "casual", suit: "#6d7cff", shoes: "sneakers" },
+    { name: "Худи", outfit: "hoodie", suit: "#35bca5", shoes: "sneakers" },
+    { name: "Куртка", outfit: "jacket", suit: "#ef6c9b", shoes: "boots" },
+    { name: "Платье", outfit: "dress", suit: "#bd7bdc", shoes: "heels" },
+    { name: "Пляжное", outfit: "beach", suit: "#35bca5", shoes: "sandals" },
+    { name: "Клубное", outfit: "club", suit: "#6d7cff", shoes: "boots" }
+  ];
+  let selectedHead = 0;
+  let selectedBody = 0;
   function avatarSettings() {
+    const head = HEAD_PRESETS[selectedHead], body = BODY_PRESETS[selectedBody];
     return {
       gender: $("#gender").value,
-      skin: $("#skin").value,
-      hair: $("#hair").value,
-      suit: $("#suit").value,
-      outfit: $("#outfit").value,
-      hairColor: $("#hair-color").value,
-      shoes: $("#shoes").value,
-      accessory: $("#accessory").value
+      skin: head.skin, hair: head.hair, hairColor: head.hairColor,
+      outfit: body.outfit, suit: body.suit, shoes: body.shoes,
+      accessory: "none"
     };
   }
+  function updateAppearanceLabels() {
+    $("#head-style-name").textContent = HEAD_PRESETS[selectedHead].name;
+    $("#body-style-name").textContent = BODY_PRESETS[selectedBody].name;
+  }
+  $("#head-prev").addEventListener("click", () => { selectedHead = (selectedHead - 1 + HEAD_PRESETS.length) % HEAD_PRESETS.length; updateAppearanceLabels(); preview(); });
+  $("#head-next").addEventListener("click", () => { selectedHead = (selectedHead + 1) % HEAD_PRESETS.length; updateAppearanceLabels(); preview(); });
+  $("#body-prev").addEventListener("click", () => { selectedBody = (selectedBody - 1 + BODY_PRESETS.length) % BODY_PRESETS.length; updateAppearanceLabels(); preview(); });
+  $("#body-next").addEventListener("click", () => { selectedBody = (selectedBody + 1) % BODY_PRESETS.length; updateAppearanceLabels(); preview(); });
 
 
   function drawAura(target, x, y, scale, type, enabled, quality = "high") {
@@ -328,7 +351,8 @@
     document.querySelectorAll("[data-gender]").forEach(button=>{const selected=button.dataset.gender===$("#gender").value;button.classList.toggle("selected",selected);button.setAttribute("aria-pressed",String(selected));});
     $("#register-next").disabled=!$("#gender").value;
   }
-  ["gender","skin","hair","outfit","suit","hair-color","shoes","accessory"].forEach(id=>$("#"+id).addEventListener("change",preview));
+  $("#gender").addEventListener("change", preview);
+  updateAppearanceLabels();
   document.querySelectorAll("[data-gender]").forEach(button=>button.addEventListener("click",()=>{$("#gender").value=button.dataset.gender;preview();}));
   preview();
 
