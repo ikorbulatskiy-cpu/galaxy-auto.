@@ -93,16 +93,11 @@
 
       <div class="scene-wrap">
         <canvas id="world-canvas"></canvas>
-        <div id="movement-pad" class="movement-pad" role="group" aria-label="Управление движением персонажа">
-          <span class="movement-pad-label">ДВИЖЕНИЕ</span>
-          <span id="movement-knob" class="movement-knob"></span>
-        </div>
         <div id="gift-layer" class="gift-layer"></div>
       </div>
 
       <nav id="room-toolbar" class="room-toolbar" aria-label="Главное управление">
         <button type="button" data-room-toggle="menu" aria-expanded="false">☰<span>Меню</span></button>
-        <button type="button" class="active" data-room-toggle="chat" aria-expanded="true">💬<span>Чат</span></button>
         <button type="button" data-room-toggle="players">🧑‍🤝‍🧑<span>Игроки</span></button>
         <button type="button" data-room-action="profile">👤<span>Профиль</span></button>
       </nav>
@@ -135,7 +130,7 @@
       <aside id="room-events-panel" class="room-flyout room-events-panel hidden" aria-label="События комнаты"><div class="room-flyout-head"><div><small>NEXORA LIVE</small><strong>События комнаты</strong></div><button type="button" data-room-close="events" aria-label="Закрыть">×</button></div><div id="room-event-list" class="room-event-list"><p class="room-event-empty">Здесь появятся события комнаты.</p></div></aside>
 
       <aside id="chat-drawer" class="chat-drawer" aria-label="Общий чат планеты">
-        <div class="drawer-head"><div class="chat-title"><strong>Чат планеты</strong><span id="chat-online-label">Общение со всеми игроками</span></div><div class="chat-head-actions"><span id="chat-connection-status" class="chat-connection-status" data-state="connecting"><i></i><span>Подключение</span></span><span id="chat-new-count" class="chat-new-count hidden">0 новых</span><button id="close-history" type="button" aria-label="Свернуть чат">⌄</button></div></div>
+        <div class="drawer-head"><div class="chat-title"><strong>Чат планеты</strong><span id="chat-online-label">Общение со всеми игроками</span></div><div class="chat-head-actions"><span id="chat-connection-status" class="chat-connection-status" data-state="connecting"><i></i><span>Подключение</span></span><span id="chat-new-count" class="chat-new-count hidden">0 новых</span></div></div>
         <nav class="chat-tabs" aria-label="Разделы общения"><button type="button" class="active" data-chat-view="general">🌐 Общий чат</button></nav>
         <div id="chat-history" class="chat-history" aria-live="polite"></div>
         <div id="chat-emoji-picker" class="chat-emoji-picker hidden" aria-label="Эмодзи"><button type="button" data-chat-emoji="😊">😊</button><button type="button" data-chat-emoji="😂">😂</button><button type="button" data-chat-emoji="😍">😍</button><button type="button" data-chat-emoji="😘">😘</button><button type="button" data-chat-emoji="❤️">❤️</button><button type="button" data-chat-emoji="🔥">🔥</button><button type="button" data-chat-emoji="✨">✨</button><button type="button" data-chat-emoji="👋">👋</button></div>
