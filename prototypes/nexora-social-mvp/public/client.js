@@ -823,8 +823,49 @@
     renderRoomPlayers();
   }
 
-  function renderRoomPlayers(){const box=$("#room-player-list");if(!box)return;const query=($("#room-player-search")?.value||"").trim().toLocaleLowerCase("ru-RU");const rows=[...state.players.values()].filter(p=>!query||p.nickname.toLocaleLowerCase("ru-RU").includes(query)).sort((a,b)=>{if(String(a.id)===String(state.me?.id))return -1;if(String(b.id)===String(state.me?.id))return 1;return String(a.nickname).localeCompare(String(b.nickname),"ru");});$("#room-player-count").textContent=String(state.players.size);box.replaceChildren();if(!rows.length){const empty=document.createElement("p");empty.className="developer-muted";empty.textContent=query?"Игроки не найдены.":"В комнате пока никого нет.";box.append(empty);return;}rows.forEach(player=>{const row=document.createElement("button");row.type="button";row.className="room-player-row"+(String(state.selected)===String(player.id)?" selected":"");const avatar=document.createElement("canvas");avatar.className="room-player-avatar";avatar.width=64;avatar.height=72;drawAvatar(avatar.getContext("2d"),32,54,.78,player.avatar,1,null);const meta=document.createElement("span");meta.className="room-player-meta";const name=document.createElement("strong");name.textContent=player.nickname+(String(player.id)===String(state.me?.id)?" · Вы":"");const rank=document.createElement("small");rank.textContent=(player.title||"Новичок")+(player.auraEnabled?" · Аура активна":"");meta.append(name,rank);const status=document.createElement("i");status.className="room-player-status";row.append(avatar,meta,status);row.addEventListener("click",()=>{openProfile(player);closeRoomFlyouts("players");});box.append(row);});}
-  $("#room-player-search")?.addEventListener("input",renderRoomPlayers);
+  function renderRoomPlayers() {
+    const box = $("#room-player-list");
+    if (!box) return;
+    const rows = [...state.players.values()].sort((a, b) => {
+      if (String(a.id) === String(state.me?.id)) return -1;
+      if (String(b.id) === String(state.me?.id)) return 1;
+      return String(a.nickname).localeCompare(String(b.nickname), "ru");
+    });
+    $("#room-player-count").textContent = String(state.players.size);
+    box.replaceChildren();
+    if (!rows.length) {
+      const empty = document.createElement("p");
+      empty.className = "developer-muted";
+      empty.textContent = "В комнате пока никого нет.";
+      box.append(empty);
+      return;
+    }
+    rows.forEach(player => {
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "room-player-row" + (String(state.selected) === String(player.id) ? " selected" : "");
+      const avatar = document.createElement("canvas");
+      avatar.className = "room-player-avatar";
+      avatar.width = 64;
+      avatar.height = 72;
+      drawAvatar(avatar.getContext("2d"), 32, 54, .78, player.avatar, 1, null);
+      const meta = document.createElement("span");
+      meta.className = "room-player-meta";
+      const name = document.createElement("strong");
+      name.textContent = player.nickname + (String(player.id) === String(state.me?.id) ? " · Вы" : "");
+      const rank = document.createElement("small");
+      rank.textContent = (player.title || "Новичок") + (player.auraEnabled ? " · Аура активна" : "");
+      meta.append(name, rank);
+      const status = document.createElement("i");
+      status.className = "room-player-status";
+      row.append(avatar, meta, status);
+      row.addEventListener("click", () => {
+        openProfile(player);
+        closeRoomFlyouts("players");
+      });
+      box.append(row);
+    });
+  }
   let globalSearchTimer = null;
   let globalSearchSequence = 0;
   function renderGlobalSearch(data, query) {
@@ -2256,6 +2297,133 @@
       box.append(makeSocialRow(title, actor + (item.read_at ? "" : " · Новое")));
     });
   }
+  async function loadOwnerProfileTools(profile) {
+    const content = $("#public-profile-owner-content");
+    content.replaceChildren();
+    const loading = document.createElement("p");
+    loading.className = "developer-muted";
+    loading.textContent = "Загружаю данные персонажа…";
+    content.append(loading);
+    try {
+      const data = await developerRequest("/players/" + encodeURIComponent(profile.id));
+      const player = data.player || {};
+      content.replaceChildren();
+      const summary = document.createElement("div");
+      summary.className = "developer-row";
+      const title = document.createElement("strong");
+      title.textContent = player.nickname + " · ID " + player.id;
+      const detail = document.createElement("span");
+      detail.textContent = (player.planet || "Неизвестная комната") + " · " + (player.banned ? "Заблокирован" : "Не заблокирован") + " · Баланс: " + (player.balance || "0") + " Koins";
+      summary.append(title, detail);
+      content.append(summary);
+      const inventory = document.createElement("div");
+      inventory.className = "developer-row";
+      inventory.textContent = "Предметов в инвентаре: " + (data.inventory || []).length;
+      content.append(inventory);
+      const punishments = document.createElement("div");
+      punishments.className = "developer-row";
+      punishments.textContent = "Записей модерации: " + (data.punishments || []).length;
+      content.append(punishments);
+      const actions = document.createElement("div");
+      actions.className = "public-profile-owner-actions";
+      const addAction = (label, handler) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = label;
+        button.addEventListener("click", async () => {
+          button.disabled = true;
+          try { await handler(); }
+          catch (error) { showToast(error.message); }
+          finally { button.disabled = false; }
+        });
+        actions.append(button);
+      };
+      if (developerPermissions.includes("players.warn")) {
+        addAction("Выдать предупреждение", async () => {
+          const reason = prompt("Причина предупреждения");
+          if (!reason?.trim()) return;
+          await developerRequest("/players/" + player.id + "/warn", { method: "POST", body: JSON.stringify({ reason: reason.trim() }) });
+          showToast("Предупреждение выдано.");
+          await loadOwnerProfileTools(profile);
+        });
+      }
+      if ((!player.banned && developerPermissions.includes("players.ban")) || (player.banned && developerPermissions.includes("players.unban"))) {
+        addAction(player.banned ? "🔓 Разблокировать персонажа" : "🔒 Заблокировать персонажа", async () => {
+          const reason = prompt(player.banned ? "Причина разблокировки" : "Причина блокировки");
+          if (!reason?.trim()) return;
+          if (player.banned) {
+            const result = await developerRequest("/players/" + player.id + "/ban", { method: "DELETE", body: JSON.stringify({ reason: reason.trim() }) });
+            if (!result.revoked) throw new Error("Активная блокировка не найдена.");
+            showToast("Персонаж разблокирован.");
+          } else {
+            const hours = prompt("Срок в часах. Оставь пустым для постоянной блокировки.", "24");
+            if (hours === null) return;
+            await developerRequest("/players/" + player.id + "/ban", { method: "POST", body: JSON.stringify({ reason: reason.trim(), hours: hours === "" ? null : Number(hours) }) });
+            showToast("Персонаж заблокирован.");
+          }
+          await loadOwnerProfileTools(profile);
+        });
+      }
+      if (developerPermissions.includes("players.delete") && String(player.id) !== String(state.me?.id)) {
+        addAction("Удалить персонажа", async () => {
+          const reason = prompt("Причина удаления персонажа");
+          if (!reason?.trim()) return;
+          const confirmation = prompt("Для подтверждения введи точный ник: " + player.nickname);
+          if (confirmation !== player.nickname) throw new Error("Ник не совпадает. Удаление отменено.");
+          await developerRequest("/players/" + player.id, { method: "DELETE", body: JSON.stringify({ reason: reason.trim(), confirmNickname: confirmation }) });
+          $("#public-profile-owner-tools").classList.add("hidden");
+          $("#public-profile").classList.add("hidden");
+          showToast("Персонаж удалён.");
+        });
+      }
+      if (developerIsOwner && String(player.id) !== String(state.me?.id)) {
+        addAction("Сбросить код доступа", async () => {
+          if (!confirm("Сбросить код входа персонажа? Все его активные сессии будут завершены.")) return;
+          const result = await developerRequest("/players/" + player.id + "/access-code/reset", { method: "POST", body: "{}" });
+          const codeBox = document.createElement("div");
+          codeBox.className = "developer-row owner-code-result";
+          const label = document.createElement("strong");
+          label.textContent = "Новый код доступа. Показывается только сейчас:";
+          const value = document.createElement("code");
+          value.textContent = result.code;
+          const copy = document.createElement("button");
+          copy.type = "button";
+          copy.textContent = "Копировать код";
+          copy.addEventListener("click", async () => {
+            try { await navigator.clipboard.writeText(result.code); showToast("Код скопирован."); }
+            catch { showToast("Выдели код и скопируй вручную."); }
+          });
+          codeBox.append(label, value, copy);
+          content.append(codeBox);
+          showToast("Код обновлён. Предыдущие сессии завершены.");
+        });
+      }
+      addAction("Открыть полную панель разработчика", async () => {
+        $("#public-profile").classList.add("hidden");
+        openDeveloperPanel("players");
+      });
+      content.append(actions);
+      if (data.inventory?.length) {
+        const list = document.createElement("div");
+        list.className = "developer-row";
+        list.textContent = "Инвентарь: " + data.inventory.map(item => item.item_code + " × " + item.quantity).join(", ");
+        content.append(list);
+      }
+      if (data.punishments?.length) {
+        const list = document.createElement("div");
+        list.className = "developer-row";
+        list.textContent = "Последние действия: " + data.punishments.slice(0, 5).map(item => item.action_type + " · " + item.reason).join(" | ");
+        content.append(list);
+      }
+    } catch (error) {
+      content.replaceChildren();
+      const message = document.createElement("p");
+      message.className = "developer-muted";
+      message.textContent = error.message;
+      content.append(message);
+    }
+  }
+
   async function openPublicProfile(id) {
     closeCompetingPanels("#public-profile");
     const panel=$("#public-profile");
@@ -2266,6 +2434,17 @@
       const data=await response.json().catch(()=>({}));
       if(!response.ok)throw new Error(data.error||"Не удалось загрузить профиль.");
       const p=data.profile;
+      const ownerTools = $("#public-profile-owner-tools");
+      ownerTools.classList.toggle("hidden", !developerIsOwner);
+      const ownerToggle = $("#public-profile-owner-toggle");
+      const ownerContent = $("#public-profile-owner-content");
+      ownerContent.replaceChildren();
+      ownerContent.classList.add("hidden");
+      ownerToggle.onclick = async () => {
+        const opening = ownerContent.classList.contains("hidden");
+        ownerContent.classList.toggle("hidden", !opening);
+        if (opening) await loadOwnerProfileTools(p);
+      };
       $("#public-profile-name").textContent=p.nickname;
       $("#public-profile-developer").classList.toggle("hidden", !p.isDeveloper);
       $("#public-profile-presence").textContent=p.online?"● Сейчас в сети":"○ Не в сети";
