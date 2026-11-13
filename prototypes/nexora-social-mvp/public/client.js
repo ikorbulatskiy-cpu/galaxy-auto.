@@ -39,6 +39,7 @@
       skin: $("#skin").value,
       hair: $("#hair").value,
       suit: $("#suit").value,
+      outfit: $("#outfit").value,
       hairColor: $("#hair-color").value,
       shoes: $("#shoes").value,
       accessory: $("#accessory").value
@@ -1126,6 +1127,7 @@
       skin: $("#edit-skin").value,
       hair: $("#edit-hair").value,
       suit: $("#edit-suit").value,
+      outfit: $("#edit-outfit").value,
       hairColor: $("#edit-hair-color").value,
       shoes: $("#edit-shoes").value,
       accessory: $("#edit-accessory").value
@@ -1135,7 +1137,7 @@
     profileCtx.clearRect(0, 0, profileCanvas.width, profileCanvas.height);
     drawAvatar(profileCtx, 90, 96, 1.8, editorAvatarSettings(), 1, null);
   }
-  ["edit-gender","edit-skin","edit-hair","edit-suit","edit-hair-color","edit-shoes","edit-accessory"].forEach(id=>$("#"+id).addEventListener("change",drawProfilePreview));
+  ["edit-gender","edit-skin","edit-hair","edit-outfit","edit-suit","edit-hair-color","edit-shoes","edit-accessory"].forEach(id=>$("#"+id).addEventListener("change",drawProfilePreview));
 
   async function openMyProfile() {
     const panel = $("#profile-editor");
@@ -1166,6 +1168,7 @@
       $("#edit-skin").value = avatar.skin || skins[0];
       $("#edit-hair").value = avatar.hair || "short";
       $("#edit-suit").value = avatar.suit || suits[0];
+      $("#edit-outfit").value = avatar.outfit || "casual";
       $("#edit-hair-color").value = avatar.hairColor || "#30233d";
       $("#edit-shoes").value = avatar.shoes || "sneakers";
       $("#edit-accessory").value = avatar.accessory || "none";
