@@ -12,6 +12,7 @@ const { createAuthorityRouter } = require("./src/authority");
 const { createPlanetsRouter } = require("./src/planets");
 const { createEconomyRouter } = require("./src/economy");
 const { normalizeAvatar } = require("./src/avatar");
+const { attachGalaxySockets } = require("./src/galaxy-sockets");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -33,6 +34,7 @@ const EMOTIONS = ["wave","kiss","dance","smile","sad","laugh","surprise","love",
 const players = new Map();
 
 app.use(express.json({ limit: "32kb" }));
+app.get("/galaxy", (_req, res) => res.sendFile(path.join(__dirname, "public", "galaxy.html")));
 app.use(express.static(path.join(__dirname, "public")));
 function cookieOptions() {
   return { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 30 * 86400000 };
@@ -118,6 +120,8 @@ io.use(async (socket, next) => {
     next();
   } catch (error) { next(error); }
 });
+
+attachGalaxySockets(io, { pool, auth, planets: PLANETS, normalizeAvatar });
 
 io.on("connection", (socket) => {
   socket.join("account:" + socket.data.account.id);
