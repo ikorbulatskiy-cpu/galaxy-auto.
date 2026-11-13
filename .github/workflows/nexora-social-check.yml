@@ -33,7 +33,7 @@ jobs:
           node --check src/auth.js
           node --check src/social.js
           node --check src/profile.js
-          node --check src/developer.js\n          node --check src/auth.js
+          node --check src/developer.js
           node --check public/client.js
       - name: Verify migration sequence and social repair tables
         run: |

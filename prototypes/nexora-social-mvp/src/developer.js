@@ -9,7 +9,7 @@ const PERMISSIONS = new Set([
 const ROLES = new Set(["DEVELOPER", "ADMIN", "MODERATOR", "HELPER", "USER"]);
 function ownerId() {
   const value = String(process.env.NEXORA_OWNER_ACCOUNT_ID || "").trim();
-  return /^\\d+$/.test(value) ? value : "";
+  return /^\d+$/.test(value) ? value : "";
 }
 function createDeveloperRouter({ pool, auth, players, planets }) {
   const router = express.Router();
@@ -77,7 +77,7 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
   router.get("/players/:id", async (req, res, next) => {
     try {
       const current = await requirePermission(req, res, "players.view"); if (!current) return;
-      if (!/^\\d+$/.test(String(req.params.id))) return res.status(400).json({ error: "Некорректный ID." });
+      if (!/^\d+$/.test(String(req.params.id))) return res.status(400).json({ error: "Некорректный ID." });
       const result = await pool.query(
         `SELECT a.id,a.nickname,a.created_at,a.last_login_at,c.avatar,c.planet,c.level,c.experience,c.authority,
                 COALESCE(w.balance,0)::text AS balance
@@ -98,7 +98,7 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
       const targetId = String(req.params.id);
       const reason = String(req.body?.reason || "").trim().slice(0, 500);
       const hours = req.body?.hours == null || req.body.hours === "" ? null : Number(req.body.hours);
-      if (!/^\\d+$/.test(targetId) || !reason || (hours !== null && (!Number.isInteger(hours) || hours < 1 || hours > 8760))) return res.status(400).json({ error: "Укажите корректный ID, причину и срок от 1 до 8760 часов либо постоянную блокировку." });
+      if (!/^\d+$/.test(targetId) || !reason || (hours !== null && (!Number.isInteger(hours) || hours < 1 || hours > 8760))) return res.status(400).json({ error: "Укажите корректный ID, причину и срок от 1 до 8760 часов либо постоянную блокировку." });
       if (ownerId() && targetId === ownerId()) return res.status(403).json({ error: "Нельзя заблокировать OWNER." });
       const target = await pool.query("SELECT id FROM nexora_social_world.accounts WHERE id=$1", [targetId]);
       if (!target.rowCount) return res.status(404).json({ error: "Игрок не найден." });
@@ -112,7 +112,7 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
     try {
       const current = await requirePermission(req, res, "players.unban"); if (!current) return;
       const targetId = String(req.params.id), reason = String(req.body?.reason || "").trim().slice(0,500);
-      if (!/^\\d+$/.test(targetId) || !reason) return res.status(400).json({ error: "Укажите ID игрока и причину разблокировки." });
+      if (!/^\d+$/.test(targetId) || !reason) return res.status(400).json({ error: "Укажите ID игрока и причину разблокировки." });
       const client = await pool.connect();
       let changed;
       try {
@@ -128,7 +128,7 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
     try{
       const current=await requirePermission(req,res,"players.warn"); if(!current)return;
       const targetId=String(req.params.id),reason=String(req.body?.reason||"").trim().slice(0,500);
-      if(!/^\\d+$/.test(targetId)||!reason)return res.status(400).json({error:"Укажите ID игрока и причину предупреждения."});
+      if(!/^\d+$/.test(targetId)||!reason)return res.status(400).json({error:"Укажите ID игрока и причину предупреждения."});
       if(ownerId()&&targetId===ownerId())return res.status(403).json({error:"Нельзя выдать предупреждение OWNER."});
       const target=await pool.query("SELECT id FROM nexora_social_world.accounts WHERE id=$1",[targetId]);
       if(!target.rowCount)return res.status(404).json({error:"Игрок не найден."});
@@ -183,7 +183,7 @@ function createDeveloperRouter({ pool, auth, players, planets }) {
       const role = String(req.body?.role || "").trim().toUpperCase();
       const reason = String(req.body?.reason || "").trim().slice(0, 500);
       const permissions = Array.isArray(req.body?.permissions) ? [...new Set(req.body.permissions.filter(p => PERMISSIONS.has(p)))] : [];
-      if (!/^\\d+$/.test(accountId) || !ROLES.has(role)) return res.status(400).json({ error: "Некорректный аккаунт или роль." });
+      if (!/^\d+$/.test(accountId) || !ROLES.has(role)) return res.status(400).json({ error: "Некорректный аккаунт или роль." });
       if (ownerId() && accountId === ownerId()) return res.status(400).json({ error: "Нельзя изменить роль владельца через назначения." });
       const target = await pool.query("SELECT id FROM nexora_social_world.accounts WHERE id=$1", [accountId]);
       if (!target.rowCount) return res.status(404).json({ error: "Аккаунт не найден." });
