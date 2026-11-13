@@ -76,8 +76,8 @@
       <header class="topbar">
         <div class="top-brand"><span>✦</span> NEXORA</div>
         <div class="room-location"><strong id="planet-title">Стартовая</strong><small id="room-location-title">Главная площадь</small></div>
-        <div class="topbar-status"><div class="online-pill"><i></i><span id="online-count">1</span></div><div class="connection-pill" id="connection-status" data-state="connecting"><i></i><span>Связь</span></div></div>
-        <div class="topbar-actions"><button id="my-profile" class="glass-button" type="button" aria-label="Профиль">👤</button><button id="social-open" class="glass-button" type="button" aria-label="Друзья и сообщения" title="Социальное меню">👥</button><button id="shop-open" class="glass-button shop-open-button" type="button" aria-label="Магазин">🛍️</button><button id="developer-open" class="glass-button hidden" type="button">🛠️</button><button id="planets-button" class="glass-button" aria-label="Планеты">🪐</button><button id="exit-room" class="glass-button" type="button" aria-label="Выход">↪</button></div>
+        <div class="topbar-status"><div class="online-pill" title="Игроки в комнате"><i></i><span id="online-count">1</span></div><div class="topbar-koins" title="Баланс Koins">✦ <strong id="topbar-koins">—</strong></div></div>
+        <div class="topbar-actions"><button id="my-profile" class="glass-button" type="button" aria-label="Профиль">👤</button><button id="social-open" class="glass-button" type="button" aria-label="Друзья и сообщения" title="Социальное меню">👥</button><button id="shop-open" class="glass-button shop-open-button" type="button" aria-label="Магазин">🛍️</button><button id="developer-open" class="glass-button hidden" type="button" aria-label="Панель разработчика">🛠️</button><button id="planets-button" class="glass-button" aria-label="Планеты">🪐</button><button id="exit-room" class="glass-button" type="button" aria-label="Выход">↪</button></div>
       </header>
 
       <div class="planet-picker hidden" id="planet-picker">
@@ -91,19 +91,6 @@
         <div id="gift-layer" class="gift-layer"></div>
       </div>
 
-      <div class="game-controls">
-        <div class="action-row">
-          <button class="action-button" data-emotion="wave">👋 <span>Помахать</span></button>
-          <button class="action-button" data-emotion="kiss">💋 <span>Поцелуй</span></button>
-          <button class="action-button" data-emotion="dance">💃 <span>Танец</span></button>
-          <button id="history-button" class="action-button history-action">☰ <span>Чат</span></button>
-        </div>
-        <form id="chat-form" class="chat-form">
-          <input id="chat-input" maxlength="240" placeholder="Написать сообщение..." autocomplete="off">
-          <button type="submit" aria-label="Отправить сообщение">➤</button>
-        </form>
-      </div>
-
       <nav id="room-toolbar" class="room-toolbar" aria-label="Игровое управление">
         <button type="button" data-room-toggle="menu" aria-expanded="false">☰<span>Меню</span></button>
         <button type="button" data-room-toggle="chat">💬<span>Чат</span></button>
@@ -112,6 +99,7 @@
         <button type="button" data-room-action="friends">⭐<span>Друзья</span></button>
         <button type="button" data-room-action="gifts">🎁<span>Подарки</span></button>
         <button type="button" data-room-toggle="events">🔔<span>События</span><i id="room-event-count" class="room-event-count hidden">0</i></button>
+        <button type="button" data-room-action="profile">👤<span>Профиль</span></button>
       </nav>
 
       <aside id="room-main-menu" class="room-flyout hidden" aria-label="Главное меню">
@@ -125,6 +113,7 @@
           <button type="button" data-room-action="shop">🛍️<span>Магазин</span></button>
           <button type="button" data-room-action="authority">⭐<span>Звания и ауры</span></button>
           <button type="button" data-room-action="planets">🪐<span>Планеты</span></button>
+          <button type="button" data-room-action="aura-quality" id="aura-quality-action">✨<span>Качество аур: высокое</span></button>
           <button type="button" data-room-action="developer" id="room-developer-action" class="hidden">🛠️<span>Разработчик</span></button>
           <button type="button" data-room-action="exit">↪<span>Выйти</span></button>
         </div>
@@ -145,9 +134,13 @@
 
       <aside id="room-events-panel" class="room-flyout room-events-panel hidden" aria-label="События комнаты"><div class="room-flyout-head"><div><small>NEXORA LIVE</small><strong>События комнаты</strong></div><button type="button" data-room-close="events" aria-label="Закрыть">×</button></div><div id="room-event-list" class="room-event-list"><p class="room-event-empty">Здесь появятся события комнаты.</p></div></aside>
 
-      <aside id="chat-drawer" class="chat-drawer hidden">
-        <div class="drawer-head"><strong>Общий чат</strong><button id="close-history" aria-label="Закрыть">×</button></div>
-        <div id="chat-history" class="chat-history"></div>
+      <aside id="chat-drawer" class="chat-drawer hidden" aria-label="Чат комнаты">
+        <div class="drawer-head"><div><strong>Чат комнаты</strong><span id="chat-online-label">Сообщения игроков</span></div><button id="close-history" aria-label="Закрыть">×</button></div>
+        <div id="chat-history" class="chat-history" aria-live="polite"></div>
+        <form id="chat-form" class="chat-form">
+          <input id="chat-input" maxlength="240" placeholder="Написать сообщение..." autocomplete="off" aria-label="Сообщение">
+          <button type="submit" aria-label="Отправить сообщение">➤</button>
+        </form>
       </aside>
 
       <div id="profile-menu" class="profile-menu hidden">
