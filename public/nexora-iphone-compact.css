@@ -334,3 +334,20 @@
 @media (prefers-reduced-motion: reduce) {
   #dashboard > #tab-world .nx-avatar-card {animation: none !important}
 }
+
+
+/* NEXORA FIX (mobile): собственный персонаж всегда стоит по центру сцены.
+   left:50% + translateX(-50%) центрируют спрайт независимо от ширины экрана.
+   Абсолютное позиционирование выводит его из прокручиваемого flex-списка. */
+#dashboard > #tab-world .nx-avatars > .nx-avatar-card.me{
+  position:absolute!important;
+  left:50%!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:0!important;
+  flex:none!important;
+  margin:0!important;
+  transform:translateX(-50%)!important;
+  z-index:5!important;
+  scroll-snap-align:none!important;
+}
