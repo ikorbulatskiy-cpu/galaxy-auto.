@@ -592,7 +592,8 @@
       $("#profile-authority").textContent = p.authority;
       $("#profile-koins").textContent = p.koins;
       $("#profile-nickname-display").textContent = p.nickname;
-      paintAuthorityProfile(p);
+      const authorityState=await authorityApi("/");
+      paintAuthorityProfile(p,authorityState.titles);
       $("#profile-status").value = p.status || "";
       $("#profile-bio").value = p.bio || "";
       const avatar = p.avatar || {};
@@ -608,7 +609,7 @@
     }
   }
 
-  function paintAuthorityProfile(profile) {
+  function paintAuthorityProfile(profile, titles = []) {
     const labels={NOVICE:"Новичок",BEDA:"Беда",PAPA:"Папа",ANGEL:"Ангел",CREATOR:"Создатель"};
     const colors={NOVICE:"#d7def9",BEDA:"#ffe17a",PAPA:"#ffca55",ANGEL:"#78f0a5",CREATOR:"#ff655c"};
     const key=profile.authorityTitle||"NOVICE";
@@ -618,10 +619,11 @@
       ? "Активная аура: "+(key==="BEDA"?"золотое сияние":key==="PAPA"?"премиальное золотое сияние":key==="ANGEL"?"зелёное сияние":key==="CREATOR"?"красное пламя и искры":"нет")
       : "Без активной ауры";
     const order=["NOVICE","BEDA","PAPA","ANGEL","CREATOR"],index=order.indexOf(key),next=order[index+1];
-    const thresholds=[25,75,150,300];
-    const progress=Math.min(100,Math.max(0,Number(profile.authority||0)/Math.max(1,thresholds[index]||300)*100));
+    const nextConfig=titles.find(item=>item.title_key===next);
+    const threshold=Number(nextConfig?.min_authority ?? [25,75,150,300][index] ?? 300);
+    const progress=Math.min(100,Math.max(0,Number(profile.authority||0)/Math.max(1,threshold)*100));
     $("#profile-authority-progress").style.width=index>=4?"100%":progress+"%";
-    $("#profile-authority-next").textContent=next?"Следующее звание: "+labels[next]:"Максимальное звание достигнуто";
+    $("#profile-authority-next").textContent=next?( "Следующее звание: "+labels[next]+" · "+threshold+" авторитета"):"Максимальное звание достигнуто";
   }
   async function authorityApi(path="",options={}) {
     const response=await fetch("/api/authority"+path,{credentials:"same-origin",headers:{"Content-Type":"application/json",...(options.headers||{})},...options});
@@ -657,6 +659,7 @@
         if(item.title_key===current.titleKey){button.textContent="Текущее звание";button.disabled=true;}
         else if(item.sort_order<currentOrder){button.textContent="Уже пройдено";button.disabled=true;}
         else if(item.sort_order!==currentOrder+1||!item.enabled){button.textContent=item.enabled?"Сначала предыдущее звание":"Недоступно";button.disabled=true;}
+        else if(Number(current.authority)<Number(item.min_authority)){button.textContent="Нужно "+item.min_authority+" авторитета";button.disabled=true;}
         else {
           button.textContent="Повысить за "+Number(item.koins_price).toLocaleString("ru-RU")+" Koins";
           button.addEventListener("click",async()=>{
@@ -668,7 +671,7 @@
               const me=state.players.get(state.me?.id);if(me)Object.assign(me,{authorityTitle:result.current.titleKey,auraType:item.aura_type,auraEnabled:result.current.auraEnabled});
               $("#authority-current-label").textContent="Текущее звание: "+result.current.title+" · Koins: "+Number(result.current.koins).toLocaleString("ru-RU");
               const profileResponse=await fetch("/api/profile",{credentials:"same-origin"}),profileData=await profileResponse.json();
-              if(profileResponse.ok){$("#profile-koins").textContent=profileData.profile.koins;paintAuthorityProfile(profileData.profile);}
+              if(profileResponse.ok){$("#profile-koins").textContent=profileData.profile.koins;const refreshedAuthority=await authorityApi("/");paintAuthorityProfile(profileData.profile,refreshedAuthority.titles);}
               showToast("Новое звание: "+item.title_label);await openAuthorityPanel();
             }catch(error){message.textContent=error.message;button.disabled=false;}
           });
@@ -1221,6 +1224,10 @@
       const desc = document.createElement("p"); desc.textContent = item.desc;
       const price = document.createElement("div"); price.className = "shop-item-price"; price.textContent = item.price;
       const button = document.createElement("button"); button.type = "button"; button.textContent = "Скоро в продаже"; button.disabled = true;
+      if (item.cat === "authority" || item.cat === "auras") {
+        button.disabled = false; button.textContent = "Открыть звания";
+        button.addEventListener("click", () => { $("#shop-panel").classList.add("hidden"); openAuthorityPanel(); });
+      }
       body.append(name,desc,price,button); card.append(art,body); box.append(card);
     });
     if (!items.length) { const empty = document.createElement("p"); empty.className = "shop-notice"; empty.textContent = "Новые предметы этой категории появятся позже."; box.append(empty); }
