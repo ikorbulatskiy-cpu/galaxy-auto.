@@ -11,15 +11,15 @@
   const loginError = $("#login-error");
 
   const PLANETS = {
-    starter: { name: "Стартовая", sky: ["#10183d", "#24245c"], ground: "#493b83", glow: "#8e82ff" },
-    club: { name: "Клуб", sky: ["#241039", "#64285d"], ground: "#713a79", glow: "#ff7bc7" },
-    beach: { name: "Пляж", sky: ["#06344e", "#167b91"], ground: "#b47a54", glow: "#74e5df" }
+    starter: { name: "Стартовая", location: "Главная площадь", sky: ["#10183d", "#24245c"], ground: "#493b83", glow: "#8e82ff" },
+    club: { name: "Клуб", location: "Танцпол", sky: ["#241039", "#64285d"], ground: "#713a79", glow: "#ff7bc7" },
+    beach: { name: "Пляж", location: "Берег океана", sky: ["#06344e", "#167b91"], ground: "#b47a54", glow: "#74e5df" }
   };
   const skins = ["#f4c7a1", "#c9875b", "#75452f"];
   const suits = ["#6d7cff", "#ef6c9b", "#35bca5"];
   const state = {
     me: null, players: new Map(), planet: "starter", selected: null,
-    stars: [], chat: [], roomEvents: [], unreadEvents: 0, width: 0, height: 0, dpr: 1, toastTimer: null
+    stars: [], chat: [], roomEvents: [], unreadEvents: 0, width: 0, height: 0, dpr: 1, toastTimer: null, movementFrame: 0
   };
 
   function avatarSettings() {
@@ -173,6 +173,23 @@
 
   function drawPlanetBackdrop(){const w=state.width,h=state.height,t=Date.now()/1000;ctx.save();if(state.planet==="starter"){const moon=ctx.createRadialGradient(w*.76,h*.25,4,w*.76,h*.25,Math.min(w,h)*.16);moon.addColorStop(0,"rgba(210,220,255,.9)");moon.addColorStop(.72,"rgba(135,151,222,.24)");moon.addColorStop(1,"rgba(135,151,222,0)");ctx.fillStyle=moon;ctx.beginPath();ctx.arc(w*.76,h*.25,Math.min(w,h)*.16,0,Math.PI*2);ctx.fill();for(let i=0;i<12;i++){const bw=24+(i%4)*13,bh=h*(.12+((i*7)%5)*.035),bx=i*w/11-8;ctx.fillStyle=i%2?"rgba(23,34,79,.72)":"rgba(31,42,93,.78)";ctx.fillRect(bx,h*.69-bh,bw,bh);ctx.fillStyle="rgba(151,190,255,.38)";for(let wy=h*.69-bh+9;wy<h*.68;wy+=13)for(let wx=bx+6;wx<bx+bw-4;wx+=11)ctx.fillRect(wx,wy,3,4);}}else if(state.planet==="club"){for(let i=0;i<5;i++){const x=w*(.12+i*.19),top=h*(.16+(i%2)*.1);ctx.globalAlpha=.16+Math.sin(t*1.8+i)*.05;ctx.strokeStyle=i%2?"#ff75d1":"#68eaff";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x+Math.sin(t+i)*w*.08,h*.68);ctx.stroke();}ctx.globalAlpha=.3;ctx.fillStyle="#f36acb";ctx.beginPath();ctx.ellipse(w*.5,h*.61,w*.36,12,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;for(let i=0;i<7;i++){ctx.fillStyle=i%2?"rgba(16,21,57,.78)":"rgba(35,18,65,.8)";ctx.fillRect(i*w/7,h*(.47+(i%3)*.035),w/10,h*.2);}}else{const sun=ctx.createRadialGradient(w*.78,h*.22,2,w*.78,h*.22,Math.min(w,h)*.2);sun.addColorStop(0,"rgba(255,239,183,.92)");sun.addColorStop(.55,"rgba(255,196,133,.25)");sun.addColorStop(1,"rgba(255,196,133,0)");ctx.fillStyle=sun;ctx.beginPath();ctx.arc(w*.78,h*.22,Math.min(w,h)*.2,0,Math.PI*2);ctx.fill();ctx.fillStyle="rgba(255,255,255,.12)";for(let i=0;i<4;i++){const x=((i*.31+t*.012)%1.25-.1)*w,y=h*(.25+i*.075);ctx.beginPath();ctx.ellipse(x,y,34,8,0,0,Math.PI*2);ctx.ellipse(x+22,y-4,22,7,0,0,Math.PI*2);ctx.fill();}for(const px of [w*.12,w*.9]){ctx.strokeStyle="rgba(29,67,61,.78)";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(px,h*.73);ctx.quadraticCurveTo(px+18,h*.48,px+2,h*.34);ctx.stroke();for(let j=0;j<5;j++){ctx.strokeStyle="rgba(33,89,75,.88)";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(px+2,h*.36);ctx.quadraticCurveTo(px+(j-2)*15,h*.28,px+(j-2)*27,h*.34);ctx.stroke();}}ctx.fillStyle="rgba(116,222,220,.18)";ctx.fillRect(0,h*.62,w,h*.07);ctx.fillStyle="rgba(255,255,255,.22)";for(let i=0;i<8;i++){const x=((i*.17+t*.02)%1.15-.05)*w;ctx.fillRect(x,h*(.64+(i%3)*.018),28,1);}}ctx.restore();}
 
+  function beginPlayerMovement(player,targetX,targetY){
+    if(!player)return;
+    const now=performance.now(),fromX=Number.isFinite(player.renderX)?player.renderX:player.x,fromY=Number.isFinite(player.renderY)?player.renderY:(player.y??.82);
+    const distance=Math.hypot((targetX-fromX)*Math.max(1,state.width),(targetY-fromY)*Math.max(1,state.height));
+    player.moveFromX=fromX;player.moveFromY=fromY;player.moveToX=targetX;player.moveToY=targetY;player.moveStartedAt=now;
+    player.moveDuration=Math.max(180,Math.min(2400,distance/185*1000));player.facing=targetX>=fromX?1:-1;
+    player.x=targetX;player.y=targetY;player.moving=distance>3;
+    if(!player.moving){player.renderX=targetX;player.renderY=targetY;}
+  }
+  function advancePlayerMovement(player,now){
+    if(!Number.isFinite(player.moveStartedAt)||!Number.isFinite(player.moveDuration)){player.renderX??=player.x;player.renderY??=player.y??.82;return;}
+    const progress=Math.min(1,(now-player.moveStartedAt)/player.moveDuration),eased=progress*progress*(3-2*progress);
+    player.renderX=player.moveFromX+(player.moveToX-player.moveFromX)*eased;
+    player.renderY=player.moveFromY+(player.moveToY-player.moveFromY)*eased;
+    if(progress>=1){player.renderX=player.moveToX;player.renderY=player.moveToY;player.moving=false;player.moveStartedAt=null;player.moveDuration=null;}else player.moving=true;
+  }
+
   function drawScene() {
     if (gameScreen.classList.contains("hidden")) return;
     const w = state.width, h = state.height;
@@ -210,52 +227,35 @@
     // Detailed, planet-specific world geometry is rendered beneath player avatars.
     window.NexoraWorldScene?.draw(ctx, w, h, state.planet, Date.now());
 
-    const ordered = [...state.players.values()].sort((a, b) => a.x - b.x);
+    const ordered = [...state.players.values()].sort((a,b)=>(a.renderY??a.y??.82)-(b.renderY??b.y??.82));
+    const now = performance.now();
     ordered.forEach((player) => {
-      const x = player.x * w;
-      const baseY = surfaceY(x);
-      const isMe = player.id === state.me?.id;
-      const render = player.renderX ?? player.x;
-      player.renderX = render + (player.x - render) * .18;
-      const drawX = player.renderX * w;
-      const y = surfaceY(drawX) - 5;
-      const moveOffset = player.moving ? Math.sin(Date.now() / 80) * 2 : 0;
+      advancePlayerMovement(player, now);
+      const drawX = (player.renderX ?? player.x) * w;
+      const depth = Math.max(.60,Math.min(.86,player.renderY ?? player.y ?? .82));
+      const scale = .78 + ((depth-.60)/.26)*.24;
+      const y = depth*h;
+      const isMe = String(player.id) === String(state.me?.id);
       const emotion = player.emotion?.until > Date.now() ? player.emotion.type : null;
-
-      if (player.bubble?.until > Date.now()) {
-        const bubbleText = player.bubble.text;
-        ctx.font = "11px sans-serif";
-        const bubbleWidth = Math.min(w - 24, Math.max(70, ctx.measureText(bubbleText).width + 20));
-        const bubbleX = Math.max(8, Math.min(w - bubbleWidth - 8, drawX - bubbleWidth / 2));
-        const bubbleY = y - 93;
-        ctx.fillStyle = "rgba(255,255,255,.94)";
-        roundRect(ctx, bubbleX, bubbleY, bubbleWidth, 27, 10); ctx.fill();
-        ctx.fillStyle = "#1a2146"; ctx.textAlign = "center";
-        ctx.fillText(bubbleText, bubbleX + bubbleWidth / 2, bubbleY + 17, bubbleWidth - 12);
-        ctx.textAlign = "start";
+      if(player.bubble?.until>Date.now()){
+        const bubbleText=player.bubble.text;ctx.font="11px sans-serif";
+        const bubbleWidth=Math.min(w-24,Math.max(70,ctx.measureText(bubbleText).width+20));
+        const bubbleX=Math.max(8,Math.min(w-bubbleWidth-8,drawX-bubbleWidth/2));
+        const bubbleY=y-91*scale;ctx.fillStyle="rgba(255,255,255,.94)";
+        roundRect(ctx,bubbleX,bubbleY,bubbleWidth,27,10);ctx.fill();
+        ctx.fillStyle="#1a2146";ctx.textAlign="center";ctx.fillText(bubbleText,bubbleX+bubbleWidth/2,bubbleY+17,bubbleWidth-12);ctx.textAlign="start";
       }
-
-      if (String(state.selected) === String(player.id)) {
-        ctx.save();
-        ctx.strokeStyle = "#e7dcff"; ctx.lineWidth = 2; ctx.shadowColor = "#a58cff"; ctx.shadowBlur = 16;
-        ctx.beginPath(); ctx.ellipse(drawX,y + moveOffset + 1,25,46,0,0,Math.PI*2); ctx.stroke();
-        ctx.shadowBlur = 0; ctx.fillStyle = "rgba(10,15,42,.9)";
-        roundRect(ctx,drawX-48,y-77,96,19,8); ctx.fill();
-        ctx.fillStyle = "#fff"; ctx.font = "bold 9px sans-serif"; ctx.textAlign = "center";
-        ctx.fillText(player.nickname,drawX,y-64,88); ctx.textAlign = "start";
-        ctx.restore();
+      if(String(state.selected)===String(player.id)){
+        ctx.save();ctx.strokeStyle="#e7dcff";ctx.lineWidth=2;ctx.shadowColor="#a58cff";ctx.shadowBlur=16;
+        ctx.beginPath();ctx.ellipse(drawX,y+2,25*scale,46*scale,0,0,Math.PI*2);ctx.stroke();ctx.restore();
       }
-      drawAura(ctx, drawX, y + moveOffset, .95, player.auraType, player.auraEnabled);
-      drawAvatar(ctx, drawX, y + moveOffset, .95, player.avatar, player.facing || 1, emotion, Boolean(player.moving));
-      if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20,y-58-Math.sin(Date.now()/120)*3);ctx.restore();}
-      ctx.textAlign = "center";
-      ctx.font = isMe ? "bold 11px sans-serif" : "10px sans-serif";
-      ctx.fillStyle = isMe ? "#fff1a8" : "#ffffff";
-      ctx.shadowColor = "#080b20"; ctx.shadowBlur = 5;
-      ctx.fillText(player.nickname, drawX, baseY + 13);
-      if(player.title){ctx.font="bold 8px sans-serif";ctx.fillStyle="#bfcaff";ctx.fillText(player.title.toUpperCase(),drawX,baseY+24);}
-      ctx.shadowBlur = 0;
-      ctx.textAlign = "start";
+      drawAura(ctx,drawX,y,scale,player.auraType,player.auraEnabled);
+      drawAvatar(ctx,drawX,y,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
+      if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20*scale,y-58*scale-Math.sin(Date.now()/120)*3);ctx.restore();}
+      // Only the nickname stays above the avatar. Rank and authority belong in the info card.
+      ctx.save();ctx.textAlign="center";ctx.font=(isMe?"700 ":"600 ")+Math.max(10,11*scale)+"px Inter,sans-serif";
+      ctx.fillStyle=isMe?"#fff1b8":"#fff";ctx.shadowColor="#080b20";ctx.shadowBlur=7;
+      ctx.fillText(player.nickname,drawX,y-48*scale,132);ctx.restore();
     });
     requestAnimationFrame(drawScene);
   }
@@ -291,6 +291,7 @@
         loginScreen.classList.add("hidden");
         gameScreen.classList.remove("hidden");
         $("#planet-title").textContent = PLANETS[state.planet].name;
+    $("#room-location-title").textContent = PLANETS[state.planet].location;
         resize();
         requestAnimationFrame(drawScene);
         refreshSocial();
@@ -353,22 +354,19 @@
   socket.on("planet:state", (data) => {
     state.planet = data.planet;
     state.players.clear();
-    data.players.forEach((player) => state.players.set(player.id, { ...player, renderX: player.x }));
+    data.players.forEach((player) => state.players.set(player.id, { ...player, y: player.y ?? .82, renderX: player.x, renderY: player.y ?? .82 }));
     state.chat = data.history || [];
     renderHistory();
     $("#planet-title").textContent = PLANETS[state.planet].name;
+    $("#room-location-title").textContent = PLANETS[state.planet].location;
     updateOnline();
   });
-  socket.on("player:joined",player=>{state.players.set(player.id,{...player,renderX:player.x});updateOnline();pushRoomEvent("Игрок вошёл",player.nickname+" присоединился к планете.","✦");});
+  socket.on("player:joined",player=>{state.players.set(player.id,{...player,y:player.y??.82,renderX:player.x,renderY:player.y??.82});updateOnline();pushRoomEvent("Игрок вошёл",player.nickname+" присоединился к планете.","✦");});
   socket.on("player:left",({id})=>{const departed=state.players.get(id);state.players.delete(id);updateOnline();if(departed)pushRoomEvent("Игрок вышел",departed.nickname+" покинул планету.","↗");if(state.selected===id)closeProfile();});
-  socket.on("player:moved", ({ id, x }) => {
-    const player = state.players.get(id);
-    if (!player) return;
-    player.facing = x >= player.x ? 1 : -1;
-    player.x = x;
-    player.moving = true;
-    clearTimeout(player.moveTimer);
-    player.moveTimer = setTimeout(() => { player.moving = false; }, 400);
+  socket.on("player:moved",({id,x,y})=>{
+    const player=state.players.get(String(id));
+    if(!player||!Number.isFinite(Number(x))||!Number.isFinite(Number(y)))return;
+    beginPlayerMovement(player,Number(x),Number(y));
   });
   socket.on("player:bubble", ({ id, bubble }) => {
     const player = state.players.get(id);
@@ -408,47 +406,35 @@
   });
   socket.on("profile:updated", (player) => {
     const previous = state.players.get(player.id);
-    state.players.set(player.id, { ...previous, ...player, renderX: previous?.renderX ?? player.x });
+    state.players.set(player.id,{...previous,...player,y:player.y??previous?.y??.82,renderX:previous?.renderX??player.x,renderY:previous?.renderY??player.y??.82});
     if (String(player.id) === String(state.me?.id)) {
       state.me = { ...state.me, ...player };
       if (!$("#profile-editor").classList.contains("hidden")) paintAuthorityProfile(state.me);
     }
-    if (state.selected === player.id) $("#profile-rank").textContent = (player.title || "Новичок") + " · Авторитет " + player.authority;
+    if (String(state.selected) === String(player.id)) {
+      $("#profile-rank").textContent = (player.title || "Новичок") + " · Авторитет " + (player.authority ?? 0);
+      $("#profile-aura").textContent = player.auraEnabled ? "Аура активна" : "Аура выключена";
+    }
   });
   socket.on("friend:result", ({ nickname, already }) => showToast(already ? nickname + " уже в друзьях" : nickname + " добавлен в друзья"));
   socket.on("friend:notice",({nickname})=>{pushRoomEvent("Новый друг",nickname+" добавил вас в друзья.","⭐");showToast(nickname+" добавил вас в друзья");});
 
-  canvas.addEventListener("pointerdown", (event) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    let nearest = null, nearestDistance = Infinity;
-    for (const player of state.players.values()) {
-      const px = player.x * state.width;
-      const py = surfaceY(px) - 24;
-      const distance = Math.hypot(px - x, py - y);
-      if (distance < 34 && distance < nearestDistance) {
-        nearest = player; nearestDistance = distance;
-      }
+  canvas.addEventListener("pointerdown",(event)=>{
+    if(event.button!==undefined&&event.button!==0)return;
+    const rect=canvas.getBoundingClientRect(),x=event.clientX-rect.left,y=event.clientY-rect.top;
+    let nearest=null,nearestDistance=Infinity;
+    for(const player of state.players.values()){
+      const px=(player.renderX??player.x)*state.width,py=(player.renderY??player.y??.82)*state.height-18;
+      const distance=Math.hypot(px-x,py-y);
+      if(distance<38&&distance<nearestDistance){nearest=player;nearestDistance=distance;}
     }
-    if (nearest) {
-      openProfile(nearest);
-      return;
-    }
-    if (y > state.height * .48) {
-      const targetX = Math.max(.04, Math.min(.96, x / state.width));
-      const me = state.players.get(state.me?.id);
-      if (me) {
-        me.facing = targetX >= me.x ? 1 : -1;
-        me.x = targetX;
-        me.moving = true;
-        clearTimeout(me.moveTimer);
-        me.moveTimer = setTimeout(() => { me.moving = false; }, 450);
-      }
-      socket.emit("player:move", { x: targetX });
-    } else {
+    if(nearest){openProfile(nearest);return;}
+    const relativeY=y/Math.max(1,state.height);
+    if(relativeY>=.55&&relativeY<=.97){
       closeProfile();
-    }
+      const targetX=Math.max(.04,Math.min(.96,x/state.width)),targetY=Math.max(.60,Math.min(.86,relativeY));
+      socket.emit("player:move",{x:targetX,y:targetY},result=>{if(!result?.ok)showToast(result?.error||"Не удалось переместить персонажа.");});
+    }else closeProfile();
   });
 
   function updateOnline() {
@@ -478,7 +464,11 @@
   }
   document.querySelectorAll("[data-room-toggle]").forEach(button => button.addEventListener("click",() => {
     const name = button.dataset.roomToggle;
-    if (name === "chat") { $("#chat-input").focus(); $("#chat-drawer").classList.toggle("hidden"); closeRoomFlyouts(); return; }
+    if(name==="chat"){
+      const opening=$("#chat-drawer").classList.contains("hidden");
+      $("#chat-drawer").classList.toggle("hidden",!opening);gameScreen.classList.toggle("chat-open",opening);closeRoomFlyouts();
+      if(opening)setTimeout(()=>$("#chat-input").focus(),80);return;
+    }
     toggleRoomFlyout(name);
   }));
   document.querySelectorAll("[data-room-close]").forEach(button => button.addEventListener("click",() => closeRoomFlyouts()));
@@ -486,7 +476,7 @@
     const action = button.dataset.roomAction;
     closeRoomFlyouts();
     if (action === "profile") openMyProfile();
-    else if (action === "chat") $("#chat-input").focus();
+    else if (action === "chat") { $("#room-toolbar [data-room-toggle=\"chat\"]").click(); }
     else if (action === "friends") openSocialTab("friends");
     else if (action === "messages") openSocialTab("messages");
     else if (action === "gifts") { if (state.selected && String(state.selected) !== String(state.me?.id)) { $("#gift-options").classList.remove("hidden"); $("#profile-menu").classList.remove("hidden"); } else showToast("Выбери игрока в комнате, чтобы отправить подарок."); }
@@ -506,7 +496,9 @@
   function openProfile(player) {
     state.selected = player.id;
     $("#profile-name").textContent = player.nickname;
-    $("#profile-rank").textContent = (player.title || "Новичок") + " · Авторитет " + player.authority;
+    $("#profile-rank").textContent = (player.title || "Новичок") + " · Авторитет " + (player.authority ?? 0);
+    $("#profile-aura").textContent = player.auraEnabled ? "Аура активна" : "Аура выключена";
+    $("#profile-online-status").textContent = "● В этой комнате";
     const ownProfile = String(player.id) === String(state.me?.id);
     ["#dm-open-button","#whisper-button","#gift-button","#friend-button"].forEach(selector => $(selector).classList.toggle("hidden", ownProfile));
     $("#my-profile-context").classList.toggle("hidden", !ownProfile);
@@ -617,7 +609,7 @@
     });
   });
   $("#history-button").addEventListener("click", () => $("#chat-drawer").classList.toggle("hidden"));
-  $("#close-history").addEventListener("click", () => $("#chat-drawer").classList.add("hidden"));
+  $("#close-history").addEventListener("click",()=>{$("#chat-drawer").classList.add("hidden");gameScreen.classList.remove("chat-open");});
 
   socket.on("connect",()=>setConnectionStatus("online","На связи"));
   socket.on("reconnect_attempt",()=>setConnectionStatus("reconnecting","Переподключение"));
