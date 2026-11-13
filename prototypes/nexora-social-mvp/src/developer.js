@@ -4,7 +4,8 @@ const PERMISSIONS = new Set([
   "players.view", "players.ban", "players.unban", "players.warn",
   "moderation.view", "world.view", "world.manage", "economy.view",
   "economy.manage", "items.view", "items.manage", "system.view",
-  "roles.manage", "logs.view",\n  "authority.view", "authority.assign", "authority.remove", "authority.configure", "authority.history"
+  "roles.manage", "logs.view",
+  "authority.view", "authority.assign", "authority.remove", "authority.configure", "authority.history"
 ]);
 const ROLES = new Set(["DEVELOPER", "ADMIN", "MODERATOR", "HELPER", "USER"]);
 function ownerId() {
