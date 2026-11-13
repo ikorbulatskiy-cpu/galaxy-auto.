@@ -19,7 +19,7 @@
     log.append(row);while(log.children.length>120)log.firstChild.remove();log.scrollTop=log.scrollHeight;
   }
   function updateOnline(){const count=players.length;$("#online-count").textContent=count;$("#players-list").replaceChildren(...players.map(p=>{const row=document.createElement("button");row.className="player-row";row.textContent=(p.nickname||"Игрок")+(String(p.id)===String(me.id)?" · Вы":"");row.addEventListener("click",()=>openPlayer(p));return row}))}
-  function setPlayers(list){players=list||[];players.forEach(p=>{p.isMe=String(p.id)===String(me.id)});scene.setPlayers(players);updateOnline()}
+  function setPlayers(list){players=list||[];players.forEach(p=>{p.isMe=String(p.id)===String(me.id)});scene.setPlayers(players);scene.centerOn(me.id);updateOnline()}
   function openPlayer(player){selected=player;const menu=$("#context-menu");menu.hidden=false;menu.style.left=Math.max(8,Math.min(innerWidth-200,innerWidth/2-90))+"px";menu.style.top=Math.max(70,Math.min(innerHeight-220,innerHeight/2-50))+"px";$("#context-title").textContent=player.nickname||"Персонаж";$("#context-move").hidden=String(player.id)!==String(me.id);$("#context-info").hidden=false}
   function closeContext(){$("#context-menu").hidden=true}
   function openInfo(){if(!selected)return;$("#profile-title").textContent=selected.nickname||"Персонаж";$("#profile-content").textContent=(selected.title||"Новичок")+" · "+(selected.authority||0)+" очков авторитета"+(selected.auraEnabled?" · Аура активна":"");$("#profile-modal").hidden=false;closeContext()}
