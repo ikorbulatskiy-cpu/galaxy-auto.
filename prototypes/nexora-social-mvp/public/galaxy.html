@@ -53,7 +53,16 @@
 <div id="profile-modal" class="modal" hidden><section class="modal-card"><header><b id="profile-title">Информация персонажа</b><button data-close="profile" type="button">×</button></header><p id="profile-content"></p></section></div>
 <section id="planet-map" class="planet-map" hidden aria-label="Карта планет">
   <div class="planet-map-head"><div><small>NEXORA UNIVERSE</small><h2>Космическая карта</h2><p>Выбери планету для путешествия</p></div><button type="button" data-map-close aria-label="Закрыть">×</button></div>
-  <div class="planet-map-toolbar"><button type="button" class="map-filter active" data-map-filter="all">Все планеты</button><button type="button" class="map-filter" data-map-filter="popular">Популярные</button><button type="button" class="map-filter" data-map-filter="favorites">Избранное</button><input id="planet-search" class="planet-search" type="search" maxlength="48" placeholder="Найти планету..." autocomplete="off" aria-label="Поиск планет"></div>
+  <div class="planet-map-toolbar"><button type="button" class="map-filter active" data-map-filter="all">Все</button><button type="button" class="map-filter" data-map-filter="popular">Популярные</button><button type="button" class="map-filter" data-map-filter="favorites">Избранное</button><input id="planet-search" class="planet-search" type="search" maxlength="48" placeholder="Найти планету..." autocomplete="off" aria-label="Поиск планет"></div>
+  <div class="planet-category-toolbar" aria-label="Категории планет">
+    <button type="button" class="map-filter" data-map-filter="category:social">Общение</button>
+    <button type="button" class="map-filter" data-map-filter="category:romantic">Романтика</button>
+    <button type="button" class="map-filter" data-map-filter="category:music">Музыка</button>
+    <button type="button" class="map-filter" data-map-filter="category:dance">Танцы</button>
+    <button type="button" class="map-filter" data-map-filter="category:game">Игры</button>
+    <button type="button" class="map-filter" data-map-filter="category:vip">VIP</button>
+    <button type="button" class="map-filter" data-map-filter="category:created">Созданные</button>
+  </div>
   <div class="planet-map-body"><div id="planet-orbit-map" class="planet-orbit-map" aria-label="Выбор планеты"></div>
   <aside class="planet-detail" id="planet-detail"><div class="planet-detail-art"></div><small>ВЫБЕРИ МИР</small><h3>Твоя следующая остановка</h3><p>На карте тебя ждут новые комнаты и знакомства.</p></aside></div>
   <div class="planet-map-footer"><span id="planet-map-count">Загрузка планет…</span><button id="planet-visit" class="planet-visit" type="button" disabled>Посетить планету ↗</button></div>
