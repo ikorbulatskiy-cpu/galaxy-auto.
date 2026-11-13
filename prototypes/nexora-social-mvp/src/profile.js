@@ -2,14 +2,7 @@ const express = require("express");
 const cookie = require("cookie");
 
 const COOKIE_NAME = "nexora_session";
-const SKINS = ["#f4c7a1", "#c9875b", "#75452f"];
-const SUITS = ["#6d7cff", "#ef6c9b", "#35bca5"];
-const HAIR = ["short", "long", "spiky", "bob", "ponytail", "curly"];
-const GENDERS = ["male", "female"];
-const OUTFITS = ["casual", "hoodie", "jacket", "dress", "beach", "club"];
-const HAIR_COLORS = ["#30233d", "#6b432c", "#e5c07b", "#e9eef8", "#bd5de5"];
-const SHOES = ["sneakers", "boots", "heels", "sandals"];
-const ACCESSORIES = ["none", "glasses", "headphones", "crown", "flower", "cap", "scarf"];
+const { normalizeAvatar } = require("./avatar");
 
 function cleanText(value, max) {
   return String(value ?? "").replace(/[<>\u0000-\u001f]/g, "").trim().slice(0, max);
