@@ -24,7 +24,7 @@
   const items=planetObjects.slice().sort((a,b)=>Number(a.y)-Number(b.y));
   for(const item of items){
    const tile=customObjectTiles[item.code],x=Number(item.x)*rect.width,y=Number(item.y)*rect.height;
-   const scale=Math.max(.45,Math.min(1.6,Number(item.scale)||1)),size=78*scale;
+   const scale=Math.max(.5,Math.min(2,Number(item.scale)||1)),size=78*scale;
    ctx.save();ctx.translate(x,y);ctx.rotate((Number(item.rotation)||0)*Math.PI/180);
    ctx.fillStyle="rgba(5,10,28,.24)";ctx.beginPath();ctx.ellipse(0,2,size*.39,size*.09,0,0,Math.PI*2);ctx.fill();
    if(tile&&customObjectAtlas.complete&&customObjectAtlas.naturalWidth)ctx.drawImage(customObjectAtlas,tile[0]*256,tile[1]*256,256,256,-size*.5,-size*.91,size,size);
