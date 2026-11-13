@@ -36,7 +36,7 @@ jobs:
       - name: JavaScript syntax
         run: npm run check
       - name: Unit and integration tests
-        run: npm test
+        run: node --test test/*.test.js
       - name: Verify Galaxy migration and API contract
         run: |
           node <<'NODE'
