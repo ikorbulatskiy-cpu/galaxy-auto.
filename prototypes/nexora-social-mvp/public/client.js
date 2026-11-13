@@ -904,7 +904,7 @@
               (result.history||[]).forEach(entry=>{
                 const row=document.createElement("div");row.className="developer-row";
                 const strong=document.createElement("strong");strong.textContent=entry.old_title+" → "+entry.new_title;
-                const detail=document.createElement("span");detail.textContent=entry.source+" · "+(entry.actor_nickname||"Система")+" · "+(entry.reason||"")+" · "+new Date(entry.created_at).toLocaleString("ru-RU");
+                const detail=document.createElement("span");detail.textContent=entry.source+" · "+(entry.actor_nickname||"Система")+" · "+(entry.reason||"")+(entry.koins_spent?" · списано "+Number(entry.koins_spent).toLocaleString("ru-RU")+" Koins":"")+" · "+new Date(entry.created_at).toLocaleString("ru-RU");
                 row.append(strong,detail);box.append(row);
               });
               content.append(box);
