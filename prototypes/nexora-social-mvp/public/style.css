@@ -1369,3 +1369,319 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 .developer-profile-badge { display:inline-flex!important; width:max-content; align-items:center; gap:5px; padding:5px 9px; border:1px solid rgba(255,198,87,.45); border-radius:999px; color:#ffd36e!important; background:rgba(255,180,45,.12); font-size:10px!important; font-weight:800; letter-spacing:.08em; }
 .developer-profile-badge.hidden { display:none!important; }
 @media(max-width:600px){ .social-tabs button { padding:10px 4px; font-size:10px; } }
+
+
+
+/* NEXORA 16.0 — unified interface system */
+:root {
+  --nxo-surface: rgba(13, 20, 49, .97);
+  --nxo-surface-soft: rgba(255,255,255,.055);
+  --nxo-border-soft: rgba(190,196,255,.15);
+  --nxo-border-strong: rgba(172,158,255,.32);
+  --nxo-text: #f4f5ff;
+  --nxo-muted: #aab5d8;
+  --nxo-accent: #9184f5;
+  --nxo-accent-soft: rgba(145,132,245,.16);
+  --nxo-danger: #e77b98;
+}
+#app button {
+  font-family: inherit;
+  font-weight: 650;
+  letter-spacing: .005em;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease, opacity .16s ease;
+}
+#app button:focus-visible,
+#app input:focus-visible,
+#app select:focus-visible,
+#app textarea:focus-visible {
+  outline: 2px solid rgba(177,164,255,.82);
+  outline-offset: 2px;
+}
+#app button:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+#app input, #app select, #app textarea {
+  min-height: 42px;
+  border: 1px solid var(--nxo-border-soft);
+  border-radius: 12px;
+  background: rgba(7,13,34,.78);
+  color: var(--nxo-text);
+  font: inherit;
+}
+#app input::placeholder, #app textarea::placeholder { color: #8793ba; }
+#app input:focus, #app select:focus, #app textarea:focus {
+  border-color: rgba(167,151,255,.72);
+  box-shadow: 0 0 0 3px rgba(145,132,245,.12);
+}
+.topbar-actions { display: none !important; }
+.topbar { justify-content: flex-start; }
+.room-location { margin-right: auto; }
+.topbar-status { margin-left: auto; }
+#room-toolbar {
+  z-index: 50;
+  left: 50%;
+  right: auto;
+  bottom: max(9px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(520px, calc(100% - 24px));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+  padding: 6px;
+  border: 1px solid rgba(190,196,255,.22);
+  border-radius: 19px;
+  background: rgba(9,15,39,.94);
+  box-shadow: 0 16px 44px rgba(0,0,0,.46), inset 0 1px rgba(255,255,255,.08);
+  backdrop-filter: blur(24px);
+}
+#room-toolbar > button,
+#room-toolbar > button:not([data-room-toggle="menu"]) {
+  display: grid !important;
+  min-width: 0;
+  min-height: 52px;
+  align-content: center;
+  justify-items: center;
+  gap: 5px;
+  padding: 5px 2px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  background: transparent;
+  color: #d5dcfa;
+  font-size: 19px;
+}
+#room-toolbar > button span {
+  display: block;
+  max-width: 100%;
+  color: #aeb9df;
+  font-size: 9px;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#room-toolbar > button.active,
+#room-toolbar > button[aria-expanded="true"] {
+  border-color: rgba(177,163,255,.32);
+  background: linear-gradient(145deg, rgba(145,132,245,.24), rgba(76,130,210,.12));
+  color: #fff;
+}
+#room-toolbar > button.active span,
+#room-toolbar > button[aria-expanded="true"] span { color: #fff; }
+#room-main-menu {
+  z-index: 49;
+  left: 50%;
+  right: auto;
+  bottom: calc(max(75px, env(safe-area-inset-bottom) + 68px));
+  transform: translateX(-50%);
+  width: min(430px, calc(100% - 22px));
+  max-height: min(65dvh, 540px);
+  padding: 15px;
+}
+.room-menu-grid {
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 8px;
+}
+.room-menu-grid button,
+.room-emotion-grid button {
+  min-height: 66px;
+  border: 1px solid var(--nxo-border-soft);
+  border-radius: 14px;
+  background: rgba(255,255,255,.045);
+  color: var(--nxo-text);
+}
+.room-menu-grid button span,
+.room-emotion-grid button span {
+  color: #c3cbed;
+  font-size: 10px;
+  line-height: 1.25;
+}
+.room-menu-grid button:active,
+.room-emotion-grid button:active { transform: scale(.97); background: var(--nxo-accent-soft); }
+.room-flyout, .chat-drawer, .profile-menu, .profile-editor, .authority-panel,
+.social-panel, .shop-panel, .developer-panel, .planets-panel, .public-profile {
+  border: 1px solid var(--nxo-border-strong) !important;
+  border-radius: 21px !important;
+  background: linear-gradient(155deg, rgba(17,25,61,.985), rgba(7,12,34,.99)) !important;
+  box-shadow: 0 24px 68px rgba(0,0,0,.48), inset 0 1px rgba(255,255,255,.07) !important;
+  backdrop-filter: blur(24px);
+}
+.room-flyout-head, .drawer-head, .social-head, .profile-editor-head, .developer-head,
+.shop-topline, .planets-head {
+  border-color: rgba(255,255,255,.09);
+}
+.room-flyout-head strong, .drawer-head strong, .social-head strong,
+.profile-editor-head strong, .developer-head strong, .shop-topline h2,
+.planets-head h2 { color: var(--nxo-text); }
+.social-panel {
+  z-index: 60;
+  top: max(64px, env(safe-area-inset-top) + 58px);
+  bottom: calc(max(76px, env(safe-area-inset-bottom) + 68px));
+  width: min(560px, calc(100% - 20px));
+  max-width: 560px;
+  padding: 15px;
+}
+.social-head { min-height: 38px; }
+.social-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 6px;
+  padding: 10px 0;
+}
+.social-tabs button, .rating-categories button, .shop-tabs button, .developer-tabs button {
+  min-height: 39px;
+  border: 1px solid var(--nxo-border-soft);
+  border-radius: 11px;
+  background: rgba(255,255,255,.045);
+  color: #cbd3f2;
+  font-size: 11px;
+}
+.social-tabs button.active, .rating-categories button.active,
+.shop-tabs button.active, .developer-tabs button.active {
+  border-color: rgba(177,163,255,.35);
+  background: var(--nxo-accent-soft);
+  color: #fff;
+}
+.social-view { min-height: 0; }
+.social-view h4 { margin: 13px 0 5px; color: #dfe4ff; font-size: 11px; }
+.social-view input { width: 100%; padding: 0 13px; }
+.social-row {
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 13px;
+  background: rgba(255,255,255,.035);
+}
+.social-row .social-name { color: var(--nxo-text); font-size: 12px; }
+.social-row small { color: var(--nxo-muted); font-size: 10px; }
+.social-row button, .social-message-form button,
+.public-profile-actions button, .profile-save-button,
+.shop-item-body button, .shop-character-card button,
+.planet-tools button, .planet-card-body>button, #planet-create-submit,
+#planet-owner-save, .planet-owner-actions button, #planet-object-add, #planet-object-save,
+.developer-role-form > button, .developer-authority-quick > button,
+.developer-player-actions button {
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid rgba(173,160,255,.25);
+  border-radius: 11px;
+  background: linear-gradient(135deg, rgba(121,108,224,.92), rgba(100,126,220,.9));
+  color: #fff;
+  font-size: 11px;
+  font-weight: 750;
+}
+.social-row button:active, .public-profile-actions button:active,
+.profile-save-button:active, .shop-item-body button:active { transform: scale(.98); }
+.social-thread { border: 1px solid rgba(255,255,255,.08); border-radius: 13px; background: rgba(4,9,28,.45); }
+.social-message-form { gap: 7px; }
+.social-message-form input { min-width: 0; padding: 0 12px; }
+.social-message-form button { width: 44px; flex: 0 0 44px; }
+.profile-menu {
+  z-index: 70;
+  width: min(330px, calc(100% - 22px));
+  max-height: min(78dvh, 620px);
+  overflow-y: auto;
+  padding: 15px;
+}
+.profile-menu > button:not(.menu-close), .gift-options button {
+  min-height: 42px;
+  margin-top: 5px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 11px;
+  background: rgba(255,255,255,.045);
+  color: #edf0ff;
+  font-size: 11px;
+}
+.profile-menu > button:not(.menu-close):active { background: var(--nxo-accent-soft); }
+.profile-editor, .public-profile, .authority-panel, .shop-panel, .developer-panel, .planets-panel {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.profile-editor-grid, .custom-grid { gap: 10px; }
+.profile-field label, .profile-editor-grid label, .custom-grid label {
+  color: #d5dcf7;
+  font-size: 11px;
+}
+.profile-field input, .profile-field textarea, .profile-editor-grid select,
+.custom-grid select { width: 100%; padding: 10px 12px; }
+.developer-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 5px 0 10px; }
+.developer-tabs button { flex: 0 0 auto; padding: 0 13px; }
+.developer-content { min-width: 0; }
+.developer-row {
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 13px;
+  background: rgba(255,255,255,.035);
+}
+.developer-row strong { color: #f1f3ff; }
+.developer-row span, .developer-muted { color: var(--nxo-muted); }
+.developer-row button, .developer-content button:not(.developer-tabs button) {
+  border-radius: 11px;
+}
+.developer-row .danger-button, .danger-button {
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid rgba(231,123,152,.32);
+  border-radius: 11px;
+  background: rgba(174,66,100,.18);
+  color: #ffc3d1;
+  font-size: 11px;
+}
+.shop-tabs { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 6px; }
+.shop-tabs button { padding: 0 6px; font-size: 10px; }
+.shop-item { border: 1px solid rgba(255,255,255,.08); border-radius: 15px; background: rgba(255,255,255,.035); }
+.shop-item-body { gap: 7px; }
+.shop-item-body strong { color: var(--nxo-text); }
+.shop-item-body p { color: var(--nxo-muted); }
+.planets-panel input, .planets-panel select, .planets-panel textarea { width: 100%; padding: 10px 12px; }
+.planets-panel button { border-radius: 11px; }
+.chat-drawer {
+  z-index: 40;
+  bottom: calc(max(76px, env(safe-area-inset-bottom) + 68px));
+  width: min(440px, calc(100% - 24px));
+}
+.chat-tabs button {
+  min-height: 34px;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 10px;
+  background: rgba(255,255,255,.045);
+  color: #cbd3f2;
+  font-size: 10px;
+}
+.chat-tabs button.active { border-color: var(--nxo-border-strong); background: var(--nxo-accent-soft); color: #fff; }
+.chat-form input { min-height: 42px; padding: 0 12px; }
+.chat-form button[type="submit"], .chat-emoji-button { min-height: 42px; border-radius: 11px; }
+#login-screen { padding: max(22px,env(safe-area-inset-top)) 16px max(22px,env(safe-area-inset-bottom)); }
+.login-card {
+  width: min(100%, 440px);
+  padding: clamp(20px,4vw,30px);
+  border: 1px solid rgba(190,196,255,.18);
+  border-radius: 25px;
+  background: linear-gradient(155deg, rgba(21,29,69,.92), rgba(8,13,35,.96));
+  box-shadow: 0 24px 72px rgba(0,0,0,.4), inset 0 1px rgba(255,255,255,.08);
+}
+.login-card .muted { color: var(--nxo-muted); }
+.auth-caption, .customization-heading { color: #b8c2e7; letter-spacing: .09em; font-size: 10px; }
+#nickname, #recovery-code, .login-card select { min-height: 46px; padding: 0 14px; }
+.primary-button {
+  min-height: 46px;
+  border: 1px solid rgba(190,180,255,.3);
+  border-radius: 13px;
+  background: linear-gradient(110deg,#716ff0,#9a70e8 58%,#bd7bdc);
+}
+.text-button { min-height: 40px; color: #c8c6ff; }
+@media (max-width: 600px) {
+  #room-toolbar { width: calc(100% - 18px); gap: 3px; padding: 5px; }
+  #room-toolbar > button, #room-toolbar > button:not([data-room-toggle="menu"]) { min-height: 49px; }
+  #room-toolbar > button span { font-size: 8px; }
+  #room-main-menu { width: calc(100% - 18px); bottom: calc(max(69px, env(safe-area-inset-bottom) + 62px)); }
+  .room-menu-grid { gap: 6px; }
+  .room-menu-grid button, .room-emotion-grid button { min-height: 59px; }
+  .social-panel { left: 7px; right: 7px; width: auto; top: max(58px, env(safe-area-inset-top) + 52px); bottom: calc(max(69px, env(safe-area-inset-bottom) + 62px)); padding: 12px; }
+  .social-tabs button { min-height: 38px; padding: 0 3px; font-size: 10px; }
+  .chat-drawer { left: 7px; right: 7px; width: auto; bottom: calc(max(69px, env(safe-area-inset-bottom) + 62px)); max-height: min(48dvh, 380px); }
+  .profile-menu { left: 8px; right: 8px; width: auto; max-height: 72dvh; }
+  .shop-tabs { gap: 4px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #app button { transition: none; }
+}
