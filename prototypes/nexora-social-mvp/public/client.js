@@ -1226,6 +1226,7 @@
     $("#room-developer-action").classList.toggle("hidden", !data.allowed);
       $("#developer-roles-tab").classList.toggle("hidden", !developerPermissions.includes("roles.manage"));
       $("#developer-authority-tab").classList.toggle("hidden", !developerPermissions.some(permission => permission.startsWith("authority.")));
+      $("#developer-planets-tab").classList.toggle("hidden", !developerPermissions.includes("planets.view"));
     } catch (_error) { $("#developer-open").classList.add("hidden"); }
   }
   function developerRender(title, rows) {
@@ -1303,6 +1304,30 @@
         const d = await developerRequest("/world");
         developerRender("Планеты и комнаты", d.world.map(p => ({ title: p.title, detail: p.online + " онлайн · " + p.rooms + " комнат" })));
 
+      } else if (tab === "planets") {
+        if(!developerPermissions.includes("planets.view"))throw new Error("Недостаточно прав.");
+        const d=await developerRequest("/planets");
+        content.replaceChildren();
+        const heading=document.createElement("h3");heading.textContent="Управление пользовательскими планетами";content.append(heading);
+        d.planets.forEach(p=>{
+          const row=document.createElement("div");row.className="developer-row";
+          const title=document.createElement("strong");title.textContent=p.name+" · ID "+p.id+" · "+p.owner_nickname;
+          const detail=document.createElement("span");detail.textContent=p.status+" · "+p.online+" онлайн · "+p.total_visits+" посещений · "+p.access_mode;
+          row.append(title,detail);
+          if(developerPermissions.includes("planets.manage")){
+            const action=document.createElement("select");["hide","block","restore","transfer","delete"].forEach(value=>{const option=document.createElement("option");option.value=value;option.textContent=({hide:"Скрыть",block:"Заблокировать",restore:"Восстановить",transfer:"Передать владельца",delete:"Удалить"})[value];action.append(option);});
+            const run=document.createElement("button");run.type="button";run.textContent="Применить";
+            run.addEventListener("click",async()=>{
+              const value=action.value,reason=prompt("Причина действия")||"";if(!reason)return;
+              const accountId=value==="transfer"?prompt("ID нового владельца"):"";if(value==="transfer"&&!accountId)return;
+              if(value==="delete"&&!confirm("Удалить планету "+p.name+"? Это действие необратимо."))return;
+              try{const response=await fetch("/api/developer/planets/"+p.id+"/action",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:value,reason,accountId})});const result=await response.json();if(!response.ok)throw new Error(result.error||"Ошибка");showToast("Действие выполнено.");loadDeveloperTab("planets");}
+              catch(error){showToast(error.message);}
+            });
+            row.append(action,run);
+          }
+          content.append(row);
+        });
       } else if (tab === "authority") {
         if (!developerPermissions.some(permission => permission.startsWith("authority."))) throw new Error("Недостаточно прав.");
         const data=await authorityApi("/");
@@ -1424,7 +1449,7 @@
         reason.maxLength = 500; reason.placeholder = "Причина назначения";
         const permissionWrap = document.createElement("div");
         permissionWrap.className = "developer-permission-grid";
-        const available = ["players.view","players.ban","players.unban","players.warn","moderation.view","world.view","world.manage","economy.view","economy.manage","items.view","items.manage","system.view","logs.view","authority.view","authority.assign","authority.remove","authority.configure","authority.history"];
+        const available = ["players.view","players.ban","players.unban","players.warn","moderation.view","world.view","world.manage","economy.view","economy.manage","items.view","items.manage","system.view","logs.view","authority.view","authority.assign","authority.remove","authority.configure","authority.history","planets.view","planets.manage"];
         available.forEach(value => {
           const label = document.createElement("label");
           const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.value = value;
