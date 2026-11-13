@@ -194,6 +194,7 @@ function createAuthorityRouter({ pool, auth, io, players }) {
       const result = await pool.query(
         `SELECT a.id,a.nickname,COALESCE(c.authority,0)::int AS authority,
                 COALESCE(c.authority_title,'NOVICE') AS authority_title,
+                COALESCE(c.aura_enabled,FALSE) AS aura_enabled,
                 COALESCE(w.balance,0)::text AS koins
            FROM nexora_social_world.accounts a
            LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
