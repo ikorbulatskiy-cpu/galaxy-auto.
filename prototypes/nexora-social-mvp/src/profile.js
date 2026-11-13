@@ -48,7 +48,7 @@ function createProfileRouter({ pool, auth, io }) {
     return {
       id: String(row.id), nickname: row.nickname, createdAt: row.created_at,
       status: row.profile_status, bio: row.profile_bio, avatar: normalizeAvatar(row.avatar),
-      authority: row.authority, level: row.level, experience: row.experience,
+      authority: row.authority, authorityTitle: row.authority_title || "NOVICE",\n      auraEnabled: Boolean(row.aura_enabled), level: row.level, experience: row.experience,
       friendsCount: row.friends_count, giftsReceived: row.gifts_received,
       koins: row.balance ?? 0
     };
