@@ -2,27 +2,10 @@ const express = require("express");
 const cookie = require("cookie");
 
 const COOKIE_NAME = "nexora_session";
-const SKINS = ["#f4c7a1", "#c9875b", "#75452f"];
-const SUITS = ["#6d7cff", "#ef6c9b", "#35bca5"];
-const HAIR = ["short", "long", "spiky"];
-const GENDERS = ["male", "female"];
-const HAIR_COLORS = ["#30233d", "#6b432c", "#e5c07b", "#e9eef8", "#bd5de5"];
-const SHOES = ["sneakers", "boots", "heels"];
-const ACCESSORIES = ["none", "glasses", "headphones", "crown"];
+const { normalizeAvatar } = require("./avatar");
 
 function cleanText(value, max) {
   return String(value ?? "").replace(/[<>\u0000-\u001f]/g, "").trim().slice(0, max);
-}
-function normalizeAvatar(input) {
-  return {
-    gender: GENDERS.includes(input?.gender) ? input.gender : "male",
-    skin: SKINS.includes(input?.skin) ? input.skin : SKINS[0],
-    hair: HAIR.includes(input?.hair) ? input.hair : "short",
-    suit: SUITS.includes(input?.suit) ? input.suit : SUITS[0],
-    hairColor: HAIR_COLORS.includes(input?.hairColor) ? input.hairColor : HAIR_COLORS[0],
-    shoes: SHOES.includes(input?.shoes) ? input.shoes : "sneakers",
-    accessory: ACCESSORIES.includes(input?.accessory) ? input.accessory : "none"
-  };
 }
 function asyncRoute(fn) {
   return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);

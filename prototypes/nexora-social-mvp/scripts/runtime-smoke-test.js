@@ -36,7 +36,7 @@ function mockResponse() {
 
 async function registerAndLogin(nickname, ip) {
   const registration = mockResponse();
-  await auth.register({ body: { nickname } }, registration);
+  await auth.register({ body: { nickname, avatar: { gender: "female", skin: "#c9875b", hair: "ponytail", suit: "#ef6c9b", outfit: "club", hairColor: "#e5c07b", shoes: "sandals", accessory: "flower", unexpected: "ignored" } } }, registration);
   assert.equal(registration.statusCode, 201, "account registration succeeds");
   assert.ok(registration.body.recoveryCode, "registration returns a recovery code");
   const account = registration.body.account;
@@ -57,6 +57,10 @@ async function run() {
   const ownerId = String(owner.account.id);
   const targetId = String(target.account.id);
   accountIds = [ownerId, targetId];
+  assert.equal(owner.account.avatar.outfit, "club", "registration persists the selected outfit");
+  assert.equal(owner.account.avatar.hair, "ponytail", "registration persists the selected hairstyle");
+  assert.equal(owner.account.avatar.accessory, "flower", "registration persists the selected accessory");
+  assert.equal(owner.account.avatar.unexpected, undefined, "registration ignores unrecognized appearance fields");
   process.env.NEXORA_OWNER_ACCOUNT_ID = ownerId;
 
   await pool.query("UPDATE nexora_social_world.wallets SET balance=1000 WHERE account_id=$1", [ownerId]);
@@ -170,11 +174,14 @@ async function run() {
     body: JSON.stringify({
       status: "NEXORA CI",
       bio: "Profile integration test",
-      avatar: { gender: "female", skin: "#c9875b", hair: "long", suit: "#ef6c9b", hairColor: "#e5c07b", shoes: "boots", accessory: "crown" }
+      avatar: { gender: "female", skin: "#c9875b", hair: "curly", suit: "#ef6c9b", outfit: "dress", hairColor: "#e5c07b", shoes: "sandals", accessory: "flower" }
     })
   }));
   assert.equal(result.status, 200, "profile and appearance can be updated");
-  assert.equal(result.body.profile.avatar.accessory, "crown", "validated avatar appearance is persisted");
+  assert.equal(result.body.profile.avatar.accessory, "flower", "new accessory selection is persisted");
+  assert.equal(result.body.profile.avatar.outfit, "dress", "outfit style is validated and persisted");
+  assert.equal(result.body.profile.avatar.hair, "curly", "new hairstyle is validated and persisted");
+  assert.equal(result.body.profile.avatar.shoes, "sandals", "new shoe style is validated and persisted");
 
   result = await json(await request("/api/social/requests", owner.token, {
     method: "POST",

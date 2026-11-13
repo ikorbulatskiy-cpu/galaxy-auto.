@@ -26,6 +26,8 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check prototypes/nexora-social-mvp/server.js
+          node --check prototypes/nexora-social-mvp/src/avatar.js
+          node --check prototypes/nexora-social-mvp/src/auth.js
           node --check prototypes/nexora-social-mvp/src/profile.js
           node --check prototypes/nexora-social-mvp/src/economy.js
           node --check prototypes/nexora-social-mvp/src/planets.js
@@ -51,6 +53,7 @@ jobs:
           const client = fs.readFileSync(root + "public/client.js", "utf8");
           const server = fs.readFileSync(root + "server.js", "utf8");
           const profile = fs.readFileSync(root + "src/profile.js", "utf8");
+          const avatar = fs.readFileSync(root + "src/avatar.js", "utf8");
           const economy = fs.readFileSync(root + "src/economy.js", "utf8");
           const planets = fs.readFileSync(root + "src/planets.js", "utf8");
           const developer = fs.readFileSync(root + "src/developer.js", "utf8");
@@ -66,8 +69,8 @@ jobs:
             [client.includes("function renderRoomEvents") && client.includes("setConnectionStatus"), "event feed and connection state exist"],
             [server.includes('socket.on("player:action"') && server.includes("sender.planet!==target.planet"), "player actions validate same planet"],
             [server.includes("lastActionAt") && server.includes("lastEmotionAt"), "action and emotion throttles exist"],
-            [server.includes("hairColor: allowed.hairColor") && server.includes("accessory: allowed.accessory"), "server validates appearance fields"],
-            [profile.includes("HAIR_COLORS.includes") && profile.includes("ACCESSORIES.includes"), "profile validates persisted appearance"],
+            [server.includes('require("./src/avatar")') && avatar.includes("ACCESSORIES.includes") && avatar.includes("OUTFITS.includes"), "server validates appearance fields through shared allowlist"],
+            [avatar.includes("HAIR.includes") && avatar.includes("ACCESSORIES.includes") && profile.includes("normalizeAvatar"), "profile validates persisted appearance through shared validator"],
             [css.includes("grid-template-columns:repeat(5") && css.includes("room-events-panel"), "five-control toolbar and event styles exist"],
             [html.includes('/sprite-engine.js') && html.includes('/world-objects.js'), "sprite and world-object engines are loaded"],
             [client.includes("nexora-world-props-atlas.svg") && client.includes("ctx.drawImage(customObjectAtlas") && client.includes("customObjectTiles"), "custom planet decorations use the original illustrated sprite atlas"],
