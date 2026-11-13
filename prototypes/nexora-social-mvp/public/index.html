@@ -70,6 +70,7 @@
           <button type="button" data-room-action="search" aria-label="Поиск">🔍<span>Поиск</span></button>
           <button type="button" data-room-action="shop">🛍️<span>Магазин</span></button>
           <button type="button" data-room-action="planets">🪐<span>Планеты</span></button>
+          <button type="button" data-room-action="galaxy">🌌<span>Galaxy 2D</span></button>
           <button type="button" data-room-action="rating">🏆<span>Рейтинг</span></button>
           <button type="button" data-room-toggle="events" aria-expanded="false">🔔<span>События</span></button>
           <button type="button" data-room-action="developer" id="room-developer-action" class="hidden">🛠️<span>Разработчик</span></button>
@@ -295,6 +296,10 @@
       </aside>
       <aside id="developer-panel" class="developer-panel hidden" aria-label="Панель разработчика"><div class="developer-head"><div><span class="developer-kicker">NEXORA CONTROL</span><strong>Панель управления</strong></div><button id="developer-close" type="button" aria-label="Закрыть">×</button></div><div class="developer-tabs"><button type="button" data-developer-tab="overview" class="active">Обзор</button><button type="button" data-developer-tab="players">Игроки</button><button type="button" data-developer-tab="moderation">Модерация</button><button type="button" data-developer-tab="world">Мир</button><button type="button" data-developer-tab="planets" id="developer-planets-tab" class="hidden">Планеты</button><button type="button" data-developer-tab="audit">Журнал</button><button type="button" data-developer-tab="authority" id="developer-authority-tab" class="hidden">Авторитеты</button><button type="button" data-developer-tab="roles" id="developer-roles-tab" class="hidden">Роли</button></div><div id="developer-content" class="developer-content"><p class="developer-muted">Загрузка панели…</p></div></aside><div id="toast" class="toast hidden" role="status"></div>
     </section>
+  <section id="integrated-galaxy-view" class="integrated-galaxy-view hidden" aria-label="NEXORA Galaxy 2D">
+    <button id="integrated-galaxy-back" class="integrated-galaxy-back" type="button">‹ Назад в NEXORA</button>
+    <iframe id="integrated-galaxy-frame" title="NEXORA Galaxy 2D" loading="lazy" allow="fullscreen"></iframe>
+  </section>
   </main>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/world-scene.js"></script>
