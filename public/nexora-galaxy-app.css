@@ -151,3 +151,31 @@ body:has(#dashboard:not(.hidden)){background:#171c24;color:#f4f6f8}
  #dashboard>#tab-world .nx-connection-status{max-width:76px;height:26px;padding:0 6px;font-size:9px}
  #dashboard>#tab-world .nx-menu-trigger{width:32px!important;height:32px!important;min-width:32px;flex-basis:32px}
 }
+
+
+/* Galaxy is the primary app surface on desktop too; keep the compact phone layout below 700px. */
+@media(min-width:700px){
+ body:has(#dashboard:not(.hidden)){display:flex;justify-content:center;min-height:100dvh;background:#171c24}
+ #dashboard{width:min(1120px,100vw)!important;max-width:1120px!important;min-height:100dvh;margin:0 auto!important}
+ #dashboard>#tab-world{width:100%!important;max-width:none!important;min-height:100dvh;margin:0!important;padding:0!important}
+ #dashboard>#tab-world>.nx-world{
+  width:100%!important;max-width:1120px!important;height:100dvh!important;min-height:0!important;max-height:100dvh!important;
+  margin:0 auto!important;display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:64px minmax(230px,34vh) minmax(300px,1fr) 64px!important;
+  overflow:hidden!important;border:0!important;border-radius:0!important
+ }
+ #dashboard>#tab-world .nx-topbar{grid-row:1!important;height:64px!important;min-height:64px!important;padding:8px 18px!important}
+ #dashboard>#tab-world .nx-chat-panel{grid-row:2!important;min-height:0!important;height:100%!important}
+ #dashboard>#tab-world .nx-chat-log{min-height:0!important;flex:1 1 auto!important}
+ #dashboard>#tab-world .nx-scene{grid-row:3!important;height:auto!important;min-height:0!important;max-height:none!important}
+ #dashboard>#tab-world .nx-avatars{left:4%!important;right:4%!important;bottom:38px!important;justify-content:center!important;gap:18px!important}
+ #dashboard>#tab-world .nx-avatar-card{flex-basis:76px!important;width:76px!important}
+ #dashboard>#tab-world .nx-avatar-card canvas,
+ #dashboard>#tab-world .nx-avatar-card svg,
+ #dashboard>#tab-world .nx-avatar-card img{width:62px!important;height:124px!important;max-width:62px!important;max-height:124px!important}
+ #dashboard>#tab-world .nx-avatar-name{width:76px!important;max-width:76px!important;font-size:10px!important}
+ #dashboard>#tab-world .nx-bottom-nav{grid-row:4!important;height:64px!important;min-height:64px!important;padding:5px 18px!important}
+ #dashboard>#tab-world .nx-bottom-nav button{font-size:11px!important}
+ #dashboard>#tab-world .nx-bottom-nav button span{font-size:19px!important}
+}
