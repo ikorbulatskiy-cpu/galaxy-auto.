@@ -403,7 +403,11 @@
   socket.on("profile:updated", (player) => {
     const previous = state.players.get(player.id);
     state.players.set(player.id, { ...previous, ...player, renderX: previous?.renderX ?? player.x });
-    if (String(player.id) === String(state.me?.id)) state.me = { ...state.me, ...player };
+    if (String(player.id) === String(state.me?.id)) {
+      state.me = { ...state.me, ...player };
+      if (!$("#profile-editor").classList.contains("hidden")) paintAuthorityProfile(state.me);
+    }
+    if (state.selected === player.id) $("#profile-rank").textContent = (player.title || "Новичок") + " · Авторитет " + player.authority;
   });
   socket.on("friend:result", ({ nickname, already }) => showToast(already ? nickname + " уже в друзьях" : nickname + " добавлен в друзья"));
   socket.on("friend:notice", ({ nickname }) => showToast(nickname + " добавил вас в друзья"));
