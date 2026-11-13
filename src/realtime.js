@@ -119,14 +119,16 @@ function attachRealtime(server) {
       const token = cookieValue(request.headers.cookie, COOKIE_NAME);
       if (!token) throw new Error("auth");
       const auth = await pool.query(
-        `SELECT u.id,u.username,s.id AS session_id FROM sessions s
+        `SELECT u.id,u.username,s.id AS session_id,COALESCE(gp.invisible,FALSE) AS invisible FROM sessions s
          JOIN users u ON u.id=s.user_id
+         LEFT JOIN galaxy_preferences gp ON gp.user_id=u.id
          WHERE s.token_hash=$1 AND s.expires_at>NOW() AND u.status='active'`,
         [hash(token)]
       );
       if (!auth.rowCount) throw new Error("auth");
       user = auth.rows[0];
       socket.userId = user.id;
+      socket.isInvisible = Boolean(user.invisible);
       connectionId = crypto.randomUUID();
       socket.connectionId = connectionId;
       console.info("Realtime socket authenticated:", { connectionId, userId: user.id });
@@ -210,12 +212,12 @@ function attachRealtime(server) {
           if (previousRoom && rooms.has(previousRoom)) {
             rooms.get(previousRoom).delete(socket);
             if (!rooms.get(previousRoom).size) rooms.delete(previousRoom);
-            publish({ type: "presence", action: "left", roomId: previousRoom, userId: user.id, connectionId });
+            if (!socket.isInvisible) publish({ type: "presence", action: "left", roomId: previousRoom, userId: user.id, connectionId });
           }
           socket.joinedRoom = packet.roomId;
           if (!rooms.has(socket.joinedRoom)) rooms.set(socket.joinedRoom,new Set());
           rooms.get(socket.joinedRoom).add(socket);
-          publish({ type: "presence", action: "joined", roomId: socket.joinedRoom, userId: user.id, username: user.username });
+          if (!socket.isInvisible) publish({ type: "presence", action: "joined", roomId: socket.joinedRoom, userId: user.id, username: user.username });
           socket.send(JSON.stringify({type:"joined_room",roomId:socket.joinedRoom}));
           pool.query("SELECT p.name,p.settings FROM rooms r JOIN planets p ON p.id=r.planet_id WHERE r.id=$1",[socket.joinedRoom]).then(result=>{
             if(!result.rowCount||socket.readyState!==1)return;
@@ -283,7 +285,7 @@ function attachRealtime(server) {
       if (connectionId) {
         try {
           const removed = await pool.query("DELETE FROM room_presence WHERE connection_id=$1 RETURNING room_id,user_id,connection_id",[connectionId]);
-          if (removed.rowCount) publish({ type: "presence", action: "left", roomId: removed.rows[0].room_id, userId: removed.rows[0].user_id, connectionId: removed.rows[0].connection_id });
+          if (removed.rowCount && !socket.isInvisible) publish({ type: "presence", action: "left", roomId: removed.rows[0].room_id, userId: removed.rows[0].user_id, connectionId: removed.rows[0].connection_id });
         } catch {}
       }
     });
