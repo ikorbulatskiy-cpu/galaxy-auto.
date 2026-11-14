@@ -1229,3 +1229,143 @@
 #nexora-developer-window .nexora-management-actions button,#nexora-developer-window .nexora-management-form button{border:1px solid #83905d!important;border-radius:2px!important;background:#56633d!important;color:#f1ffd9!important;font:12px Arial,sans-serif!important;}
 #nexora-developer-window input,#nexora-developer-window select,#nexora-developer-window textarea{border:1px solid #78849c!important;border-radius:2px!important;background:#252e43!important;color:#f0f1f5!important;}
 #nexora-developer-window .nexora-management-note{color:#c7dc70!important;}
+
+
+/* Chat refresh: clearer hierarchy, readable message bubbles and simple controls */
+.retro-chat{
+  background:linear-gradient(180deg,#101b3d 0%,#0b1534 100%);
+  border-bottom:1px solid #526a9e;
+  box-shadow:inset 0 1px 0 #ffffff0b;
+}
+.chat-space{
+  padding:12px 14px;
+  gap:8px;
+  scrollbar-color:#6079b8 #111c3c;
+}
+.chat-space:empty::before{
+  content:"Чат пока пустой. Напиши первое сообщение!";
+  display:block;
+  margin:auto;
+  padding:10px 14px;
+  color:#aebce0;
+  font-size:12px;
+  text-align:center;
+}
+.chat-line{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  gap:4px 7px;
+  width:fit-content;
+  max-width:min(88%,680px);
+  padding:8px 11px;
+  border:1px solid #435783;
+  border-radius:11px 11px 11px 3px;
+  background:#1a2a50;
+  color:#f4f7ff;
+  font-size:13px;
+  line-height:1.45;
+  box-shadow:0 2px 7px #0002;
+}
+.chat-line b{color:#a9edc4;font-size:11px;font-weight:800}
+.chat-line span{min-width:0;color:#f5f7ff;overflow-wrap:anywhere}
+.chat-line.mine{
+  align-self:flex-end;
+  justify-content:flex-end;
+  border-color:#6577aa;
+  border-radius:11px 11px 3px 11px;
+  background:#293b68;
+}
+.chat-line.mine b{color:#ffe49b}
+.retro-composer{
+  height:auto;
+  min-height:54px;
+  flex:0 0 auto;
+  gap:8px;
+  align-items:center;
+  padding:8px 10px;
+  background:#0a1430;
+  border-top:1px solid #344b7a;
+}
+.retro-composer input{
+  height:38px;
+  min-height:38px;
+  padding:0 13px;
+  border:1px solid #526a9d;
+  border-radius:9px;
+  background:#111f43;
+  color:#fff;
+  font:14px Tahoma,Arial,sans-serif!important;
+  transition:border-color .15s,box-shadow .15s;
+}
+.retro-composer input:focus{
+  border-color:#9bb7f4;
+  box-shadow:0 0 0 3px #7d9fe522;
+}
+.retro-composer input::placeholder{color:#9eadd1}
+.retro-composer button{
+  width:auto;
+  min-width:94px;
+  height:38px;
+  padding:0 14px;
+  border:1px solid #8ca5dc;
+  border-radius:9px;
+  background:#4967a7;
+  color:#fff;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.1px;
+  box-shadow:0 2px 5px #0003;
+  transition:background .15s,transform .15s;
+}
+.retro-composer button:hover{background:#5a79bb}
+.retro-composer button:active{transform:translateY(1px)}
+.retro-composer button:disabled{opacity:.55;cursor:wait}
+.chat-error{
+ right:12px;bottom:58px;z-index:2;
+  max-width:calc(100% - 24px);
+  padding:6px 9px;
+  border:1px solid #a95b75;
+  border-radius:7px;
+  background:#411d35;
+  color:#ffd6df;
+  font-size:11px;
+}
+.nexora-character-actions-card button,
+.nexora-info-actions button,
+.nexora-avatar-save,
+.nexora-management-tabs button,
+.nexora-developer-window button,
+.nexora-emotions-window button,
+.nexora-report-form button,
+.nexora-creator-actions button{
+  min-height:38px;
+  border-radius:8px;
+  font-size:13px;
+  font-weight:750;
+  letter-spacing:0;
+  box-shadow:none;
+  transition:filter .15s,transform .15s,background .15s;
+}
+.nexora-character-actions-card button:hover,
+.nexora-info-actions button:hover,
+.nexora-avatar-save:hover,
+.nexora-management-tabs button:hover,
+.nexora-developer-window button:hover,
+.nexora-emotions-window button:hover,
+.nexora-report-form button:hover,
+.nexora-creator-actions button:hover{filter:brightness(1.1)}
+.nexora-character-actions-card button:active,
+.nexora-info-actions button:active,
+.nexora-avatar-save:active,
+.nexora-management-tabs button:active,
+.nexora-developer-window button:active,
+.nexora-emotions-window button:active,
+.nexora-report-form button:active,
+.nexora-creator-actions button:active{transform:translateY(1px)}
+@media(max-width:600px){
+  .chat-space{padding:9px 10px;gap:7px}
+  .chat-line{max-width:94%;font-size:12px;padding:7px 9px}
+  .retro-composer{min-height:52px;padding:7px 8px;gap:6px}
+  .retro-composer button{min-width:82px;padding:0 10px}
+}
