@@ -87,7 +87,7 @@ app.post("/api/room/presence",async(req,res)=>{
   const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
   await ensureRoomPresenceSchema();
   await pool.query("INSERT INTO nexora_social_auth.room_presence(account_id,nickname,last_seen) VALUES($1,$2,NOW()) ON CONFLICT(account_id) DO UPDATE SET nickname=EXCLUDED.nickname,last_seen=NOW()",[String(account.id),account.nickname]);
-  const online=await pool.query("SELECT p.account_id,p.nickname,c.head_id,c.body_id FROM nexora_social_auth.room_presence p LEFT JOIN nexora_social_auth.characters c ON c.account_id=p.account_id WHERE p.last_seen>NOW()-INTERVAL '45 seconds' ORDER BY p.last_seen DESC LIMIT 24");
+  const online=await pool.query("SELECT p.account_id,p.nickname,c.head_id,c.body_id FROM nexora_social_auth.room_presence p LEFT JOIN nexora_social_auth.characters c ON c.account_id::text=p.account_id WHERE p.last_seen>NOW()-INTERVAL '45 seconds' ORDER BY p.last_seen DESC LIMIT 24");
   res.json({players:online.rows.map(row=>({id:String(row.account_id),nickname:row.nickname,headId:Number(row.head_id)||1,bodyId:Number(row.body_id)||1,mine:String(row.account_id)===String(account.id)}))});
  }catch(error){console.error("Room presence failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось загрузить игроков."});}
 });
