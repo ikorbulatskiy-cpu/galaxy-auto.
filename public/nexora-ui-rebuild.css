@@ -242,3 +242,111 @@
 @media(max-width:700px){
  #dashboard>#tab-world .nx-dice-roll{flex-basis:34px!important;width:34px!important;height:32px!important;min-height:32px!important}
 }
+
+
+/* Avatar stage correction: feet meet the floor and the nickname sits directly
+   below them on a compact dark nameplate. This intentionally overrides the
+   older absolute-positioned nameplate rules. */
+#dashboard>#tab-world .nx-scene{
+  overflow:hidden!important;
+}
+#dashboard>#tab-world .nx-floor{
+  z-index:2!important;
+  height:20px!important;min-height:20px!important;max-height:20px!important;
+  border-top:1px solid #8994a0!important;
+  background:linear-gradient(180deg,#242c36 0%,#111821 100%)!important;
+  box-shadow:inset 0 2px 4px #ffffff10,0 -2px 8px #0007!important;
+}
+#dashboard>#tab-world .nx-avatars{
+  position:absolute!important;left:0!important;right:0!important;top:auto!important;
+  bottom:20px!important;z-index:5!important;
+  display:flex!important;flex-direction:row!important;align-items:flex-end!important;
+  justify-content:flex-start!important;gap:clamp(8px,1.5vw,16px)!important;
+  height:130px!important;min-height:130px!important;max-height:130px!important;
+  margin:0!important;padding:0 12px!important;
+  overflow-x:auto!important;overflow-y:hidden!important;
+  scrollbar-width:none!important;
+}
+#dashboard>#tab-world .nx-avatars::-webkit-scrollbar{display:none!important}
+#dashboard>#tab-world .nx-avatar-card,
+#dashboard>#tab-world .nx-avatar-card.me{
+  position:relative!important;inset:auto!important;left:auto!important;right:auto!important;
+  top:auto!important;bottom:auto!important;transform:none!important;translate:none!important;
+  display:flex!important;flex:0 0 82px!important;flex-direction:column!important;
+  align-items:center!important;justify-content:flex-end!important;
+  box-sizing:border-box!important;width:82px!important;min-width:82px!important;max-width:82px!important;
+  height:128px!important;min-height:128px!important;max-height:128px!important;
+  margin:0!important;padding:0!important;gap:1px!important;
+  overflow:visible!important;text-align:center!important;animation:none!important;
+}
+#dashboard>#tab-world .nx-avatar-visual{
+  order:1!important;position:relative!important;z-index:3!important;
+  display:flex!important;align-items:flex-end!important;justify-content:center!important;
+  flex:0 0 108px!important;width:82px!important;height:108px!important;min-height:108px!important;
+  margin:0!important;padding:0!important;overflow:visible!important;pointer-events:none!important;
+}
+#dashboard>#tab-world .nx-avatar-visual canvas[data-nexora-sprite],
+#dashboard>#tab-world .nx-avatar-visual svg{
+  display:block!important;flex:0 0 auto!important;width:72px!important;height:108px!important;
+  max-width:none!important;max-height:108px!important;margin:0 auto!important;
+  object-fit:contain!important;object-position:center bottom!important;
+}
+#dashboard>#tab-world .nx-avatar-card .nx-avatar-name{
+  position:relative!important;inset:auto!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;
+  transform:none!important;order:2!important;z-index:8!important;
+  display:block!important;flex:0 0 18px!important;
+  box-sizing:border-box!important;width:auto!important;min-width:0!important;max-width:82px!important;
+  height:18px!important;min-height:18px!important;margin:0!important;padding:2px 6px!important;
+  overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+  border:1px solid #7f8b99!important;border-radius:4px!important;
+  background:linear-gradient(180deg,#202a36,#0b1119)!important;
+  box-shadow:0 2px 5px #0009,inset 0 1px #ffffff16!important;
+  color:#f3f5f8!important;font:700 9px/1.2 Arial,sans-serif!important;
+  text-align:center!important;text-shadow:0 1px 2px #000!important;
+  pointer-events:none!important;
+}
+#dashboard>#tab-world .nx-avatar-card.me .nx-avatar-name{
+  border-color:#d9bd78!important;color:#ffe7aa!important;
+}
+#dashboard>#tab-world .nx-avatar-platform{display:none!important}
+#dashboard>#tab-world .nx-avatar-card:after,
+#dashboard>#tab-world .nx-rank-mark{display:none!important;content:none!important}
+#dashboard>#tab-world .nx-avatar-card .nx-fav-toggle{
+  top:2px!important;right:0!important;z-index:10!important;
+}
+@media(max-width:700px){
+  #dashboard>#tab-world .nx-floor{
+    height:18px!important;min-height:18px!important;max-height:18px!important;
+  }
+  #dashboard>#tab-world .nx-avatars{
+    bottom:18px!important;height:116px!important;min-height:116px!important;max-height:116px!important;
+    gap:8px!important;padding:0 7px!important;
+  }
+  #dashboard>#tab-world .nx-avatar-card,
+  #dashboard>#tab-world .nx-avatar-card.me{
+    flex-basis:66px!important;width:66px!important;min-width:66px!important;max-width:66px!important;
+    height:114px!important;min-height:114px!important;max-height:114px!important;
+  }
+  #dashboard>#tab-world .nx-avatar-visual{
+    flex-basis:96px!important;width:66px!important;height:96px!important;min-height:96px!important;
+  }
+  #dashboard>#tab-world .nx-avatar-visual canvas[data-nexora-sprite],
+  #dashboard>#tab-world .nx-avatar-visual svg{
+    width:64px!important;height:96px!important;max-height:96px!important;
+  }
+  #dashboard>#tab-world .nx-avatar-card .nx-avatar-name{
+    flex-basis:17px!important;height:17px!important;min-height:17px!important;
+    max-width:66px!important;padding:2px 4px!important;font-size:8px!important;
+  }
+}
+@media(max-width:380px){
+  #dashboard>#tab-world .nx-avatars{gap:6px!important;padding-inline:5px!important}
+  #dashboard>#tab-world .nx-avatar-card,
+  #dashboard>#tab-world .nx-avatar-card.me{
+    flex-basis:60px!important;width:60px!important;min-width:60px!important;max-width:60px!important;
+  }
+  #dashboard>#tab-world .nx-avatar-visual{width:60px!important}
+  #dashboard>#tab-world .nx-avatar-visual canvas[data-nexora-sprite],
+  #dashboard>#tab-world .nx-avatar-visual svg{width:56px!important;height:84px!important;max-height:84px!important}
+  #dashboard>#tab-world .nx-avatar-card .nx-avatar-name{max-width:60px!important;font-size:7px!important}
+}
