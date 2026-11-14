@@ -270,3 +270,22 @@
 .nexora-info-actions span{min-width:0;color:#65718a;font-size:10px;overflow-wrap:anywhere}
 @media(max-width:480px){.nexora-avatar-panel{padding:8px!important}.nexora-avatar-window{width:100%!important;max-height:calc(100dvh - 16px)!important;border-radius:14px!important}.nexora-info-top{padding:10px}.nexora-photo-picker{flex-basis:92px;width:92px;height:104px}.nexora-info-fields{gap:8px;padding:10px}.nexora-info-fields input,.nexora-info-fields select,.nexora-info-fields textarea{padding:8px;font-size:12px}.nexora-info-actions{padding:9px 10px}.nexora-character-info-trigger{bottom:calc(13% + 145px)!important}}
 @media(max-height:560px){.nexora-info-top{padding:7px}.nexora-photo-picker{height:80px}.nexora-photo-picker img{height:54px}.nexora-info-fields{gap:6px;padding:8px}.nexora-info-fields textarea{min-height:48px}}
+
+
+/* Direct character tap: no outline frame or extra floating button. */
+.nexora-world-avatar:hover,.nexora-world-avatar:focus,.nexora-world-avatar:focus-visible{outline:none!important;outline-offset:0!important;box-shadow:none!important;}
+.nexora-character-info-trigger{display:none!important}
+.nexora-avatar-panel{position:fixed!important;inset:0!important;z-index:999!important;display:flex!important;align-items:center!important;justify-content:center!important;width:100vw!important;height:100dvh!important;max-height:100dvh!important;padding:max(12px,env(safe-area-inset-top)) 14px max(12px,env(safe-area-inset-bottom))!important;overflow:hidden!important;background:#05091dcc!important;backdrop-filter:blur(6px)!important}
+.nexora-avatar-panel.hidden{display:none!important}
+.nexora-avatar-window{width:min(350px,100%)!important;max-height:min(590px,calc(100dvh - 32px))!important;min-height:0!important;border:1px solid #a995df!important;border-radius:14px!important;box-shadow:0 14px 42px #000a!important}
+.nexora-info-header{padding:10px 13px!important;font-size:12px!important;letter-spacing:.7px!important}
+.nexora-info-top{padding:10px!important;gap:11px!important}
+.nexora-photo-picker{flex-basis:88px!important;width:88px!important;height:96px!important}
+.nexora-photo-picker img{height:69px!important}
+.nexora-info-fields{gap:8px!important;padding:10px!important}
+.nexora-info-fields label{font-size:10px!important}
+.nexora-info-fields input,.nexora-info-fields select,.nexora-info-fields textarea{padding:8px!important;font-size:11px!important}
+.nexora-info-fields textarea{min-height:54px!important}
+.nexora-info-actions{padding:8px 10px!important}
+.nexora-info-actions button{padding:9px 11px!important;font-size:11px!important}
+@media(max-width:480px){.nexora-avatar-window{width:min(340px,calc(100vw - 28px))!important;max-height:calc(100dvh - 36px)!important}.nexora-info-fields{grid-template-columns:1fr 1fr!important}}
