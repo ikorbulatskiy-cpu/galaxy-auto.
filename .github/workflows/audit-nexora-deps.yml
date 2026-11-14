@@ -1,0 +1,44 @@
+name: Audit NEXORA production dependencies
+
+on:
+  push:
+    branches:
+      - chore/npm-audit-nexora
+    paths:
+      - ".github/workflows/audit-nexora-deps.yml"
+      - "prototypes/nexora-social-mvp/package.json"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install production dependencies
+        working-directory: prototypes/nexora-social-mvp
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Report vulnerability details
+        working-directory: prototypes/nexora-social-mvp
+        shell: bash
+        run: |
+          npm audit --json > "$RUNNER_TEMP/npm-audit.json" || true
+          node - "$RUNNER_TEMP/npm-audit.json" <<'NODE'
+          const fs = require('node:fs');
+          const report = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+          console.log('Audit summary:', JSON.stringify(report.metadata?.vulnerabilities ?? {}, null, 2));
+          for (const [name, item] of Object.entries(report.vulnerabilities ?? {})) {
+            console.log(JSON.stringify({
+              package: name,
+              severity: item.severity,
+              direct: item.isDirect,
+              range: item.range,
+              fixAvailable: item.fixAvailable,
+              via: item.via
+            }, null, 2));
+          }
+          NODE
