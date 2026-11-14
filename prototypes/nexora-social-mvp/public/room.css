@@ -1028,3 +1028,34 @@
 .nexora-report-form label{display:grid;gap:6px;font-size:12px;font-weight:800}
 .nexora-report-form button{padding:10px;border:1px solid #7187b6;border-radius:6px;background:linear-gradient(#7187b6,#50658f);color:#fff;font-weight:800}
 .nexora-report-form p{min-height:16px;margin:0;color:#287044;font-size:12px}
+
+
+/* Панель разработчика использует тот же ретро-вид, что и окно «Действия». */
+.nexora-developer-panel{position:fixed!important;inset:0!important;z-index:1200!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:14px!important;background:#05070dcc!important;backdrop-filter:none!important}
+.nexora-developer-panel.hidden{display:none!important}
+.nexora-developer-window{box-sizing:border-box!important;width:min(720px,calc(100vw - 28px))!important;max-height:calc(100dvh - 40px)!important;display:flex!important;flex-direction:column!important;gap:0!important;overflow:hidden!important;padding:0!important;border:3px ridge #8a8a8a!important;border-radius:0!important;background:repeating-linear-gradient(0deg,#242424 0 2px,#202020 2px 4px)!important;color:#f0f0f0!important;box-shadow:0 8px 28px #000c!important;font-family:Arial,sans-serif!important}
+.nexora-developer-window>header{position:relative!important;flex:0 0 29px!important;height:29px!important;min-height:29px!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:0 34px!important;border:0!important;border-bottom:2px solid #527b19!important;background:repeating-linear-gradient(135deg,#b9f34b 0 6px,#a6df38 6px 12px)!important;color:#101010!important;font-family:Arial,sans-serif!important;font-size:13px!important;font-weight:900!important;letter-spacing:0!important;text-shadow:1px 1px #eaffae!important;text-transform:uppercase!important}
+.nexora-developer-window>header span{color:#101010!important;font:900 13px Arial,sans-serif!important;text-transform:uppercase!important}
+.nexora-developer-window>header button{position:absolute!important;right:2px!important;top:1px!important;width:25px!important;height:24px!important;min-height:24px!important;padding:0!important;border:1px solid #5c6e34!important;border-radius:0!important;background:#a5d83a!important;color:#111!important;font:18px/18px Arial,sans-serif!important;text-shadow:none!important}
+.nexora-management-meta{flex:0 0 auto!important;padding:7px 9px!important;border:0!important;border-bottom:1px solid #454545!important;background:#242424!important;color:#b9f34b!important;font:12px Arial,sans-serif!important}
+.nexora-management-tabs{flex:0 0 auto!important;display:flex!important;flex-wrap:wrap!important;gap:0!important;padding:0!important;border:0!important;border-bottom:1px solid #454545!important;border-radius:0!important;background:#202020!important}
+.nexora-management-tabs button{flex:1 1 90px!important;min-width:0!important;min-height:30px!important;padding:4px 8px!important;border:0!important;border-right:1px solid #454545!important;border-bottom:1px solid #454545!important;border-radius:0!important;background:transparent!important;color:#f0f0f0!important;font:500 13px/1.15 Arial,sans-serif!important;text-align:left!important;text-shadow:1px 1px #000!important}
+.nexora-management-tabs button::before{content:"›"!important;display:inline-block!important;width:17px!important;color:#b9f34b!important;font-size:15px!important;font-weight:900!important}
+.nexora-management-tabs button.active,.nexora-management-tabs button:active,.nexora-management-tabs button:focus-visible{outline:1px dotted #d8ff70!important;background:#47751c!important;color:#fff!important}
+.nexora-management-note{flex:0 0 auto!important;min-height:16px!important;padding:4px 9px!important;border-bottom:1px solid #454545!important;background:#242424!important;color:#b9f34b!important;font:12px Arial,sans-serif!important}
+.nexora-management-note.error{color:#ff8997!important}
+.nexora-management-content{min-height:110px!important;overflow:auto!important;padding:8px!important;background:repeating-linear-gradient(0deg,#242424 0 2px,#202020 2px 4px)!important;color:#f0f0f0!important;font:13px Arial,sans-serif!important}
+.nexora-management-loading,.nexora-management-empty{padding:22px 10px!important;color:#b9f34b!important;text-align:center!important;font:13px Arial,sans-serif!important}
+.nexora-management-card{padding:9px!important;border:1px solid #555!important;border-radius:0!important;background:#292929!important;box-shadow:none!important;color:#f0f0f0!important}
+.nexora-management-card p{color:#dedede!important;font:12px/1.4 Arial,sans-serif!important}
+.nexora-management-card small{color:#a9a9a9!important;font:11px Arial,sans-serif!important}
+.nexora-management-player-head b{color:#f0f0f0!important;font:700 13px Arial,sans-serif!important}
+.nexora-management-player-head span{border:1px solid #555!important;border-radius:0!important;background:#333!important;color:#ddd!important;font:11px Arial,sans-serif!important}
+.nexora-management-player-head span.online{border-color:#527b19!important;background:#35551b!important;color:#d8ff70!important}
+.nexora-management-actions button,.nexora-management-form button{min-height:30px!important;padding:4px 9px!important;border:1px solid #666!important;border-radius:0!important;background:#303030!important;color:#f0f0f0!important;font:500 12px Arial,sans-serif!important;text-shadow:1px 1px #000!important}
+.nexora-management-actions button::before{content:"› "!important;color:#b9f34b!important;font-weight:900!important}
+.nexora-management-actions button.danger{border-color:#98515a!important;background:#48272b!important;color:#ffdfe2!important}
+.nexora-management-actions select,.nexora-management-form input,.nexora-management-form textarea,.nexora-management-form select{box-sizing:border-box!important;max-width:100%!important;padding:7px!important;border:1px solid #666!important;border-radius:0!important;background:#171717!important;color:#f0f0f0!important;font:12px Arial,sans-serif!important}
+.nexora-management-form{max-width:none!important;margin:8px 0!important;padding:8px!important;border:1px solid #555!important;background:#242424!important}
+.nexora-management-form label{color:#b9f34b!important;font:12px Arial,sans-serif!important}
+@media(max-width:560px){.nexora-developer-panel{padding:7px!important}.nexora-developer-window{width:calc(100vw - 14px)!important;max-height:92dvh!important}.nexora-management-tabs button{flex:1 1 30%!important;min-width:0!important;padding:7px 5px!important;font-size:11px!important}.nexora-management-content{padding:6px!important}}
