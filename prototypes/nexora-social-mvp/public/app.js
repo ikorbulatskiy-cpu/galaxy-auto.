@@ -70,6 +70,16 @@ $("customize-back").addEventListener("click",()=>{$("register-step-customize").c
   ctx.putImageData(frame,0,0);
  }
 
+ function trimmedSpriteDataUrl(canvas,w,h){
+ const d=canvas.getContext("2d").getImageData(0,0,w,h).data;let x0=w,y0=h,x1=-1,y1=-1;
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(d[(y*w+x)*4+3]>18){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}
+ if(x1<x0||y1<y0)return canvas.toDataURL("image/png");
+ x0=Math.max(0,x0-2);y0=Math.max(0,y0-2);x1=Math.min(w-1,x1+2);y1=Math.min(h-1,y1+2);
+ const out=document.createElement("canvas");out.width=x1-x0+1;out.height=y1-y0+1;
+ out.getContext("2d").drawImage(canvas,x0,y0,out.width,out.height,0,0,out.width,out.height);
+ return out.toDataURL("image/png");
+}
+
  function getSprite(kind,id){
   const key=kind+":"+id;
   if(spritePromises[key])return spritePromises[key];
@@ -82,7 +92,7 @@ $("customize-back").addEventListener("click",()=>{$("register-step-customize").c
     const ctx=canvas.getContext("2d");
     if(!ctx){reject(new Error("Canvas is unavailable"));return;}
     ctx.clearRect(0,0,w,h);ctx.drawImage(source,x,y,w,h,0,0,w,h);removeScreenshotBackground(ctx,w,h);
-    resolve(canvas.toDataURL("image/png"));
+    resolve(trimmedSpriteDataUrl(canvas,w,h));
    };
    source.onerror=()=>reject(new Error("Не удалось загрузить исходный спрайт "+kind));
    source.src="/assets/sprites/characters/IMG_415"+(kind==="head"?"7":"8")+".png?v=source-sprite-20261115";
