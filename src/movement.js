@@ -48,7 +48,8 @@ router.get("/rooms/:roomId/positions", requireSession, async (req, res, next) =>
 });
 
 function attachMovement(server) {
-  const wss = new WebSocketServer({ server, path: "/ws-movement", maxPayload: 2048 });
+  const wss = new WebSocketServer({ noServer: true, maxPayload: 2048 });
+  registerWebSocketRoute(server, "/ws-movement", wss);
   const peers = new Map();
   const instanceId = crypto.randomUUID();
   const broadcast = event => {
