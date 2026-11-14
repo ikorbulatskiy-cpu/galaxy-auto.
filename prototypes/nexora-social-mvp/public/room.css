@@ -159,3 +159,13 @@
 .nexora-profile-loaded .nexora-avatar-content{min-height:70px}
 .nexora-profile-loaded .nexora-avatar-save{margin-top:4px}
 @media(max-width:480px){.nexora-avatar-panel{padding:10px!important}.nexora-avatar-window{width:min(370px,100%);max-height:calc(100dvh - 20px)}}
+
+
+/* First complete character: supplied demon body and fire aura */
+.nexora-world-avatar{width:148px!important;height:150px!important;bottom:13%!important;display:block!important;overflow:visible!important;filter:drop-shadow(0 0 9px #a52aff) drop-shadow(0 0 18px #ff6a00)!important}
+.nexora-world-avatar>.nexora-full-art{display:block;width:100%;height:100%;object-fit:cover;object-position:center;mix-blend-mode:normal;pointer-events:none}
+.nexora-world-avatar>svg{display:none!important}
+.nexora-profile-avatar{overflow:hidden}
+.nexora-profile-avatar>.nexora-full-art{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+.nexora-profile-avatar>svg{display:none!important}
+@media(max-width:520px){.nexora-world-avatar{width:132px!important;height:136px!important}}
