@@ -62,7 +62,10 @@
   worldAvatar.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openCharacterActions();}});
   $("nexora-action-info").addEventListener("click",()=>{closeCharacterActions();openAvatar();});
   $("nexora-action-emotions").addEventListener("click",openEmotions);
-  $("nexora-action-auras").addEventListener("click",openAuras);\n  $("nexora-action-developer").addEventListener("click",openDeveloperMode);\n  $("nexora-developer-close").addEventListener("click",closeDeveloperMode);\n  $("nexora-developer-panel").addEventListener("click",event=>{if(event.target===$("nexora-developer-panel"))closeDeveloperMode();});
+  $("nexora-action-auras").addEventListener("click",openAuras);
+  $("nexora-action-developer").addEventListener("click",openDeveloperMode);
+  $("nexora-developer-close").addEventListener("click",closeDeveloperMode);
+  $("nexora-developer-panel").addEventListener("click",event=>{if(event.target===$("nexora-developer-panel"))closeDeveloperMode();});
   $("nexora-auras-close").addEventListener("click",closeAuras);
   $("nexora-auras-panel").addEventListener("click",event=>{if(event.target===$("nexora-auras-panel"))closeAuras();});
   $("nexora-action-exit").addEventListener("click",closeCharacterActions);
