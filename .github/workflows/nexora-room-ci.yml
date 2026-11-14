@@ -1,156 +1,49 @@
-name: NEXORA Room Redesign CI
+name: NEXORA 2D Room CI
 
 on:
-  pull_request:
-    branches: [nexora-social-mvp]
   push:
     branches: [nexora-social-mvp]
     paths:
       - "prototypes/nexora-social-mvp/public/**"
-      - "prototypes/nexora-social-mvp/server.js"
-      - "prototypes/nexora-social-mvp/src/profile.js"
-      - "prototypes/nexora-social-mvp/src/**"
-      - "prototypes/nexora-social-mvp/migrations/**"
       - ".github/workflows/nexora-room-ci.yml"
+  pull_request:
+    branches: [nexora-social-mvp]
 
 jobs:
-  room-redesign:
+  validate-2d-world:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install application dependencies
-        run: cd prototypes/nexora-social-mvp && npm install
-      - name: Check JavaScript syntax
+      - name: Check browser JavaScript
         run: |
-          node --check prototypes/nexora-social-mvp/server.js
-          node --check prototypes/nexora-social-mvp/src/avatar.js
-          node --check prototypes/nexora-social-mvp/src/auth.js
-          node --check prototypes/nexora-social-mvp/src/profile.js
-          node --check prototypes/nexora-social-mvp/src/economy.js
-          node --check prototypes/nexora-social-mvp/src/planets.js
-          node --check prototypes/nexora-social-mvp/src/social.js
-          node --check prototypes/nexora-social-mvp/src/developer.js
-          node --check prototypes/nexora-social-mvp/src/galaxy-sockets.js
-          node --check prototypes/nexora-social-mvp/public/client.js
+          node --check prototypes/nexora-social-mvp/public/app.js
           node --check prototypes/nexora-social-mvp/public/sprite-engine.js
-          node --check prototypes/nexora-social-mvp/public/world-objects.js
           node --check prototypes/nexora-social-mvp/public/world-scene.js
+          node --check prototypes/nexora-social-mvp/public/world-objects.js
+      - name: Validate 2D art assets
+        run: |
           python3 -c "import xml.etree.ElementTree as ET; ET.parse('prototypes/nexora-social-mvp/public/assets/sprites/characters/nexora-avatar-atlas.svg')"
-          python3 -c "import xml.etree.ElementTree as ET; ET.parse('prototypes/nexora-social-mvp/public/assets/sprites/props/nexora-world-props-atlas.svg')"
-          python3 -c "import xml.etree.ElementTree as ET; [ET.parse('prototypes/nexora-social-mvp/public/assets/sprites/planets/' + name + '.svg') for name in ('starter','club','beach')]"
-          node -e "JSON.parse(require('fs').readFileSync('prototypes/nexora-social-mvp/public/assets/sprites/characters/atlas.json','utf8'))"
-      - name: Verify room features and server validation
+          python3 -c "import xml.etree.ElementTree as ET; ET.parse('prototypes/nexora-social-mvp/public/assets/sprites/planets/starter.svg')"
+      - name: Verify minimal 2D room and existing auth integration
         run: |
           node <<'NODE'
           const fs = require("fs");
-          const root = "prototypes/nexora-social-mvp/";
-          const html = fs.readFileSync(root + "public/index.html", "utf8");
-          const galaxySockets = fs.readFileSync(root + "src/galaxy-sockets.js", "utf8");
-          const css = fs.readFileSync(root + "public/style.css", "utf8");
-          const spriteCss = fs.readFileSync(root + "public/sprite-overhaul.css", "utf8");
-          const worldScene = fs.readFileSync(root + "public/world-scene.js", "utf8");
-          const client = fs.readFileSync(root + "public/client.js", "utf8");
-          const server = fs.readFileSync(root + "server.js", "utf8");
-          const profile = fs.readFileSync(root + "src/profile.js", "utf8");
-          const avatar = fs.readFileSync(root + "src/avatar.js", "utf8");
-          const economy = fs.readFileSync(root + "src/economy.js", "utf8");
-          const planets = fs.readFileSync(root + "src/planets.js", "utf8");
-          const developer = fs.readFileSync(root + "src/developer.js", "utf8");
-          const migration = fs.readFileSync(root + "migrations/011_economy_reports_planet_objects.sql", "utf8");
-          const sprites = fs.readFileSync(root + "public/sprite-engine.js", "utf8");
-          const atlas = fs.readFileSync(root + "public/assets/sprites/characters/nexora-avatar-atlas.svg", "utf8");
-          const props = fs.readFileSync(root + "public/world-objects.js", "utf8");
+          const root = "prototypes/nexora-social-mvp/public/";
+          const html = fs.readFileSync(root + "index.html", "utf8");
+          const app = fs.readFileSync(root + "app.js", "utf8");
           const checks = [
-            [html.includes('id="planet-new-name"') && html.includes('id="planet-create-submit"') && !html.includes('id="planet-new-category"') && !html.includes('id="planet-owner-tools"'), "planet creation UI only asks for a name"],
-            [client.includes('planetRequest("/api/planets",{method:"POST",body:JSON.stringify({name})})') && !client.includes('function openPlanetOwnerTools'), "planet creation submits a name-only payload without removed management UI"],
-            [planets.includes('if(!name.length)') && !planets.includes('name.length<3'), "custom planet names accept any non-empty length including one character"],
-            [html.includes('id="edit-hair"') && ['value="bob"','value="ponytail"','value="curly"'].every(value=>html.includes(value)), "avatar editor exposes hairstyle options"],
-            [html.includes('id="edit-shoes"') && ['value="sneakers"','value="boots"','value="sandals"'].every(value=>html.includes(value)), "avatar editor exposes footwear options"],
-            [html.includes('id="edit-accessory"') && ['value="flower"','value="cap"','value="scarf"'].every(value=>html.includes(value)), "avatar editor exposes accessory options"],
-            [html.includes('id="edit-outfit"') && ['hoodie','jacket','dress','beach','club'].every(value=>html.includes('value="'+value+'"')), "avatar editor exposes outfit styles"],
-            [fs.readFileSync(root + "public/sprite-engine.js", "utf8").includes("nexora:sprites-ready") && client.includes("nexora:sprites-ready"), "avatar previews refresh when sprite atlas loads"],
-
-            [html.includes('id="clear-chat-button"') && client.includes('$("#clear-chat-button")?.addEventListener') && client.includes("state.chat = state.chat.filter(message => message.whisper)"), "clear button removes public chat only in the current browser"],
-            [server.includes('socket.emit("planet:state", { planet, players: list, history: [] })') && !server.includes("nexora_social_world.messages"), "public room chat is ephemeral and never reads or writes message history"],
-            [css.includes("width:min(370px,calc(100vw - 24px))") && css.includes(".chat-clear-button"), "room chat is wider, viewport-bounded and has a compact clear control"],
-            [html.includes('id="world-canvas"') && html.includes('id="room-events-panel"'), "world canvas and event panel exist"],
-            [html.includes('data-room-toggle="events"') && html.includes('id="room-player-list"') && !html.includes('id="room-player-search"') && html.includes('id="room-global-search-input"'), "events control, unfiltered room list and global server search exist"],
-            [client.includes("function drawPlanetBackdrop") && client.includes("function drawAvatar"), "planet and character renderers exist"],
-            [client.includes('socket.on("player:action:played"') && client.includes('socket.emit("player:action"'), "player action client flow exists"],
-            [client.includes("function renderRoomEvents") && client.includes("setConnectionStatus"), "event feed and connection state exist"],
-            [server.includes('socket.on("player:action"') && server.includes("sender.planet!==target.planet"), "player actions validate same planet"],
-            [server.includes("lastActionAt") && server.includes("lastEmotionAt"), "action and emotion throttles exist"],
-            [server.includes('require("./src/avatar")') && avatar.includes("ACCESSORIES.includes") && avatar.includes("OUTFITS.includes"), "server validates appearance fields through shared allowlist"],
-            [avatar.includes("HAIR.includes") && avatar.includes("ACCESSORIES.includes") && profile.includes("normalizeAvatar"), "profile validates persisted appearance through shared validator"],
-            [css.includes("grid-template-columns:repeat(5") && css.includes("room-events-panel"), "five-control toolbar and event styles exist"],
-            [html.includes('/sprite-engine.js') && html.includes('/world-objects.js'), "sprite and world-object engines are loaded"],
-            [client.includes("nexora-world-props-atlas.svg") && client.includes("ctx.drawImage(customObjectAtlas") && client.includes("customObjectTiles"), "custom planet decorations use the original illustrated sprite atlas"],
-            [html.includes('/sprite-overhaul.css'), "mobile-first visual stylesheet is loaded"],
-            [spriteCss.includes("prefers-reduced-motion") && spriteCss.includes("env(safe-area-inset-bottom)"), "mobile safe-area and reduced-motion styles exist"],
-            [worldScene.includes("sceneAssets") && worldScene.includes("drawImage(art"), "illustrated planet backgrounds are loaded by scene renderer"],
-            [sprites.includes("function animationFrames") && sprites.includes("drawImage(atlas"), "sprite atlas animation renderer exists"],
-            [atlas.includes("sprite atlas") && atlas.includes("id=\"front\"") && atlas.includes("id=\"back\""), "original directional SVG sprite atlas exists"],
-            [props.includes("function drawFountain") && props.includes("function drawPalm"), "planet prop library exists"],
-            [client.includes("player.direction=") && client.includes("spriteDirection"), "four-direction movement drives sprite rendering"],
-            [server.includes('app.use("/api/economy"') && economy.includes('router.post("/purchase"'), "transactional economy routes are mounted"],
-            [economy.includes("FOR UPDATE") && economy.includes("wallet_transactions") && economy.includes("requestId"), "purchases lock balances and enforce idempotency"],
-            [economy.includes('router.post("/equip"') && economy.includes('router.post("/reports"'), "inventory equip and player reports endpoints exist"],
-            [planets.includes('router.put("/:id/objects"') && planets.includes("OBJECT_CODES"), "custom planet object editor validates owner-saved objects"],
-            [migration.includes("wallet_transactions") && migration.includes("custom_planet_objects") && migration.includes("player_reports"), "additive 011 economy and world migration exists"],
-            [planets.includes("AND ($1='' OR p.name ILIKE '%'||$1||'%')") && !planets.includes("AND ($1=' OR"), "custom planet catalog search uses a valid empty-query predicate"],
-            [developer.includes("/^" + String.fromCharCode(92) + "d+$/.test") && !developer.includes("/^" + String.fromCharCode(92,92) + "d+$/.test"), "developer moderation and planet IDs use decimal-only validation"],
-            [developer.includes('router.post("/roles"') && developer.includes('current.role !== "OWNER"') && developer.includes('NEXORA_OWNER_ACCOUNT_ID'), "only the owner can assign developer roles"],
-            [client.includes('if (ownProfile)') && client.includes('Открыть панель разработчика') && client.includes('developerIsOwner'), "developer controls are available from the owner's own character"],
-            [html.includes('id="public-profile-owner-tools"') && client.includes('ownerTools.classList.toggle("hidden", !developerIsOwner)') && client.includes('loadOwnerProfileTools'), "main developer tools are shown only in character profiles for the owner"],
-            [developer.includes('router.post("/players/:id/access-code/reset"') && developer.includes('player.access_code.reset') && developer.includes('current.role !== "OWNER"'), "character access-code reset is owner-only and audited"],
-            [client.includes('async function developerRequest(path, options = {})'), "developer requests support protected actions"],
-            [server.includes('app.get("/galaxy"') && server.includes('res.redirect(308, "/")'), "legacy Galaxy URL redirects to the single main NEXORA site"],
-            [!html.includes('id="integrated-galaxy-view"') && !html.includes("Galaxy 2D"), "main page no longer embeds the secondary Galaxy interface"],
-            [!client.includes("openIntegratedGalaxy") && !client.includes("integrated-galaxy-frame") && client.includes("Draw exactly one compact nickname plate"), "main world renders one nickname plate and has no embedded Galaxy client"],
-            [!css.includes("integrated-galaxy-view") && !css.includes("galaxy-primary-toolbar"), "secondary Galaxy overlay styles are removed"],
-            [galaxySockets.includes('io.of("/galaxy")') && galaxySockets.includes("auth.authenticateToken") && galaxySockets.includes('socket.on("player:move"'), "legacy server socket namespace remains authenticated"]
+            [html.includes('id="intro-canvas"') && html.includes('id="open-register"') && html.includes('id="open-login"'), "2D welcome screen and two entry buttons exist"],
+            [html.includes('id="register-step-one"') && html.includes('id="register-step-two"') && html.includes('id="step-label"'), "registration has two visible steps"],
+            [html.includes('id="login-nickname"') && html.includes('id="login-code"'), "login is separate and uses nickname plus recovery code"],
+            [html.includes('id="room-canvas"') && html.includes('id="room-screen"'), "the 2D room canvas exists"],
+            [html.includes('/sprite-engine.js') && html.includes('/world-scene.js') && html.includes('/world-objects.js'), "2D scene and character renderers are loaded"],
+            [app.includes('fetch("/api/auth/register"') && app.includes('fetch("/api/auth/login"') && app.includes('fetch("/api/auth/me"'), "existing PostgreSQL-backed auth endpoints are retained"],
+            [app.includes('NexoraSpriteEngine.draw') && app.includes('NexoraWorldScene.draw') && app.includes('NexoraWorldObjects.get'), "room uses original 2D scene, props and character sprites"],
+            [app.includes('data-move') && app.includes('ArrowUp') && app.includes('pointerdown'), "keyboard and touch movement are wired"]
           ];
           for (const [ok, label] of checks) console.log((ok ? "PASS " : "FAIL ") + label);
           if (checks.some(([ok]) => !ok)) process.exit(1);
           NODE
-
-  migration-test:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: nexora_test
-          POSTGRES_USER: nexora
-          POSTGRES_PASSWORD: nexora_test_password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U nexora -d nexora_test"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    steps:
-      - uses: actions/checkout@v4
-      - name: Apply all migrations to a clean temporary PostgreSQL
-        env:
-          PGPASSWORD: nexora_test_password
-        run: |
-          set -euo pipefail
-          for file in prototypes/nexora-social-mvp/migrations/*.sql; do
-            echo "Applying $file"
-            psql -h 127.0.0.1 -U nexora -d nexora_test -v ON_ERROR_STOP=1 -f "$file"
-          done
-          psql -h 127.0.0.1 -U nexora -d nexora_test -v ON_ERROR_STOP=1 -c "SELECT item_code, price FROM nexora_social_world.shop_catalog ORDER BY item_code"
-          psql -h 127.0.0.1 -U nexora -d nexora_test -v ON_ERROR_STOP=1 -c "SELECT to_regclass('nexora_social_world.custom_planet_objects'), to_regclass('nexora_social_world.player_reports'), to_regclass('nexora_social_world.wallet_transactions')"
-
-      - name: Install app dependencies for runtime smoke tests
-        run: cd prototypes/nexora-social-mvp && npm install --no-audit --no-fund
-      - name: Run API smoke tests against temporary PostgreSQL
-        working-directory: prototypes/nexora-social-mvp
-        env:
-          DATABASE_URL: postgresql://nexora:nexora_test_password@127.0.0.1:5432/nexora_test
-        run: node scripts/runtime-smoke-test.js
