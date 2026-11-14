@@ -21,8 +21,8 @@
 .window-cloud{position:absolute;left:17%;top:20%;width:45px;height:15px;border-radius:20px;background:#fff;box-shadow:13px -9px 0 -2px #fff,29px -3px 0 1px #fff}
 .window-hill{position:absolute;left:-10%;right:-10%;bottom:-25%;height:48%;border-radius:50% 50% 0 0;background:linear-gradient(#8edb83,#58bd78)}
 .wall-decoration{display:none!important}
-.room-baseboard{position:absolute;left:0;right:0;bottom:45%;height:15px;background:#050505;border-top:2px solid #18265d;border-bottom:2px solid #000;box-shadow:0 3px 0 #000}
-.room-floor{position:absolute;left:0;right:0;bottom:0;height:45%;background:#050505;border:0}
+.room-baseboard{position:absolute;left:0;right:0;bottom:45%;height:15px;background:#101d55;border-top:2px solid #18265d;border-bottom:2px solid #07133d;box-shadow:0 3px 0 #07133d}
+.room-floor{position:absolute;left:0;right:0;bottom:0;height:45%;background:linear-gradient(180deg,#07133d 0%,#101d55 80%,#18265d 100%);border:0}
 .room-floor:after{display:none}
 .floor-shine{display:none}
 @media(max-width:600px){.retro-room{width:100vw;height:100dvh;min-height:0;border:0}.retro-chat{height:190px;flex-basis:190px}.room-window{left:6%;top:12%;width:34%;height:43%;border-width:6px}.wall-decoration{right:10%;top:20%;width:68px;border-width:6px}.room-floor{height:45%}.room-baseboard{bottom:45%}}
