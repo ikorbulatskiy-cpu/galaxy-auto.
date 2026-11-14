@@ -1,32 +1,76 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#090d20"><title>NEXORA — Galaxy World</title>
-<link rel="stylesheet" href="/styles.css"><script defer src="/app.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b13">
+<meta name="description" content="NEXORA — знакомства, общение и виртуальный мир 18+.">
+<title>NEXORA — Meet. Connect. Discover.</title>
+<link rel="stylesheet" href="/styles.css?v=landing-20261114">
+<script defer src="/app.js?v=landing-20261114"></script>
 </head>
-<body><div class="shell">
-<header class="topbar"><button class="brand" data-section="registration">✦ NEXORA</button><div class="top-meta"><span id="connection">Проверка сервера…</span><time id="header-time"></time></div></header>
+<body>
+<div class="site-shell">
+<header class="top">
+  <a class="brand" href="/" aria-label="NEXORA"><span class="mark">✦</span>NEXORA</a>
+  <div class="top-meta"><span id="connection">Проверка сервера…</span><time id="header-time"></time></div>
+</header>
 
-<main class="content">
-<section class="section active" id="section-registration">
-<div class="section-heading"><div><p class="eyebrow">НАЧНИ СВОЮ ИСТОРИЮ</p><h1>NEXORA</h1></div><div class="avatar" id="avatar">🧑</div></div>
-<div class="auth-switch"><button class="auth-mode active" data-auth="register">Регистрация</button><button class="auth-mode" data-auth="login">Вход</button></div>
-<form id="auth-form" novalidate>
-<label>Ник<input id="nickname" minlength="3" maxlength="24" autocomplete="username" placeholder="Твой ник" required></label>
-<label id="recovery-login-label" class="hidden">Код восстановления<input id="recovery-login" autocomplete="one-time-code" placeholder="Код, выданный при создании ника"></label>
-<p class="form-error" id="form-error" role="alert"></p><button class="primary" id="submit-auth" type="submit">Создать ник</button>
-</form>
-<div class="account-state hidden" id="account-state">
-<h2>Профиль игрока</h2><p class="player-nickname" id="account-name"></p>
+<main id="landing" class="landing">
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="eyebrow">✦ СОЦИАЛЬНЫЙ ВИРТУАЛЬНЫЙ МИР · 18+</div>
+      <h1>Люди ближе.<br><span class="gradient">Моменты ярче.</span></h1>
+      <p class="lead">Создай персонажа, находи друзей, общайся в личных сообщениях и открывай новые уголки NEXORA.</p>
+      <div class="hero-actions">
+        <button class="button primary" type="button" data-open="register">Создать персонажа <span>↗</span></button>
+        <button class="button secondary" type="button" data-open="login">Уже есть персонаж?</button>
+      </div>
+      <p class="age-note">Для создания персонажа нужно подтвердить, что тебе исполнилось 18 лет. Почта и пароль не нужны.</p>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+      <div class="planet">✦</div><span class="star star-one">✧</span><span class="star star-two">✦</span><span class="star star-three">·</span>
+      <div class="art-caption">MEET · CONNECT · DISCOVER</div>
+    </div>
+  </section>
+  <footer class="landing-footer"><span>© 2026 NEXORA</span><span>Meet. Connect. Discover.</span></footer>
+</main>
 
-<div class="character-panel"><h3>Инфо персонажа</h3><div class="recovery-panel"><h3>Личный код восстановления</h3><p id="recovery-value">Код доступен только владельцу аккаунта.</p><button class="secondary" id="recovery-generate">Создать новый код</button></div><h3>Создать персонажа</h3><div class="character-preview" id="character-preview">🧑</div>
-<div class="character-selects"><label>Голова<select id="head-choice"><option value="1">Голова 1</option><option value="2">Голова 2</option><option value="3">Голова 3</option><option value="4">Голова 4</option><option value="5">Голова 5</option><option value="6">Голова 6</option><option value="7">Голова 7</option><option value="8">Голова 8</option><option value="9">Голова 9</option><option value="10">Голова 10</option><option value="11">Голова 11</option><option value="12">Голова 12</option></select></label>
-<label>Тело<select id="body-choice"><option value="1">Тело 1</option><option value="2">Тело 2</option><option value="3">Тело 3</option><option value="4">Тело 4</option><option value="5">Тело 5</option><option value="6">Тело 6</option><option value="7">Тело 7</option><option value="8">Тело 8</option><option value="9">Тело 9</option><option value="10">Тело 10</option><option value="11">Тело 11</option><option value="12">Тело 12</option></select></label></div>
-<button class="primary" id="create-character" type="button">Персонаж</button><p class="form-error" id="character-error" role="alert"></p></div>
-<button class="secondary" id="logout">Выйти</button></div></section>
-<section class="section" id="section-clan"><p class="eyebrow">СООБЩЕСТВО</p><h1>Клан Стихия</h1><div class="panel clan-panel"><div class="clan-mark">СТИХИЯ</div><div class="stats"><span>💎 Авторитет <b>272 574</b></span><span>⭐ Уровень <b>11</b></span><span>👥 Участники <b>105</b></span></div><dl><dt>Основан</dt><dd>25 апреля 2008 г.</dd><dt>Основатель</dt><dd>ВЫНОСНОЙ</dd><dt>Лидер</dt><dd>/T/L/I/G/R/A/</dd><dt>Помощники</dt><dd>80</dd><dt>Мемберы</dt><dd>24</dd></dl><blockquote>«Относись к человеку так, как хочешь, чтобы относились к тебе!»</blockquote></div></section>
-<section class="section" id="section-extra"><p class="eyebrow">СОЦИАЛЬНЫЕ ВОЗМОЖНОСТИ</p><h1>Дополнительно</h1><div class="menu-grid"><button data-action="mail">✉ Написать письмо</button><button data-action="friends">♧ Друзья</button><button data-action="gallery">▧ Фотогалерея</button><button data-action="game-info">✦ Игровое инфо</button><button data-action="pets">🐾 Питомцы</button><button data-action="gift-money">₿ Подарить денег</button><button data-action="gift-item">◇ Подарить вещь</button><button data-action="proposal">♡ Сделать предложение</button><button data-action="clan-invite">♜ Пригласить в клан</button><button data-action="blog">▤ Блог</button><button data-action="privileges">✧ Привилегии</button><button data-action="newspaper">▥ Газета</button></div></section>
-<section class="section" id="section-emotions"><p class="eyebrow">ТВОЁ НАСТРОЕНИЕ</p><h1>Эмоции</h1><div class="emotion-grid"><button class="emotion active">❤️ <span>Люблю</span></button><button class="emotion">💼 <span>Занят</span></button><button class="emotion">😊 <span>Весело</span></button><button class="emotion">😄 <span>Очень весело</span></button><button class="emotion">😏 <span>Дразнюсь</span></button><button class="emotion">😳 <span>Смущение</span></button><button class="emotion">😢 <span>Грустно</span></button><button class="emotion">😲 <span>Удивление</span></button><button class="emotion">😐 <span>Апатия</span></button><button class="emotion">🤔 <span>Сомнение</span></button><button class="emotion">😤 <span>Гордый</span></button><button class="emotion">😕 <span>Недоумение</span></button><button class="emotion">😭 <span>Очень грустно</span></button></div></section>
-<section class="section" id="section-menu"><p class="eyebrow">МИР NEXORA</p><h1>Главное меню</h1><div class="menu-grid"><button data-action="say">💬 Сказать</button><button data-action="action">⚡ Действие</button><button data-action="more">⋯ Дополнительно</button><button data-action="fun">🎮 Развлечения</button><button data-action="settings">⚙ Настройки</button><button data-action="travel">🪐 Перелететь на другую планету</button><button data-action="move">➤ Переместиться</button><button data-action="my-info">♙ Моё инфо</button><button data-action="planet-info">◎ Инфо планеты</button><button data-action="shop">◇ Магазин</button><button data-action="help">❔ Помощь</button><button data-action="advertising">▣ Реклама</button><button data-action="emotions">♡ Эмоции</button><button data-action="fireworks">✧ Фейерверк</button></div></section>
-</main><footer class="footer"><button id="footer-left">✎ Изменить</button><button id="footer-right">‹ Назад</button></footer><div class="toast" id="toast" role="status"></div></div></body></html>
+<section id="auth-modal" class="modal" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <button class="close" id="close-auth" type="button" aria-label="Закрыть">×</button>
+    <div class="dialog-kicker">ТВОЯ ИСТОРИЯ В NEXORA</div>
+    <h2 id="auth-title">Создать персонажа</h2>
+    <div class="auth-switch">
+      <button class="auth-mode active" type="button" data-auth="register">Создать персонажа</button>
+      <button class="auth-mode" type="button" data-auth="login">Войти</button>
+    </div>
+    <form id="auth-form" novalidate>
+      <label class="field-label">Ник<input class="field" id="nickname" minlength="3" maxlength="24" autocomplete="username" placeholder="Твой ник" required></label>
+      <label class="field-label hidden" id="recovery-login-label">Код восстановления<input class="field" id="recovery-login" autocomplete="one-time-code" placeholder="Код, выданный при создании персонажа"></label>
+      <p class="form-error" id="form-error" role="alert"></p>
+      <button class="button primary submit" id="submit-auth" type="submit">Создать персонажа</button>
+    </form>
+    <div class="account-state hidden" id="account-state">
+      <h3>Персонаж создан</h3>
+      <p class="player-nickname" id="account-name"></p>
+      <div class="recovery-panel"><b>Личный код восстановления</b><p id="recovery-value">Код доступен только владельцу аккаунта.</p><button class="button secondary" id="recovery-generate" type="button">Создать новый код</button></div>
+      <div class="character-panel">
+        <h3>Внешность персонажа</h3>
+        <div class="character-preview" id="character-preview">🧑</div>
+        <div class="character-selects">
+          <label class="field-label">Голова<select class="field" id="head-choice"><option value="1">Голова 1</option><option value="2">Голова 2</option><option value="3">Голова 3</option><option value="4">Голова 4</option><option value="5">Голова 5</option><option value="6">Голова 6</option><option value="7">Голова 7</option><option value="8">Голова 8</option><option value="9">Голова 9</option><option value="10">Голова 10</option><option value="11">Голова 11</option><option value="12">Голова 12</option></select></label>
+          <label class="field-label">Тело<select class="field" id="body-choice"><option value="1">Тело 1</option><option value="2">Тело 2</option><option value="3">Тело 3</option><option value="4">Тело 4</option><option value="5">Тело 5</option><option value="6">Тело 6</option><option value="7">Тело 7</option><option value="8">Тело 8</option><option value="9">Тело 9</option><option value="10">Тело 10</option><option value="11">Тело 11</option><option value="12">Тело 12</option></select></label>
+        </div>
+        <button class="button primary submit" id="create-character" type="button">Сохранить персонажа</button>
+        <p class="form-error" id="character-error" role="alert"></p>
+      </div>
+      <button class="button secondary submit" id="logout" type="button">Выйти</button>
+    </div>
+  </div>
+</section>
+<div class="toast" id="toast" role="status"></div>
+</div>
+</body>
+</html>
