@@ -566,9 +566,11 @@
     orderedPlayers.forEach((player) => {
       advancePlayerMovement(player, now);
       const drawX = (player.renderX ?? player.x) * w;
-      const depth = Math.max(.60,Math.min(.86,player.renderY ?? player.y ?? .82));
-      const scale = .78 + ((depth-.60)/.26)*.24;
+      // Keep every avatar on one shared ground line. The former name position becomes the feet line.
+      const depth = .82;
+      const scale = .78 + ((.82-.60)/.26)*.24;
       const y = depth*h;
+      const avatarGroundY = y + 53*scale;
       const isMe = String(player.id) === String(state.me?.id);
       const emotion = player.emotion?.until > Date.now() ? player.emotion.type : null;
       if(player.bubble?.until>Date.now()){
@@ -578,24 +580,30 @@
         if(line)lines.push(line);const visibleLines=lines.slice(0,3);if(lines.length>3)visibleLines[2]=visibleLines[2].replace(/\s+$/,"")+"…";
         const bubbleWidth=Math.min(w-20,Math.max(76,...visibleLines.map(item=>ctx.measureText(item).width+20)));
         const bubbleHeight=18+visibleLines.length*14;const bubbleX=Math.max(10,Math.min(w-bubbleWidth-10,drawX-bubbleWidth/2));
-        const bubbleY=Math.max(8,Math.min(h-bubbleHeight-8,y-119*scale-bubbleHeight+29));
+        const bubbleY=Math.max(8,Math.min(h-bubbleHeight-8,avatarGroundY-119*scale-bubbleHeight+29));
         ctx.fillStyle="rgba(255,255,255,.97)";roundRect(ctx,bubbleX,bubbleY,bubbleWidth,bubbleHeight,10);ctx.fill();
         ctx.fillStyle="#1a2146";ctx.textAlign="center";visibleLines.forEach((item,index)=>ctx.fillText(item,bubbleX+bubbleWidth/2,bubbleY+15+index*14,maxTextWidth));ctx.textAlign="start";ctx.restore();
       }
       if(String(state.selected)===String(player.id)){
         ctx.save();ctx.strokeStyle="#e7dcff";ctx.lineWidth=2;ctx.shadowColor="#a58cff";ctx.shadowBlur=16;
-        ctx.beginPath();ctx.ellipse(drawX,y+2,25*scale,46*scale,0,0,Math.PI*2);ctx.stroke();ctx.restore();
+        ctx.beginPath();ctx.ellipse(drawX,avatarGroundY-31*scale,25*scale,46*scale,0,0,Math.PI*2);ctx.stroke();ctx.restore();
       }
-      const auraCenterY=y-28*scale;
+      const auraCenterY=avatarGroundY-28*scale;
       drawAura(ctx,drawX,auraCenterY,scale,player.auraType,player.auraEnabled,state.auraQuality);
       const spriteDirection=player.direction||"down";
-      const spriteDrawn=window.NexoraSpriteEngine?.draw(ctx,drawX,y,scale,player.avatar,spriteDirection,Boolean(player.moving),emotion);
-      if(!spriteDrawn)drawAvatar(ctx,drawX,y,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
+      const spriteDrawn=window.NexoraSpriteEngine?.draw(ctx,drawX,avatarGroundY,scale,player.avatar,spriteDirection,Boolean(player.moving),emotion);
+      if(!spriteDrawn)drawAvatar(ctx,drawX,avatarGroundY,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
       drawAuraHalo(ctx,drawX,auraCenterY,scale,player.auraType,player.auraEnabled,state.auraQuality);
-      if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20*scale,y-58*scale-Math.sin(Date.now()/120)*3);ctx.restore();}
+      if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20*scale,avatarGroundY-58*scale-Math.sin(Date.now()/120)*3);ctx.restore();}
+      // One clean nickname plate above the head. No duplicate label or decorative lines over the avatar.
       ctx.save();ctx.textAlign="center";ctx.font=(isMe?"750 ":"650 ")+Math.max(10,11*scale)+"px Inter,sans-serif";
-      ctx.fillStyle=isMe?"#fff1b8":"#fff";ctx.shadowColor="#080b20";ctx.shadowBlur=7;
-      ctx.lineWidth=3;ctx.strokeStyle="rgba(5,9,27,.82)";ctx.strokeText(player.nickname,drawX,y+53*scale,136);ctx.fillText(player.nickname,drawX,y+53*scale,136);ctx.restore();
+      const nickname=String(player.nickname||"Игрок").slice(0,24);
+      const labelWidth=Math.min(150,Math.max(48,ctx.measureText(nickname).width+18));
+      const labelHeight=21,labelX=Math.max(5,Math.min(w-labelWidth-5,drawX-labelWidth/2));
+      const labelY=Math.max(5,avatarGroundY-95*scale);
+      ctx.fillStyle="rgba(7,13,31,.82)";roundRect(ctx,labelX,labelY,labelWidth,labelHeight,8);ctx.fill();
+      ctx.fillStyle=isMe?"#fff1b8":"#fff";ctx.shadowColor="#080b20";ctx.shadowBlur=4;
+      ctx.fillText(nickname,labelX+labelWidth/2,labelY+14.5,labelWidth-10);ctx.restore();
     });
     requestAnimationFrame(drawScene);
   }
