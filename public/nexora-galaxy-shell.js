@@ -113,8 +113,8 @@
       const h=sheet.getBoundingClientRect().height||170;
       let top=r.bottom+7;
       if(top+h>window.innerHeight-8)top=Math.max(8,r.top-h-7);
-      sheet.style.left=left+"px";sheet.style.top=top+"px";sheet.style.bottom="auto";
-      sheet.style.transform="none";sheet.style.width=w+"px";
+      sheet.style.setProperty("left",left+"px","important");sheet.style.setProperty("top",top+"px","important");sheet.style.setProperty("bottom","auto","important");
+      sheet.style.setProperty("transform","none","important");sheet.style.setProperty("width",w+"px","important");
     };
     const playerObserver=new MutationObserver(positionPlayerSheet);
     playerObserver.observe(world,{subtree:true,childList:true,attributes:true,attributeFilter:["class","hidden"]});
