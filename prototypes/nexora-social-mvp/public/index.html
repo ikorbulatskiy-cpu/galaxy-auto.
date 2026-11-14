@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/style.css?v=5">
   <link rel="stylesheet" href="/sprite-overhaul.css">
   <link rel="stylesheet" href="/galaxy-interface.css?v=1">
-  <link rel="stylesheet" href="/retro-social.css?v=3">
+  <link rel="stylesheet" href="/retro-social.css?v=4">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -118,7 +118,7 @@
         <div class="drawer-head"><div class="retro-chat-brand"><span class="retro-chat-mark">✉</span><div class="chat-title"><strong>ОБЩИЙ ЧАТ</strong><span id="chat-online-label"><i></i> Все игроки комнаты</span></div></div><div class="chat-head-actions"><span id="chat-connection-status" class="chat-connection-status" data-state="connecting"><i></i><span>Подключение</span></span><span id="chat-new-count" class="chat-new-count hidden">0 новых</span></div></div>
         <div class="world-room-picker"><button id="world-room-toggle" type="button" aria-expanded="false">📍 Выбрать комнату</button><div id="world-room-list" class="world-room-list hidden" aria-label="Комнаты планеты"></div></div>
         <nav class="chat-tabs" aria-label="Разделы общения"><button type="button" class="active" data-chat-view="general">🌐 Общий чат</button></nav>
-        <div id="chat-history" class="chat-history" aria-live="polite"></div>
+        <section class="retro-chat-stream" aria-label="Переписка"><div id="chat-history" class="chat-history" aria-live="polite" aria-relevant="additions text"></div></section>
         <div class="chat-footer-tools"><button id="clear-chat-button" class="chat-clear-button" type="button" title="Очистить историю только у себя" aria-label="Очистить историю общего чата только у себя">⌫ Очистить чат</button></div>
         <div id="chat-emoji-picker" class="chat-emoji-picker hidden" aria-label="Эмодзи"><button type="button" data-chat-emoji="😊">😊</button><button type="button" data-chat-emoji="😂">😂</button><button type="button" data-chat-emoji="😍">😍</button><button type="button" data-chat-emoji="😘">😘</button><button type="button" data-chat-emoji="❤️">❤️</button><button type="button" data-chat-emoji="🔥">🔥</button><button type="button" data-chat-emoji="✨">✨</button><button type="button" data-chat-emoji="👋">👋</button></div>
         <form id="chat-form" class="chat-form"><input id="chat-input" maxlength="240" placeholder="Написать сообщение..." autocomplete="off" aria-label="Сообщение в общий чат" enterkeyhint="send"><button id="chat-emoji-button" class="chat-emoji-button" type="button" aria-label="Добавить эмодзи" aria-expanded="false">😊</button><button type="submit" aria-label="Отправить сообщение">➤</button></form>
