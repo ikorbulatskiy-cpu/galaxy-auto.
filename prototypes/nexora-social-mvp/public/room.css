@@ -1204,3 +1204,28 @@
 }
 .planet-name{color:#f1ffd9!important;text-shadow:1px 1px #285d25!important}
 #visitor-clock{color:#f1ffd9!important;text-shadow:1px 1px #285d25!important}
+
+
+/* Надёжная посадка: нижняя точка тела совпадает с верхней кромкой зелёного пола. */
+#room-scene .nexora-world-avatar{bottom:13%!important;}
+#room-scene .nexora-world-avatar .nexora-demon-layers{inset:0!important;bottom:0!important;height:100%!important;}
+#room-scene .nexora-world-avatar .nexora-demon-body{position:absolute!important;left:0!important;right:0!important;top:auto!important;bottom:-16px!important;height:calc(100% + 16px)!important;width:100%!important;object-fit:contain!important;object-position:center bottom!important;transform:none!important;}
+#room-scene .nexora-room-player{bottom:13%!important;}
+
+/* Режим разработчика использует ту же ретро-оформительскую тему, что и окно «Инфо». */
+#nexora-developer-panel{position:fixed!important;inset:0!important;z-index:120!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:10px!important;background:#05091dcc!important;backdrop-filter:blur(5px)!important;}
+#nexora-developer-panel.hidden{display:none!important}
+#nexora-developer-window{box-sizing:border-box!important;width:min(430px,100%)!important;max-height:calc(100dvh - 20px)!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;padding:0!important;border:1px solid #78849c!important;border-radius:3px!important;background:#353d54!important;color:#e2e4eb!important;box-shadow:0 22px 70px #000c!important;font-family:Arial,sans-serif!important;}
+#nexora-developer-window header{flex:0 0 auto!important;min-height:42px!important;padding:0 12px!important;border-bottom:1px solid #78849c!important;background:#30394f!important;color:#c7dc70!important;font:700 12px Arial,sans-serif!important;letter-spacing:1px!important;text-transform:uppercase!important;}
+#nexora-developer-window header button{width:30px!important;height:30px!important;border:1px solid #78849c!important;border-radius:2px!important;background:#252e43!important;color:#e2e4eb!important;font:22px Arial,sans-serif!important;}
+#nexora-developer-window .nexora-management-meta{padding:8px 10px!important;border-bottom:1px solid #69748e!important;background:#323a51!important;color:#c7dc70!important;font:11px Arial,sans-serif!important;}
+#nexora-developer-window .nexora-management-tabs{display:flex!important;flex-wrap:wrap!important;gap:3px!important;padding:7px!important;background:#30394f!important;border-bottom:1px solid #69748e!important;}
+#nexora-developer-window .nexora-management-tabs button{flex:1 1 auto!important;min-width:65px!important;padding:7px 6px!important;border:1px solid #78849c!important;border-radius:2px!important;background:#252e43!important;color:#dfe6d0!important;font:11px Arial,sans-serif!important;}
+#nexora-developer-window .nexora-management-tabs button.active{border-color:#c7dc70!important;background:#56633d!important;color:#f4ffd5!important;}
+#nexora-developer-window .nexora-management-content{min-height:120px!important;overflow:auto!important;padding:8px!important;background:#353d54!important;color:#e2e4eb!important;}
+#nexora-developer-window .nexora-management-card{padding:9px!important;border:1px solid #68754d!important;border-radius:2px!important;background:#30394f!important;color:#e2e4eb!important;box-shadow:none!important;}
+#nexora-developer-window .nexora-management-card p,#nexora-developer-window .nexora-management-card small{color:#d2d8e2!important;}
+#nexora-developer-window .nexora-management-player-head b{color:#c7dc70!important;font:700 13px Arial,sans-serif!important;}
+#nexora-developer-window .nexora-management-actions button,#nexora-developer-window .nexora-management-form button{border:1px solid #83905d!important;border-radius:2px!important;background:#56633d!important;color:#f1ffd9!important;font:12px Arial,sans-serif!important;}
+#nexora-developer-window input,#nexora-developer-window select,#nexora-developer-window textarea{border:1px solid #78849c!important;border-radius:2px!important;background:#252e43!important;color:#f0f1f5!important;}
+#nexora-developer-window .nexora-management-note{color:#c7dc70!important;}
