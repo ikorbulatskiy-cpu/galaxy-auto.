@@ -18,7 +18,7 @@
   const skins = ["#f4c7a1", "#c9875b", "#75452f"];
   const suits = ["#6d7cff", "#ef6c9b", "#35bca5"];
   const state = {
-    me: null, players: new Map(), planet: "starter", selected: null, customPlanetObjects: [], unreadChat: 0,
+    me: null, players: new Map(), planet: "starter", roomId: null, rooms: [], selected: null, customPlanetObjects: [], unreadChat: 0,
     stars: [], chat: [], roomEvents: [], unreadEvents: 0, width: 0, height: 0, dpr: 1, toastTimer: null, movementFrame: 0,
     joystick: { active: false, pointerId: null, dx: 0, dy: 0, lastSentAt: 0 },
     auraQuality: localStorage.getItem("nexora-aura-quality") === "low" ? "low" : "high"
@@ -734,6 +734,7 @@
 
   socket.on("planet:state", (data) => {
     state.planet = data.planet;
+    state.roomId = data.roomId || state.roomId;
     state.players.clear();
     data.players.forEach((player) => state.players.set(player.id, { ...player, y: player.y ?? .82, renderX: player.x, renderY: player.y ?? .82 }));
     // Public chat is session-only: a fresh join never restores old messages.
@@ -744,6 +745,51 @@
     $("#room-location-title").textContent = (PLANETS[state.planet] || {location:"Космическое пространство"}).location;
     syncOnlineRoomName();
     updateOnline();
+  });
+  socket.on("world:rooms:list", data => {
+    if (data.planet !== state.planet) return;
+    state.rooms = Array.isArray(data.rooms) ? data.rooms : [];
+    state.roomId = data.currentRoomId || state.roomId;
+    renderWorldRooms();
+  });
+  function renderWorldRooms() {
+    const list = $("#world-room-list"), toggle = $("#world-room-toggle");
+    if (!list || !toggle) return;
+    const current = state.rooms.find(room => room.id === state.roomId);
+    toggle.textContent = current ? "📍 " + current.locationName + " · " + current.name : "📍 Выбрать комнату";
+    list.replaceChildren();
+    if (!state.rooms.length) {
+      const empty = document.createElement("p"); empty.textContent = "Комнаты загружаются…"; list.append(empty); return;
+    }
+    const groups = new Map();
+    state.rooms.forEach(room => {
+      if (!groups.has(room.locationName)) groups.set(room.locationName, []);
+      groups.get(room.locationName).push(room);
+    });
+    groups.forEach((rooms, location) => {
+      const heading = document.createElement("strong"); heading.className = "world-room-location"; heading.textContent = location; list.append(heading);
+      rooms.forEach(room => {
+        const button = document.createElement("button"); button.type = "button";
+        button.className = "world-room-option" + (room.id === state.roomId ? " active" : "");
+        button.textContent = room.name + (room.id === state.roomId ? " · Вы здесь" : "");
+        button.addEventListener("click", () => {
+          if (room.id === state.roomId) { list.classList.add("hidden"); return; }
+          button.disabled = true;
+          socket.timeout(8000).emit("world:room:change", {roomId:room.id}, (error,result) => {
+            button.disabled = false;
+            if (error || !result?.ok) { showToast(result?.error || "Не удалось перейти в комнату."); return; }
+            list.classList.add("hidden"); toggle.setAttribute("aria-expanded","false");
+            showToast("Вы перешли: " + room.name);
+          });
+        });
+        list.append(button);
+      });
+    });
+  }
+  $("#world-room-toggle")?.addEventListener("click", () => {
+    const list=$("#world-room-list"),button=$("#world-room-toggle");
+    const opening=list.classList.contains("hidden");
+    list.classList.toggle("hidden",!opening);button.setAttribute("aria-expanded",String(opening));
   });
   socket.on("player:joined",player=>{state.players.set(player.id,{...player,y:player.y??.82,renderX:player.x,renderY:player.y??.82});updateOnline();pushRoomEvent("Игрок вошёл",player.nickname+" присоединился к планете.","✦");});
   socket.on("player:left",({id})=>{const departed=state.players.get(id);state.players.delete(id);updateOnline();if(departed)pushRoomEvent("Игрок вышел",departed.nickname+" покинул планету.","↗");if(state.selected===id)closeProfile();});
