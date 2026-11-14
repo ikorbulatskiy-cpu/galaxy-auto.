@@ -21,21 +21,42 @@
   if($("nexora-world-avatar"))return;
   const scene=$("room-scene");
   scene.insertAdjacentHTML("beforeend",'<div id="nexora-world-avatar" class="nexora-world-avatar aura-none" role="button" tabindex="0" aria-label="Открыть инфо" aria-expanded="false"><span class="nexora-demon-layers" aria-label="Основной персонаж"><img class="nexora-demon-body" src="/assets/sprites/characters/nexora-demon-body.webp" alt=""><img class="nexora-demon-aura" src="/assets/sprites/characters/nexora-demon-aura.webp" alt=""></span><div id="nexora-world-rank" class="nexora-world-rank">Персонаж</div></div><section id="nexora-avatar-panel" class="nexora-avatar-panel hidden" aria-label="Инфо" aria-modal="true" role="dialog"><div class="nexora-avatar-window"><header class="nexora-info-header"><span>ИНФО</span><button id="nexora-avatar-close" class="nexora-avatar-close" type="button" aria-label="Закрыть">×</button></header><div id="nexora-profile-loading" class="nexora-profile-loading" role="status"><i></i><b>Загружаем анкету…</b><span>Скорость зависит от интернет-соединения</span></div><div id="nexora-profile-error" class="nexora-profile-error hidden" role="alert"></div><form id="nexora-info-form" class="nexora-info-form hidden"><div class="nexora-classic-profile"><div class="nexora-classic-top"><label class="nexora-classic-photo"><img id="nexora-info-photo" alt="Твоё фото" src=""><span>＋ Фото</span><input id="nexora-info-photo-file" type="file" accept="image/jpeg,image/png,image/webp"></label><div class="nexora-classic-facts"><div class="nexora-classic-planet">🌍 <strong id="nexora-info-planet">Земля</strong></div><label>💞 <input name="relationship" maxlength="80" placeholder="Отношения"></label><label>💎 <input name="privileges" maxlength="100" placeholder="Привилегии"></label><label>🧍 <input name="status" maxlength="100" placeholder="Статус"></label><label>🔎 <input name="lookingFor" maxlength="100" placeholder="Ищет…"></label></div></div><div class="nexora-classic-links"><span>Блог (0)</span><span>Фото (0)</span></div><label class="nexora-classic-ask">Спроси меня<input name="askMe" maxlength="300" placeholder="Напиши вопрос, на который готов ответить"></label><div class="nexora-classic-section">Анкета</div><div class="nexora-classic-questionnaire"><label>Пол<select name="gender"><option value="">Не указано</option><option value="Мужской">Мужской</option><option value="Женский">Женский</option><option value="Другое">Другое</option></select></label><label>🎂 Дата рождения<input name="birthDate" type="date" max="2100-12-31"></label><label class="wide">🌍 Город<input name="city" maxlength="80" placeholder="Твой город"></label><label class="wide">Род занятий<textarea name="occupation" maxlength="120" rows="2" placeholder="Чем занимаешься"></textarea></label><label class="wide">Интересы<textarea name="interests" maxlength="220" rows="2" placeholder="Спорт, музыка, путешествия…"></textarea></label><label class="wide">О себе<textarea name="about" maxlength="600" rows="3" placeholder="Расскажи немного о себе"></textarea></label></div></div><div class="nexora-info-actions"><button id="nexora-info-save" type="submit">Сохранить</button><span id="nexora-info-note" role="status"></span></div></form></div></section>');
-  scene.insertAdjacentHTML("beforeend",'<section id="nexora-character-actions" class="nexora-character-actions hidden" role="dialog" aria-modal="true" aria-label="Действия"><div class="nexora-character-actions-card"><div class="nexora-character-actions-title">ДЕЙСТВИЯ</div><button id="nexora-action-info" type="button">Инфо</button><button id="nexora-action-exit" type="button" class="secondary">Выход</button></div></section>');
+  scene.insertAdjacentHTML("beforeend",'<section id="nexora-character-actions" class="nexora-character-actions hidden" role="dialog" aria-modal="true" aria-label="Действия"><div class="nexora-character-actions-card"><div class="nexora-character-actions-title">ДЕЙСТВИЯ</div><button id="nexora-action-info" type="button">Инфо</button><button id="nexora-action-emotions" type="button">Эмоции</button><button id="nexora-action-exit" type="button" class="secondary">Выход</button></div></section><section id="nexora-emotions-panel" class="nexora-emotions-panel hidden" role="dialog" aria-modal="true" aria-label="Эмоции"><div class="nexora-emotions-window"><header>Эмоции<button id="nexora-emotions-close" type="button" aria-label="Закрыть">×</button></header><div class="nexora-emotions-list" id="nexora-emotions-list"></div></div></section>');
   applyDemonAura();
   const worldAvatar=$("nexora-world-avatar");
   worldAvatar.setAttribute("aria-label","Открыть действия персонажа");
   worldAvatar.addEventListener("click",openCharacterActions);
   worldAvatar.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openCharacterActions();}});
   $("nexora-action-info").addEventListener("click",()=>{closeCharacterActions();openAvatar();});
+  $("nexora-action-emotions").addEventListener("click",openEmotions);
   $("nexora-action-exit").addEventListener("click",closeCharacterActions);
+  $("nexora-emotions-close").addEventListener("click",closeEmotions);
+  $("nexora-emotions-panel").addEventListener("click",event=>{if(event.target===$("nexora-emotions-panel"))closeEmotions();});
+  buildEmotionOptions();
   $("nexora-character-actions").addEventListener("click",event=>{if(event.target===$("nexora-character-actions"))closeCharacterActions();});
   $("nexora-avatar-close").addEventListener("click",closeAvatar);
   $("nexora-avatar-panel").addEventListener("click",event=>{if(event.target===$("nexora-avatar-panel"))closeAvatar();});
   $("nexora-info-form").addEventListener("submit",saveCharacterInfo);
   $("nexora-info-photo-file").addEventListener("change",previewCharacterPhoto);
-  document.addEventListener("keydown",event=>{if(event.key==="Escape"){closeAvatar();closeCharacterActions();}});
+  document.addEventListener("keydown",event=>{if(event.key==="Escape"){closeAvatar();closeCharacterActions();closeEmotions();}});
  }
+ const characterEmotions=[["Убрать","",""],["❤️","Люблю","love"],["⛔","Занят","busy"],["🙂","Весело","happy"],["😄","Очень весело","very-happy"],["😛","Дразнюсь","teasing"],["😳","Смущение","shy"],["😞","Грустно","sad"],["😮","Удивление","surprised"],["😐","Апатия","apathetic"],["🤔","Сомнение","doubt"],["😎","Гордый","proud"],["😕","Недоумение","confused"],["😢","Очень грустно","very-sad"]];
+ function buildEmotionOptions(){
+  const list=$("nexora-emotions-list");if(!list)return;
+  characterEmotions.forEach(([emoji,label,key])=>{const button=document.createElement("button");button.type="button";button.className="nexora-emotion-option"+(!key?" remove":"");button.innerHTML=emoji?'<span class="emoji"></span><span class="label"></span>':'<span class="label"></span>';button.querySelector(".label").textContent=label;if(emoji)button.querySelector(".emoji").textContent=emoji;button.addEventListener("click",()=>selectCharacterEmotion(key,emoji,label));list.append(button);});
+  const saved=localStorage.getItem("nexora-character-emotion");if(saved){const found=characterEmotions.find(item=>item[2]===saved);if(found)showCharacterEmotion(found[0],found[1]);}
+ }
+ function selectCharacterEmotion(key,emoji,label){
+  if(key)localStorage.setItem("nexora-character-emotion",key);else localStorage.removeItem("nexora-character-emotion");
+  showCharacterEmotion(emoji,label);closeEmotions();closeCharacterActions();
+ }
+ function showCharacterEmotion(emoji,label){
+  const avatar=$("nexora-world-avatar");if(!avatar)return;
+  let bubble=$("nexora-current-emotion");if(!bubble){bubble=document.createElement("div");bubble.id="nexora-current-emotion";bubble.className="nexora-current-emotion";avatar.append(bubble);}
+  bubble.textContent=label?emoji+" "+label:"";bubble.classList.toggle("hidden",!label);
+ }
+ function openEmotions(){closeCharacterActions();$("nexora-emotions-panel").classList.remove("hidden");}
+ function closeEmotions(){const panel=$("nexora-emotions-panel");if(panel)panel.classList.add("hidden");}
  function openCharacterActions(){
   ensureAvatarEditor();
   $("nexora-character-actions").classList.remove("hidden");
