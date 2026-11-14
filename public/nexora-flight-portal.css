@@ -1,0 +1,16 @@
+/* Shared Galaxy-style portal transitions for every player in a room. */
+#tab-world .nx-flight-overlay{opacity:0;transition:opacity .22s ease}
+#tab-world .nx-flight-overlay.is-active{opacity:1}
+#tab-world .nx-flight-stars{background-image:radial-gradient(#fff 1px,transparent 1.5px),radial-gradient(#b9a4ff 1px,transparent 1.5px),radial-gradient(#8ce8ff 1px,transparent 1.5px);background-size:47px 47px,83px 83px,127px 127px;animation:nxPortalStars .9s linear infinite}
+#tab-world .nx-flight-ship{animation:nxPortalShip 1.15s cubic-bezier(.45,0,.55,1) infinite}
+#tab-world .nx-avatar-card{transform-origin:50% 88%}
+#tab-world .nx-avatar-card.nx-portal-leaving{z-index:8;pointer-events:none;animation:nxAvatarDepart .82s cubic-bezier(.4,0,.8,.3) forwards!important}
+#tab-world .nx-avatar-card.nx-portal-arriving{z-index:8;animation:nxAvatarArrive .9s cubic-bezier(.16,.8,.25,1) both!important}
+#tab-world .nx-avatar-portal-fx{position:absolute;z-index:9;left:50%;top:46%;width:24px;height:24px;border:2px solid #b9a4ff;border-radius:50%;transform:translate(-50%,-50%) scale(.3);box-shadow:0 0 12px #9f8bff, inset 0 0 9px #9f8bff;pointer-events:none;animation:nxPortalRing .82s ease-out forwards}
+#tab-world .nx-portal-arriving .nx-avatar-portal-fx{border-color:#8ce8ff;box-shadow:0 0 15px #8ce8ff,inset 0 0 9px #8ce8ff;animation-duration:.9s}
+@keyframes nxPortalStars{from{background-position:0 0,0 0,0 0}to{background-position:0 140px,0 220px,0 310px}}
+@keyframes nxPortalShip{0%{transform:translateY(22px) scale(.72);opacity:.5}50%{transform:translateY(-18px) scale(1.08);opacity:1}100%{transform:translateY(22px) scale(.72);opacity:.5}}
+@keyframes nxAvatarDepart{0%{opacity:1;filter:blur(0);transform:translateY(0) scale(1)}45%{opacity:1;filter:blur(1px);transform:translateY(-15px) scale(1.08)}100%{opacity:0;filter:blur(8px);transform:translateY(-58px) scale(.25)}}
+@keyframes nxAvatarArrive{0%{opacity:0;filter:blur(8px);transform:translateY(-35px) scale(.35)}65%{opacity:1;filter:blur(0);transform:translateY(4px) scale(1.06)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes nxPortalRing{0%{opacity:0;transform:translate(-50%,-50%) scale(.25)}35%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(4.8)}}
+@media(prefers-reduced-motion:reduce){#tab-world .nx-flight-stars,#tab-world .nx-flight-ship,#tab-world .nx-avatar-card.nx-portal-leaving,#tab-world .nx-avatar-card.nx-portal-arriving,#tab-world .nx-avatar-portal-fx{animation:none!important;transition:none!important}}
