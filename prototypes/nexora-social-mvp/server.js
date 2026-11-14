@@ -103,13 +103,24 @@ function publicPlayer(player) {
     bubble: player.bubble, emotion: player.emotion, friendsCount: player.friendsCount
   };
 }
-const roomName = (planet) => "planet:" + planet;
-async function sendPlanetState(socket, planet) {
-  const list = [...players.values()].filter((p) => p.planet === planet).map(publicPlayer);
-  // Public chat is intentionally ephemeral. Joining clients receive no backlog.
-  socket.emit("planet:state", { planet, players: list, history: [] });
+const roomChannel = player => "world:" + player.planet + ":room:" + player.roomId;
+async function ensureDefaultRoom(planet) {
+  const locationId = "location-" + planet, roomId = "room-" + planet + "-main";
+  await pool.query("INSERT INTO nexora_social_world.world_locations(id,planet_key,name,sort_order) VALUES($1,$2,$3,1) ON CONFLICT(id) DO NOTHING",[locationId,planet,"Главная площадь"]);
+  await pool.query("INSERT INTO nexora_social_world.world_rooms(id,planet_key,location_id,name,sort_order,is_default) VALUES($1,$2,$3,$4,1,TRUE) ON CONFLICT(id) DO NOTHING",[roomId,planet,locationId,"Главная комната"]);
+  return roomId;
 }
-function broadcastPlayer(player, event) { io.to(roomName(player.planet)).emit(event, publicPlayer(player)); }
+async function sendPlanetState(socket, player) {
+  const list = [...players.values()].filter(p=>p.planet===player.planet&&p.roomId===player.roomId).map(publicPlayer);
+  const [historyResult,roomsResult] = await Promise.all([
+    pool.query("SELECT id,account_id AS \"playerId\",nickname,message AS text,created_at FROM nexora_social_world.room_messages WHERE room_id=$1 ORDER BY id DESC LIMIT 80",[player.roomId]),
+    pool.query("SELECT r.id,r.name,r.location_id AS \"locationId\",l.name AS \"locationName\",r.is_default AS \"isDefault\" FROM nexora_social_world.world_rooms r JOIN nexora_social_world.world_locations l ON l.id=r.location_id WHERE r.planet_key=$1 ORDER BY l.sort_order,r.sort_order,r.name",[player.planet])
+  ]);
+  const history=historyResult.rows.reverse().map(row=>({id:String(row.id),playerId:String(row.playerId),nickname:row.nickname,text:row.text,time:new Date(row.created_at).getTime()}));
+  socket.emit("planet:state",{planet:player.planet,roomId:player.roomId,players:list,history});
+  socket.emit("world:rooms:list",{planet:player.planet,currentRoomId:player.roomId,rooms:roomsResult.rows});
+}
+function broadcastPlayer(player,event){io.to(roomChannel(player)).emit(event,publicPlayer(player));}
 
 io.use(async (socket, next) => {
   try {
@@ -129,7 +140,7 @@ io.on("connection", (socket) => {
     try {
       const account = socket.data.account;
       const result = await pool.query(
-        "SELECT nickname,avatar,planet,position_x,position_y,authority,authority_title,aura_enabled FROM nexora_social_world.characters WHERE account_id=$1",
+        "SELECT nickname,avatar,planet,room_id,position_x,position_y,authority,authority_title,aura_enabled FROM nexora_social_world.characters WHERE account_id=$1",
         [account.id]
       );
       const saved = result.rows[0];
@@ -150,10 +161,14 @@ io.on("connection", (socket) => {
           (p.access_mode === "private" && String(p.owner_account_id) !== String(account.id) && !p.staff) ||
           (p.access_mode === "invite" && String(p.owner_account_id) !== String(account.id) && !p.staff && !p.invited && !p.member)) planet = "starter";
       }
+      let roomId=saved.room_id;
+      if(customId||!roomId)roomId=await ensureDefaultRoom(planet);
+      const validRoom=await pool.query("SELECT id FROM nexora_social_world.world_rooms WHERE id=$1 AND planet_key=$2",[roomId,planet]);
+      if(!validRoom.rowCount)roomId=await ensureDefaultRoom(planet);
       const friendCount = await pool.query("SELECT COUNT(*)::int AS count FROM nexora_social_world.friends WHERE account_id=$1", [account.id]);
       const player = {
         id: String(account.id), socketId: socket.id, accountId: account.id,
-        nickname: saved.nickname, avatar: normalizeAvatar(saved.avatar), planet,
+        nickname: saved.nickname, avatar: normalizeAvatar(saved.avatar), planet, roomId,
         x: Math.max(0.04, Math.min(0.96, Number(saved.position_x))),
         y: Math.max(0.60, Math.min(0.86, Number(saved.position_y ?? .82))), authority: saved.authority,
         authorityTitle: saved.authority_title || "NOVICE", auraEnabled: Boolean(saved.aura_enabled),
@@ -161,9 +176,10 @@ io.on("connection", (socket) => {
       };
       players.set(socket.id, player);
       socket.data.player = player;
-      socket.join(roomName(planet));
-      await sendPlanetState(socket, planet);
-      socket.to(roomName(planet)).emit("player:joined", publicPlayer(player));
+      socket.join(roomChannel(player));
+      await pool.query("UPDATE nexora_social_world.characters SET room_id=$1,planet=$2 WHERE account_id=$3",[roomId,planet,account.id]);
+      await sendPlanetState(socket,player);
+      socket.to(roomChannel(player)).emit("player:joined",publicPlayer(player));
       ack({ ok: true, player: publicPlayer(player) });
     } catch (error) { console.error("join failed:", error); ack({ ok: false, error: "Не удалось загрузить персонажа." }); }
   });
@@ -187,9 +203,26 @@ io.on("connection", (socket) => {
       }
     }
     player.x=x;player.y=y;player.lastMoveAt=now;
-    io.to(roomName(player.planet)).emit("player:moved",{id:player.id,x,y,serverTime:now});
+    io.to(roomChannel(player)).emit("player:moved",{id:player.id,x,y,serverTime:now});
     pool.query("UPDATE nexora_social_world.characters SET position_x=$1,position_y=$2,updated_at=NOW() WHERE account_id=$3",[x,y,player.accountId]).catch(console.error);
     ack({ok:true,x,y});
+  });
+
+  socket.on("world:room:change",async(payload,ack=()=>{})=>{
+    const player=players.get(socket.id),nextRoomId=String(payload?.roomId||"");
+    if(!player)return ack({ok:false,error:"Персонаж не подключён."});
+    try{
+      const found=await pool.query("SELECT id FROM nexora_social_world.world_rooms WHERE id=$1 AND planet_key=$2",[nextRoomId,player.planet]);
+      if(!found.rowCount)return ack({ok:false,error:"Комната недоступна."});
+      if(nextRoomId===player.roomId)return ack({ok:true});
+      const oldChannel=roomChannel(player);
+      socket.to(oldChannel).emit("player:left",{id:player.id});socket.leave(oldChannel);
+      player.roomId=nextRoomId;socket.join(roomChannel(player));
+      await pool.query("UPDATE nexora_social_world.characters SET room_id=$1,updated_at=NOW() WHERE account_id=$2",[nextRoomId,player.accountId]);
+      await sendPlanetState(socket,player);
+      socket.to(roomChannel(player)).emit("player:joined",publicPlayer(player));
+      ack({ok:true,roomId:player.roomId});
+    }catch(error){console.error("Room switch failed:",error);ack({ok:false,error:"Не удалось перейти в комнату."});}
   });
 
   socket.on("player:typing", (payload) => {
@@ -202,7 +235,7 @@ io.on("connection", (socket) => {
     }
     player.typing = typing;
     player.typingUntil = typing ? Date.now() + 2200 : 0;
-    io.to(roomName(player.planet)).emit("player:typing", { id: player.id, typing });
+    io.to(roomChannel(player)).emit("player:typing", { id: player.id, typing });
   });
 
   socket.on("chat:send", (payload, ack = () => {}) => {
@@ -213,20 +246,19 @@ io.on("connection", (socket) => {
     if (player.typing) {
       player.typing = false;
       player.typingUntil = 0;
-      io.to(roomName(player.planet)).emit("player:typing", { id: player.id, typing: false });
+      io.to(roomChannel(player)).emit("player:typing", { id: player.id, typing: false });
     }
-    // Keep public messages in connected clients only; never write them to PostgreSQL.
-    const message = {
-      id: socket.id + ":" + Date.now(),
-      playerId: player.id,
-      nickname: player.nickname,
-      text: messageText,
-      time: Date.now()
-    };
-    player.bubble = { text: messageText, until: Date.now() + 5000 };
-    io.to(roomName(player.planet)).emit("chat:message", message);
-    io.to(roomName(player.planet)).emit("player:bubble", { id: player.id, bubble: player.bubble });
-    ack({ ok: true });
+    try {
+      const saved=await pool.query("INSERT INTO nexora_social_world.room_messages(room_id,account_id,nickname,message) VALUES($1,$2,$3,$4) RETURNING id,created_at",[player.roomId,player.accountId,player.nickname,messageText]);
+      const row=saved.rows[0],message={id:String(row.id),playerId:player.id,nickname:player.nickname,text:messageText,time:new Date(row.created_at).getTime()};
+      player.bubble={text:messageText,until:Date.now()+5000};
+      io.to(roomChannel(player)).emit("chat:message",message);
+      io.to(roomChannel(player)).emit("player:bubble",{id:player.id,bubble:player.bubble});
+      ack({ok:true,id:message.id});
+    } catch(error) {
+      console.error("Room message save failed:",error);
+      ack({ok:false,error:"Не удалось сохранить сообщение. Попробуйте ещё раз."});
+    }
   });
 
   socket.on("emotion:play", (payload) => {
@@ -236,7 +268,7 @@ io.on("connection", (socket) => {
     if (now - (player.lastEmotionAt || 0) < 350) return;
     player.lastEmotionAt = now;
     player.emotion = { type: payload.emotion, until: now + 1800 };
-    io.to(roomName(player.planet)).emit("emotion:played", { id: player.id, emotion: payload.emotion });
+    io.to(roomChannel(player)).emit("emotion:played", { id: player.id, emotion: payload.emotion });
   });
 
   socket.on("player:action",(payload,ack=()=>{})=>{
@@ -245,8 +277,8 @@ io.on("connection", (socket) => {
     if(!sender||!target||sender.id===target.id||sender.planet!==target.planet||!Object.hasOwn(labels,action))return ack({ok:false,error:"Это действие сейчас недоступно."});
     const now=Date.now();if(now-(sender.lastActionAt||0)<1200)return ack({ok:false,error:"Подождите перед следующим действием."});sender.lastActionAt=now;
     const event={fromId:sender.id,toId:target.id,from:sender.nickname,to:target.nickname,action,label:labels[action],time:now};
-    io.to(roomName(sender.planet)).emit("player:action:played",event);
-    io.to(roomName(sender.planet)).emit("chat:message",{id:"action-"+now+"-"+sender.id,playerId:sender.id,nickname:"NEXORA",text:sender.nickname+" "+labels[action]+" "+target.nickname+".",time:now,system:true});
+    io.to(roomChannel(sender)).emit("player:action:played",event);
+    io.to(roomChannel(sender)).emit("chat:message",{id:"action-"+now+"-"+sender.id,playerId:sender.id,nickname:"NEXORA",text:sender.nickname+" "+labels[action]+" "+target.nickname+".",time:now,system:true});
     ack({ok:true});
   });
 
@@ -280,8 +312,8 @@ io.on("connection", (socket) => {
       } finally { client.release(); }
       target.authority = updated.rows[0].authority;
       const event = { fromId: sender.id, from: sender.nickname, toId: target.id, to: target.nickname, gift: payload.gift, icon: gift.icon, authorityAdded: gift.authority };
-      io.to(roomName(sender.planet)).emit("gift:received", event);
-      io.to(roomName(target.planet)).emit("profile:updated", publicPlayer(target));
+      io.to(roomChannel(sender)).emit("gift:received", event);
+      io.to(roomChannel(target)).emit("profile:updated", publicPlayer(target));
       ack({ ok: true, event });
     } catch (error) { console.error("gift save failed:", error); ack({ ok: false, error: "Не удалось сохранить подарок." }); }
   });
@@ -335,8 +367,8 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     const player = players.get(socket.id);
     if (!player) return;
-    if (player.typing) socket.to(roomName(player.planet)).emit("player:typing", { id: player.id, typing: false });
-    socket.to(roomName(player.planet)).emit("player:left", { id: player.id });
+    if (player.typing) socket.to(roomChannel(player)).emit("player:typing", { id: player.id, typing: false });
+    socket.to(roomChannel(player)).emit("player:left", { id: player.id });
     players.delete(socket.id);
   });
 });
@@ -346,12 +378,12 @@ setInterval(() => {
   for (const player of players.values()) {
     if (player.bubble && player.bubble.until <= now) {
       player.bubble = null;
-      io.to(roomName(player.planet)).emit("player:bubble", { id: player.id, bubble: null });
+      io.to(roomChannel(player)).emit("player:bubble", { id: player.id, bubble: null });
     }
     if (player.emotion && player.emotion.until <= now) player.emotion = null;
     if (player.typing && player.typingUntil <= now) {
       player.typing = false;
-      io.to(roomName(player.planet)).emit("player:typing", { id: player.id, typing: false });
+      io.to(roomChannel(player)).emit("player:typing", { id: player.id, typing: false });
     }
   }
 }, 500);
