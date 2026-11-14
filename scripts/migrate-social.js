@@ -10,7 +10,7 @@ async function main(){
   const version="001_nexora_social_auth";
   const applied=await client.query("SELECT 1 FROM nexora_social_auth.social_schema_migrations WHERE version=$1",[version]);
   if(!applied.rowCount){
-   const sql=fs.readFileSync(path.join(__dirname,"../database/migrations/001_nexora_social_auth.sql"),"utf8");
+   const sql=fs.readFileSync(path.join(__dirname,"../database/migrations/001_nexora_social_world.sql"),"utf8");
    await client.query("BEGIN");
    try{await client.query(sql);await client.query("INSERT INTO nexora_social_auth.social_schema_migrations(version) VALUES($1)",[version]);await client.query("COMMIT");console.log("Applied:",version);}
    catch(error){await client.query("ROLLBACK");throw error;}
