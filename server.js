@@ -87,9 +87,22 @@ app.post("/api/room/presence",async(req,res)=>{
   const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
   await ensureRoomPresenceSchema();
   await pool.query("INSERT INTO nexora_social_auth.room_presence(account_id,nickname,last_seen) VALUES($1,$2,NOW()) ON CONFLICT(account_id) DO UPDATE SET nickname=EXCLUDED.nickname,last_seen=NOW()",[String(account.id),account.nickname]);
-  const online=await pool.query("SELECT p.account_id,p.nickname,c.head_id,c.body_id FROM nexora_social_auth.room_presence p LEFT JOIN nexora_social_auth.characters c ON c.account_id::text=p.account_id WHERE p.last_seen>NOW()-INTERVAL '45 seconds' ORDER BY p.account_id ASC LIMIT 24");
-  res.json({players:online.rows.map(row=>({id:String(row.account_id),nickname:row.nickname,headId:Number(row.head_id)||1,bodyId:Number(row.body_id)||1,mine:String(row.account_id)===String(account.id)}))});
+  await ensureAvatarEquipmentSchema();
+  const online=await pool.query("SELECT p.account_id,p.nickname,c.head_id,c.body_id,c.outfit_id,COALESCE(ar.rank_name,'Новичок') AS authority_title,COALESCE(ar.aura,'none') AS aura,COALESCE(ar.stars,0)::int AS authority_stars FROM nexora_social_auth.room_presence p LEFT JOIN nexora_social_auth.characters c ON c.account_id::text=p.account_id LEFT JOIN LATERAL (SELECT * FROM nexora_social_auth.authority_ranks WHERE min_points<=COALESCE(c.authority_points,0) ORDER BY min_points DESC LIMIT 1) ar ON TRUE WHERE p.last_seen>NOW()-INTERVAL '45 seconds' ORDER BY p.account_id ASC LIMIT 24");
+  res.json({players:online.rows.map(row=>({id:String(row.account_id),nickname:row.nickname,headId:Number(row.head_id)||1,bodyId:Number(row.body_id)||1,outfitId:Number(row.outfit_id)||0,authorityTitle:row.authority_title,aura:row.aura,authorityStars:Number(row.authority_stars)||0,mine:String(row.account_id)===String(account.id)}))});
  }catch(error){console.error("Room presence failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось загрузить игроков."});}
+});
+app.get("/api/room/player/:id",async(req,res)=>{
+ try{
+  const viewer=await getAccount(req);if(!viewer)return res.status(401).json({error:"Войдите в аккаунт."});
+  const id=String(req.params.id||"");
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id))return res.status(400).json({error:"Некорректный игрок."});
+  await ensureAvatarEquipmentSchema();await ensureCharacterInfoSchema();
+  const result=await pool.query("SELECT a.id,a.nickname,c.head_id,c.body_id,c.outfit_id,c.profile_photo_data_url,c.profile_gender,c.profile_birth_date,c.profile_city,c.profile_occupation,c.profile_interests,c.profile_about,c.profile_status,c.profile_relationship,c.profile_privileges,c.profile_looking_for,c.profile_ask_me,COALESCE(ar.rank_name,'Новичок') AS authority_title,COALESCE(ar.aura,'none') AS aura,COALESCE(ar.stars,0)::int AS authority_stars FROM nexora_social_auth.accounts a LEFT JOIN nexora_social_auth.characters c ON c.account_id=a.id LEFT JOIN LATERAL (SELECT * FROM nexora_social_auth.authority_ranks WHERE min_points<=COALESCE(c.authority_points,0) ORDER BY min_points DESC LIMIT 1) ar ON TRUE WHERE a.id=$1",[id]);
+  if(!result.rows.length)return res.status(404).json({error:"Игрок не найден."});
+  const p=result.rows[0];
+  res.json({player:{id:String(p.id),nickname:p.nickname,headId:Number(p.head_id)||1,bodyId:Number(p.body_id)||1,outfitId:Number(p.outfit_id)||0,authorityTitle:p.authority_title,aura:p.aura,authorityStars:Number(p.authority_stars)||0},profile:{photoDataUrl:p.profile_photo_data_url||"",gender:p.profile_gender||"",birthDate:p.profile_birth_date?new Date(p.profile_birth_date).toISOString().slice(0,10):"",city:p.profile_city||"",occupation:p.profile_occupation||"",interests:p.profile_interests||"",about:p.profile_about||"",status:p.profile_status||"",relationship:p.profile_relationship||"",privileges:String(p.profile_privileges||"").replace(/разработчик/ig,"").trim(),lookingFor:p.profile_looking_for||"",askMe:p.profile_ask_me||""}});
+ }catch(error){console.error("Room player profile failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось загрузить анкету игрока."});}
 });
 app.get("/galaxy",(_req,res)=>res.redirect(308,"/"));app.get("*",(_req,res)=>res.sendFile(path.join(publicDirectory,"index.html")));
 app.listen(PORT,"0.0.0.0",()=>console.log("NEXORA server is running on port "+PORT));
