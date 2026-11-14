@@ -119,6 +119,44 @@
   updateCharacterName();
   new MutationObserver(updateCharacterName).observe(scene, { childList: true, subtree: true, characterData: true });
 
+  // A compact, truthful room-connection indicator driven by the existing live status node.
+  const connectionSource = root.querySelector("#nx-status");
+  const connectionBadge = document.createElement("div");
+  connectionBadge.className = "nx-connection-status";
+  connectionBadge.setAttribute("role", "status");
+  connectionBadge.setAttribute("aria-live", "polite");
+  connectionBadge.textContent = "Проверка связи";
+  connectionBadge.dataset.state = "connecting";
+  const logo = header.querySelector(".nx-logo");
+  if (logo) logo.after(connectionBadge);
+  const syncConnection = () => {
+    const raw = (connectionSource?.textContent || "").trim();
+    const value = raw.toLocaleLowerCase("ru");
+    let state = "connecting", label = "Подключение";
+    if (/отличное|установлено|подключено|соединение активно/.test(value)) {
+      state = "connected"; label = "На связи";
+    } else if (/потерян|проблем|ошиб|недоступ|закрыт|не удалось|нет связи/.test(value)) {
+      state = "disconnected"; label = "Нет связи";
+    } else if (/подключ|провер|восстанов|повтор|ожидан/.test(value)) {
+      state = "connecting"; label = "Подключение";
+    } else if (raw) {
+      state = "connecting"; label = "Проверка связи";
+    }
+    connectionBadge.dataset.state = state;
+    connectionBadge.textContent = label;
+    connectionBadge.title = raw || "Состояние соединения с комнатой";
+  };
+  syncConnection();
+  if (connectionSource) new MutationObserver(syncConnection).observe(connectionSource, {
+    childList: true, characterData: true, subtree: true
+  });
+  window.addEventListener("nexora:room-joined", syncConnection);
+  window.addEventListener("nexora:room-left", () => {
+    connectionBadge.dataset.state = "disconnected";
+    connectionBadge.textContent = "Нет связи";
+    connectionBadge.title = "Вы вышли из комнаты";
+  });
+
   // The existing world module continues to own sending, history, presence and reconnects.
   root.classList.add("nx-galaxy-mobile-ui");
 })();

@@ -119,3 +119,50 @@
  #dashboard>#tab-world .nx-avatar-card,#dashboard>#tab-world .nx-avatar-card:before{animation:none!important}
  #dashboard>#tab-world *{scroll-behavior:auto!important;transition:none!important}
 }
+
+/* Balanced scene geometry: the avatar stage must use the full scene, not a short strip. */
+#dashboard>#tab-world .nx-scene{min-height:0!important;height:194px!important;max-height:194px!important;position:relative;isolation:isolate}
+#dashboard>#tab-world .nx-avatars{
+  position:absolute!important;inset:0!important;left:0!important;right:0!important;top:0!important;bottom:0!important;
+  width:auto!important;height:auto!important;min-height:0!important;max-height:none!important;
+  display:block!important;overflow:visible!important;padding:0!important;margin:0!important;pointer-events:none
+}
+#dashboard>#tab-world .nx-avatar-card{
+  position:absolute!important;width:68px!important;min-width:68px!important;max-width:68px!important;
+  height:132px!important;min-height:0!important;max-height:132px!important;flex:none!important;
+  display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-end!important;
+  transform:translate(-50%,-100%)!important;pointer-events:auto;overflow:visible!important
+}
+#dashboard>#tab-world .nx-avatar-card canvas[data-nexora-sprite]{
+  display:block!important;width:64px!important;height:96px!important;max-width:64px!important;max-height:96px!important;
+  object-fit:contain!important;object-position:center bottom!important
+}
+#dashboard>#tab-world .nx-avatar-name{max-width:68px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:9px!important;padding:2px 5px!important;margin-bottom:2px!important}
+#dashboard>#tab-world .nx-avatar-card .nx-fav-toggle{right:-2px!important;top:22px!important}
+#dashboard>#tab-world .nx-scene:after{pointer-events:none}
+#dashboard>#tab-world .nx-connection-status{
+  min-width:0;max-width:112px;height:28px;flex:0 1 auto;display:flex;align-items:center;gap:6px;
+  padding:0 8px;border:1px solid #ffffff1c;border-radius:999px;background:#141c25;color:#cbd5df;
+  font-size:10px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+#dashboard>#tab-world .nx-connection-status:before{content:"";width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#9aa4af;box-shadow:0 0 0 3px #9aa4af20}
+#dashboard>#tab-world .nx-connection-status[data-state="connected"]{border-color:#3a876a;background:#153329;color:#a8edc7}
+#dashboard>#tab-world .nx-connection-status[data-state="connected"]:before{background:#51d18a;box-shadow:0 0 0 3px #51d18a22}
+#dashboard>#tab-world .nx-connection-status[data-state="connecting"]{border-color:#947b43;background:#332b1b;color:#f1d79a}
+#dashboard>#tab-world .nx-connection-status[data-state="connecting"]:before{background:#e8b84f;box-shadow:0 0 0 3px #e8b84f22}
+#dashboard>#tab-world .nx-connection-status[data-state="disconnected"]{border-color:#9a4d58;background:#3a2028;color:#ffc0c7}
+#dashboard>#tab-world .nx-connection-status[data-state="disconnected"]:before{background:#ff6878;box-shadow:0 0 0 3px #ff687822}
+#dashboard>#tab-world .nx-topbar{gap:8px}
+#dashboard>#tab-world .nx-logo{font-size:14px;letter-spacing:.7px;flex:0 0 auto}
+#dashboard>#tab-world .nx-menu-trigger{width:36px;height:36px;flex:0 0 36px;border-radius:9px}
+#dashboard>#tab-world .nx-online-wrap{gap:5px;font-size:11px}
+#dashboard>#tab-world #nx-online{min-width:26px;height:24px;padding:0 6px;font-size:11px}
+#dashboard>#tab-world .nx-exit-button{width:36px;height:36px;flex:0 0 36px;border-radius:9px}
+#dashboard>#tab-world .nx-bottom-nav{grid-template-columns:38px 38px minmax(0,1fr) 38px;gap:6px;padding-left:9px;padding-right:9px}
+#dashboard>#tab-world .nx-bottom-nav button{width:38px;height:38px;min-height:38px;border-radius:9px}
+@media(max-width:360px){
+ #dashboard>#tab-world .nx-scene{height:174px!important;max-height:174px!important}
+ #dashboard>#tab-world .nx-avatar-card{width:60px!important;min-width:60px!important;max-width:60px!important;height:116px!important;max-height:116px!important}
+ #dashboard>#tab-world .nx-avatar-card canvas[data-nexora-sprite]{width:56px!important;height:84px!important;max-width:56px!important;max-height:84px!important}
+ #dashboard>#tab-world .nx-connection-status{max-width:88px;padding:0 6px;font-size:9px}
+}
