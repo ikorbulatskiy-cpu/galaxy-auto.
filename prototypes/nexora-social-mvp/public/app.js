@@ -1,36 +1,64 @@
 (() => {
  "use strict";
  const $=id=>document.getElementById(id);
- const state={account:null,recoveryCode:null,x:.5,y:.82,direction:"down",moving:false,keys:new Set(),last:0};
- const avatar={skin:"#e8b58f",suit:"#6179e8",hair:"#352a43",gender:"other"};
- const toast=msg=>{const t=$("toast");t.textContent=msg;t.classList.add("visible");clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove("visible"),2400);};
+ const state={account:null,recoveryCode:null};
+ const toast=msg=>{const t=$("toast");t.textContent=msg;t.classList.add("visible");clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove("visible"),3000);};
  function modal(name,open){const m=$(name+"-modal");m.classList.toggle("open",open);m.setAttribute("aria-hidden",String(!open));}
  function resetRegister(){$("register-step-one").classList.remove("hidden");$("register-step-two").classList.add("hidden");$("step-label").textContent="1 из 2";$("step-progress").style.width="50%";$("register-error").textContent="";$("finish-error").textContent="";$("register-next").disabled=false;}
  $("open-register").addEventListener("click",()=>{resetRegister();modal("register",true);setTimeout(()=>$("register-nickname").focus(),60);});
- $("open-login").addEventListener("click",()=>{ $("login-error").textContent="";modal("login",true);setTimeout(()=>$("login-code").focus(),60);});
+ $("open-login").addEventListener("click",()=>{$("login-error").textContent="";modal("login",true);setTimeout(()=>$("login-code").focus(),60);});
  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>modal(b.dataset.close,false)));
  document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)modal(m.id.replace("-modal",""),false);}));
- $("register-form").addEventListener("submit",async e=>{e.preventDefault();$("register-error").textContent="";const nickname=$("register-nickname").value.trim();if(nickname.length<3){$("register-error").textContent="Ник должен содержать минимум 3 символа.";return;}const b=$("register-next");b.disabled=true;
-  try{const r=await fetch("/api/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nickname})});const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось создать персонажа");state.account=d.account;state.recoveryCode=d.recoveryCode;$("recovery-code").textContent=d.recoveryCode||"Код не получен";$("register-step-one").classList.add("hidden");$("register-step-two").classList.remove("hidden");$("step-label").textContent="2 из 2";$("step-progress").style.width="100%";}
-  catch(err){$("register-error").textContent=err.message;b.disabled=false;}
+ $("register-form").addEventListener("submit",async e=>{
+  e.preventDefault();$("register-error").textContent="";
+  const nickname=$("register-nickname").value.trim();
+  if(nickname.length<3){$("register-error").textContent="Ник должен содержать минимум 3 символа.";return;}
+  const b=$("register-next");b.disabled=true;
+  try{
+   const r=await fetch("/api/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nickname})});
+   const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось создать персонажа");
+   state.account=d.account;state.recoveryCode=d.recoveryCode;$("recovery-code").textContent=d.recoveryCode||"Код не получен";
+   $("register-step-one").classList.add("hidden");$("register-step-two").classList.remove("hidden");
+   $("step-label").textContent="2 из 2";$("step-progress").style.width="100%";
+  }catch(err){$("register-error").textContent=err.message;b.disabled=false;}
  });
- $("enter-world").addEventListener("click",async()=>{const b=$("enter-world");b.disabled=true;$("finish-error").textContent="";try{await enterRoom(state.account);toast("Персонаж создан. Код восстановления сохранён.");}catch(err){$("finish-error").textContent=err.message;}finally{b.disabled=false;}});
- $("login-form").addEventListener("submit",async e=>{e.preventDefault();$("login-error").textContent="";const b=$("login-submit");b.disabled=true;try{const r=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({recoveryCode:$("login-code").value.trim()})});const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось войти");$("login-code").value="";await enterRoom(d.account);toast("Добро пожаловать обратно!");}catch(err){$("login-error").textContent=err.message;}finally{b.disabled=false;}});
- async function enterRoom(account){state.account=account;try{const profileResponse=await fetch("/api/account/profile");if(!profileResponse.ok)throw Error("Не удалось загрузить персонажа. Войдите ещё раз.");const profile=await profileResponse.json();if(!profile.character){const createResponse=await fetch("/api/character",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({headId:1,bodyId:1})});const created=await createResponse.json();if(!createResponse.ok)throw Error(created.error||"Не удалось создать персонажа.");profile.character=created.character;}avatar.headId=profile.character.head_id;avatar.bodyId=profile.character.body_id;}catch(err){state.account=null;throw err;}modal("register",false);modal("login",false);$("intro-screen").classList.add("hidden");$("room-screen").classList.remove("hidden");$("player-label").textContent=account?.nickname||"Ты в комнате";resize();state.last=0;requestAnimationFrame(loop);}
- $("leave-room").addEventListener("click",async()=>{await fetch("/api/auth/logout",{method:"POST"}).catch(()=>{});state.account=null;$("room-screen").classList.add("hidden");$("intro-screen").classList.remove("hidden");toast("Ты вышел из мира.");});
- function drawScene(ctx,w,h,time,withPlayer){if(window.NexoraWorldScene)NexoraWorldScene.draw(ctx,w,h,"starter",time);if(window.NexoraWorldObjects){const items=NexoraWorldObjects.get("starter",w,h,time);NexoraWorldObjects.render(ctx,items);}if(withPlayer&&window.NexoraSpriteEngine){const px=state.x*w,py=state.y*h;if(!NexoraSpriteEngine.draw(ctx,px,py,Math.max(.75,Math.min(1.25,w/700)),avatar,state.direction,state.moving,""))drawFallback(ctx,px,py);}}
- function drawFallback(ctx,x,y){ctx.save();ctx.fillStyle="#e9b58f";ctx.beginPath();ctx.arc(x,y-47,13,0,Math.PI*2);ctx.fill();ctx.fillStyle="#6179e8";ctx.fillRect(x-13,y-34,26,27);ctx.fillStyle="#303958";ctx.fillRect(x-11,y-8,9,15);ctx.fillRect(x+2,y-8,9,15);ctx.restore();}
- function sizeCanvas(canvas){const rect=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);const w=Math.max(1,Math.floor(rect.width*dpr)),h=Math.max(1,Math.floor(rect.height*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}return{w,h,dpr};}
- function resize(){for(const id of ["intro-canvas","room-canvas"]){const c=$(id);if(!c)continue;const {w,h}=sizeCanvas(c);const ctx=c.getContext("2d");ctx.setTransform(1,0,0,1,0,0);drawScene(ctx,w,h,performance.now(),id==="room-canvas");}}
- function loop(time){if($("room-screen").classList.contains("hidden"))return;const dt=Math.min((time-state.last)/1000||0,.04);state.last=time;const speed=.34*dt;state.moving=state.keys.size>0;if(state.keys.has("left")){state.x-=speed;state.direction="left";}if(state.keys.has("right")){state.x+=speed;state.direction="right";}if(state.keys.has("up")){state.y-=speed;state.direction="up";}if(state.keys.has("down")){state.y+=speed;state.direction="down";}state.x=Math.max(.06,Math.min(.94,state.x));state.y=Math.max(.48,Math.min(.94,state.y));const c=$("room-canvas");const {w,h}=sizeCanvas(c);const ctx=c.getContext("2d");ctx.setTransform(1,0,0,1,0,0);drawScene(ctx,w,h,time,true);requestAnimationFrame(loop);}
- function keyName(k){return ({ArrowUp:"up",w:"up",W:"up",ArrowDown:"down",s:"down",S:"down",ArrowLeft:"left",a:"left",A:"left",ArrowRight:"right",d:"right",D:"right"})[k];}
- window.addEventListener("keydown",e=>{const k=keyName(e.key);if(k&&!$("room-screen").classList.contains("hidden")){e.preventDefault();state.keys.add(k);}});
- window.addEventListener("keyup",e=>{const k=keyName(e.key);if(k)state.keys.delete(k);});
- window.addEventListener("blur",()=>state.keys.clear());
- document.querySelectorAll("[data-move]").forEach(b=>{const k=b.dataset.move;const start=e=>{e.preventDefault();state.keys.add(k);};const stop=e=>{e.preventDefault();state.keys.delete(k);};b.addEventListener("pointerdown",start);["pointerup","pointercancel","pointerleave"].forEach(ev=>b.addEventListener(ev,stop));});
- window.addEventListener("resize",resize);
- async function status(){try{const [s,o]=await Promise.all([fetch("/api/status"),fetch("/api/account/online")]);const sd=await s.json(),od=await o.json();$("server-status").textContent=sd.database==="connected"?"● Сервер NEXORA онлайн":"● Сервер доступен";$("room-online").textContent=String(Math.max(1,od.online||1));}catch{$("server-status").textContent="Нет связи с сервером";}}
- async function session(){try{const r=await fetch("/api/auth/me"),d=await r.json();if(d.authenticated)await enterRoom(d.account);}catch(err){console.warn("Session restore failed:",err.message);}}
- drawIntro();status();session();setInterval(status,30000);
- function drawIntro(){if($("intro-screen").classList.contains("hidden"))return;const c=$("intro-canvas");const {w,h}=sizeCanvas(c);const ctx=c.getContext("2d");ctx.setTransform(1,0,0,1,0,0);drawScene(ctx,w,h,performance.now(),true);requestAnimationFrame(drawIntro);}
+ $("enter-world").addEventListener("click",async()=>{
+  const b=$("enter-world");b.disabled=true;$("finish-error").textContent="";
+  try{
+   await ensureCharacter();
+   modal("register",false);
+   toast("Персонаж создан и сохранён. Новая комната будет подключена отдельно.");
+  }catch(err){$("finish-error").textContent=err.message;}
+  finally{b.disabled=false;}
+ });
+ $("login-form").addEventListener("submit",async e=>{
+  e.preventDefault();$("login-error").textContent="";
+  const b=$("login-submit");b.disabled=true;
+  try{
+   const r=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({recoveryCode:$("login-code").value.trim()})});
+   const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось войти");
+   state.account=d.account;$("login-code").value="";
+   await ensureCharacter();modal("login",false);
+   toast("Вход выполнен. Новая 2D-комната будет подключена отдельно.");
+  }catch(err){$("login-error").textContent=err.message;}
+  finally{b.disabled=false;}
+ });
+ async function ensureCharacter(){
+  const profileResponse=await fetch("/api/account/profile");
+  if(!profileResponse.ok)throw Error("Не удалось загрузить профиль. Попробуй войти ещё раз.");
+  const profile=await profileResponse.json();
+  if(!profile.character){
+   const createResponse=await fetch("/api/character",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({headId:1,bodyId:1})});
+   const created=await createResponse.json();if(!createResponse.ok)throw Error(created.error||"Не удалось создать персонажа.");
+  }
+ }
+ async function status(){
+  try{const r=await fetch("/api/status");const d=await r.json();$("server-status").textContent=d.database==="connected"?"● Сервер и база данных онлайн":"● Сервер доступен";}
+  catch{$("server-status").textContent="Нет связи с сервером";}
+ }
+ async function session(){
+  try{const r=await fetch("/api/auth/me");const d=await r.json();if(d.authenticated)state.account=d.account;}
+  catch(err){console.warn("Session restore failed:",err.message);}
+ }
+ status();session();setInterval(status,30000);
 })();
