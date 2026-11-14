@@ -11,8 +11,8 @@
  const room=$("room-screen");
 
  const rankRows=[["Новичок","0","—"],["Бывалый","1","✦"],["Уважаемый","2","✦✦"],["Мастер","3","✦✦✦"],["Профессионал","4","✦✦✦✦"],["Гуру","5–9","✦"],["Неприкасаемый","10–19","✦✦"],["Папа / Мама","20–99","✦✦"],["Ангел Галактики","100–199","✦✦✦✦"],["Бог / Богиня Галактики","200–999","✦✦✦✦✦"],["Всемогущий","1000–1999","✦✦✦✦✦✦"],["Mister / Miss Вселенная","2000–9999","✦✦✦✦✦✦"],["Легенда Галактики","10000–19999","✦✦✦✦✦✦✦"],["Премьер Галактики","20000–49999","✦✦✦✦✦✦✦"],["Император Галактики","50000+","✦✦✦✦✦✦✦"]];
- const auraNames={none:"Без ауры","dark-1":"Тёмная аура 1","dark-2":"Тёмная аура 2","dark-3":"Тёмная аура 3","blue-1":"Голубая аура 1","blue-2":"Голубая аура 2"};
- const selectableAuras=[["none","Без ауры",""],["dark-1","Тёмная аура 1","aura-dark-1"],["dark-2","Тёмная аура 2","aura-dark-2"],["dark-3","Тёмная аура 3","aura-dark-3"],["blue-1","Голубая аура 1","aura-blue-1"],["blue-2","Голубая аура 2","aura-blue-2"]];
+ const auraNames={none:"Без ауры","dark-1":"Тёмная аура","blue-1":"Голубая аура"};
+ const selectableAuras=[["none","Без ауры",""],["dark-1","Тёмная аура","aura-dark-1"],["blue-1","Голубая аура","aura-blue-1"]];
  let avatar={headId:1,bodyId:1,outfitId:0};
 
  const roomSpriteCrops={head:[[108,908,188,174],[503,885,202,202],[902,904,202,181],[108,1249,191,210],[503,1235,202,217],[902,1273,202,195]],body:[[101,983,202,188],[480,856,253,304],[897,897,224,275],[101,1193,210,347],[434,1229,325,318],[897,1236,224,311]]};
@@ -40,7 +40,7 @@
   roomSpritePromises[key].then(src=>{img.src=src;}).catch(error=>console.error("NEXORA sprite:",error));
  }
  let currentNickname="Персонаж";
- let selectedAura=localStorage.getItem("nexora-selected-aura")||"";
+ let selectedAura=localStorage.getItem("nexora-selected-aura")||"blue-1";if(selectedAura==="blue-2"||selectedAura==="dark-2"||selectedAura==="dark-3")selectedAura="blue-1";
  function ensureAvatarEditor(){
   if($("nexora-world-avatar"))return;
   const scene=$("room-scene");
