@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "nexora-demon-separated-layers.zip"
+      - ".github/workflows/extract-nexora-demon.yml"
 
 permissions:
   contents: write
@@ -24,8 +25,6 @@ jobs:
           test -s /tmp/nexora-demon/nexora-demon-body.webp
           test -s /tmp/nexora-demon/nexora-demon-aura.webp
       - name: Copy files to MVP branch
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
