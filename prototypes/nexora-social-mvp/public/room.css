@@ -957,3 +957,41 @@
 @keyframes nexora-name-float{0%,100%{translate:-50% 0}50%{translate:-50% -2px}}
 @media(max-width:520px){#room-scene .nexora-world-avatar,#room-scene .nexora-room-player{width:56px!important;height:88px!important}#room-scene .nexora-world-avatar .nexora-world-rank,#room-scene .nexora-room-player .nexora-room-player-name{font-size:9px!important;max-width:112px!important}}
 @media(prefers-reduced-motion:reduce){#room-scene .nexora-world-avatar .nexora-avatar-sprite,#room-scene .nexora-room-player .nexora-avatar-sprite,#room-scene .nexora-world-avatar .nexora-world-rank,#room-scene .nexora-room-player .nexora-room-player-name{animation:none!important}}
+
+
+/* Name alignment and developer-only frame; ordinary players keep plain names. */
+#room-scene .nexora-world-avatar .nexora-world-rank,
+#room-scene .nexora-room-player .nexora-room-player-name{
+  left:50%!important;right:auto!important;top:auto!important;
+  bottom:calc(100% - 1px)!important;transform:translateX(-50%)!important;
+  width:max-content!important;max-width:140px!important;
+  padding:0!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;
+  color:#fff!important;font:700 11px/1.2 Tahoma,Arial,sans-serif!important;
+  text-align:center!important;text-shadow:0 1px 3px #000,0 0 5px #000!important;
+  animation:none!important;
+}
+#room-scene .nexora-world-avatar .nexora-world-rank.nexora-developer-name,
+#room-scene .nexora-room-player .nexora-room-player-name.nexora-developer-name{
+  padding:4px 10px 5px!important;
+  border:1px solid #f5d47a!important;border-radius:7px!important;
+  background:linear-gradient(180deg,#473512f2,#171326f5)!important;
+  color:#ffe9a5!important;
+  box-shadow:0 0 0 2px #1b1528,0 0 12px #f5c75b88!important;
+}
+#room-scene .nexora-world-avatar .nexora-world-rank.nexora-developer-name::after,
+#room-scene .nexora-room-player .nexora-room-player-name.nexora-developer-name::after{
+  content:"✦ РАЗРАБОТЧИК СЕРВЕРА ✦";
+  display:block;margin-top:2px;color:#fff0bb;
+  font:700 7px/1.1 Tahoma,Arial,sans-serif;letter-spacing:.8px;
+}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite:not(.nexora-walking),
+#room-scene .nexora-room-player .nexora-avatar-sprite:not(.nexora-walking){animation:none!important}
+#room-scene .nexora-world-avatar,#room-scene .nexora-room-player{
+  bottom:max(13%,var(--nexora-floor-edge,13%))!important;
+  transform:translateX(-50%)!important;transform-origin:center bottom!important;
+}
+@media(max-width:520px){
+ #room-scene .nexora-world-avatar .nexora-world-rank,
+ #room-scene .nexora-room-player .nexora-room-player-name{font-size:9px!important}
+}
