@@ -1,4 +1,4 @@
--- NEXORA authority progression and expanded illustrated avatar catalog.
+-- NEXORA authority progression and expanded avatar catalog.
 ALTER TABLE nexora_social_auth.characters
   ADD COLUMN IF NOT EXISTS authority_points INTEGER NOT NULL DEFAULT 0 CHECK (authority_points >= 0);
 
