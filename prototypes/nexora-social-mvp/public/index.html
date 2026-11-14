@@ -7,20 +7,20 @@
 </head>
 <body><div class="shell">
 <header class="topbar"><button class="brand" data-section="registration">✦ NEXORA</button><div class="top-meta"><span id="connection">Проверка сервера…</span><time id="header-time"></time></div></header>
-<nav class="tabs" aria-label="Навигация"><button class="tab active" data-section="registration">Регистрация</button><button class="tab" data-section="clan">Клан</button><button class="tab" data-section="extra">Дополнительно</button><button class="tab" data-section="emotions">Эмоции</button><button class="tab" data-section="menu">Меню</button></nav>
+
 <main class="content">
 <section class="section active" id="section-registration">
 <div class="section-heading"><div><p class="eyebrow">НАЧНИ СВОЮ ИСТОРИЮ</p><h1>NEXORA</h1></div><div class="avatar" id="avatar">🧑</div></div>
 <div class="auth-switch"><button class="auth-mode active" data-auth="register">Регистрация</button><button class="auth-mode" data-auth="login">Вход</button></div>
 <form id="auth-form" novalidate>
 <label>Ник<input id="nickname" minlength="3" maxlength="24" autocomplete="username" placeholder="Твой ник" required></label>
-<label>Пароль<input id="password" type="password" minlength="8" maxlength="72" autocomplete="new-password" placeholder="Не менее 8 символов" required></label>
-<p class="form-error" id="form-error" role="alert"></p><button class="primary" id="submit-auth" type="submit">Создать аккаунт</button>
+<label id="recovery-login-label" class="hidden">Код восстановления<input id="recovery-login" autocomplete="one-time-code" placeholder="Код, выданный при создании ника"></label>
+<p class="form-error" id="form-error" role="alert"></p><button class="primary" id="submit-auth" type="submit">Создать ник</button>
 </form>
 <div class="account-state hidden" id="account-state">
 <h2>Профиль игрока</h2><p class="player-nickname" id="account-name"></p>
-<div class="recovery-panel"><h3>Код восстановления</h3><p id="recovery-value">Создай код и сохрани его в надёжном месте.</p><button class="secondary" id="recovery-generate">Создать код восстановления</button></div>
-<div class="character-panel"><h3>Создать персонажа</h3><div class="character-preview" id="character-preview">🧑</div>
+
+<div class="character-panel"><h3>Инфо персонажа</h3><div class="recovery-panel"><h3>Личный код восстановления</h3><p id="recovery-value">Код доступен только владельцу аккаунта.</p><button class="secondary" id="recovery-generate">Создать новый код</button></div><h3>Создать персонажа</h3><div class="character-preview" id="character-preview">🧑</div>
 <div class="character-selects"><label>Голова<select id="head-choice"><option value="1">Голова 1</option><option value="2">Голова 2</option><option value="3">Голова 3</option><option value="4">Голова 4</option><option value="5">Голова 5</option><option value="6">Голова 6</option><option value="7">Голова 7</option><option value="8">Голова 8</option><option value="9">Голова 9</option><option value="10">Голова 10</option><option value="11">Голова 11</option><option value="12">Голова 12</option></select></label>
 <label>Тело<select id="body-choice"><option value="1">Тело 1</option><option value="2">Тело 2</option><option value="3">Тело 3</option><option value="4">Тело 4</option><option value="5">Тело 5</option><option value="6">Тело 6</option><option value="7">Тело 7</option><option value="8">Тело 8</option><option value="9">Тело 9</option><option value="10">Тело 10</option><option value="11">Тело 11</option><option value="12">Тело 12</option></select></label></div>
 <button class="primary" id="create-character" type="button">Персонаж</button><p class="form-error" id="character-error" role="alert"></p></div>
