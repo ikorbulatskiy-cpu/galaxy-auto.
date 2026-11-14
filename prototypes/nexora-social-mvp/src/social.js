@@ -253,6 +253,81 @@ function createSocialRouter({ pool, auth, io }) {
     res.json({ ok: true });
   }));
 
+
+  router.get("/dating", asyncRoute(async (req, res) => {
+    const q = clean(req.query.q, 24);
+    const gender = ["female","male","other"].includes(req.query.gender) ? req.query.gender : "";
+    const result = await pool.query(
+      `SELECT a.id,a.nickname,c.avatar,c.planet,c.profile_status,c.authority,c.authority_title,c.aura_enabled,c.level,
+              EXISTS(SELECT 1 FROM nexora_social_world.likes mine WHERE mine.from_account_id=$1 AND mine.to_account_id=a.id) AS liked_by_me,
+              EXISTS(SELECT 1 FROM nexora_social_world.likes theirs WHERE theirs.from_account_id=a.id AND theirs.to_account_id=$1) AS likes_me
+         FROM nexora_social_world.accounts a
+         LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
+        WHERE a.id<>$1 AND ($2='' OR a.nickname ILIKE '%'||$2||'%')
+          AND ($3='' OR c.gender=$3)
+          AND NOT EXISTS(SELECT 1 FROM nexora_social_world.user_blocks b
+            WHERE (b.account_id=$1 AND b.blocked_account_id=a.id) OR (b.account_id=a.id AND b.blocked_account_id=$1))
+        ORDER BY liked_by_me ASC,a.nickname LIMIT 60`,
+      [req.account.id,q,gender]
+    );
+    res.json({ users: result.rows.map(row => ({
+      ...row,id:String(row.id),online:Boolean(io.sockets.adapter.rooms.get("account:"+row.id)?.size),
+      authority:Number(row.authority||0),level:Number(row.level||1),
+      matched:Boolean(row.liked_by_me&&row.likes_me),likedByMe:Boolean(row.liked_by_me)
+    })) });
+  }));
+
+  router.get("/matches", asyncRoute(async (req, res) => {
+    const result = await pool.query(
+      `SELECT a.id,a.nickname,c.avatar,c.planet,c.profile_status,c.level,MAX(mine.created_at) AS matched_at
+         FROM nexora_social_world.likes mine
+         JOIN nexora_social_world.likes theirs ON theirs.from_account_id=mine.to_account_id AND theirs.to_account_id=mine.from_account_id
+         JOIN nexora_social_world.accounts a ON a.id=mine.to_account_id
+         LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
+        WHERE mine.from_account_id=$1
+          AND NOT EXISTS(SELECT 1 FROM nexora_social_world.user_blocks b
+            WHERE (b.account_id=$1 AND b.blocked_account_id=a.id) OR (b.account_id=a.id AND b.blocked_account_id=$1))
+        GROUP BY a.id,a.nickname,c.avatar,c.planet,c.profile_status,c.level
+        ORDER BY matched_at DESC LIMIT 100`,
+      [req.account.id]
+    );
+    res.json({ matches: result.rows.map(row => ({...row,id:String(row.id),online:Boolean(io.sockets.adapter.rooms.get("account:"+row.id)?.size)})) });
+  }));
+
+  router.post("/likes/:id", asyncRoute(async (req, res) => {
+    const targetId = Number(req.params.id);
+    if (!Number.isSafeInteger(targetId) || targetId<=0 || targetId===Number(req.account.id)) return res.status(400).json({error:"Некорректный пользователь."});
+    const target = await pool.query("SELECT id,nickname FROM nexora_social_world.accounts WHERE id=$1",[targetId]);
+    if (!target.rowCount) return res.status(404).json({error:"Пользователь не найден."});
+    const blocked = await pool.query("SELECT 1 FROM nexora_social_world.user_blocks WHERE (account_id=$1 AND blocked_account_id=$2) OR (account_id=$2 AND blocked_account_id=$1)",[req.account.id,targetId]);
+    if (blocked.rowCount) return res.status(403).json({error:"Взаимодействие с этим пользователем недоступно."});
+    const client=await pool.connect();
+    let matched=false,notice;
+    try{
+      await client.query("BEGIN");
+      await client.query("INSERT INTO nexora_social_world.likes(from_account_id,to_account_id) VALUES($1,$2) ON CONFLICT(from_account_id,to_account_id) DO NOTHING",[req.account.id,targetId]);
+      const reverse=await client.query("SELECT 1 FROM nexora_social_world.likes WHERE from_account_id=$1 AND to_account_id=$2",[targetId,req.account.id]);
+      matched=reverse.rowCount>0;
+      if(matched){
+        notice=await client.query("INSERT INTO nexora_social_world.notifications(account_id,actor_account_id,type,payload) VALUES($1,$2,'match',jsonb_build_object('accountId',$2::text)) RETURNING id,created_at",[req.account.id,targetId]);
+        await client.query("INSERT INTO nexora_social_world.notifications(account_id,actor_account_id,type,payload) VALUES($1,$2,'match',jsonb_build_object('accountId',$2::text))",[targetId,req.account.id]);
+      }else{
+        notice=await client.query("INSERT INTO nexora_social_world.notifications(account_id,actor_account_id,type,payload) VALUES($1,$2,'like',jsonb_build_object('accountId',$2::text)) RETURNING id,created_at",[targetId,req.account.id]);
+      }
+      await client.query("COMMIT");
+    }catch(error){await client.query("ROLLBACK");throw error;}finally{client.release();}
+    io.to("account:"+targetId).emit("social:notification",{id:notice.rows[0].id,type:matched?"match":"like",actor:{id:req.account.id,nickname:req.account.nickname},createdAt:notice.rows[0].created_at});
+    if(matched)io.to("account:"+req.account.id).emit("social:notification",{type:"match",actor:{id:targetId,nickname:target.rows[0].nickname}});
+    res.status(201).json({ok:true,matched});
+  }));
+
+  router.delete("/likes/:id", asyncRoute(async (req,res)=>{
+    const targetId=Number(req.params.id);
+    if(!Number.isSafeInteger(targetId)||targetId<=0)return res.status(400).json({error:"Некорректный пользователь."});
+    await pool.query("DELETE FROM nexora_social_world.likes WHERE from_account_id=$1 AND to_account_id=$2",[req.account.id,targetId]);
+    res.json({ok:true});
+  }));
+
   return router;
 }
 module.exports = { createSocialRouter };
