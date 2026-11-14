@@ -55,6 +55,21 @@ $("customize-back").addEventListener("click",()=>{$("register-step-customize").c
   body:[[101,983,202,188],[480,856,253,304],[897,897,224,275],[101,1193,210,347],[434,1229,325,318],[897,1236,224,311]]
  };
  const spritePromises={};
+ function removeScreenshotBackground(ctx,w,h){
+  const frame=ctx.getImageData(0,0,w,h),pixels=frame.data;
+  const corners=[[0,0],[w-1,0],[0,h-1],[w-1,h-1]];
+  const bg=[0,1,2].map(ch=>Math.round(corners.reduce((sum,[x,y])=>sum+pixels[(y*w+x)*4+ch],0)/corners.length));
+  for(let i=0;i<pixels.length;i+=4){
+   const oldAlpha=pixels[i+3]/255;
+   const distance=Math.hypot(pixels[i]-bg[0],pixels[i+1]-bg[1],pixels[i+2]-bg[2]);
+   const alpha=Math.max(0,Math.min(1,(distance-16)/42))*oldAlpha;
+   if(alpha<=0.01){pixels[i+3]=0;continue;}
+   for(let ch=0;ch<3;ch++)pixels[i+ch]=Math.max(0,Math.min(255,Math.round((pixels[i+ch]-bg[ch]*(1-alpha))/alpha)));
+   pixels[i+3]=Math.round(alpha*255);
+  }
+  ctx.putImageData(frame,0,0);
+ }
+
  function getSprite(kind,id){
   const key=kind+":"+id;
   if(spritePromises[key])return spritePromises[key];
@@ -66,7 +81,7 @@ $("customize-back").addEventListener("click",()=>{$("register-step-customize").c
     const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;
     const ctx=canvas.getContext("2d");
     if(!ctx){reject(new Error("Canvas is unavailable"));return;}
-    ctx.clearRect(0,0,w,h);ctx.drawImage(source,x,y,w,h,0,0,w,h);
+    ctx.clearRect(0,0,w,h);ctx.drawImage(source,x,y,w,h,0,0,w,h);removeScreenshotBackground(ctx,w,h);
     resolve(canvas.toDataURL("image/png"));
    };
    source.onerror=()=>reject(new Error("Не удалось загрузить исходный спрайт "+kind));
