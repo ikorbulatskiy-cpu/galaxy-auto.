@@ -459,8 +459,11 @@
 /* Temporary clean slate: remove all legacy body and aura visuals until new art is supplied. */
 .nexora-world-avatar::before,.nexora-world-avatar::after,.nexora-aura-orbit,.nexora-user-aura,.nexora-demon-layers{display:none!important;content:none!important;opacity:0!important;filter:none!important;animation:none!important}
 #nexora-action-auras,#nexora-auras-panel,.nexora-auras-panel,.nexora-aura-option,.nexora-aura-preview{display:none!important}
-.nexora-creator-picker:not(.nexora-head-picker){display:none!important}
-.nexora-creator-stage svg{width:72px;height:72px}
+#creator-preview .nexora-creator-preview-stack{position:relative;width:100%;height:100%;display:grid;place-items:center}
+.nexora-creator-choice img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:auto}
+#creator-preview img{position:absolute;max-width:100%;max-height:100%;object-fit:contain}
+#creator-preview .creator-preview-body{width:100%;height:100%}
+#creator-preview .creator-preview-head{width:65%;height:65%;top:0;left:17.5%}
 #nexora-profile-body,[data-tab="bodies"],[data-tab="body"]{display:none!important}
 
 /* Remove every old aura effect from the scene and profile previews. */
@@ -469,7 +472,7 @@
 /* Original user-provided aura sprites and body layers */
 .nexora-world-avatar{isolation:isolate}
 .nexora-user-aura{position:absolute;z-index:0;left:50%;bottom:-3px;width:165%;height:145%;transform:translateX(-50%);overflow:visible;pointer-events:none}
-.nexora-avatar-sprite{position:relative;z-index:1;overflow:visible}
+.nexora-avatar-sprite{position:relative;z-index:1;overflow:visible;width:100%;height:100%;display:block}.nexora-avatar-sprite img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:auto;pointer-events:none}
 .nexora-aura-thumb{flex:0 0 38px;width:38px;height:38px;display:grid;place-items:center;overflow:hidden;background:#111827;border:1px solid #52617a}
 .nexora-aura-thumb svg{width:100%;height:100%;display:block}
 .nexora-aura-option{min-height:54px}
