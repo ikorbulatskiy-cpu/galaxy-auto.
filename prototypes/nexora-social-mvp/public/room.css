@@ -476,3 +476,6 @@
 .nexora-aura-thumb{flex:0 0 38px;width:38px;height:38px;display:grid;place-items:center;overflow:hidden;background:#111827;border:1px solid #52617a}
 .nexora-aura-thumb svg{width:100%;height:100%;display:block}
 .nexora-aura-option{min-height:54px}
+
+/* Fix avatar picker: room.js inserts IMG elements, not inline SVG nodes. */
+.nexora-choice img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:auto}
