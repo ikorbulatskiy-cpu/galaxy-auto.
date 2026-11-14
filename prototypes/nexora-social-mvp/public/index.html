@@ -40,8 +40,7 @@
  <section id="login-modal" class="modal" aria-hidden="true">
   <div class="auth-card login-card"><button class="close" data-close="login" aria-label="Закрыть">×</button>
    <div class="eyebrow">ВОЗВРАЩЕНИЕ ВО ВСЕЛЕННУЮ</div><h2>Уже есть персонаж?</h2>
-   <form id="login-form"><label>Ник<input id="login-nickname" minlength="3" maxlength="24" placeholder="Твой ник" autocomplete="username" required></label>
-    <label>Код восстановления<input id="login-code" placeholder="Код восстановления" autocomplete="one-time-code" required></label>
+   <form id="login-form"><label>Код восстановления<input id="login-code" placeholder="Введи код восстановления" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" required></label>
     <p class="error" id="login-error"></p><button class="main-button" id="login-submit" type="submit">Войти в мир →</button>
    </form>
   </div>
