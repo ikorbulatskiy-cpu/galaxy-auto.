@@ -224,3 +224,10 @@
 .nexora-world-avatar .nexora-demon-layers img{position:absolute!important;left:0!important;right:0!important;top:0!important;bottom:0!important;width:100%!important;height:100%!important;object-fit:contain!important;object-position:center bottom!important;transform:none!important;}
 .nexora-world-avatar .nexora-demon-body{z-index:1!important;}
 .nexora-world-avatar .nexora-demon-aura{z-index:2!important;}
+
+
+/* Final screenshot calibration: shoes meet the floor boundary; aura frames the body. */
+.nexora-world-avatar{bottom:calc(13% - 12px)!important;}
+.nexora-world-avatar .nexora-demon-layers img{object-fit:contain!important;object-position:center bottom!important;transform-origin:center bottom!important;}
+.nexora-world-avatar .nexora-demon-body{transform:none!important;z-index:1!important;}
+.nexora-world-avatar .nexora-demon-aura{transform:scale(1.12)!important;z-index:2!important;}
