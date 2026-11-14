@@ -291,7 +291,7 @@
   currentNickname=String(account&&account.nickname||account&&account.name||"Персонаж").trim().slice(0,24)||"Персонаж";
   ensureAvatarEditor();
   try{const response=await fetch("/api/account/profile",{cache:"no-store"});if(response.ok){const profile=await response.json(),character=profile.character||profile.profile?.character||{};state.isDeveloper=Boolean(profile.account?.isDeveloper||profile.profile?.isDeveloper);const developerButton=$("nexora-action-developer");if(developerButton)developerButton.classList.toggle("hidden",!state.isDeveloper);avatar.headId=Math.max(1,Math.min(6,Number(character.headId??character.head_id)||1));avatar.bodyId=Math.max(1,Math.min(6,Number(character.bodyId??character.body_id)||1));applyWorldAvatar();}}catch(error){console.warn("Could not load saved avatar:",error);}
-  const nameLabel=$("nexora-world-rank");if(nameLabel)nameLabel.textContent=currentNickname;
+  const nameLabel=$("nexora-world-rank");if(nameLabel){nameLabel.textContent=currentNickname;nameLabel.classList.toggle("nexora-developer-name",state.isDeveloper);}
   $("intro-screen").classList.add("hidden");
   room.classList.remove("hidden");
   updateVisitorClock();
@@ -300,7 +300,7 @@
   loadMessages(true);
   if(state.poll)clearInterval(state.poll);
   state.poll=setInterval(()=>loadMessages(false),2200);
-  const world=$("nexora-world-avatar");if(world){state.position={x:parseFloat(world.style.left)||50,bottom:parseFloat(world.style.bottom)||12};world.style.left=state.position.x+"%";world.style.bottom=state.position.bottom+"%";}
+  const world=$("nexora-world-avatar");if(world){state.position={x:parseFloat(world.style.left)||50,bottom:13};world.style.left=state.position.x+"%";world.style.bottom=state.position.bottom+"%";}
   syncRoomPosition();
   loadRoomPresence();
   if(state.presenceTimer)clearInterval(state.presenceTimer);
@@ -338,9 +338,9 @@
      node.addEventListener("click",event=>{event.stopPropagation();openCharacterActions(node.dataset.playerId);});
      node.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openCharacterActions(node.dataset.playerId);}});
     }
-    const [slotX,slotY]=slots[index%slots.length];const x=Number.isFinite(Number(player.xPercent))?Number(player.xPercent):slotX;const y=Number.isFinite(Number(player.bottomPercent))?Number(player.bottomPercent):slotY;const oldX=parseFloat(node.style.left),oldY=parseFloat(node.style.bottom);const moved=Number.isFinite(oldX)&&(Math.abs(oldX-x)>.15||Math.abs(oldY-y)>.15);node.style.left=x+"%";node.style.bottom=y+"%";node.dataset.facing=String(Number(player.facing)||1);const playerSprite=node.querySelector(".nexora-avatar-sprite");if(playerSprite){playerSprite.classList.toggle("facing-left",Number(player.facing)===-1);if(moved){playerSprite.classList.remove("nexora-walking");void playerSprite.offsetWidth;playerSprite.classList.add("nexora-walking");setTimeout(()=>playerSprite.classList.remove("nexora-walking"),760);}}
+    const [slotX,slotY]=slots[index%slots.length];const x=Number.isFinite(Number(player.xPercent))?Number(player.xPercent):slotX;const y=Math.max(13,Number.isFinite(Number(player.bottomPercent))?Number(player.bottomPercent):slotY);const oldX=parseFloat(node.style.left),oldY=parseFloat(node.style.bottom);const moved=Number.isFinite(oldX)&&(Math.abs(oldX-x)>.15||Math.abs(oldY-y)>.15);node.style.left=x+"%";node.style.bottom=y+"%";node.dataset.facing=String(Number(player.facing)||1);const playerSprite=node.querySelector(".nexora-avatar-sprite");if(playerSprite){playerSprite.classList.toggle("facing-left",Number(player.facing)===-1);if(moved){playerSprite.classList.remove("nexora-walking");void playerSprite.offsetWidth;playerSprite.classList.add("nexora-walking");setTimeout(()=>playerSprite.classList.remove("nexora-walking"),760);}}
     node.className="nexora-world-avatar nexora-room-player aura-"+(player.aura&&player.aura!=="none"?player.aura:"none");
-    node.querySelector(".nexora-room-player-name").textContent=String(player.nickname||"Игрок").slice(0,24);
+    const playerName=node.querySelector(".nexora-room-player-name");playerName.textContent=String(player.nickname||"Игрок").slice(0,24);playerName.classList.toggle("nexora-developer-name",Boolean(player.isDeveloper));
     const title=node.querySelector(".nexora-emperor-title");if(title)title.hidden=!String(player.authorityTitle||"").includes("Император");
     const aura=node.querySelector(".nexora-room-player-aura");if(aura)aura.setAttribute("href",player.aura&&player.aura!=="none"?"/assets/sprites/characters/nexora-user-auras.svg?v=sprite-alpha-fix-v3-20261115#aura-"+player.aura:"");
    });
