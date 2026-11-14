@@ -50,7 +50,7 @@ function attachSocketCompat(server) {
       `SELECT r.id,p.slug,p.name
        FROM rooms r JOIN planets p ON p.id=r.planet_id
        WHERE p.is_active=TRUE AND r.is_active=TRUE
-       ORDER BY p.created_at ASC,r.created_at ASC LIMIT 1`
+       ORDER BY r.created_at ASC LIMIT 1`
     );
     return fallback.rows[0] || null;
   }
@@ -85,7 +85,7 @@ function attachSocketCompat(server) {
       if (requested.rowCount) planet = requested.rows[0];
     }
     if (!planet) {
-      const fallback = await pool.query("SELECT id,slug,name FROM planets WHERE is_active=TRUE ORDER BY created_at ASC LIMIT 1");
+      const fallback = await pool.query("SELECT id,slug,name FROM planets WHERE slug='nexora-prime' AND is_active=TRUE LIMIT 1");
       planet = fallback.rows[0] || null;
     }
     if (!planet) throw new Error("В мире пока нет доступных планет.");
