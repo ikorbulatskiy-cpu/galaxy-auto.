@@ -1,7 +1,7 @@
 (() => {
  "use strict";
  const $=id=>document.getElementById(id);
- const state={lastMessageId:0,poll:null,clockTimer:null,presenceTimer:null,movementTimer:null,playerIds:new Set()};
+ const state={lastMessageId:0,poll:null,clockTimer:null,presenceTimer:null,movementTimer:null,viewingOtherPlayer:false,playerIds:new Set()};
  function updateVisitorClock(){
   const clock=$("visitor-clock");
   if(!clock)return;
@@ -151,11 +151,42 @@
   const menu=$("nexora-character-actions");if(menu)menu.classList.add("hidden");
   const a=$("nexora-world-avatar");if(a)a.setAttribute("aria-expanded","false");
  }
+ function setInfoReadonly(readonly){
+  const form=$("nexora-info-form");if(!form)return;
+  Array.from(form.elements).forEach(control=>{control.disabled=readonly;});
+  const actions=document.querySelector(".nexora-info-actions");if(actions)actions.classList.toggle("hidden",readonly);
+  const photo=$("nexora-info-photo-file");if(photo)photo.closest("label").classList.toggle("nexora-readonly-photo",readonly);
+  const title=document.querySelector("#nexora-avatar-panel .nexora-info-header span");if(title)title.textContent=readonly?"ИНФО ИГРОКА":"ИНФО";
+  state.viewingOtherPlayer=readonly;
+ }
  function closeAvatar(){
   $("nexora-avatar-panel").classList.add("hidden");
-  const a=$("nexora-world-avatar");if(a)a.setAttribute("aria-expanded","false");
+  setInfoReadonly(false);
+  const a=$("nexora-world-avatar");if(a&&a.id==="nexora-world-avatar")a.setAttribute("aria-expanded","false");
+ }
+ async function openOtherPlayer(playerId){
+  ensureAvatarEditor();
+  closeCharacterActions();closeEmotions();closeAuras();
+  const panel=$("nexora-avatar-panel"),loading=$("nexora-profile-loading"),form=$("nexora-info-form"),error=$("nexora-profile-error");
+  setInfoReadonly(true);panel.classList.remove("hidden");loading.classList.remove("hidden");form.classList.add("hidden");error.classList.add("hidden");
+  loading.innerHTML='<i></i><b>Загружаем анкету игрока…</b><span>Получаем открытую информацию персонажа</span>';
+  try{
+   const response=await fetch("/api/room/player/"+encodeURIComponent(playerId),{cache:"no-store"});
+   const data=await response.json();if(!response.ok)throw Error(data.error||"Не удалось загрузить анкету игрока");
+   const p=data.profile||{},player=data.player||{},fields=form.elements;
+   ["gender","birthDate","city","occupation","interests","about","status","relationship","lookingFor","askMe"].forEach(k=>{if(fields[k])fields[k].value=p[k]||"";});
+   $("nexora-info-planet").textContent=player.nickname||"Игрок";
+   $("nexora-info-privileges").textContent=p.privileges||"—";
+   $("nexora-info-photo").src=p.photoDataUrl||"";$("nexora-info-photo").classList.toggle("has-photo",Boolean(p.photoDataUrl));
+   const header=document.querySelector("#nexora-avatar-panel .nexora-info-header span");if(header)header.textContent="ИНФО: "+String(player.nickname||"ИГРОК").toUpperCase();
+   loading.classList.add("hidden");form.classList.remove("hidden");
+  }catch(errorValue){
+   loading.classList.add("hidden");error.classList.remove("hidden");error.textContent=errorValue.message||"Не удалось загрузить анкету игрока.";
+   const retry=document.createElement("button");retry.type="button";retry.textContent="Повторить загрузку";retry.addEventListener("click",()=>openOtherPlayer(playerId));error.append(retry);
+  }
  }
  async function openAvatar(){
+  setInfoReadonly(false);
   ensureAvatarEditor();
   const panel=$("nexora-avatar-panel"),loading=$("nexora-profile-loading"),form=$("nexora-info-form"),error=$("nexora-profile-error");
   panel.classList.remove("hidden");loading.classList.remove("hidden");form.classList.add("hidden");error.classList.add("hidden");
@@ -267,9 +298,21 @@
    scene.querySelectorAll(".nexora-room-player").forEach(node=>{if(!active.has(node.dataset.playerId))node.remove();});
    const slots=[[8,13],[26,13],[74,13],[92,13],[8,53],[26,53],[74,53],[92,53]];
    players.forEach((player,index)=>{
-    const id=String(player.id);let node=scene.querySelector('[data-player-id="'+CSS.escape(id)+'"]');
-    if(!node){node=document.createElement("div");node.className="nexora-room-player aura-blue";node.dataset.playerId=id;const sprite=document.createElement("div");sprite.className="nexora-room-player-sprite";const body=document.createElement("img"),head=document.createElement("img");body.alt="";head.alt="";body.className="nexora-room-player-body";head.className="nexora-room-player-head";sprite.append(body,head);const name=document.createElement("span");name.className="nexora-room-player-name";node.append(sprite,name);scene.append(node);setSpriteImage(body,"body",Math.max(1,Math.min(6,Number(player.bodyId)||1)));setSpriteImage(head,"head",Math.max(1,Math.min(6,Number(player.headId)||1)));}
-    const [x,y]=slots[index%slots.length];node.style.left=x+"%";node.style.bottom=y+"%";node.querySelector(".nexora-room-player-name").textContent=String(player.nickname||"Игрок").slice(0,24);
+    const id=String(player.id);let node=scene.querySelector('.nexora-room-player[data-player-id="'+CSS.escape(id)+'"]');
+    if(!node){
+     node=document.createElement("div");node.className="nexora-world-avatar nexora-room-player aura-"+(player.aura&&player.aura!=="none"?player.aura:"none");node.dataset.playerId=id;node.setAttribute("role","button");node.tabIndex=0;node.setAttribute("aria-label","Открыть анкету игрока "+String(player.nickname||"Игрок"));
+     node.innerHTML='<svg class="nexora-user-aura" viewBox="0 0 174 160" aria-hidden="true"><use class="nexora-room-player-aura" href=""></use></svg><div class="nexora-avatar-sprite" role="img" aria-label="Персонаж NEXORA"><img class="nexora-room-player-body" alt=""><img class="nexora-room-player-head" alt=""></div><div class="nexora-emperor-title" hidden>✦ ИМПЕРАТОР ГАЛАКТИКИ ✦</div><div class="nexora-world-rank nexora-room-player-name"></div>';
+     scene.append(node);
+     setSpriteImage(node.querySelector(".nexora-room-player-body"),"body",Math.max(1,Math.min(6,Number(player.bodyId)||1)));
+     setSpriteImage(node.querySelector(".nexora-room-player-head"),"head",Math.max(1,Math.min(6,Number(player.headId)||1)));
+     node.addEventListener("click",event=>{event.stopPropagation();openOtherPlayer(node.dataset.playerId);});
+     node.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openOtherPlayer(node.dataset.playerId);}});
+    }
+    const [x,y]=slots[index%slots.length];node.style.left=x+"%";node.style.bottom=y+"%";
+    node.className="nexora-world-avatar nexora-room-player aura-"+(player.aura&&player.aura!=="none"?player.aura:"none");
+    node.querySelector(".nexora-room-player-name").textContent=String(player.nickname||"Игрок").slice(0,24);
+    const title=node.querySelector(".nexora-emperor-title");if(title)title.hidden=!String(player.authorityTitle||"").includes("Император");
+    const aura=node.querySelector(".nexora-room-player-aura");if(aura)aura.setAttribute("href",player.aura&&player.aura!=="none"?"/assets/sprites/characters/nexora-user-auras.svg?v=sprite-alpha-fix-v3-20261115#aura-"+player.aura:"");
    });
   }catch(error){console.warn("Room players unavailable:",error);}
  }
