@@ -358,3 +358,15 @@
 .nexora-character-actions-card button::before{content:"›"!important;display:inline-block!important;width:17px!important;color:#b9f34b!important;font-size:15px!important;font-weight:900!important}
 .nexora-character-actions-card button.secondary{background:transparent!important;border-color:#454545!important;color:#f0f0f0!important}
 .nexora-character-actions-card button:active,.nexora-character-actions-card button:focus-visible{outline:1px dotted #d8ff70!important;background:#47751c!important}
+
+
+/* Keep the complete profile editor inside the viewport; scroll only its contents. */
+#nexora-avatar-panel{box-sizing:border-box!important;padding-top:max(10px,env(safe-area-inset-top))!important;padding-bottom:max(10px,env(safe-area-inset-bottom))!important}
+.nexora-avatar-window{box-sizing:border-box!important;width:min(390px,calc(100vw - 24px))!important;height:min(760px,calc(100dvh - max(20px,env(safe-area-inset-top)) - max(20px,env(safe-area-inset-bottom))) )!important;max-height:calc(100dvh - max(20px,env(safe-area-inset-top)) - max(20px,env(safe-area-inset-bottom)))!important;min-height:0!important;overflow:hidden!important}
+.nexora-info-form{flex:1 1 0!important;min-height:0!important;overflow:hidden!important}
+.nexora-classic-profile{box-sizing:border-box!important;flex:1 1 0!important;min-height:0!important;height:0!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain!important;scrollbar-width:thin!important;scrollbar-color:#91ad45 #252d43!important;padding-bottom:18px!important}
+.nexora-classic-top,.nexora-classic-questionnaire,.nexora-classic-facts{min-width:0!important}
+.nexora-classic-photo img{max-width:100%!important}
+.nexora-info-actions{flex:0 0 auto!important;padding-bottom:max(9px,env(safe-area-inset-bottom))!important}
+@media(max-height:700px){.nexora-avatar-window{height:calc(100dvh - 20px)!important;max-height:calc(100dvh - 20px)!important}.nexora-classic-profile{padding-top:8px!important;padding-bottom:12px!important}.nexora-classic-links{margin-bottom:14px!important}.nexora-classic-ask{margin-bottom:14px!important}.nexora-classic-photo img{height:clamp(82px,18dvh,124px)!important}}
+@media(max-width:380px){.nexora-avatar-window{width:calc(100vw - 18px)!important}.nexora-classic-top{grid-template-columns:minmax(88px,36%) minmax(0,1fr)!important;gap:8px!important}.nexora-classic-photo img{height:clamp(80px,17dvh,112px)!important}.nexora-classic-facts{gap:5px!important;font-size:11px!important}.nexora-classic-links,.nexora-classic-ask{font-size:12px!important}}
