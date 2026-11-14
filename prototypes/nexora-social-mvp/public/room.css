@@ -332,3 +332,18 @@
 .nexora-character-actions-title{text-align:center!important;color:#c9d2a0!important;font-size:12px!important;font-weight:900!important;letter-spacing:1.1px!important;margin-bottom:2px!important}
 .nexora-character-actions-card button{width:100%!important;min-height:43px!important;border:1px solid #9b8bd8!important;border-radius:9px!important;background:linear-gradient(135deg,#8063d0,#51449a)!important;color:#fff!important;font-size:14px!important;font-weight:800!important}
 .nexora-character-actions-card button.secondary{background:#202a43!important;border-color:#66728e!important;color:#e9edf8!important}
+
+
+/* Retro pixel-style emotions picker inspired by the supplied reference. */
+.nexora-emotions-panel{position:fixed!important;inset:0!important;z-index:1002!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:14px!important;background:#05070dcc!important}
+.nexora-emotions-panel.hidden{display:none!important}
+.nexora-emotions-window{box-sizing:border-box;width:min(310px,calc(100vw - 28px))!important;height:min(440px,calc(100dvh - 40px))!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;border:3px ridge #8a8a8a!important;background:#171717!important;color:#f4f4f4!important;box-shadow:0 8px 28px #000c!important;font-family:Arial,sans-serif!important}
+.nexora-emotions-window header{height:29px!important;min-height:29px!important;display:flex!important;align-items:center!important;justify-content:center!important;position:relative!important;background:repeating-linear-gradient(135deg,#b9f34b 0 6px,#a6df38 6px 12px)!important;border-bottom:2px solid #527b19!important;color:#101010!important;font-size:14px!important;font-weight:900!important;text-transform:none!important;text-shadow:1px 1px #eaffae!important}
+.nexora-emotions-window header button{position:absolute!important;right:2px!important;top:1px!important;width:25px!important;height:24px!important;padding:0!important;border:1px solid #5c6e34!important;background:#a5d83a!important;color:#111!important;font-size:18px!important;line-height:18px!important}
+.nexora-emotions-list{flex:1!important;min-height:0!important;overflow-y:auto!important;padding:4px 3px!important;background:repeating-linear-gradient(0deg,#242424 0 2px,#202020 2px 4px)!important;scrollbar-color:#8dbb30 #151515!important}
+.nexora-emotion-option{width:100%!important;min-height:29px!important;display:flex!important;align-items:center!important;gap:7px!important;padding:2px 7px!important;border:0!important;border-radius:0!important;background:transparent!important;color:#f0f0f0!important;text-align:left!important;font-size:14px!important;font-weight:500!important;line-height:1.15!important;text-shadow:1px 1px #000!important}
+.nexora-emotion-option .emoji{width:22px!important;flex:0 0 22px!important;font-size:17px!important;text-align:center!important}
+.nexora-emotion-option.remove{background:#4c851d!important;color:#fff!important}
+.nexora-emotion-option:active,.nexora-emotion-option:focus-visible{outline:1px dotted #d8ff70!important;background:#47751c!important}
+.nexora-current-emotion{position:absolute!important;left:50%!important;bottom:calc(100% + 7px)!important;transform:translateX(-50%)!important;white-space:nowrap!important;padding:4px 9px!important;border:1px solid #b39ae8!important;border-radius:14px!important;background:#17102c!important;color:#fff!important;font-size:11px!important;font-weight:700!important;z-index:5!important;box-shadow:0 0 12px #8c43d9!important}
+.nexora-current-emotion.hidden{display:none!important}
