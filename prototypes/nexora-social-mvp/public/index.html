@@ -4,8 +4,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101633"><meta name="description" content="NEXORA — социальный виртуальный мир">
 <title>NEXORA — Social World</title>
-<link rel="stylesheet" href="/styles.css?v=auth-clean-20261114"><link rel="stylesheet" href="/room.css?v=empty-room-20261114-1">
-<script defer src="/app.js?v=auth-clean-20261114"></script><script defer src="/room.js?v=empty-room-20261114-1"></script>
+<link rel="stylesheet" href="/styles.css?v=auth-clean-20261114"><link rel="stylesheet" href="/room.css?v=planet-header-20261114-1">
+<script defer src="/app.js?v=auth-clean-20261114"></script><script defer src="/room.js?v=planet-header-20261114-1"></script>
 </head>
 <body>
 <div class="app-shell">
@@ -51,6 +51,7 @@
  </section>
  <section id="room-screen" class="hidden" aria-label="Пустая 2D-комната NEXORA">
   <div class="retro-room">
+   <header class="planet-header"><span class="planet-name">Земля</span><time id="visitor-clock" aria-label="Местное время">--:--</time></header>
    <section class="retro-chat" aria-label="Окно чата">
     <div class="chat-space" aria-live="polite"></div>
     <form id="chat-form" class="retro-composer">
@@ -61,12 +62,7 @@
     <div id="chat-error" class="chat-error" role="status"></div>
    </section>
    <main id="room-scene" class="retro-scene" aria-label="Пустая просторная виртуальная комната">
-    <div class="room-wall"></div>
-    <div class="room-window"><div class="window-sky"></div><div class="window-cloud"></div><div class="window-hill"></div></div>
-    <div class="wall-decoration"></div>
-    <div class="room-baseboard"></div>
-    <div class="room-floor"></div>
-    <div class="floor-shine"></div>
+    <div class="room-blue-area" aria-label="Голубая площадка планеты"></div>
    </main>
   </div>
  </section>
