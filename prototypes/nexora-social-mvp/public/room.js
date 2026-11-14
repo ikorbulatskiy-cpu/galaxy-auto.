@@ -11,8 +11,8 @@
  const room=$("room-screen");
 
  const rankRows=[["Новичок","0","—"],["Бывалый","1","✦"],["Уважаемый","2","✦✦"],["Мастер","3","✦✦✦"],["Профессионал","4","✦✦✦✦"],["Гуру","5–9","✦"],["Неприкасаемый","10–19","✦✦"],["Папа / Мама","20–99","✦✦"],["Ангел Галактики","100–199","✦✦✦✦"],["Бог / Богиня Галактики","200–999","✦✦✦✦✦"],["Всемогущий","1000–1999","✦✦✦✦✦✦"],["Mister / Miss Вселенная","2000–9999","✦✦✦✦✦✦"],["Легенда Галактики","10000–19999","✦✦✦✦✦✦✦"],["Премьер Галактики","20000–49999","✦✦✦✦✦✦✦"],["Император Галактики","50000+","✦✦✦✦✦✦✦"]];
- const auraNames={none:"Без ауры","dark-1":"Тёмная аура","blue-1":"Голубая аура"};
- const selectableAuras=[["none","Без ауры",""],["dark-1","Тёмная аура","aura-dark-1"],["blue-1","Голубая аура","aura-blue-1"]];
+ const auraNames={none:"Без ауры",star:"Звёздная",romance:"Романтика",nebula:"Туманность",comet:"Комета",supernova:"Сияние",halo:"Сверхновая"};
+ const selectableAuras=[["none","Без ауры",""],["star","Звёздная","aura-star"],["romance","Романтика","aura-romance"],["nebula","Туманность","aura-nebula"],["comet","Комета","aura-comet"],["supernova","Сияние","aura-supernova"],["halo","Сверхновая","aura-halo"]];
  let avatar={headId:1,bodyId:1,outfitId:0};
 
  const roomSpriteCrops={head:[[108,908,188,174],[503,885,202,202],[902,904,202,181],[108,1249,191,210],[503,1235,202,217],[902,1273,202,195]],body:[[101,983,202,188],[480,856,253,304],[897,897,224,275],[101,1193,210,347],[434,1229,325,318],[897,1236,224,311]]};
@@ -50,7 +50,7 @@
   roomSpritePromises[key].then(src=>{img.src=src;}).catch(error=>console.error("NEXORA sprite:",error));
  }
  let currentNickname="Персонаж";
- let selectedAura=localStorage.getItem("nexora-selected-aura")||"blue-1";if(selectedAura==="blue-2"||selectedAura==="dark-2"||selectedAura==="dark-3")selectedAura="blue-1";
+ let selectedAura=localStorage.getItem("nexora-selected-aura")||"nebula";if(!selectableAuras.some(item=>item[0]===selectedAura))selectedAura="nebula";
  function ensureAvatarEditor(){
   if($("nexora-world-avatar"))return;
   const scene=$("room-scene");
@@ -90,7 +90,7 @@
   $("nexora-emotions-panel").addEventListener("click",event=>{if(event.target===$("nexora-emotions-panel"))closeEmotions();});
   buildEmotionOptions();
   buildAuraOptions();
-  const initialAura=selectableAuras.find(item=>item[0]===selectedAura)?.[2],initialAuraNode=$("nexora-world-aura");if(initialAuraNode)initialAuraNode.setAttribute("href",initialAura?"/assets/sprites/characters/nexora-user-auras.svg?v=sprite-alpha-fix-v3-20261115#"+initialAura:"");
+  const initialAura=selectableAuras.find(item=>item[0]===selectedAura)?.[2],initialAuraNode=$("nexora-world-aura");if(initialAuraNode)initialAuraNode.setAttribute("href",initialAura?"/assets/sprites/characters/nexora-user-auras.svg?v=galaxy-aura-art-v1-20261115#"+initialAura:"");
   $("nexora-character-actions").addEventListener("click",event=>{if(event.target===$("nexora-character-actions"))closeCharacterActions();});
   $("nexora-avatar-close").addEventListener("click",closeAvatar);
   $("nexora-avatar-panel").addEventListener("click",event=>{if(event.target===$("nexora-avatar-panel"))closeAvatar();});
@@ -122,7 +122,7 @@
  }
  function buildAuraOptions(){
   const list=$("nexora-auras-list");if(!list)return;
-  selectableAuras.forEach(([key,label,sprite])=>{const button=document.createElement("button");button.type="button";button.className="nexora-aura-option";button.dataset.aura=key;const swatch=document.createElement("span");swatch.className="nexora-aura-thumb";if(sprite){const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("viewBox",sprite.startsWith("aura-dark")?"0 0 159 160":"0 0 174 160");const use=document.createElementNS("http://www.w3.org/2000/svg","use");use.setAttribute("href","/assets/sprites/characters/nexora-user-auras.svg?v=sprite-alpha-fix-v3-20261115#"+sprite);svg.append(use);swatch.append(svg);}else{swatch.textContent="—";}const name=document.createElement("span");name.textContent=label;const check=document.createElement("b");check.textContent="✓";button.append(swatch,name,check);button.addEventListener("click",()=>selectCharacterAura(key));list.append(button);});
+  selectableAuras.forEach(([key,label,sprite])=>{const button=document.createElement("button");button.type="button";button.className="nexora-aura-option";button.dataset.aura=key;const swatch=document.createElement("span");swatch.className="nexora-aura-thumb";if(sprite){const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("viewBox",sprite.startsWith("aura-dark")?"0 0 159 160":"0 0 174 160");const use=document.createElementNS("http://www.w3.org/2000/svg","use");use.setAttribute("href","/assets/sprites/characters/nexora-user-auras.svg?v=galaxy-aura-art-v1-20261115#"+sprite);svg.append(use);swatch.append(svg);}else{swatch.textContent="—";}const name=document.createElement("span");name.textContent=label;const check=document.createElement("b");check.textContent="✓";button.append(swatch,name,check);button.addEventListener("click",()=>selectCharacterAura(key));list.append(button);});
   updateAuraSelection();
  }
  function updateAuraSelection(){document.querySelectorAll(".nexora-aura-option").forEach(button=>button.classList.toggle("selected",button.dataset.aura===(selectedAura||"none")));}
@@ -131,7 +131,7 @@
   if(selectedAura)localStorage.setItem("nexora-selected-aura",selectedAura);else localStorage.removeItem("nexora-selected-aura");
   const world=$("nexora-world-avatar");
   if(world){const rank=$("nexora-rank-title")?.textContent||"";const emperor=rank.includes("Император");world.className="nexora-world-avatar aura-"+(selectedAura||"none");const title=world.querySelector(".nexora-emperor-title");if(title)title.hidden=true;}
-  const auraUse=$("nexora-world-aura");const sprite=selectableAuras.find(item=>item[0]===selectedAura)?.[2];if(auraUse)auraUse.setAttribute("href",sprite?"/assets/sprites/characters/nexora-user-auras.svg?v=sprite-alpha-fix-v3-20261115#"+sprite:"");
+  const auraUse=$("nexora-world-aura");const sprite=selectableAuras.find(item=>item[0]===selectedAura)?.[2];if(auraUse)auraUse.setAttribute("href",sprite?"/assets/sprites/characters/nexora-user-auras.svg?v=galaxy-aura-art-v1-20261115#"+sprite:"");
   const preview=$("nexora-aura-preview");if(preview){preview.className="nexora-aura-preview aura-"+(selectedAura||"none");preview.textContent="✦";}
   updateAuraSelection();closeAuras();closeCharacterActions();
  }
@@ -407,7 +407,7 @@
     node.className="nexora-world-avatar nexora-room-player aura-"+(player.aura&&player.aura!=="none"?player.aura:"none");
     const playerName=node.querySelector(".nexora-room-player-name");playerName.textContent=String(player.nickname||"Игрок").slice(0,24);
     const title=node.querySelector(".nexora-emperor-title");if(title)title.hidden=!String(player.authorityTitle||"").includes("Император");
-    const aura=node.querySelector(".nexora-room-player-aura");if(aura)aura.setAttribute("href",player.aura&&player.aura!=="none"?"/assets/sprites/characters/nexora-user-auras.svg?v=sprite-alpha-fix-v3-20261115#aura-"+player.aura:"");
+    const aura=node.querySelector(".nexora-room-player-aura");if(aura)aura.setAttribute("href",player.aura&&player.aura!=="none"?"/assets/sprites/characters/nexora-user-auras.svg?v=galaxy-aura-art-v1-20261115#aura-"+player.aura:"");
    });
   }catch(error){console.warn("Room players unavailable:",error);}
  }
