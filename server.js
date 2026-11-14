@@ -83,7 +83,7 @@ app.get("/api/room/messages",async(req,res)=>{
 });
 app.post("/api/room/messages",async(req,res)=>{
  try{
-  const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
+  const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});if(account.is_muted)return res.status(403).json({error:"Возможность писать сообщения временно ограничена."});
   const message=clean(req.body.message);if(!message||message.length>500)return res.status(400).json({error:"Сообщение должно содержать от 1 до 500 символов."});
   await ensureRoomChatSchema();
   const saved=await pool.query("INSERT INTO nexora_social_auth.room_messages(account_id,nickname,message) VALUES($1,$2,$3) RETURNING id,nickname,message,created_at,account_id",[String(account.id),account.nickname,message]);
