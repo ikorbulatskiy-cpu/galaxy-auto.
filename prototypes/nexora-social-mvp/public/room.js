@@ -39,7 +39,9 @@
 }
 
  function setSpriteImage(img,kind,id){
-  if(!img)return;const key=kind+":"+id;
+  if(!img)return;
+  if(kind==="head"){img.src="/assets/sprites/characters/nexora-devil-head-"+Math.max(1,Math.min(6,Number(id)||1))+".svg?v=devil-heads-v1";return;}
+  const key=kind+":"+id;
   if(!roomSpritePromises[key])roomSpritePromises[key]=new Promise((resolve,reject)=>{
    const source=new Image();source.onload=()=>{const [x,y,w,h]=roomSpriteCrops[kind][id-1];if(x+w>source.naturalWidth||y+h>source.naturalHeight){reject(new Error("Sprite crop exceeds source"));return;}const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;const ctx=canvas.getContext("2d");if(!ctx){reject(new Error("Canvas unavailable"));return;}ctx.drawImage(source,x,y,w,h,0,0,w,h);removeScreenshotBackground(ctx,w,h);resolve(trimmedSpriteDataUrl(canvas,w,h));};source.onerror=()=>reject(new Error("Cannot load "+kind+" atlas"));source.src="/assets/sprites/characters/IMG_415"+(kind==="head"?"7":"8")+".png?v=source-sprite-20261115";
   });
