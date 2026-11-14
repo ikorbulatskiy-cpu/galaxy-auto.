@@ -79,10 +79,10 @@
    const key=String(u.character_id||u.id||u.username||u.character_name||"player");
    const name=u.character_name||u.username||"Игрок";
    const fav=favorites.some(x=>x.key===key),aura=u.character_aura||"none";
-   const rank=(aura&&aura!=="none")?'<span class="nx-rank-mark" aria-hidden="true">'+(aura==="angel"?"✧":aura==="god"?"☼":aura==="almighty"?"♛":aura==="universe"?"✹":"★")+'</span>':"";
+   const rank="";
    return '<div class="nx-avatar-card aura-'+esc(aura)+' '+(u.is_me?"me":"")+'" data-player-key="'+esc(key)+'" data-player-username="'+esc(u.username||"")+'" data-player-user-id="'+esc(u.user_id||"")+'">'+
-    '<div class="nx-avatar-name" title="'+esc(name)+'">'+(u.is_me?"♛ ":"")+esc(name)+'</div>'+
-    '<div class="nx-avatar-visual">'+rank+avatar(u.character_appearance||{})+cosmetics(u.character_appearance||{})+'</div>'+
+    '<div class="nx-avatar-name" title="'+esc(name)+'">'+esc(name)+'</div>'+
+    '<div class="nx-avatar-visual">'+avatar(u.character_appearance||{})+cosmetics(u.character_appearance||{})+'</div>'+
     '<div class="nx-avatar-platform" aria-hidden="true"></div>'+
     '<button type="button" class="nx-fav-toggle '+(fav?"is-favorite":"")+'" data-favorite="'+esc(key)+'" data-favorite-name="'+esc(name)+'" title="Добавить в избранное" aria-label="Добавить в избранное">'+(fav?"★":"☆")+'</button></div>';
   }).join("");
