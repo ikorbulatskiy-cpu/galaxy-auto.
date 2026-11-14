@@ -102,3 +102,24 @@
 .nexora-profile-avatar.aura-emperor{background:radial-gradient(ellipse,#a14de488 0%,#7d2bc955 42%,transparent 75%);filter:drop-shadow(0 0 8px #d18aff) drop-shadow(0 0 17px #8c37ff)}
 @keyframes nexora-flame-drift{0%,100%{transform:translate(-50%,-50%) rotate(-7deg) scale(.94);opacity:.48}50%{transform:translate(-50%,-50%) rotate(8deg) scale(1.08);opacity:.82}}
 @media(prefers-reduced-motion:reduce){.nexora-world-avatar::before,.nexora-world-avatar::after{animation:none}}
+
+
+/* Reference-matched NEXORA cosmic avatar editor */
+.nexora-avatar-panel{color:#f5efff;background:radial-gradient(ellipse at 50% -15%,#452078 0,transparent 48%),linear-gradient(155deg,#090817 0%,#11102b 58%,#080b1d 100%);border:1px solid #a96aff;box-shadow:0 0 0 1px #44236d,0 0 24px #812cff88,0 18px 60px #000d}
+.nexora-rank-head{background:linear-gradient(115deg,#17112e,#11152c);border-bottom:1px solid #633d9b}
+.nexora-rank-head small,.nexora-rank-head span{color:#c7b6e8}
+.nexora-rank-head h2{color:#9cff71;text-shadow:0 0 12px #66ff5c55}
+.nexora-avatar-close{color:#f1ddff}
+.nexora-aura-preview{border:1px solid #a968ff;background:radial-gradient(circle,#fff9b4 0 10%,#ffb72e 24%,#b44aff 47%,#31105b 66%,transparent 72%);filter:drop-shadow(0 0 10px #b54dff)}
+.nexora-aura-preview.aura-none{background:#17142b;color:#9b8bb8;border-color:#57436f}
+.nexora-progress{background:#27203c}.nexora-progress i{background:linear-gradient(90deg,#318dff,#9d4cff,#ee8dff);box-shadow:0 0 10px #a54dff}
+.nexora-rank-sub{color:#c5b5df}
+.nexora-tabs{background:#05050d;border:1px solid #62438d;box-shadow:0 0 12px #772bba55}
+.nexora-tabs button{color:#cfc2e8}.nexora-tabs button.active{background:linear-gradient(#69558c,#32264f);color:#fff;box-shadow:inset 0 0 12px #c99aff55,0 0 9px #9e4dff66}
+.nexora-choice{border:1px solid #62477f;background:linear-gradient(145deg,#211934,#0d1023);box-shadow:inset 0 0 10px #a56aff18,0 2px 7px #0008}
+.nexora-choice.selected{border:2px solid #bd7bff;box-shadow:0 0 0 2px #9d4aff55,0 0 15px #9d4aff88}
+.nexora-rank-row{border-bottom-color:#392b55;color:#f3eaff}.nexora-rank-row span{color:#c2b3dc}.nexora-rank-row strong{color:#ffc45d;text-shadow:0 0 8px #ff8b3b55}
+.nexora-avatar-save{background:linear-gradient(100deg,#3e63db,#7134a8,#a23ec1);box-shadow:0 0 16px #8138c766}
+#nexora-avatar-note{color:#9cffb0}
+.nexora-world-avatar .nexora-aura-orbit{border-width:3px;box-shadow:0 0 9px #fff,0 0 22px #b65aff,0 0 45px #8b35ff,inset 0 0 24px #8b35ff}
+.nexora-emperor-title[hidden]{display:none!important}
