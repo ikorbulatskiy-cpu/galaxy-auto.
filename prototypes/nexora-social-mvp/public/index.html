@@ -2,22 +2,26 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101633"><meta name="description" content="NEXORA — социальный 2D-мир">
-<title>NEXORA — 2D World</title>
-<link rel="stylesheet" href="/styles.css?v=2d-world-20261114">
-<script defer src="/world-scene.js"></script><script defer src="/world-objects.js"></script><script defer src="/sprite-engine.js"></script><script defer src="/app.js?v=2d-world-20261114"></script>
+<meta name="theme-color" content="#101633"><meta name="description" content="NEXORA — социальный виртуальный мир">
+<title>NEXORA — Social World</title>
+<link rel="stylesheet" href="/styles.css?v=auth-clean-20261114">
+<script defer src="/app.js?v=auth-clean-20261114"></script>
 </head>
 <body>
 <div class="app-shell">
- <header class="site-header"><a class="brand" href="/">✦ NEXORA</a><span id="server-status">Подключение к миру…</span></header>
+ <header class="site-header"><a class="brand" href="/">✦ NEXORA</a><span id="server-status">Подключение к серверу…</span></header>
  <main id="intro-screen" class="intro-screen">
-  <div class="intro-art"><canvas id="intro-canvas" aria-label="Иллюстрация 2D-комнаты NEXORA"></canvas><div class="art-label">ТВОЯ ВСЕЛЕННАЯ</div></div>
+  <div class="intro-art" aria-hidden="true">
+   <div class="orbit orbit-one"><i></i></div><div class="orbit orbit-two"><i></i></div>
+   <div class="planet planet-main"></div><div class="planet planet-small"></div>
+   <div class="art-caption">ТВОЯ ВСЕЛЕННАЯ NEXORA</div>
+  </div>
   <section class="intro-card">
-   <div class="logo-symbol">✦</div><div class="eyebrow">СОЦИАЛЬНЫЙ 2D-МИР</div><h1>NEXORA</h1>
+   <div class="logo-symbol">✦</div><div class="eyebrow">СОЦИАЛЬНЫЙ ВИРТУАЛЬНЫЙ МИР</div><h1>NEXORA</h1>
    <p>Знакомься. Общайся. Исследуй свой мир.</p>
    <button class="main-button" id="open-register">Создать персонажа <span>↗</span></button>
    <button class="second-button" id="open-login">Уже есть персонаж?</button>
-   <small>Сообщество предназначено для пользователей 18+</small>
+   <small>Новая 2D-комната готовится к запуску</small>
   </section>
   <footer>© 2026 NEXORA · MEET · CONNECT · DISCOVER</footer>
  </main>
@@ -33,7 +37,7 @@
    </form></div>
    <div id="register-step-two" class="hidden"><h2>Добро пожаловать!</h2>
     <div class="code-box"><b>Твой код восстановления</b><strong id="recovery-code"></strong><small>Сохрани код. Он понадобится для следующего входа.</small></div>
-    <p class="error" id="finish-error"></p><button class="main-button" id="enter-world">Войти в 2D-мир</button>
+    <p class="error" id="finish-error"></p><button class="main-button" id="enter-world">Завершить создание персонажа</button>
    </div>
   </div>
  </section>
@@ -41,20 +45,10 @@
   <div class="auth-card login-card"><button class="close" data-close="login" aria-label="Закрыть">×</button>
    <div class="eyebrow">ВОЗВРАЩЕНИЕ ВО ВСЕЛЕННУЮ</div><h2>Уже есть персонаж?</h2>
    <form id="login-form"><label>Код восстановления<input id="login-code" placeholder="Введи код восстановления" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" required></label>
-    <p class="error" id="login-error"></p><button class="main-button" id="login-submit" type="submit">Войти в мир →</button>
+    <p class="error" id="login-error"></p><button class="main-button" id="login-submit" type="submit">Войти →</button>
    </form>
   </div>
  </section>
-
- <main id="room-screen" class="room-screen hidden">
-  <header class="room-header"><div class="room-brand">✦ NEXORA</div><div class="room-title"><b>Главная площадь</b><small>Стартовая планета</small></div><div class="room-online"><i></i> <span id="room-online">1</span></div><button id="leave-room" class="leave-button">Выйти ↗</button></header>
-  <div class="room-stage"><canvas id="room-canvas" aria-label="2D-комната NEXORA"></canvas><div class="room-hint">Перемещайся по комнате</div>
-   <div class="touch-pad" aria-label="Управление персонажем">
-    <button data-move="up" class="up">▲</button><button data-move="left" class="left">◀</button><button data-move="down" class="down">▼</button><button data-move="right" class="right">▶</button>
-   </div>
-  </div>
-  <footer class="room-footer"><span id="player-label">Ты в комнате</span><span>2D WORLD · NEXORA</span></footer>
- </main>
  <div id="toast" class="toast" role="status"></div>
 </div>
 </body></html>
