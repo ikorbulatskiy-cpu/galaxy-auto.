@@ -131,7 +131,7 @@ app.get("/api/management/overview",async(req,res)=>{
   const actor=await requireStaff(req,res);if(!actor)return;
   await ensureWalletSchema();
   const [players,reports,actions]=await Promise.all([
-   pool.query("SELECT a.id,a.nickname,a.created_at,COALESCE(ar.role,CASE WHEN LOWER(a.nickname)=LOWER($1) THEN 'developer' ELSE 'player' END) AS role,COALESCE(w.diamonds,0)::bigint AS diamonds,COALESCE(rp.last_seen>NOW()-INTERVAL '45 seconds',FALSE) AS online,COALESCE(rp.last_seen,a.created_at) AS last_seen FROM nexora_social_auth.accounts a LEFT JOIN nexora_social_auth.account_roles ar ON ar.account_id=a.id LEFT JOIN nexora_social_auth.account_wallets w ON w.account_id=a.id LEFT JOIN nexora_social_auth.room_presence rp ON rp.account_id::text=a.id::text ORDER BY online DESC,a.created_at DESC LIMIT 200",[DEVELOPER_NICKNAME]),
+   pool.query("SELECT a.id,a.nickname,a.created_at,COALESCE(ar.role,CASE WHEN LOWER(a.nickname)=LOWER($1) THEN 'developer' ELSE 'player' END) AS role,COALESCE(w.diamonds,0)::bigint AS diamonds,COALESCE(rp.last_seen>NOW()-INTERVAL '45 seconds',FALSE) AS online,COALESCE(rp.last_seen,a.created_at) AS last_seen,COALESCE(ch.authority_points,0)::int AS experience,COALESCE(ranks.rank_name,'Новичок') AS authority_title FROM nexora_social_auth.accounts a LEFT JOIN nexora_social_auth.account_roles ar ON ar.account_id=a.id LEFT JOIN nexora_social_auth.account_wallets w ON w.account_id=a.id LEFT JOIN nexora_social_auth.room_presence rp ON rp.account_id::text=a.id::text LEFT JOIN nexora_social_auth.characters ch ON ch.account_id=a.id LEFT JOIN LATERAL (SELECT rank_name FROM nexora_social_auth.authority_ranks WHERE min_points<=COALESCE(ch.authority_points,0) ORDER BY min_points DESC LIMIT 1) ranks ON TRUE ORDER BY online DESC,a.created_at DESC LIMIT 200",[DEVELOPER_NICKNAME]),
    pool.query("SELECT r.id,r.reason,r.details,r.status,r.created_at,reporter.nickname AS reporter_nickname,target.nickname AS target_nickname FROM nexora_social_auth.moderation_reports r LEFT JOIN nexora_social_auth.accounts reporter ON reporter.id=r.reporter_id LEFT JOIN nexora_social_auth.accounts target ON target.id=r.target_id WHERE r.status='new' ORDER BY r.created_at DESC LIMIT 100"),
    pool.query("SELECT m.id,m.action,m.reason,m.details,m.created_at,actor.nickname AS actor_nickname,target.nickname AS target_nickname FROM nexora_social_auth.moderation_actions m LEFT JOIN nexora_social_auth.accounts actor ON actor.id=m.actor_id LEFT JOIN nexora_social_auth.accounts target ON target.id=m.target_id ORDER BY m.created_at DESC LIMIT 100")
   ]);
@@ -158,7 +158,7 @@ app.post("/api/management/action",managementLimiter,async(req,res)=>{
   if(!/^[0-9a-f-]{36}$/i.test(targetId)||!["warning","mute","ban","kick","unban"].includes(action)||!reason)return res.status(400).json({error:"Укажите игрока, действие и причину."});
   if(targetId===String(actor.id))return res.status(400).json({error:"Нельзя применить это действие к себе."});
   if((action==="ban"||action==="unban")&&!actor.isDeveloper&&!actor.isSeniorModerator)return res.status(403).json({error:"Для блокировки нужны расширенные полномочия."});
-  const target=await pool.query("SELECT a.id,COALESCE(ar.role,CASE WHEN LOWER(a.nickname)=LOWER($2) THEN 'developer' ELSE 'player' END) AS role FROM nexora_social_auth.accounts a LEFT JOIN nexora_social_auth.account_roles ar ON ar.account_id=a.id WHERE a.id=$1",[targetId,DEVELOPER_NICKNAME]);if(!target.rowCount)return res.status(404).json({error:"Игрок не найден."});if(!actor.isDeveloper&&(target.rows[0].role==="developer"||(target.rows[0].role==="senior_moderator"&&actor.role==="moderator")))return res.status(403).json({error:"У вас нет полномочий применять действия к этому сотруднику."});
+  const target=await pool.query("SELECT a.id,COALESCE(ar.role,CASE WHEN LOWER(a.nickname)=LOWER($2) THEN 'developer' ELSE 'player' END) AS role FROM nexora_social_auth.accounts a LEFT JOIN nexora_social_auth.account_roles ar ON ar.account_id=a.id WHERE a.id=$1",[targetId,DEVELOPER_NICKNAME]);if(!target.rowCount)return res.status(404).json({error:"Игрок не найден."});if(!actor.isDeveloper&&(target.rows[0].role==="developer"||(["moderator","senior_moderator"].includes(target.rows[0].role)&&actor.role==="moderator")))return res.status(403).json({error:"У вас нет полномочий применять действия к этому сотруднику."});
   const minutes=Math.max(1,Math.min(actor.isDeveloper?525600:1440,Number(req.body?.minutes)||60));
   if(action==="mute"||action==="ban")await pool.query("INSERT INTO nexora_social_auth.moderation_restrictions(account_id,kind,reason,created_by,expires_at) VALUES($1,$2,$3,$4,NOW()+($5::text||' minutes')::interval)",[targetId,action==="ban"?"ban":"mute",reason,actor.id,minutes]);
   if(action==="unban")await pool.query("DELETE FROM nexora_social_auth.moderation_restrictions WHERE account_id=$1 AND kind='ban'",[targetId]);
@@ -166,6 +166,18 @@ app.post("/api/management/action",managementLimiter,async(req,res)=>{
   await pool.query("INSERT INTO nexora_social_auth.moderation_actions(actor_id,target_id,action,reason,details) VALUES($1,$2,$3,$4,$5::jsonb)",[actor.id,targetId,action,reason,JSON.stringify({minutes:action==="mute"||action==="ban"?minutes:null})]);
   res.json({ok:true,message:({warning:"Игрок получил предупреждение.",mute:"Чат временно ограничен.",ban:"Игрок временно заблокирован.",kick:"Игрок отключён от сервера.",unban:"Блокировка снята."})[action]});
  }catch(error){console.error("Management action failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось выполнить действие."});}
+});
+app.post("/api/management/nickname",managementLimiter,async(req,res)=>{
+ try{
+  const actor=await requireStaff(req,res,true);if(!actor)return;
+  const targetId=String(req.body?.accountId||""),nickname=clean(req.body?.nickname);
+  if(!/^[0-9a-f-]{36}$/i.test(targetId)||!/^[\p{L}\p{N}_-]{3,24}$/u.test(nickname))return res.status(400).json({error:"Ник должен содержать 3–24 буквы, цифры, _ или -."});
+  const updated=await pool.query("UPDATE nexora_social_auth.accounts SET nickname=$1,nickname_normalized=LOWER($1) WHERE id=$2 RETURNING id",[nickname,targetId]);
+  if(!updated.rowCount)return res.status(404).json({error:"Игрок не найден."});
+  await pool.query("UPDATE nexora_social_auth.room_presence SET nickname=$1 WHERE account_id=$2",[nickname,targetId]);
+  await pool.query("INSERT INTO nexora_social_auth.moderation_actions(actor_id,target_id,action,reason,details) VALUES($1,$2,'nickname_change','Изменение имени',$3::jsonb)",[actor.id,targetId,JSON.stringify({nickname})]);
+  res.json({ok:true,message:"Имя игрока изменено."});
+ }catch(error){if(error.code==="23505")return res.status(409).json({error:"Такой ник уже занят."});console.error("Management nickname failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось изменить имя игрока."});}
 });
 app.post("/api/management/economy",managementLimiter,async(req,res)=>{
  let client;
