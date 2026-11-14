@@ -323,3 +323,12 @@
 .nexora-info-actions button{background:#596c9b!important;border-radius:3px!important}
 .nexora-info-actions span{color:#d4dc9a!important}
 @media(max-width:380px){.nexora-classic-top{grid-template-columns: minmax(92px,38%) minmax(0,1fr);gap:9px}.nexora-classic-photo img{height:124px}.nexora-classic-facts{font-size:12px}.nexora-classic-facts input{font-size:12px}.nexora-classic-profile{padding:10px}}
+
+
+/* Character action chooser shown on avatar tap. */
+.nexora-character-actions{position:fixed!important;inset:0!important;z-index:1000!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:16px!important;background:#05091dcc!important;backdrop-filter:blur(5px)!important}
+.nexora-character-actions.hidden{display:none!important}
+.nexora-character-actions-card{box-sizing:border-box;width:min(270px,calc(100vw - 36px))!important;display:flex!important;flex-direction:column!important;gap:11px!important;padding:17px!important;border:1px solid #a995df!important;border-radius:15px!important;background:linear-gradient(155deg,#353d54,#252d45)!important;color:#f4f5ff!important;box-shadow:0 16px 48px #000b!important}
+.nexora-character-actions-title{text-align:center!important;color:#c9d2a0!important;font-size:12px!important;font-weight:900!important;letter-spacing:1.1px!important;margin-bottom:2px!important}
+.nexora-character-actions-card button{width:100%!important;min-height:43px!important;border:1px solid #9b8bd8!important;border-radius:9px!important;background:linear-gradient(135deg,#8063d0,#51449a)!important;color:#fff!important;font-size:14px!important;font-weight:800!important}
+.nexora-character-actions-card button.secondary{background:#202a43!important;border-color:#66728e!important;color:#e9edf8!important}
