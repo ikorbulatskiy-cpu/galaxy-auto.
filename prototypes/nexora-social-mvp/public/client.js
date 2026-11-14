@@ -828,7 +828,7 @@
     try {
       const response = await fetch("/api/world/me", { credentials: "same-origin" });
       const data = await response.json().catch(() => ({}));
-      if (response.ok && data.profile) balance.textContent = Number(data.profile.koins || 0).toLocaleString("ru-RU");
+      if (response.ok && data.profile) balance.textContent = Number(data.profile.coins || 0).toLocaleString("ru-RU");
       else balance.textContent = "—";
     } catch (_) { balance.textContent = "—"; }
   }
