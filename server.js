@@ -37,8 +37,8 @@ async function getAccount(req) {
   const token = req.cookies && req.cookies[COOKIE_NAME];
   if (!token) return null;
   const result = await pool.query(
-    `SELECT a.id,a.nickname,a.phone,a.gender,a.created_at FROM nexora_social_world.sessions s
-     JOIN nexora_social_world.accounts a ON a.id=s.account_id WHERE s.token_hash=$1 AND s.expires_at>NOW()`,
+    `SELECT a.id,a.nickname,a.phone,a.gender,a.created_at FROM nexora_social_auth.sessions s
+     JOIN nexora_social_auth.accounts a ON a.id=s.account_id WHERE s.token_hash=$1 AND s.expires_at>NOW()`,
     [sha256(token)]
   );
   return result.rows[0] || null;
@@ -66,26 +66,26 @@ app.post("/api/auth/register",authLimiter,async(req,res)=>{
   try{
     const passwordHash=await bcrypt.hash(password,12),client=await pool.connect();let account;
     try{await client.query("BEGIN");const inserted=await client.query(
-      "INSERT INTO nexora_social_world.accounts(nickname,nickname_normalized,phone,gender,password_hash) VALUES($1,LOWER($1),$2,$3,$4) RETURNING id,nickname,phone,gender,created_at",
+      "INSERT INTO nexora_social_auth.accounts(nickname,nickname_normalized,phone,gender,password_hash) VALUES($1,LOWER($1),$2,$3,$4) RETURNING id,nickname,phone,gender,created_at",
       [nickname,phone,gender,passwordHash]);account=inserted.rows[0];
-      await client.query("INSERT INTO nexora_social_world.account_preferences(account_id) VALUES($1)",[account.id]);await client.query("COMMIT");
+      await client.query("INSERT INTO nexora_social_auth.account_preferences(account_id) VALUES($1)",[account.id]);await client.query("COMMIT");
     }catch(error){await client.query("ROLLBACK");throw error;}finally{client.release();}
     const token=crypto.randomBytes(32).toString("hex");
-    await pool.query("INSERT INTO nexora_social_world.sessions(account_id,token_hash,expires_at) VALUES($1,$2,NOW()+INTERVAL '30 days')",[account.id,sha256(token)]);
+    await pool.query("INSERT INTO nexora_social_auth.sessions(account_id,token_hash,expires_at) VALUES($1,$2,NOW()+INTERVAL '30 days')",[account.id,sha256(token)]);
     setSessionCookie(res,token);res.status(201).json({ok:true,account});
   }catch(error){if(error.code==="23505")return res.status(409).json({error:error.constraint?.includes("phone")?"Этот телефон уже зарегистрирован.":"Такой ник уже занят."});console.error("Registration failed:",error.code||"UNKNOWN",error.message);res.status(500).json({error:"Не удалось создать аккаунт. Попробуйте позже."});}
 });
 app.post("/api/auth/login",authLimiter,async(req,res)=>{
-  try{const result=await pool.query("SELECT id,nickname,phone,gender,password_hash,created_at FROM nexora_social_world.accounts WHERE nickname_normalized=LOWER($1)",[clean(req.body.nickname)]);
+  try{const result=await pool.query("SELECT id,nickname,phone,gender,password_hash,created_at FROM nexora_social_auth.accounts WHERE nickname_normalized=LOWER($1)",[clean(req.body.nickname)]);
     const account=result.rows[0];if(!account||!(await bcrypt.compare(String(req.body.password||""),account.password_hash)))return res.status(401).json({error:"Неверный ник или пароль."});
-    const token=crypto.randomBytes(32).toString("hex");await pool.query("INSERT INTO nexora_social_world.sessions(account_id,token_hash,expires_at) VALUES($1,$2,NOW()+INTERVAL '30 days')",[account.id,sha256(token)]);
+    const token=crypto.randomBytes(32).toString("hex");await pool.query("INSERT INTO nexora_social_auth.sessions(account_id,token_hash,expires_at) VALUES($1,$2,NOW()+INTERVAL '30 days')",[account.id,sha256(token)]);
     setSessionCookie(res,token);delete account.password_hash;res.json({ok:true,account});
   }catch(error){console.error("Login failed:",error.code||"UNKNOWN");res.status(503).json({error:"Сервис авторизации временно недоступен."});}
 });
 app.get("/api/auth/me",async(req,res)=>{try{const account=await getAccount(req);res.json({authenticated:Boolean(account),account});}catch{res.status(503).json({error:"Не удалось проверить сессию."});}});
-app.post("/api/auth/logout",async(req,res)=>{const token=req.cookies&&req.cookies[COOKIE_NAME];if(token)await pool.query("DELETE FROM nexora_social_world.sessions WHERE token_hash=$1",[sha256(token)]).catch(()=>{});res.clearCookie(COOKIE_NAME,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/"});res.json({ok:true});});
+app.post("/api/auth/logout",async(req,res)=>{const token=req.cookies&&req.cookies[COOKIE_NAME];if(token)await pool.query("DELETE FROM nexora_social_auth.sessions WHERE token_hash=$1",[sha256(token)]).catch(()=>{});res.clearCookie(COOKIE_NAME,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/"});res.json({ok:true});});
 app.get("/api/account/profile",async(req,res)=>{try{const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});res.json({account});}catch{res.status(503).json({error:"Не удалось загрузить профиль."});}});
-app.get("/api/account/online",async(_req,res)=>{try{const result=await pool.query("SELECT COUNT(DISTINCT account_id)::int AS total FROM nexora_social_world.sessions WHERE expires_at>NOW()");res.json({online:result.rows[0].total});}catch{res.json({online:0});}});
+app.get("/api/account/online",async(_req,res)=>{try{const result=await pool.query("SELECT COUNT(DISTINCT account_id)::int AS total FROM nexora_social_auth.sessions WHERE expires_at>NOW()");res.json({online:result.rows[0].total});}catch{res.json({online:0});}});
 app.get("/galaxy",(_req,res)=>res.redirect(308,"/"));
 app.get("*",(_req,res)=>res.sendFile(path.join(publicDirectory,"index.html")));
 app.listen(PORT,"0.0.0.0",()=>console.log(`NEXORA server is running on port ${PORT}`));
