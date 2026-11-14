@@ -50,16 +50,49 @@ $("customize-back").addEventListener("click",()=>{$("register-step-customize").c
 
  $("head-prev").addEventListener("click",()=>changeCreatorChoice("head",-1));$("head-next").addEventListener("click",()=>changeCreatorChoice("head",1));$("body-prev").addEventListener("click",()=>changeCreatorChoice("body",-1));$("body-next").addEventListener("click",()=>changeCreatorChoice("body",1));
  function changeCreatorChoice(kind,delta){const key=kind==="head"?"headId":"bodyId",max=kind==="head"?6:6;state[key]=((state[key]-1+delta+max)%max)+1;renderCreator();}
+ const spriteCrops={
+  head:[[108,908,188,174],[503,885,202,202],[902,904,202,181],[108,1249,191,210],[503,1235,202,217],[902,1273,202,195]],
+  body:[[101,983,202,188],[480,856,253,304],[897,897,224,275],[101,1193,210,347],[434,1229,325,318],[897,1236,224,311]]
+ };
+ const spritePromises={};
+ function getSprite(kind,id){
+  const key=kind+":"+id;
+  if(spritePromises[key])return spritePromises[key];
+  spritePromises[key]=new Promise((resolve,reject)=>{
+   const source=new Image();
+   source.onload=()=>{
+    const [x,y,w,h]=spriteCrops[kind][id-1];
+    if(x+w>source.naturalWidth||y+h>source.naturalHeight){reject(new Error("Sprite crop exceeds source image"));return;}
+    const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext("2d");
+    if(!ctx){reject(new Error("Canvas is unavailable"));return;}
+    ctx.clearRect(0,0,w,h);ctx.drawImage(source,x,y,w,h,0,0,w,h);
+    resolve(canvas.toDataURL("image/png"));
+   };
+   source.onerror=()=>reject(new Error("Не удалось загрузить исходный спрайт "+kind));
+   source.src="/assets/sprites/characters/IMG_415"+(kind==="head"?"7":"8")+".png?v=source-sprite-20261115";
+  });
+  return spritePromises[key];
+ }
+ function applySprite(img,kind,id){
+  if(!img)return;
+  img.alt=kind==="head"?"Голова "+id:"Тело "+id;
+  getSprite(kind,id).then(src=>{img.src=src;}).catch(error=>{console.error("NEXORA sprite error:",error);img.alt="Спрайт недоступен";});
+ }
  function renderCreator(){
   const bodyList=$("body-options"),headList=$("head-options"),preview=$("creator-preview");if(!headList||!preview)return;
   const bodyPicker=bodyList&&bodyList.closest(".nexora-creator-picker");if(bodyPicker)bodyPicker.hidden=false;
-  const version="standalone-sprites-20261115";
-  const headHref=id=>"/assets/sprites/characters/nexora-head-"+id+".svg?v="+version;
-  const bodyHref=id=>"/assets/sprites/characters/nexora-body-"+id+".svg?v="+version;
-  const makeChoice=(kind,id,src,selected)=>{const button=document.createElement("button");button.type="button";button.className="nexora-creator-choice"+(selected?" selected":"");button.setAttribute("aria-label",(kind==="head"?"Голова ":"Тело ")+id);button.setAttribute("aria-pressed",String(selected));const img=document.createElement("img");img.src=src;img.alt=(kind==="head"?"Голова ":"Тело ")+id;img.draggable=false;button.append(img);button.addEventListener("click",()=>{state[kind==="head"?"headId":"bodyId"]=id;renderCreator();});return button;};
-  if(bodyList){bodyList.replaceChildren();for(let i=1;i<=6;i++)bodyList.append(makeChoice("body",i,bodyHref(i),state.bodyId===i));}
-  headList.replaceChildren();for(let i=1;i<=6;i++)headList.append(makeChoice("head",i,headHref(i),state.headId===i));
-  preview.innerHTML='<div class="nexora-creator-preview-stack"><img class="creator-preview-body" src="'+bodyHref(state.bodyId)+'" alt="Тело"><img class="creator-preview-head" src="'+headHref(state.headId)+'" alt="Голова"></div>';
+  const makeChoice=(kind,id,selected)=>{
+   const button=document.createElement("button");button.type="button";button.className="nexora-creator-choice"+(selected?" selected":"");
+   button.setAttribute("aria-label",(kind==="head"?"Голова ":"Тело ")+id);button.setAttribute("aria-pressed",String(selected));
+   const img=document.createElement("img");img.alt=(kind==="head"?"Голова ":"Тело ")+id;img.draggable=false;button.append(img);applySprite(img,kind,id);
+   button.addEventListener("click",()=>{state[kind==="head"?"headId":"bodyId"]=id;renderCreator();});return button;
+  };
+  if(bodyList){bodyList.replaceChildren();for(let i=1;i<=6;i++)bodyList.append(makeChoice("body",i,state.bodyId===i));}
+  headList.replaceChildren();for(let i=1;i<=6;i++)headList.append(makeChoice("head",i,state.headId===i));
+  preview.innerHTML='<div class="nexora-creator-preview-stack"><img class="creator-preview-body" alt="Тело"><img class="creator-preview-head" alt="Голова"></div>';
+  applySprite(preview.querySelector(".creator-preview-body"),"body",state.bodyId);
+  applySprite(preview.querySelector(".creator-preview-head"),"head",state.headId);
  }
   async function ensureCharacter(){
   const profileResponse=await fetch("/api/account/profile");
