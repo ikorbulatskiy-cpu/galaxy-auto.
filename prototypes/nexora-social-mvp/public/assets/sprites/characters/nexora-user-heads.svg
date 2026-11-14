@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1206 2622">
+<title>NEXORA user heads from IMG_4157</title>
+<defs>
+ <clipPath id="head-clip-1" clipPathUnits="userSpaceOnUse"><path d="M166 923 C153 929 143 941 139 956 L128 951 L135 975 L111 979 L131 997 C128 1020 144 1044 163 1057 C180 1070 210 1074 229 1061 C249 1048 265 1024 264 1000 L287 981 L263 976 C263 952 247 933 227 925 L219 911 L208 930 C194 925 180 925 166 923 Z"/></clipPath>
+ <clipPath id="head-clip-2" clipPathUnits="userSpaceOnUse"><path d="M555 930 L570 916 L582 932 C601 924 620 924 638 932 L653 915 L666 936 C679 949 684 965 681 980 L701 984 L681 1000 C681 1025 661 1049 640 1062 C619 1074 584 1072 563 1058 C543 1044 526 1022 527 999 L505 981 L529 978 C526 960 537 941 555 930 Z"/></clipPath>
+ <clipPath id="head-clip-3" clipPathUnits="userSpaceOnUse"><path d="M946 929 L961 914 L974 932 C991 924 1011 924 1028 932 L1043 915 L1057 932 C1074 945 1081 962 1078 980 L1102 983 L1080 1000 C1080 1024 1060 1049 1040 1062 C1018 1074 984 1073 963 1058 C943 1044 927 1021 928 999 L906 982 L930 978 C927 958 933 940 946 929 Z"/></clipPath>
+ <clipPath id="head-clip-4" clipPathUnits="userSpaceOnUse"><path d="M150 1324 C137 1307 126 1284 125 1261 C149 1270 163 1291 169 1310 C181 1297 197 1293 211 1299 C225 1293 241 1297 254 1310 C260 1290 274 1270 298 1261 C297 1285 285 1308 272 1325 C281 1346 276 1373 262 1394 C246 1420 222 1440 201 1447 C178 1439 154 1420 139 1394 C126 1372 122 1346 150 1324 Z"/></clipPath>
+ <clipPath id="head-clip-5" clipPathUnits="userSpaceOnUse"><path d="M552 1324 C534 1305 526 1284 529 1260 C552 1270 566 1290 573 1310 C584 1297 600 1293 615 1299 C629 1293 646 1297 658 1310 C666 1290 679 1270 702 1260 C705 1285 694 1308 676 1325 C686 1347 681 1373 667 1395 C651 1420 629 1440 607 1447 C585 1439 561 1420 546 1394 C533 1372 529 1346 552 1324 Z"/></clipPath>
+ <clipPath id="head-clip-6" clipPathUnits="userSpaceOnUse"><path d="M947 1325 L961 1294 L976 1317 C991 1305 1011 1305 1027 1317 L1043 1294 L1058 1325 L1100 1343 L1078 1360 C1078 1384 1060 1408 1040 1421 C1019 1435 984 1434 963 1420 C943 1406 927 1383 928 1359 L906 1342 Z"/></clipPath>
+</defs>
+<symbol id="head-1" viewBox="100 900 200 190"><image href="IMG_4157.png" xlink:href="IMG_4157.png" x="0" y="0" width="1206" height="2622" clip-path="url(#head-clip-1)"/></symbol>
+<symbol id="head-2" viewBox="500 900 205 190"><image href="IMG_4157.png" xlink:href="IMG_4157.png" x="0" y="0" width="1206" height="2622" clip-path="url(#head-clip-2)"/></symbol>
+<symbol id="head-3" viewBox="900 900 210 190"><image href="IMG_4157.png" xlink:href="IMG_4157.png" x="0" y="0" width="1206" height="2622" clip-path="url(#head-clip-3)"/></symbol>
+<symbol id="head-4" viewBox="100 1240 205 220"><image href="IMG_4157.png" xlink:href="IMG_4157.png" x="0" y="0" width="1206" height="2622" clip-path="url(#head-clip-4)"/></symbol>
+<symbol id="head-5" viewBox="500 1240 205 220"><image href="IMG_4157.png" xlink:href="IMG_4157.png" x="0" y="0" width="1206" height="2622" clip-path="url(#head-clip-5)"/></symbol>
+<symbol id="head-6" viewBox="900 1240 210 220"><image href="IMG_4157.png" xlink:href="IMG_4157.png" x="0" y="0" width="1206" height="2622" clip-path="url(#head-clip-6)"/></symbol>
+</svg>
