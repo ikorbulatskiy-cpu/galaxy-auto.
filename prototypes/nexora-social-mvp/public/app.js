@@ -33,5 +33,5 @@
  async function status(){try{const [s,o]=await Promise.all([fetch("/api/status"),fetch("/api/account/online")]);const sd=await s.json(),od=await o.json();$("server-status").textContent=sd.database==="connected"?"● Сервер NEXORA онлайн":"● Сервер доступен";$("room-online").textContent=String(Math.max(1,od.online||1));}catch{$("server-status").textContent="Нет связи с сервером";}}
  async function session(){try{const r=await fetch("/api/auth/me"),d=await r.json();if(d.authenticated)enterRoom(d.account);}catch{}}
  drawIntro();status();session();setInterval(status,30000);
- function drawIntro(){const c=$("intro-canvas");const {w,h}=sizeCanvas(c);const ctx=c.getContext("2d");drawScene(ctx,w,h,performance.now(),true);}
+ function drawIntro(){if($("intro-screen").classList.contains("hidden"))return;const c=$("intro-canvas");const {w,h}=sizeCanvas(c);const ctx=c.getContext("2d");ctx.setTransform(1,0,0,1,0,0);drawScene(ctx,w,h,performance.now(),true);requestAnimationFrame(drawIntro);}
 })();
