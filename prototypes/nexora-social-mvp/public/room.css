@@ -132,3 +132,30 @@
 .nexora-world-rank{bottom:calc(100% + 3px)}
 @media(max-width:500px){.nexora-avatar-panel{inset:8px 8px 8px auto;width:min(310px,calc(100% - 16px))}.nexora-choice-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
 @media(max-height:560px){.nexora-avatar-panel{inset:6px 6px 6px auto;width:min(300px,calc(100% - 12px))}.nexora-rank-head{padding-top:7px;padding-bottom:5px;min-height:60px}.nexora-tabs{margin-bottom:4px}.nexora-avatar-save{padding:7px}}
+
+
+/* Floor baseline: align visible feet with the top edge of the floor strip */
+.nexora-world-avatar{bottom:calc(13% - 1px)!important;height:140px!important;display:block!important;transform:translateX(-50%)!important;transform-origin:center bottom!important}
+.nexora-world-avatar svg{position:absolute;left:0;bottom:-7px;width:100%;height:140px;transform:none!important;overflow:visible}
+.nexora-world-avatar:hover,.nexora-world-avatar:focus-visible{transform:translateX(-50%) scale(1.025)!important}
+.nexora-world-rank{bottom:calc(100% + 3px)}
+/* User information opens as a separate centered modal window */
+.nexora-avatar-panel{position:fixed!important;inset:0!important;z-index:100!important;width:100vw!important;height:100dvh!important;max-height:none!important;margin:0!important;padding:16px!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:auto!important;border:0!important;border-radius:0!important;background:#05091dcc!important;backdrop-filter:blur(5px);box-shadow:none!important}
+.nexora-avatar-panel.hidden{display:none!important}
+.nexora-avatar-window{position:relative;display:flex;flex-direction:column;width:min(390px,100%);max-height:min(690px,calc(100dvh - 32px));min-height:220px;overflow:hidden;border:1px solid #c7d3ff99;border-radius:16px;background:linear-gradient(155deg,#fbfcff,#e9edf7);color:#18213b;box-shadow:0 22px 70px #000c;font-family:Inter,Arial,sans-serif}
+.nexora-user-info-title{flex:0 0 auto;padding:13px 42px 10px 14px;border-bottom:1px solid #dce3f1;color:#4d5d82;font-size:10px;font-weight:900;letter-spacing:1.2px}
+.nexora-avatar-close{right:9px;top:5px;color:#303b5a;font-size:26px}
+.nexora-profile-loading{flex:1;min-height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:24px;text-align:center;color:#53617e}
+.nexora-profile-loading.hidden{display:none!important}
+.nexora-profile-loading i{width:34px;height:34px;border:3px solid #d6dff3;border-top-color:#7358cf;border-radius:50%;animation:nexora-load-spin .8s linear infinite}
+.nexora-profile-loading i.nexora-loader-error{display:grid;place-items:center;border:0;background:#fce6e8;color:#b43b4c;font-style:normal;font-weight:900;font-size:20px;animation:none}
+.nexora-profile-loading b{font-size:13px;color:#263453}
+.nexora-profile-loading span{font-size:11px;color:#74809a}
+.nexora-profile-loading button{margin-top:5px;padding:9px 15px;border:0;border-radius:9px;background:#5d61bc;color:#fff;font-weight:800}
+@keyframes nexora-load-spin{to{transform:rotate(360deg)}}
+.nexora-profile-loaded{display:flex;flex:1;min-height:0;flex-direction:column;overflow:hidden}
+.nexora-profile-loaded.hidden{display:none!important}
+.nexora-profile-loaded .nexora-rank-head{padding:9px 38px 7px 12px;min-height:68px}
+.nexora-profile-loaded .nexora-avatar-content{min-height:70px}
+.nexora-profile-loaded .nexora-avatar-save{margin-top:4px}
+@media(max-width:480px){.nexora-avatar-panel{padding:10px!important}.nexora-avatar-window{width:min(370px,100%);max-height:calc(100dvh - 20px)}}
