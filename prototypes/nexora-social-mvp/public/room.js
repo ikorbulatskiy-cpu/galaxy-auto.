@@ -139,32 +139,106 @@
  function closeAuras(){const panel=$("nexora-auras-panel");if(panel)panel.classList.add("hidden");}
  function openEmotions(){closeCharacterActions();$("nexora-emotions-panel").classList.remove("hidden");}
  function closeEmotions(){const panel=$("nexora-emotions-panel");if(panel)panel.classList.add("hidden");}
- function moveWorldAvatarTo(x,bottom){
+ 
+ const movement={keys:new Set(),target:null,velocity:{x:0,y:0},raf:0,lastFrame:0,lastSend:0,sendTimer:0,joy:{x:0,y:0},active:false};
+ function sceneBounds(){
+  const scene=$("room-scene"),r=scene.getBoundingClientRect(),world=$("nexora-world-avatar"),w=world?.getBoundingClientRect();
+  const halfX=w?Math.min(18,w.width/2/r.width*100):5;
+  const halfY=w?Math.min(30,w.height/r.height*100):18;
+  return {minX:halfX,maxX:100-halfX,minY:Math.max(0,halfY*0.05),maxY:100-halfY};
+ }
+ function paintLocalPosition(){
   const world=$("nexora-world-avatar");if(!world)return;
-  const sprite=world.querySelector(".nexora-avatar-sprite");if(!sprite)return;
-  const currentX=parseFloat(world.style.left)||state.position.x||50,currentBottom=13;
-  const scene=$("room-scene"),rect=scene?.getBoundingClientRect(),worldRect=world.getBoundingClientRect();
-  const halfWidth=rect?worldRect.width/2/rect.width*100:5;
-  const spriteHeight=rect?worldRect.height/rect.height*100:18;
-  x=Math.max(halfWidth,Math.min(100-halfWidth,Number(x)||currentX));
-  bottom=13;
-  const distance=Math.hypot((x-currentX)*8,(bottom-currentBottom)*8);
-  state.facing=x>=currentX?1:-1;state.position={x,bottom};
-  world.style.left=x+"%";world.style.bottom=bottom+"%";world.dataset.facing=String(state.facing);
-  sprite.classList.toggle("facing-left",state.facing<0);
-  sprite.classList.remove("nexora-walking");void sprite.offsetWidth;sprite.classList.add("nexora-walking");
-  if(state.movementTimer)clearTimeout(state.movementTimer);
-  state.movementTimer=setTimeout(()=>{sprite.classList.remove("nexora-walking");state.movementTimer=null;},Math.max(650,Math.min(2600,distance*7)));
-  syncRoomPosition();
+  world.style.left=state.position.x+"%";world.style.bottom=state.position.bottom+"%";
+  world.style.zIndex=String(Math.round(10+state.position.bottom));
+  world.dataset.facing=String(state.facing);
+ }
+ function moveWorldAvatarTo(x,bottom){
+  const bounds=sceneBounds();
+  state.position={x:Math.max(bounds.minX,Math.min(bounds.maxX,Number(x)||state.position.x)),bottom:Math.max(bounds.minY,Math.min(bounds.maxY,Number(bottom)||state.position.bottom))};
+  movement.target={...state.position};paintLocalPosition();queuePositionSync(true);
+ }
+ function moveWorldAvatarBy(dx,dy=0){moveWorldAvatarTo(state.position.x+dx,state.position.bottom+dy);}
+ function setFacing(dx,dy){
+  const world=$("nexora-world-avatar"),sprite=world?.querySelector(".nexora-avatar-sprite");
+  if(Math.abs(dx)>.015){state.facing=dx<0?-1:1;if(sprite)sprite.classList.toggle("facing-left",state.facing<0);}
+  if(world)world.dataset.direction=Math.abs(dx)>Math.abs(dy)?(dx<0?"left":"right"):(dy>0?"up":"down");
+ }
+ function movementVector(){
+  let x=(movement.keys.has("d")||movement.keys.has("arrowright")?1:0)-(movement.keys.has("a")||movement.keys.has("arrowleft")?1:0)+movement.joy.x;
+  let y=(movement.keys.has("w")||movement.keys.has("arrowup")?1:0)-(movement.keys.has("s")||movement.keys.has("arrowdown")?1:0)-movement.joy.y;
+  const len=Math.hypot(x,y);if(len>1){x/=len;y/=len;}return {x,y};
+ }
+ function startMovementLoop(){
+  if(movement.raf)return;
+  movement.lastFrame=0;
+  const frame=now=>{
+   if(room.classList.contains("hidden")){movement.raf=0;return;}
+   const dt=Math.min(.05,movement.lastFrame?(now-movement.lastFrame)/1000:0);movement.lastFrame=now;
+   const input=movementVector(),hasInput=Math.hypot(input.x,input.y)>.01;
+   if(hasInput)movement.target=null;
+   if(movement.target){
+    const dx=(movement.target.x-state.position.x),dy=(movement.target.bottom-state.position.bottom),len=Math.hypot(dx,dy);
+    if(len<.18){state.position={...movement.target};movement.target=null;}
+    else{input.x=dx/len;input.y=dy/len;}
+   }
+   const moving=hasInput||Boolean(movement.target);
+   const speed=25,accel=7;
+   const desiredX=moving?input.x*speed:0,desiredY=moving?input.y*speed:0;
+   movement.velocity.x+=(desiredX-movement.velocity.x)*Math.min(1,accel*dt);
+   movement.velocity.y+=(desiredY-movement.velocity.y)*Math.min(1,accel*dt);
+   if(Math.abs(movement.velocity.x)<.03)movement.velocity.x=0;
+   if(Math.abs(movement.velocity.y)<.03)movement.velocity.y=0;
+   if(dt){
+    const bounds=sceneBounds();
+    state.position.x=Math.max(bounds.minX,Math.min(bounds.maxX,state.position.x+movement.velocity.x*dt/8));
+    state.position.bottom=Math.max(bounds.minY,Math.min(bounds.maxY,state.position.bottom+movement.velocity.y*dt/8));
+   }
+   const actualX=movement.velocity.x,actualY=movement.velocity.y;
+   if(moving)setFacing(actualX||input.x,actualY||input.y);
+   const world=$("nexora-world-avatar"),sprite=world?.querySelector(".nexora-avatar-sprite");
+   if(world){paintLocalPosition();world.classList.toggle("is-moving",Math.hypot(actualX,actualY)>.8);}
+   if(sprite)sprite.classList.toggle("nexora-walking",Math.hypot(actualX,actualY)>.8);
+   if(now-movement.lastSend>140){queuePositionSync(false);movement.lastSend=now;}
+   movement.raf=requestAnimationFrame(frame);
+  };
+  movement.raf=requestAnimationFrame(frame);
+ }
+ function queuePositionSync(immediate=false){
+  if(room.classList.contains("hidden"))return;
+  if(movement.sendTimer)clearTimeout(movement.sendTimer);
+  movement.sendTimer=setTimeout(()=>{movement.sendTimer=0;syncRoomPosition();},immediate?30:120);
  }
  async function syncRoomPosition(){
   if(room.classList.contains("hidden"))return;
-  try{await fetch("/api/room/presence",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({xPercent:state.position.x,bottomPercent:state.position.bottom,facing:state.facing}),cache:"no-store"});}catch(error){console.warn("Could not sync player position:",error);}
+  try{await fetch("/api/room/presence",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({xPercent:state.position.x,bottomPercent:state.position.bottom,facing:state.facing}),cache:"no-store",keepalive:true});}
+  catch(error){console.warn("Could not sync player position:",error);}
  }
- function moveWorldAvatarBy(dx){
-  const world=$("nexora-world-avatar");if(!world||room.classList.contains("hidden"))return;
-  const x=parseFloat(world.style.left)||state.position.x||50,bottom=13;
-  moveWorldAvatarTo(x+dx,bottom);
+ function installMovementControls(){
+  const scene=$("room-scene");if(!scene||scene.dataset.movementReady)return;scene.dataset.movementReady="1";
+  document.addEventListener("keydown",event=>{
+   const key=event.key.toLowerCase(),keys=["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"];
+   if(!keys.includes(key)||room.classList.contains("hidden"))return;
+   if(/input|textarea|select/i.test(document.activeElement?.tagName||""))return;
+   event.preventDefault();movement.keys.add(key);movement.target=null;startMovementLoop();
+  });
+  document.addEventListener("keyup",event=>movement.keys.delete(event.key.toLowerCase()));
+  window.addEventListener("blur",()=>movement.keys.clear());
+  scene.addEventListener("pointerdown",event=>{
+   if(event.target.closest(".nexora-world-avatar,.nexora-character-actions,.nexora-avatar-panel,.nexora-auras-panel,.nexora-emotions-panel,.nexora-joystick"))return;
+   if(event.pointerType==="touch")return;
+   const r=scene.getBoundingClientRect(),b=sceneBounds();
+   movement.target={x:Math.max(b.minX,Math.min(b.maxX,(event.clientX-r.left)/r.width*100)),bottom:Math.max(b.minY,Math.min(b.maxY,(r.bottom-event.clientY)/r.height*100))};
+   movement.keys.clear();startMovementLoop();
+  });
+  const pad=document.createElement("div");pad.className="nexora-joystick";pad.setAttribute("aria-label","Джойстик движения");
+  pad.innerHTML='<div class="nexora-joystick-ring"><div class="nexora-joystick-knob"></div></div>';scene.append(pad);
+  const ring=pad.querySelector(".nexora-joystick-ring"),knob=pad.querySelector(".nexora-joystick-knob");
+  const update=e=>{const r=ring.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),max=r.width*.34,len=Math.hypot(dx,dy),scale=len>max?max/len:1;movement.joy={x:dx*scale/max,y:-dy*scale/max};knob.style.transform="translate("+dx*scale+"px,"+dy*scale+"px)";startMovementLoop();};
+  pad.addEventListener("pointerdown",e=>{e.preventDefault();pad.setPointerCapture(e.pointerId);update(e);});
+  pad.addEventListener("pointermove",e=>{if(pad.hasPointerCapture(e.pointerId))update(e);});
+  const release=()=>{movement.joy={x:0,y:0};knob.style.transform="translate(0,0)";};
+  pad.addEventListener("pointerup",release);pad.addEventListener("pointercancel",release);pad.addEventListener("lostpointercapture",release);
  }
  function openCharacterActions(playerId=null){
   ensureAvatarEditor();
@@ -365,8 +439,8 @@
   loadMessages(true);
   if(state.poll)clearInterval(state.poll);
   state.poll=setInterval(()=>loadMessages(false),2200);
-  const world=$("nexora-world-avatar");if(world){state.position={x:parseFloat(world.style.left)||50,bottom:13};world.style.left=state.position.x+"%";world.style.bottom=state.position.bottom+"%";}
-  syncRoomPosition();
+  const world=$("nexora-world-avatar");if(world){state.position={x:parseFloat(world.style.left)||50,bottom:parseFloat(world.style.bottom)||22};paintLocalPosition();}
+  installMovementControls();startMovementLoop();syncRoomPosition();
   loadRoomPresence();
   if(state.presenceTimer)clearInterval(state.presenceTimer);
   state.presenceTimer=setInterval(loadRoomPresence,2200);
@@ -375,7 +449,7 @@
   if(state.poll)clearInterval(state.poll);
   state.poll=null;
   if(state.presenceTimer)clearInterval(state.presenceTimer);
-  state.presenceTimer=null;
+  state.presenceTimer=null;movement.keys.clear();movement.joy={x:0,y:0};if(movement.sendTimer)clearTimeout(movement.sendTimer);
   state.playerIds.clear();
   document.querySelectorAll(".nexora-room-player").forEach(node=>node.remove());
   if(state.clockTimer)clearInterval(state.clockTimer);
@@ -403,13 +477,14 @@
      node.addEventListener("click",event=>{event.stopPropagation();openCharacterActions(node.dataset.playerId);});
      node.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openCharacterActions(node.dataset.playerId);}});
     }
-    const [slotX,slotY]=slots[index%slots.length];const x=Number.isFinite(Number(player.xPercent))?Number(player.xPercent):slotX;const y=13;const oldX=parseFloat(node.style.left),oldY=parseFloat(node.style.bottom);const moved=Number.isFinite(oldX)&&(Math.abs(oldX-x)>.15||Math.abs(oldY-y)>.15);node.style.left=x+"%";node.style.bottom=y+"%";node.dataset.facing=String(Number(player.facing)||1);const playerSprite=node.querySelector(".nexora-avatar-sprite");if(playerSprite){playerSprite.classList.toggle("facing-left",Number(player.facing)===-1);if(moved){playerSprite.classList.remove("nexora-walking");void playerSprite.offsetWidth;playerSprite.classList.add("nexora-walking");setTimeout(()=>playerSprite.classList.remove("nexora-walking"),760);}}
+    const [slotX,slotY]=slots[index%slots.length];const x=Number.isFinite(Number(player.xPercent))?Number(player.xPercent):slotX;const y=Number.isFinite(Number(player.bottomPercent))?Number(player.bottomPercent):slotY;const tx=Math.max(5,Math.min(95,x)),ty=Math.max(5,Math.min(88,y));node.dataset.targetX=String(tx);node.dataset.targetY=String(ty);if(!Number.isFinite(parseFloat(node.style.left))){node.style.left=tx+"%";node.style.bottom=ty+"%";}node.dataset.facing=String(Number(player.facing)||1);const playerSprite=node.querySelector(".nexora-avatar-sprite");if(playerSprite)playerSprite.classList.toggle("facing-left",Number(player.facing)===-1);node.style.zIndex=String(Math.round(10+ty));
     node.className="nexora-world-avatar nexora-room-player aura-"+(player.aura&&player.aura!=="none"?player.aura:"none");
     const playerName=node.querySelector(".nexora-room-player-name");playerName.textContent=String(player.nickname||"Игрок").slice(0,24);
     const title=node.querySelector(".nexora-emperor-title");if(title)title.hidden=!String(player.authorityTitle||"").includes("Император");
     const aura=node.querySelector(".nexora-room-player-aura");if(aura)aura.setAttribute("href",player.aura&&player.aura!=="none"?"/assets/sprites/characters/nexora-user-auras.svg?v=galaxy-aura-art-v1-20261115#aura-"+player.aura:"");
    });
   }catch(error){console.warn("Room players unavailable:",error);}
+  if(!state.remoteRaf){const tick=()=>{state.remoteRaf=requestAnimationFrame(tick);document.querySelectorAll(".nexora-room-player").forEach(node=>{const tx=Number(node.dataset.targetX),ty=Number(node.dataset.targetY);if(!Number.isFinite(tx)||!Number.isFinite(ty))return;const x=parseFloat(node.style.left)||tx,y=parseFloat(node.style.bottom)||ty;node.style.left=(x+(tx-x)*.22)+"%";node.style.bottom=(y+(ty-y)*.22)+"%";});};state.remoteRaf=requestAnimationFrame(tick);}
  }
  async function loadMessages(initial){
   try{
