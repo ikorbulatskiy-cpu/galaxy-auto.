@@ -309,6 +309,13 @@
 </aside>
       <aside id="planets-panel" class="planets-panel hidden" aria-label="Галактика NEXORA">
         <div class="planets-head"><div><span class="planet-kicker">EXPLORE THE NEXORA GALAXY</span><h2>Галактика планет</h2><p>Исследуй миры или создай собственную планету.</p></div><button id="planets-close" type="button" aria-label="Закрыть">×</button></div>
+        <div class="galaxy-map" aria-label="Карта галактики NEXORA">
+          <div class="galaxy-map-nebula"></div><div class="galaxy-orbit orbit-a"></div><div class="galaxy-orbit orbit-b"></div><div class="galaxy-orbit orbit-c"></div>
+          <div class="galaxy-map-sun">✦<span>NEXORA</span></div>
+          <button type="button" class="galaxy-map-planet planet-starter" data-map-planet="starter"><i></i><strong>Стартовая</strong><small>Главная площадь</small></button>
+          <button type="button" class="galaxy-map-planet planet-club" data-map-planet="club"><i></i><strong>Клуб</strong><small>Музыка и танцы</small></button>
+          <button type="button" class="galaxy-map-planet planet-beach" data-map-planet="beach"><i></i><strong>Пляж</strong><small>Океанский берег</small></button>
+        </div>
         <div class="planet-tools"><input id="planet-search" type="search" maxlength="32" placeholder="Поиск планеты"><select id="planet-category"><option value="">Все категории</option><option value="social">Социальные</option><option value="romantic">Романтика</option><option value="music">Музыка</option><option value="dance">Танцы</option><option value="game">Игры</option><option value="vip">VIP</option><option value="private">Приватные</option><option value="custom">Авторские</option></select><button id="planet-create-open" type="button">＋ Создать планету</button></div>
         <div id="planet-catalog" class="planet-catalog"><p class="planet-empty">Загружаем галактику…</p></div>
         <section id="planet-create-form" class="planet-create-form hidden">
@@ -326,6 +333,6 @@
   <script src="/world-scene.js"></script>
   <script src="/world-objects.js"></script>
   <script src="/sprite-engine.js"></script>
-  <script src="/client.js?v=6"></script>
+  <script src="/client.js?v=7"></script>
 </body>
 </html>
