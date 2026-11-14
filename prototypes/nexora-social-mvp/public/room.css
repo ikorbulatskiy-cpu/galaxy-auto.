@@ -178,3 +178,8 @@
 .nexora-demon-body{z-index:1}
 .nexora-demon-layers.aura-hidden .nexora-demon-aura{opacity:0}
 .nexora-aura-toggle{flex:0 0 auto;margin:0 9px 5px;padding:9px;border:1px solid #8e78cb;border-radius:9px;background:#30245c;color:#fff;font-size:12px;font-weight:800}
+
+
+/* Pin the demon feet to the floor line and show the player nickname above it */
+.nexora-world-avatar{bottom:13%!important;height:150px!important;}
+.nexora-world-rank{bottom:calc(100% + 10px)!important;left:50%;transform:translateX(-50%);max-width:min(220px,80vw);padding:5px 12px;font-size:12px;line-height:1.25;text-align:center;letter-spacing:.2px;overflow:hidden;text-overflow:ellipsis;}
