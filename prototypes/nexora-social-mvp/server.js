@@ -192,11 +192,29 @@ io.on("connection", (socket) => {
     ack({ok:true,x,y});
   });
 
+  socket.on("player:typing", (payload) => {
+    const player = players.get(socket.id);
+    if (!player) return;
+    const typing = Boolean(payload?.typing);
+    if (player.typing === typing) {
+      if (typing) player.typingUntil = Date.now() + 2200;
+      return;
+    }
+    player.typing = typing;
+    player.typingUntil = typing ? Date.now() + 2200 : 0;
+    io.to(roomName(player.planet)).emit("player:typing", { id: player.id, typing });
+  });
+
   socket.on("chat:send", (payload, ack = () => {}) => {
     const player = players.get(socket.id);
     if (!player) return ack({ ok: false, error: "Персонаж не подключён." });
     const messageText = cleanText(payload?.text, 240);
     if (!messageText) return ack({ ok: false, error: "Введите сообщение." });
+    if (player.typing) {
+      player.typing = false;
+      player.typingUntil = 0;
+      io.to(roomName(player.planet)).emit("player:typing", { id: player.id, typing: false });
+    }
     // Keep public messages in connected clients only; never write them to PostgreSQL.
     const message = {
       id: socket.id + ":" + Date.now(),
@@ -317,6 +335,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     const player = players.get(socket.id);
     if (!player) return;
+    if (player.typing) socket.to(roomName(player.planet)).emit("player:typing", { id: player.id, typing: false });
     socket.to(roomName(player.planet)).emit("player:left", { id: player.id });
     players.delete(socket.id);
   });
@@ -330,6 +349,10 @@ setInterval(() => {
       io.to(roomName(player.planet)).emit("player:bubble", { id: player.id, bubble: null });
     }
     if (player.emotion && player.emotion.until <= now) player.emotion = null;
+    if (player.typing && player.typingUntil <= now) {
+      player.typing = false;
+      io.to(roomName(player.planet)).emit("player:typing", { id: player.id, typing: false });
+    }
   }
 }, 500);
 
