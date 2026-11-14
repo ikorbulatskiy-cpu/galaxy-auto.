@@ -155,7 +155,7 @@
   if(tab==="emperor"){box.innerHTML='<div class="nexora-emperor-card"><div class="nexora-emperor-art"><svg viewBox="0 0 128 128"><use href="/assets/sprites/characters/nexora-emperor-set.svg#emperor-set"></use></svg></div><b>Император Галактики</b><span>Капюшон · мантия · коса · фиолетовая аура</span><button type="button" data-emperor="1">Надеть комплект</button><button type="button" data-emperor="0">Снять комплект</button></div>';box.querySelectorAll("[data-emperor]").forEach(b=>b.addEventListener("click",()=>{avatar.outfitId=Number(b.dataset.emperor);showAvatarTab("emperor");}));return;}
   if(tab==="ranks"){box.innerHTML='<div class="nexora-rank-table">'+rankRows.map((r,i)=>'<div class="nexora-rank-row"><b>'+r[0]+'</b><span>'+r[1]+'</span><strong>'+r[2]+'</strong></div>').join("")+'</div>';return;}
   const isHead=tab==="heads",count=isHead?24:6,kind=isHead?"head":"body";
-  box.innerHTML='<div class="nexora-choice-grid">'+Array.from({length:count},(_,i)=>'<button class="nexora-choice '+((isHead?avatar.headId:avatar.bodyId)===i+1?"selected":"")+'" data-choice="'+(i+1)+'" aria-label="'+(isHead?"Голова ":"Тело ")+(i+1)+'"><svg viewBox="0 0 64 '+(isHead?64:104)+'"><use href="/assets/sprites/characters/nexora-detailed-atlas.svg#'+kind+'-'+(i+1)+'"></use></svg></button>').join("")+'</div>';
+  box.innerHTML='<div class="nexora-choice-grid">'+Array.from({length:count},(_,i)=>'<button class="nexora-choice '+((isHead?avatar.headId:avatar.bodyId)===i+1?"selected":"")+'" data-choice="'+(i+1)+'" aria-label="'+(isHead?"Голова ":"Тело ")+(i+1)+'"><svg viewBox="0 0 64 '+(isHead?64:104)+'"><use href="/assets/sprites/characters/"+(isHead?"nexora-detailed-atlas.svg":"nexora-user-bodies.svg")+"#"+kind+"-"+(i+1)+"></use></svg></button>').join("")+'</div>';
   box.querySelectorAll("[data-choice]").forEach(b=>b.addEventListener("click",()=>{const id=Number(b.dataset.choice);if(isHead)avatar.headId=id;else avatar.bodyId=id;showAvatarTab(tab);}));
  }
  async function saveAvatar(){
@@ -163,9 +163,10 @@
   try{const r=await fetch("/api/character",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({headId:avatar.headId,bodyId:avatar.bodyId,outfitId:avatar.outfitId})});const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось сохранить");note.textContent="Внешность сохранена!";const body=$("nexora-world-body"),head=$("nexora-world-head"),outfit=$("nexora-world-outfit");if(body)body.setAttribute("href","/assets/sprites/characters/nexora-user-bodies.svg#body-"+avatar.bodyId);if(head)head.setAttribute("href","/assets/sprites/characters/nexora-detailed-atlas.svg#head-"+avatar.headId);if(outfit)outfit.setAttribute("href",avatar.outfitId?"/assets/sprites/characters/nexora-emperor-set.svg#emperor-set":"");}catch(e){note.textContent=e.message;}finally{b.disabled=false;}
  }
 
- function showRoom(account){
+ async function showRoom(account){
   currentNickname=String(account&&account.nickname||account&&account.name||"Персонаж").trim().slice(0,24)||"Персонаж";
   ensureAvatarEditor();
+  try{const response=await fetch("/api/account/profile",{cache:"no-store"});if(response.ok){const profile=await response.json(),character=profile.character||{};avatar.headId=Math.max(1,Math.min(24,Number(character.headId)||1));avatar.bodyId=Math.max(1,Math.min(6,Number(character.bodyId)||1));const head=$("nexora-world-head"),body=$("nexora-world-body");if(head)head.setAttribute("href","/assets/sprites/characters/nexora-detailed-atlas.svg#head-"+avatar.headId);if(body)body.setAttribute("href","/assets/sprites/characters/nexora-user-bodies.svg#body-"+avatar.bodyId);}}catch(error){console.warn("Could not load saved avatar:",error);}
   const nameLabel=$("nexora-world-rank");if(nameLabel)nameLabel.textContent=currentNickname;
   $("intro-screen").classList.add("hidden");
   room.classList.remove("hidden");
