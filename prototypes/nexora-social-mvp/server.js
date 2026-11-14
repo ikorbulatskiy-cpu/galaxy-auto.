@@ -12,7 +12,6 @@ const { createAuthorityRouter } = require("./src/authority");
 const { createPlanetsRouter } = require("./src/planets");
 const { createEconomyRouter } = require("./src/economy");
 const { normalizeAvatar } = require("./src/avatar");
-const { attachGalaxySockets } = require("./src/galaxy-sockets");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -132,7 +131,6 @@ io.use(async (socket, next) => {
   } catch (error) { next(error); }
 });
 
-attachGalaxySockets(io, { pool, auth, planets: PLANETS, normalizeAvatar });
 
 io.on("connection", (socket) => {
   socket.join("account:" + socket.data.account.id);
@@ -145,7 +143,7 @@ io.on("connection", (socket) => {
       );
       const saved = result.rows[0];
       if (!saved) return ack({ ok: false, error: "Персонаж не найден." });
-      const customId = /^custom-(\\d+)$/.exec(String(saved.planet || ""));
+      const customId = /^custom-(\d+)$/.exec(String(saved.planet || ""));
       let planet = Object.hasOwn(PLANETS, saved.planet) ? saved.planet : customId ? saved.planet : "starter";
       if (customId) {
         const custom = await pool.query(
@@ -240,7 +238,7 @@ io.on("connection", (socket) => {
     io.to(roomChannel(player)).emit("player:typing", { id: player.id, typing });
   });
 
-  socket.on("chat:send", (payload, ack = () => {}) => {
+  socket.on("chat:send", async (payload, ack = () => {}) => {
     const player = players.get(socket.id);
     if (!player) return ack({ ok: false, error: "Персонаж не подключён." });
     const messageText = cleanText(payload?.text, 240);
@@ -330,7 +328,7 @@ io.on("connection", (socket) => {
     if (!player) return ack({ ok: false, error: "Персонаж не подключён." });
     let valid = Object.hasOwn(PLANETS, nextPlanet);
     if (!valid) {
-      const match = /^custom-(\\d+)$/.exec(nextPlanet);
+      const match = /^custom-(\d+)$/.exec(nextPlanet);
       if (match) {
         const check = await pool.query(
           `SELECT p.id,p.capacity,p.access_mode,p.owner_account_id,p.status,
