@@ -1,7 +1,7 @@
 (() => {
  "use strict";
  const $=id=>document.getElementById(id);
- const state={lastMessageId:0,poll:null,clockTimer:null};
+ const state={lastMessageId:0,poll:null,clockTimer:null,presenceTimer:null,playerIds:new Set()};
  function updateVisitorClock(){
   const clock=$("visitor-clock");
   if(!clock)return;
@@ -216,14 +216,37 @@
   loadMessages(true);
   if(state.poll)clearInterval(state.poll);
   state.poll=setInterval(()=>loadMessages(false),2200);
+  loadRoomPresence();
+  if(state.presenceTimer)clearInterval(state.presenceTimer);
+  state.presenceTimer=setInterval(loadRoomPresence,5000);
  }
  function leaveRoom(){
   if(state.poll)clearInterval(state.poll);
   state.poll=null;
+  if(state.presenceTimer)clearInterval(state.presenceTimer);
+  state.presenceTimer=null;
+  state.playerIds.clear();
+  document.querySelectorAll(".nexora-room-player").forEach(node=>node.remove());
   if(state.clockTimer)clearInterval(state.clockTimer);
   state.clockTimer=null;
   room.classList.add("hidden");
   $("intro-screen").classList.remove("hidden");
+ }
+ async function loadRoomPresence(){
+  try{
+   const response=await fetch("/api/room/presence",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}",cache:"no-store"});
+   if(!response.ok)return;
+   const data=await response.json(),scene=$("room-scene");
+   const players=(data.players||[]).filter(player=>!player.mine).slice(0,12);
+   const active=new Set(players.map(player=>String(player.id)));
+   scene.querySelectorAll(".nexora-room-player").forEach(node=>{if(!active.has(node.dataset.playerId))node.remove();});
+   const slots=[[12,15],[29,9],[71,12],[88,18],[17,43],[83,40],[38,8],[62,7],[7,35],[93,38],[42,28],[58,30]];
+   players.forEach((player,index)=>{
+    const id=String(player.id);let node=scene.querySelector('[data-player-id="'+CSS.escape(id)+'"]');
+    if(!node){node=document.createElement("div");node.className="nexora-room-player aura-blue";node.dataset.playerId=id;const sprite=document.createElement("div");sprite.className="nexora-room-player-sprite";const body=document.createElement("img"),head=document.createElement("img");body.alt="";head.alt="";body.className="nexora-room-player-body";head.className="nexora-room-player-head";sprite.append(body,head);const name=document.createElement("span");name.className="nexora-room-player-name";node.append(sprite,name);scene.append(node);setSpriteImage(body,"body",Math.max(1,Math.min(6,Number(player.bodyId)||1)));setSpriteImage(head,"head",Math.max(1,Math.min(6,Number(player.headId)||1));}
+    const [x,y]=slots[index%slots.length];node.style.left=x+"%";node.style.bottom=y+"%";node.querySelector(".nexora-room-player-name").textContent=String(player.nickname||"Игрок").slice(0,24);
+   });
+  }catch(error){console.warn("Room players unavailable:",error);}
  }
  async function loadMessages(initial){
   try{
