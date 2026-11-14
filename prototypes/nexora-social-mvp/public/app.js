@@ -1,88 +1,52 @@
 (() => {
  "use strict";
  const $=id=>document.getElementById(id);
- let authMode="register", authenticated=false;
+ let authenticated=false, pendingAccount=null, pendingRecovery=null;
  const toast=message=>{const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),2600);};
- function setMode(mode){
-  authMode=mode;
-  document.querySelectorAll("[data-auth]").forEach(b=>b.classList.toggle("active",b.dataset.auth===mode));
-  $("auth-title").textContent=mode==="login"?"Войти в NEXORA":"Создать персонажа";
-  $("submit-auth").textContent=mode==="login"?"Войти":"Создать персонажа";
-  $("recovery-login-label").classList.toggle("hidden",mode!=="login");
-  $("recovery-login").required=mode==="login";
-  $("form-error").textContent="";
- }
- function openAuth(mode){
-  setMode(mode);
-  $("auth-form").classList.remove("hidden");
-  $("account-state").classList.add("hidden");
-  $("auth-modal").classList.add("open");
-  $("auth-modal").setAttribute("aria-hidden","false");
-  setTimeout(()=>$("nickname").focus(),80);
- }
- function closeAuth(){
-  if(authenticated)return;
-  $("auth-modal").classList.remove("open");
-  $("auth-modal").setAttribute("aria-hidden","true");
- }
+ function openModal(name){const el($(name+"-modal"));el.classList.add("open");el.setAttribute("aria-hidden","false");}
+ function el(x){return typeof x==="string"?$(x):x;}
+ function closeModal(name){const modal=$(name+"-modal");modal.classList.remove("open");modal.setAttribute("aria-hidden","true");}
+ function resetRegister(){ $("register-step-1").classList.remove("hidden");$("register-step-2").classList.add("hidden");$("register-step-label").textContent="1 из 2";$("register-progress-fill").style.width="50%";$("register-error").textContent="";$("register-character-error").textContent="";$("register-next").disabled=false; }
  function showAccount(account,code){
-  authenticated=true;
-  $("landing").classList.add("hidden");
-  $("auth-modal").classList.add("open");
-  $("auth-modal").setAttribute("aria-hidden","false");
-  $("auth-form").classList.add("hidden");
-  $("account-state").classList.remove("hidden");
-  $("auth-title").textContent="Твой персонаж";
-  document.querySelector(".auth-switch").classList.add("hidden");
+  authenticated=true;["register","login"].forEach(closeModal);$("landing").classList.add("hidden");openModal("account");
   $("account-name").textContent=account.nickname;
   if(code){$("recovery-value").textContent=code;$("recovery-value").classList.add("recovery-code");}
   else{$("recovery-value").textContent="Код доступен только владельцу аккаунта. При необходимости создай новый.";$("recovery-value").classList.remove("recovery-code");}
   loadPlayerProfile();
  }
- async function loadPlayerProfile(){
-  try{const r=await fetch("/api/account/profile");if(!r.ok)return;const d=await r.json();if(d.character){$("head-choice").value=String(d.character.head_id);$("body-choice").value=String(d.character.body_id);$("create-character").textContent="Обновить персонажа";}}
-  catch{}
- }
- document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",()=>openAuth(b.dataset.open)));
- document.querySelectorAll("[data-auth]").forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.auth)));
- $("close-auth").addEventListener("click",closeAuth);
- $("auth-modal").addEventListener("click",e=>{if(e.target===$("auth-modal"))closeAuth();});
- document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAuth();});
- $("auth-form").addEventListener("submit",async e=>{
-  e.preventDefault();$("form-error").textContent="";
-  const payload=authMode==="login"?{nickname:$("nickname").value.trim(),recoveryCode:$("recovery-login").value.trim()}:{nickname:$("nickname").value.trim()};
-  const endpoint=authMode==="login"?"/api/auth/login":"/api/auth/register";
-  $("submit-auth").disabled=true;
+ async function loadPlayerProfile(){try{const r=await fetch("/api/account/profile");if(!r.ok)return;const d=await r.json();if(d.character){$("head-choice").value=String(d.character.head_id);$("body-choice").value=String(d.character.body_id);}}catch{}}
+ document.querySelectorAll('[data-open="register"]').forEach(b=>b.addEventListener("click",()=>{resetRegister();openModal("register");setTimeout(()=>$("register-nickname").focus(),80);}));
+ document.querySelectorAll('[data-open="login"]').forEach(b=>b.addEventListener("click",()=>{ $("login-error").textContent="";openModal("login");setTimeout(()=>$("login-nickname").focus(),80);}));
+ document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));
+ document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m&&!authenticated)closeModal(m.id.replace("-modal",""));}));
+ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!authenticated)["register","login"].forEach(closeModal);});
+ $("register-form").addEventListener("submit",async e=>{
+  e.preventDefault();$("register-error").textContent="";
+  const nickname=$("register-nickname").value.trim();if(nickname.length<3){$("register-error").textContent="Ник должен содержать минимум 3 символа.";return;}
+  const b=$("register-next");b.disabled=true;
   try{
-   const r=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-   const d=await r.json();if(!r.ok)throw Error(d.error||"Ошибка запроса");
-   showAccount(d.account,d.recoveryCode||null);
-   toast(authMode==="login"?"С возвращением!":"Персонаж создан. Сохрани код восстановления.");
-  }catch(err){$("form-error").textContent=err.message;}
-  finally{$("submit-auth").disabled=false;}
+   const r=await fetch("/api/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nickname})});const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось создать персонажа");
+   pendingAccount=d.account;pendingRecovery=d.recoveryCode;
+   $("new-recovery-code").textContent=pendingRecovery||"Код не получен. Не закрывай окно и обратись в поддержку.";
+   $("register-step-1").classList.add("hidden");$("register-step-2").classList.remove("hidden");$("register-step-label").textContent="2 из 2";$("register-progress-fill").style.width="100%";
+  }catch(err){$("register-error").textContent=err.message;b.disabled=false;}
  });
- $("recovery-generate").addEventListener("click",async()=>{
-  try{const r=await fetch("/api/account/recovery-code",{method:"POST"}),d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось создать код");$("recovery-value").textContent=d.recoveryCode;$("recovery-value").classList.add("recovery-code");toast("Новый код создан. Старый больше не действует.");}
-  catch(e){toast(e.message);}
+ $("finish-register").addEventListener("click",async()=>{
+  const b=$("finish-register");b.disabled=true;$("register-character-error").textContent="";
+  try{const r=await fetch("/api/character",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({headId:Number($("register-head").value),bodyId:Number($("register-body").value)})});const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось сохранить внешность");showAccount(pendingAccount,pendingRecovery);toast("Персонаж создан. Сохрани код восстановления.");pendingAccount=null;pendingRecovery=null;}
+  catch(err){$("register-character-error").textContent=err.message;b.disabled=false;}
  });
- $("create-character").addEventListener("click",async()=>{
-  const b=$("create-character");b.disabled=true;$("character-error").textContent="";
-  try{const r=await fetch("/api/character",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({headId:Number($("head-choice").value),bodyId:Number($("body-choice").value)})}),d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось сохранить персонажа");b.textContent="Обновить персонажа";toast("Внешность персонажа сохранена.");}
-  catch(e){$("character-error").textContent=e.message;}
+ $("login-form").addEventListener("submit",async e=>{
+  e.preventDefault();$("login-error").textContent="";const b=$("login-submit");b.disabled=true;
+  try{const r=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nickname:$("login-nickname").value.trim(),recoveryCode:$("login-recovery").value.trim()})});const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось войти");showAccount(d.account,null);$("login-recovery").value="";toast("С возвращением!");}
+  catch(err){$("login-error").textContent=err.message;}
   finally{b.disabled=false;}
  });
- $("logout").addEventListener("click",async()=>{
-  try{await fetch("/api/auth/logout",{method:"POST"});}catch{}
-  authenticated=false;$("auth-modal").classList.remove("open");$("auth-modal").setAttribute("aria-hidden","true");$("landing").classList.remove("hidden");$("auth-form").classList.remove("hidden");$("account-state").classList.add("hidden");document.querySelector(".auth-switch").classList.remove("hidden");$("nickname").value="";$("recovery-login").value="";$("recovery-value").textContent="Код доступен только владельцу аккаунта.";$("recovery-value").classList.remove("recovery-code");setMode("login");toast("Вы вышли из аккаунта.");
- });
- async function checkSession(){
-  try{const r=await fetch("/api/auth/me"),d=await r.json();if(d.authenticated)showAccount(d.account,null);}
-  catch{}
- }
- async function updateStatus(){
-  try{const [s,t]=await Promise.all([fetch("/api/status"),fetch("/api/account/online")]);const status=await s.json(),online=await t.json();$("connection").textContent=status.database==="connected"?"● Сервер онлайн · "+online.online+" онлайн":"● Сервер доступен";}
-  catch{$("connection").textContent="● Нет связи с сервером";}
- }
+ $("recovery-generate").addEventListener("click",async()=>{try{const r=await fetch("/api/account/recovery-code",{method:"POST"}),d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось создать код");$("recovery-value").textContent=d.recoveryCode;$("recovery-value").classList.add("recovery-code");toast("Новый код создан. Старый больше не действует.");}catch(e){toast(e.message);}});
+ $("save-character").addEventListener("click",async()=>{const b=$("save-character");b.disabled=true;$("character-error").textContent="";try{const r=await fetch("/api/character",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({headId:Number($("head-choice").value),bodyId:Number($("body-choice").value)})}),d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось сохранить персонажа");toast("Внешность персонажа сохранена.");}catch(e){$("character-error").textContent=e.message;}finally{b.disabled=false;}});
+ $("logout").addEventListener("click",async()=>{try{await fetch("/api/auth/logout",{method:"POST"});}catch{}authenticated=false;closeModal("account");$("landing").classList.remove("hidden");$("login-nickname").value="";$("login-recovery").value="";resetRegister();toast("Вы вышли из аккаунта.");});
+ async function checkSession(){try{const r=await fetch("/api/auth/me"),d=await r.json();if(d.authenticated)showAccount(d.account,null);}catch{}}
+ async function updateStatus(){try{const [s,t]=await Promise.all([fetch("/api/status"),fetch("/api/account/online")]);const status=await s.json(),online=await t.json();$("connection").textContent=status.database==="connected"?"● Сервер онлайн · "+online.online+" онлайн":"● Сервер доступен";}catch{$("connection").textContent="● Нет связи с сервером";}}
  function updateTime(){$("header-time").textContent=new Intl.DateTimeFormat("ru-RU",{hour:"2-digit",minute:"2-digit"}).format(new Date());}
- setMode("register");checkSession();updateStatus();updateTime();setInterval(updateTime,30000);setInterval(updateStatus,30000);
+ resetRegister();checkSession();updateStatus();updateTime();setInterval(updateTime,30000);setInterval(updateStatus,30000);
 })();
