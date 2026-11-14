@@ -1,0 +1,116 @@
+/* Clean Galaxy-style avatar lineup: visible full sprites and a fixed dark nameplate at the feet. */
+#dashboard>#tab-world .nx-avatars{
+ left:5px!important;right:5px!important;bottom:7px!important;
+ display:flex!important;align-items:flex-end!important;justify-content:space-evenly!important;
+ gap:10px!important;padding:0 8px 2px!important;overflow-x:auto!important;overflow-y:visible!important;
+ scrollbar-width:none!important;
+}
+#dashboard>#tab-world .nx-avatars::-webkit-scrollbar{display:none!important}
+#dashboard>#tab-world .nx-avatar-card{
+ position:relative!important;isolation:isolate!important;
+ display:flex!important;flex:0 0 82px!important;flex-direction:column!important;
+ align-items:center!important;justify-content:flex-end!important;
+ width:82px!important;min-width:82px!important;max-width:82px!important;
+ margin:0!important;padding:0!important;gap:2px!important;
+ text-align:center!important;overflow:visible!important;
+ animation:none!important;transform:none!important;filter:none!important;
+}
+#dashboard>#tab-world .nx-avatar-visual{
+ position:relative!important;z-index:1!important;
+ display:flex!important;align-items:flex-end!important;justify-content:center!important;
+ width:100%!important;height:108px!important;min-height:108px!important;
+ margin:0!important;padding:0!important;overflow:visible!important;
+ pointer-events:none!important;
+}
+#dashboard>#tab-world .nx-avatar-visual canvas[data-nexora-sprite],
+#dashboard>#tab-world .nx-avatar-visual svg{
+ display:block!important;flex:0 0 auto!important;
+ width:72px!important;height:108px!important;max-width:100%!important;
+ margin:0 auto!important;object-fit:contain!important;
+}
+#dashboard>#tab-world .nx-avatar-name{
+ position:relative!important;z-index:3!important;order:3!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:82px!important;
+ min-height:19px!important;margin:0!important;padding:3px 5px!important;
+ overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+ border:1px solid #9b9eaa!important;border-radius:3px!important;
+ background:linear-gradient(180deg,#171c27f5 0%,#090d15f8 100%)!important;
+ box-shadow:0 2px 7px #000b,inset 0 1px #ffffff18!important;
+ color:#f3f0e8!important;font-family:Arial,sans-serif!important;
+ font-size:9px!important;font-weight:800!important;line-height:1.15!important;
+ letter-spacing:.1px!important;text-shadow:0 1px 2px #000!important;
+ transform:none!important;
+}
+#dashboard>#tab-world .nx-avatar-card.me .nx-avatar-name{
+ border-color:#d7bd7b!important;color:#ffe6a7!important;
+ background:linear-gradient(180deg,#302a20f7,#12131aFA)!important;
+}
+#dashboard>#tab-world .nx-avatar-card.nx-player-selected .nx-avatar-name{
+ border-color:#f2d58a!important;box-shadow:0 0 0 1px #f2d58a55,0 2px 9px #000c!important;
+}
+#dashboard>#tab-world .nx-avatar-card .nx-fav-toggle{
+ position:absolute!important;z-index:5!important;top:2px!important;right:2px!important;
+ order:2!important;width:20px!important;height:20px!important;min-width:20px!important;
+ padding:0!important;border:1px solid #ffffff55!important;border-radius:50%!important;
+ background:#111722dd!important;color:#ffe5a1!important;font-size:12px!important;
+ line-height:18px!important;box-shadow:0 2px 5px #0008!important;
+}
+#dashboard>#tab-world .nx-avatar-visual .nx-rank-mark{
+ position:absolute!important;z-index:2!important;top:0!important;left:50%!important;
+ transform:translateX(-50%)!important;pointer-events:none!important;
+}
+#dashboard>#tab-world .nx-avatar-card:after{top:-13px!important;z-index:4!important}
+#dashboard>#tab-world .nx-floor{z-index:0!important}
+#dashboard>#tab-world .nx-avatars{z-index:4!important}
+#dashboard>#tab-world .nx-avatar-card.aura-angel .nx-avatar-visual:before,
+#dashboard>#tab-world .nx-avatar-card.aura-god .nx-avatar-visual:before,
+#dashboard>#tab-world .nx-avatar-card.aura-almighty .nx-avatar-visual:before,
+#dashboard>#tab-world .nx-avatar-card.aura-universe .nx-avatar-visual:before,
+#dashboard>#tab-world .nx-avatar-card.aura-legend .nx-avatar-visual:before{
+ content:"";position:absolute;z-index:-1;left:50%;top:15px;width:65px;height:85px;
+ transform:translateX(-50%);border-radius:50%;filter:blur(10px);opacity:.55;pointer-events:none;
+}
+#dashboard>#tab-world .nx-avatar-card.aura-angel .nx-avatar-visual:before{background:#4bff9c}
+#dashboard>#tab-world .nx-avatar-card.aura-god .nx-avatar-visual:before{background:#bd72ff}
+#dashboard>#tab-world .nx-avatar-card.aura-almighty .nx-avatar-visual:before{background:#ffd66b}
+#dashboard>#tab-world .nx-avatar-card.aura-universe .nx-avatar-visual:before{background:#ff5b73}
+#dashboard>#tab-world .nx-avatar-card.aura-legend .nx-avatar-visual:before{background:#66caff}
+
+/* The selected-player control sheet is dark, compact and never covers the selected avatar. */
+.nx-player-sheet{
+ position:fixed!important;z-index:13010!important;
+ width:min(300px,calc(100vw - 20px))!important;
+ max-height:min(30dvh,230px)!important;overflow:auto!important;
+ padding:9px!important;border:1px solid #aeb3bd!important;border-radius:5px!important;
+ background:linear-gradient(180deg,#1b222dF7,#0d121bFA)!important;
+ box-shadow:0 9px 30px #000c,inset 0 1px #ffffff16!important;
+ color:#f1eee8!important;backdrop-filter:blur(14px)!important;
+}
+.nx-player-sheet-head{padding-bottom:7px!important;border-bottom:1px solid #ffffff24!important}
+.nx-player-sheet-title small{color:#d7bd7b!important;font-size:8px!important;letter-spacing:1.2px!important}
+.nx-player-sheet-title b{color:#fff0c8!important;font-size:13px!important}
+.nx-player-sheet-title span{color:#aeb6c3!important;font-size:9px!important}
+.nx-player-sheet-nav button,.nx-player-sheet-actions button{
+ min-height:30px!important;border:1px solid #687282!important;border-radius:4px!important;
+ background:linear-gradient(180deg,#303a49,#1c2531)!important;color:#f5f0e5!important;
+}
+.nx-player-sheet-actions{gap:5px!important;padding:7px 0 5px!important}
+.nx-player-sheet-actions button{font-size:10px!important}
+.nx-player-sheet-foot{padding-top:5px!important;color:#9da7b4!important;font-size:9px!important}
+@media(max-width:600px){
+ #dashboard>#tab-world .nx-avatar-card{flex-basis:66px!important;width:66px!important;min-width:66px!important;max-width:66px!important}
+ #dashboard>#tab-world .nx-avatar-visual{height:91px!important;min-height:91px!important}
+ #dashboard>#tab-world .nx-avatar-visual canvas[data-nexora-sprite],
+ #dashboard>#tab-world .nx-avatar-visual svg{width:61px!important;height:91px!important}
+ #dashboard>#tab-world .nx-avatar-name{max-width:66px!important;min-height:17px!important;padding:2px 3px!important;font-size:8px!important}
+ #dashboard>#tab-world .nx-avatar-card .nx-fav-toggle{top:0!important;right:0!important;width:18px!important;height:18px!important;min-width:18px!important;font-size:11px!important;line-height:16px!important}
+ .nx-player-sheet{width:min(292px,calc(100vw - 16px))!important;max-height:min(31dvh,220px)!important}
+}
+@media(max-width:380px){
+ #dashboard>#tab-world .nx-avatar-card{flex-basis:60px!important;width:60px!important;min-width:60px!important;max-width:60px!important}
+ #dashboard>#tab-world .nx-avatar-visual{height:84px!important;min-height:84px!important}
+ #dashboard>#tab-world .nx-avatar-visual canvas[data-nexora-sprite],
+ #dashboard>#tab-world .nx-avatar-visual svg{width:56px!important;height:84px!important}
+ #dashboard>#tab-world .nx-avatar-name{max-width:60px!important;font-size:7px!important}
+}
