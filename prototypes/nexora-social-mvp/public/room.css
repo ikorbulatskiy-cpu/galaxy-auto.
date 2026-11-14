@@ -794,3 +794,23 @@
   font-weight:400!important;
   text-shadow:none!important;
 }
+
+
+/* Double-tap movement inside the room and a small hop while walking. */
+#room-scene{touch-action:manipulation;cursor:crosshair}
+#room-scene .nexora-world-avatar{
+  transition:left .72s cubic-bezier(.2,.72,.25,1),bottom .72s cubic-bezier(.2,.72,.25,1)!important;
+  cursor:pointer;
+}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite.nexora-walking{
+  animation:nexora-walk-hop .34s ease-in-out infinite;
+  transform-origin:center bottom;
+}
+@keyframes nexora-walk-hop{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-13px)}
+}
+@media(prefers-reduced-motion:reduce){
+  #room-scene .nexora-world-avatar{transition:left .2s linear,bottom .2s linear!important}
+  #room-scene .nexora-world-avatar .nexora-avatar-sprite.nexora-walking{animation:none}
+}
