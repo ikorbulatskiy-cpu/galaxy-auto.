@@ -479,3 +479,11 @@
 
 /* Fix avatar picker: room.js inserts IMG elements, not inline SVG nodes. */
 .nexora-choice img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:auto}
+
+/* Compose the selected head and body as one character instead of two full-size tiles. */
+#creator-preview .nexora-creator-preview-stack,
+.nexora-world-avatar .nexora-avatar-sprite{position:relative;isolation:isolate}
+#creator-preview .creator-preview-body,
+.nexora-world-avatar .nexora-avatar-sprite #nexora-world-body{position:absolute;z-index:1;inset:0;width:100%;height:100%;object-fit:contain;max-width:none;max-height:none}
+#creator-preview .creator-preview-head,
+.nexora-world-avatar .nexora-avatar-sprite #nexora-world-head{position:absolute;z-index:2;top:0;left:25%;width:50%;height:43%;max-width:none;max-height:none;object-fit:contain}
