@@ -487,3 +487,10 @@
 .nexora-world-avatar .nexora-avatar-sprite #nexora-world-body{position:absolute;z-index:1;inset:0;width:100%;height:100%;object-fit:contain;max-width:none;max-height:none}
 #creator-preview .creator-preview-head,
 .nexora-world-avatar .nexora-avatar-sprite #nexora-world-head{position:absolute;z-index:2;top:0;left:25%;width:50%;height:43%;max-width:none;max-height:none;object-fit:contain}
+
+
+/* Balanced avatar proportions: scale the torso to the head and anchor both layers together. */
+#creator-preview .creator-preview-body,
+.nexora-world-avatar .nexora-avatar-sprite #nexora-world-body{left:11%!important;top:22%!important;right:auto!important;bottom:0!important;width:78%!important;height:78%!important;object-fit:contain!important}
+#creator-preview .creator-preview-head,
+.nexora-world-avatar .nexora-avatar-sprite #nexora-world-head{left:28%!important;top:1%!important;width:44%!important;height:38%!important;object-fit:contain!important}
