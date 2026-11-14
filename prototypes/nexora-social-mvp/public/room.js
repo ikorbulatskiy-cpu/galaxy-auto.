@@ -2,10 +2,19 @@
  "use strict";
  const $=id=>document.getElementById(id);
  const state={lastMessageId:0,poll:null,clockTimer:null};
+ function updateVisitorClock(){
+  const clock=$("visitor-clock");
+  if(!clock)return;
+  try{clock.textContent=new Intl.DateTimeFormat(undefined,{hour:"2-digit",minute:"2-digit",hourCycle:" h23"}).format(new Date());}
+  catch{clock.textContent=new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
+ }
  const room=$("room-screen");
  function showRoom(account){
   $("intro-screen").classList.add("hidden");
   room.classList.remove("hidden");
+  updateVisitorClock();
+  if(state.clockTimer)clearInterval(state.clockTimer);
+  state.clockTimer=setInterval(updateVisitorClock,15000);
   loadMessages(true);
   if(state.poll)clearInterval(state.poll);
   state.poll=setInterval(()=>loadMessages(false),2200);
@@ -13,6 +22,8 @@
  function leaveRoom(){
   if(state.poll)clearInterval(state.poll);
   state.poll=null;
+  if(state.clockTimer)clearInterval(state.clockTimer);
+  state.clockTimer=null;
   room.classList.add("hidden");
   $("intro-screen").classList.remove("hidden");
  }
