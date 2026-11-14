@@ -494,3 +494,13 @@
 .nexora-world-avatar .nexora-avatar-sprite #nexora-world-body{left:11%!important;top:22%!important;right:auto!important;bottom:0!important;width:78%!important;height:78%!important;object-fit:contain!important}
 #creator-preview .creator-preview-head,
 .nexora-world-avatar .nexora-avatar-sprite #nexora-world-head{left:28%!important;top:1%!important;width:44%!important;height:38%!important;object-fit:contain!important}
+
+
+/* Restore the supplied aura picker and the original aura sprites. */
+#nexora-action-auras{display:block!important}
+#nexora-auras-panel.nexora-auras-panel:not(.hidden){display:flex!important;align-items:center!important;justify-content:center!important}
+#nexora-auras-panel .nexora-aura-option{display:flex!important;align-items:center!important}
+#nexora-auras-panel .nexora-aura-thumb{display:grid!important}
+#nexora-auras-panel .nexora-auras-hint{display:block!important}
+.nexora-world-avatar:not(.aura-none) .nexora-user-aura{display:block!important;visibility:visible!important;opacity:1!important}
+.nexora-world-avatar.aura-none .nexora-user-aura{display:none!important}
