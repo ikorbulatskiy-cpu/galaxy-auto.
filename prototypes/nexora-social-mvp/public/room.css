@@ -347,3 +347,14 @@
 .nexora-emotion-option:active,.nexora-emotion-option:focus-visible{outline:1px dotted #d8ff70!important;background:#47751c!important}
 .nexora-current-emotion{position:absolute!important;left:50%!important;bottom:calc(100% + 7px)!important;transform:translateX(-50%)!important;white-space:nowrap!important;padding:4px 9px!important;border:1px solid #b39ae8!important;border-radius:14px!important;background:#17102c!important;color:#fff!important;font-size:11px!important;font-weight:700!important;z-index:5!important;box-shadow:0 0 12px #8c43d9!important}
 .nexora-current-emotion.hidden{display:none!important}
+
+
+/* Match the character action menu to the compact retro emotion window. */
+.nexora-character-actions{position:fixed!important;inset:0!important;z-index:1000!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:14px!important;background:#05070dcc!important;backdrop-filter:none!important}
+.nexora-character-actions.hidden{display:none!important}
+.nexora-character-actions-card{box-sizing:border-box!important;width:min(260px,calc(100vw - 28px))!important;display:flex!important;flex-direction:column!important;gap:0!important;padding:0!important;overflow:hidden!important;border:3px ridge #8a8a8a!important;border-radius:0!important;background:repeating-linear-gradient(0deg,#242424 0 2px,#202020 2px 4px)!important;color:#f4f4f4!important;box-shadow:0 8px 28px #000c!important;font-family:Arial,sans-serif!important}
+.nexora-character-actions-title{height:29px!important;min-height:29px!important;display:flex!important;align-items:center!important;justify-content:center!important;margin:0!important;background:repeating-linear-gradient(135deg,#b9f34b 0 6px,#a6df38 6px 12px)!important;border-bottom:2px solid #527b19!important;color:#101010!important;font-size:13px!important;font-weight:900!important;letter-spacing:0!important;text-shadow:1px 1px #eaffae!important}
+.nexora-character-actions-card button{box-sizing:border-box!important;width:100%!important;min-height:30px!important;padding:4px 9px!important;border:0!important;border-bottom:1px solid #454545!important;border-radius:0!important;background:transparent!important;color:#f0f0f0!important;text-align:left!important;font-size:13px!important;font-weight:500!important;line-height:1.15!important;text-shadow:1px 1px #000!important}
+.nexora-character-actions-card button::before{content:"›"!important;display:inline-block!important;width:17px!important;color:#b9f34b!important;font-size:15px!important;font-weight:900!important}
+.nexora-character-actions-card button.secondary{background:transparent!important;border-color:#454545!important;color:#f0f0f0!important}
+.nexora-character-actions-card button:active,.nexora-character-actions-card button:focus-visible{outline:1px dotted #d8ff70!important;background:#47751c!important}
