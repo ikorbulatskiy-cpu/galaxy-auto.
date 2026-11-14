@@ -1408,7 +1408,7 @@
     $("#planet-create-form").classList.remove("hidden");
     $("#planet-create-error").textContent="";
   });
-  $("#planet-create-cancel").addEventListener("click",()=>{
+  $("#planet-create-cancel")?.addEventListener("click",()=>{
     $("#planet-create-form").classList.add("hidden");
     $("#planet-catalog").classList.remove("hidden");
   });
