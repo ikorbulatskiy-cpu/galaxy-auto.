@@ -1,33 +1,30 @@
-/* Retro NEXORA room: Galaxy 7.0 inspired, responsive and touch-friendly. */
-#room-screen{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);background:#070b25;color:#fff;font-family:Tahoma,Arial,sans-serif;overflow:hidden}
-#room-screen.hidden{display:none!important}.retro-room{width:min(100vw,800px);height:min(100dvh,600px);min-height:420px;display:flex;flex-direction:column;overflow:hidden;background:#090d36;border:1px solid #56568a;box-shadow:0 0 35px #000a}
-.retro-top{height:32px;flex:0 0 32px;display:flex;align-items:center;justify-content:space-between;padding:0 9px;background:linear-gradient(90deg,#1a1a4a,#2a2a5a);border-bottom:2px solid #5a5a8a;font-size:12px}
-.retro-top strong{color:#00ff88;text-shadow:0 0 7px #00ff88;letter-spacing:.5px}.retro-top span{color:#ffcc00;font-weight:bold}.retro-top button{border:0;background:none;color:#dce3ff;font-size:18px}
-.retro-chat{height:200px;flex:0 0 200px;display:flex;flex-direction:column;position:relative;background:linear-gradient(#0a0a3a,#0d0d4a);border-bottom:2px solid #5a5a8a;min-height:0}
-.chat-space{flex:1;overflow:auto;padding:5px 8px;display:flex;flex-direction:column;gap:3px}
-.chat-line{display:flex;gap:5px;font-size:12px;line-height:1.35;overflow-wrap:anywhere}.chat-line b{color:#8dffbf;flex:0 0 auto}.chat-line span{color:#fff}.chat-line.mine b{color:#ffcf6a}
-.retro-composer{height:38px;flex:0 0 38px;display:flex;gap:5px;padding:3px 5px;background:#11113e}.retro-composer input{min-width:0;flex:1;border:1px solid #4a4a8a;border-radius:3px;background:#1a1a4a;color:white;padding:0 8px;font:16px Tahoma,Arial,sans-serif!important;outline:none}.retro-composer input::placeholder{color:#aeb0d0}.retro-composer button{border:1px solid #5a7d5a;border-radius:3px;background:#3a6a3a;color:#fff;padding:0 10px;font-size:11px;font-weight:bold}.retro-composer #toggle-emojis{background:#393967;border-color:#62629b;font-size:17px;padding:0 12px}.retro-composer button:disabled{opacity:.5}.chat-error{position:absolute;bottom:42px;right:8px;color:#ff9ca8;font-size:10px}
-.emoji-panel{position:absolute;z-index:8;bottom:42px;left:6px;display:flex;flex-wrap:wrap;gap:4px;max-width:290px;padding:7px;background:#19194d;border:1px solid #7777ac;box-shadow:0 4px 12px #0008}.emoji-panel.hidden{display:none}.emoji-panel button{border:0;background:#303064;border-radius:3px;font-size:20px;padding:4px}
-.retro-scene{position:relative;flex:1;min-height:0;overflow:hidden;isolation:isolate;background:linear-gradient(#4a8ab5,#8accee 65%,#5a9a4a 65%,#2a6a1a)}
-.wall-pattern{position:absolute;inset:0 0 35%;opacity:.12;background:repeating-linear-gradient(0deg,transparent 0 26px,#e4f6ff 27px 28px),repeating-linear-gradient(90deg,transparent 0 42px,#e4f6ff 43px 44px)}
-.ground{position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(#5a9a4a,#2a6a1a)}
-.sun{position:absolute;right:7%;top:7%;width:55px;height:55px;border-radius:50%;background:#ffdf48;box-shadow:0 0 24px 9px #ffdf4880}
-.rainbow{position:absolute;z-index:1;left:50%;top:13%;width:180px;height:90px;transform:translateX(-50%);border:9px solid #ff738f88;border-bottom:0;border-radius:100px 100px 0 0;box-shadow:inset 0 7px #ffe36c88,inset 0 15px #75e6b388;opacity:.75}
-.cloud{position:absolute;z-index:1;width:92px;height:23px;border-radius:30px;background:#ffffffdf;box-shadow:18px -12px 0 -2px #fff,42px -7px 0 2px #fff;animation:cloud-drift 24s linear infinite}.c1{left:7%;top:25%}.c2{left:57%;top:34%;transform:scale(.72);animation-duration:31s}
-@keyframes cloud-drift{from{translate:-20px 0}to{translate:70px 0}}
-.fence{position:absolute;z-index:2;left:0;right:0;bottom:33%;height:23px;border-top:5px solid #89512c;border-bottom:5px solid #89512c;background:repeating-linear-gradient(90deg,transparent 0 23px,#9e673a 24px 30px,transparent 31px 45px)}
-.bush{position:absolute;z-index:2;bottom:27%;width:55px;height:27px;border-radius:50%;background:#286e35;box-shadow:12px -9px 0 #347f38,25px 0 0 #286e35}.b1{left:1%}.b2{right:2%;transform:scale(.85)}.b3{left:43%;transform:scale(.65)}
-.flower{position:absolute;z-index:3;bottom:25%;font-size:19px;animation:sway 2.7s ease-in-out infinite alternate}.f1{left:3%}.f2{left:12%;bottom:23%}.f3{left:22%}.f4{left:33%;bottom:24%}.f5{left:41%}.f6{left:51%;bottom:23%}.f7{left:61%}.f8{left:70%;bottom:24%}.f9{left:80%}.f10{left:89%;bottom:23%}.f11{right:2%}
-@keyframes sway{to{transform:rotate(8deg) translateY(-3px)}}
-.float{position:absolute;z-index:3;animation:float-up 4s ease-in-out infinite alternate}.heart{font-size:18px}.h1{left:20%;top:32%}.h2{left:38%;top:43%;animation-delay:1s}.h3{right:23%;top:31%;animation-delay:2s}.h4{right:8%;top:48%;animation-delay:.5s}.star{font-size:15px;animation:twinkle 1.3s infinite alternate}.s1{left:8%;top:10%}.s2{left:35%;top:22%;animation-delay:.4s}.s3{right:30%;top:9%;animation-delay:.8s}.s4{right:9%;top:39%;animation-delay:1s}.butterfly{font-size:20px;animation:butterfly 7s ease-in-out infinite alternate}.but1{left:30%;top:35%}.but2{right:34%;top:48%;animation-delay:2s}
-@keyframes float-up{to{translate:0 -12px}}@keyframes twinkle{from{opacity:.35;scale:.8}to{opacity:1;scale:1.2}}@keyframes butterfly{to{translate:32px -18px;rotate:12deg}}
-.avatar{position:absolute;z-index:5;top:66%;width:60px;height:90px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;transform:translateX(-50%);cursor:pointer;outline:0;transition:filter .15s,scale .15s;user-select:none}
-.avatar-frame{width:54px;height:67px;display:grid;place-items:center;border:3px solid var(--frame);border-radius:8px 8px 5px 5px;background:color-mix(in srgb,var(--frame) 42%,#241c52);font-size:43px;line-height:1;box-shadow:0 0 12px var(--frame),inset 0 0 10px #fff4}
-.nick{position:absolute;bottom:91px;left:50%;transform:translateX(-50%);white-space:nowrap;color:#fff;font:bold 10px Tahoma,Arial,sans-serif;text-shadow:-1px -1px #111,1px -1px #111,-1px 1px #111,1px 1px #111,0 0 4px #000;opacity:.95}
-.avatar:hover{scale:1.08;filter:brightness(1.12)}.avatar.selected .avatar-frame{box-shadow:0 0 0 3px #ffdf48,0 0 20px #ffdf48}.avatar.selected{z-index:7}
-.bubble{display:none;position:absolute;bottom:94px;left:50%;transform:translateX(-50%);max-width:155px;padding:5px 7px;border:1px solid #65658d;border-radius:7px;background:#fff;color:#222;font-size:10px;line-height:1.2;white-space:normal;text-align:center;box-shadow:0 2px 8px #0007}.bubble.show{display:block}.player-frame{background:#293d70!important}
-.hint{position:absolute;right:7px;bottom:5px;z-index:4;color:#e8ffe8;font-size:9px;text-shadow:0 1px 3px #0008}
-.actions{position:absolute;z-index:9;left:8px;bottom:8px;display:flex;flex-wrap:wrap;gap:5px;padding:7px;background:#171747ed;border:1px solid #7777aa;box-shadow:0 4px 12px #0008}.actions.hidden{display:none}.actions button{background:#3b3b70;border:1px solid #8585b8;color:#fff;border-radius:3px;padding:7px;font:11px Tahoma,Arial,sans-serif}
-.retro-bottom{height:36px;flex:0 0 36px;display:flex;gap:6px;align-items:center;padding:3px 7px;background:linear-gradient(90deg,#1a1a4a,#2a2a5a);border-top:2px solid #5a5a8a}.retro-bottom button{flex:1;height:27px;border:1px solid #72729a;border-radius:3px;background:linear-gradient(#555579,#35355d);color:#fff;font:bold 11px Tahoma,Arial,sans-serif}.retro-bottom .diamonds{background:linear-gradient(#63428e,#39245e);color:#ffdf48}.retro-bottom .exit{background:linear-gradient(#9c3939,#652222);border-color:#bb6666}
-@media(max-width:520px){.retro-room{width:100vw;height:100dvh;min-height:0;border:0}.retro-chat{height:180px;flex-basis:180px}.avatar{width:52px;height:82px}.avatar-frame{width:47px;height:61px;font-size:37px}.nick{font-size:8px}.retro-bottom button{font-size:10px}.rainbow{width:140px;height:70px}.sun{width:43px;height:43px}.hint{font-size:8px;max-width:55%;text-align:right}}
-@media(max-height:520px){.retro-chat{height:135px;flex-basis:135px}.retro-top{height:28px;flex-basis:28px}.retro-bottom{height:32px;flex-basis:32px}.avatar{top:62%}}
+/* NEXORA: spacious, empty 2D room in a colorful early-2000s social-game style. */
+#room-screen{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);background:#080d2b;color:#fff;font-family:Tahoma,Arial,sans-serif;overflow:hidden}
+#room-screen.hidden{display:none!important}
+.retro-room{width:min(100vw,1000px);height:min(100dvh,760px);min-height:360px;display:flex;flex-direction:column;overflow:hidden;background:#101b49;border:2px solid #5365a0;box-shadow:0 0 35px #0009}
+.retro-chat{height:220px;flex:0 0 220px;display:flex;flex-direction:column;position:relative;min-height:0;background:linear-gradient(180deg,#07133d,#101d55 80%,#18265d);border-bottom:3px solid #6578b4;box-shadow:inset 0 0 25px #020a2c}
+.chat-space{flex:1;min-height:0;overflow:auto;padding:8px 12px;display:flex;flex-direction:column;gap:4px}
+.chat-line{display:flex;gap:6px;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+.chat-line b{color:#9fffd0;flex:0 0 auto}.chat-line span{color:#fff}.chat-line.mine b{color:#ffe18a}
+.retro-composer{height:39px;flex:0 0 39px;display:flex;gap:6px;padding:4px 7px;background:#09143d;border-top:1px solid #334b87}
+.retro-composer input{min-width:0;flex:1;border:1px solid #536ca8;border-radius:4px;background:#101f53;color:white;padding:0 10px;font:16px Tahoma,Arial,sans-serif!important;outline:none}
+.retro-composer input::placeholder{color:#a9b9e6}
+.retro-composer button{width:42px;border:1px solid #7188c4;border-radius:4px;background:linear-gradient(#607ec4,#354d91);color:#fff;font-size:18px;font-weight:bold}
+.retro-composer button:disabled{opacity:.5}
+.chat-error{position:absolute;right:10px;bottom:44px;color:#ffabb8;font-size:10px}
+.retro-scene{position:relative;flex:1;min-height:0;overflow:hidden;isolation:isolate;background:#f8d7e9}
+.room-wall{position:absolute;inset:0 0 29%;background:linear-gradient(145deg,#ffd8e8 0%,#f7c5df 48%,#e8c8fa 100%)}
+.room-wall:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 79px,#fff2 80px 82px),linear-gradient(180deg,#fff3,transparent 40%);opacity:.6}
+.room-window{position:absolute;left:7%;top:10%;width:min(25%,230px);height:48%;border:9px solid #fff1d9;border-radius:8px;background:#fff;box-shadow:0 4px 0 #d39dbb,0 9px 18px #8e5b8c55;overflow:hidden}
+.window-sky{position:absolute;inset:0;background:linear-gradient(#83d7ff 0%,#c8f4ff 70%,#e9ffd4 100%)}
+.window-sky:before{content:"";position:absolute;left:48%;top:0;bottom:0;width:5px;background:#fff1d9;box-shadow:-70px 0 #fff1d9,70px 0 #fff1d9}
+.window-sky:after{content:"";position:absolute;left:0;right:0;top:52%;height:5px;background:#fff1d9}
+.window-cloud{position:absolute;left:17%;top:20%;width:45px;height:15px;border-radius:20px;background:#fff;box-shadow:13px -9px 0 -2px #fff,29px -3px 0 1px #fff}
+.window-hill{position:absolute;left:-10%;right:-10%;bottom:-25%;height:48%;border-radius:50% 50% 0 0;background:linear-gradient(#8edb83,#58bd78)}
+.wall-decoration{position:absolute;right:12%;top:18%;width:clamp(65px,11vw,120px);aspect-ratio:1;border:8px solid #fff1d9;border-radius:50%;background:linear-gradient(135deg,#fff5a8,#ffb6d5 55%,#c3a7ff);box-shadow:0 4px 0 #d39dbb,0 8px 16px #8e5b8c44}
+.room-baseboard{position:absolute;left:0;right:0;bottom:28%;height:12px;background:linear-gradient(#fff0d5,#dca5be);box-shadow:0 3px 0 #b979a1}
+.room-floor{position:absolute;left:0;right:0;bottom:0;height:29%;background:repeating-linear-gradient(90deg,#d99575 0 2px,#e8ad89 3px 115px),linear-gradient(#e9b28e,#c77e69);border-top:3px solid #b87972}
+.room-floor:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 42px,#9e5d5a25 43px 45px)}
+.floor-shine{position:absolute;left:18%;right:18%;bottom:7%;height:18%;border-radius:50%;background:#fff2;filter:blur(15px)}
+@media(max-width:600px){.retro-room{width:100vw;height:100dvh;min-height:0;border:0}.retro-chat{height:190px;flex-basis:190px}.room-window{left:6%;top:12%;width:34%;height:43%;border-width:6px}.wall-decoration{right:10%;top:20%;width:68px;border-width:6px}.room-floor{height:31%}.room-baseboard{bottom:30%}}
+@media(max-height:500px){.retro-chat{height:130px;flex-basis:130px}}
