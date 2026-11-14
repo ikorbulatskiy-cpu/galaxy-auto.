@@ -616,30 +616,6 @@
       ctx.restore();
 
       if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20*scale,avatarGroundY-58*scale-Math.sin(Date.now()/120)*3);ctx.restore();}
-      // A single compact nickname plate sits directly below the avatar's feet.
-      ctx.save();
-      ctx.font="700 10px system-ui, sans-serif";
-      const fullNickname=String(player.nickname||"Игрок");
-      const maxNameWidth=Math.max(42,Math.min(148,w-24));
-      let visibleNickname=fullNickname;
-      while(visibleNickname.length>1&&ctx.measureText(visibleNickname).width>maxNameWidth-14) visibleNickname=visibleNickname.slice(0,-2)+"…";
-      const nameWidth=Math.min(maxNameWidth,Math.max(42,ctx.measureText(visibleNickname).width+14));
-      const nameHeight=17;
-      const nameX=Math.max(8,Math.min(w-nameWidth-8,drawX-nameWidth/2));
-      const nameY=avatarGroundY+14*scale;
-      ctx.fillStyle="rgba(8,12,29,.86)";
-      ctx.strokeStyle="rgba(190,183,255,.28)";
-      ctx.lineWidth=1;
-      ctx.shadowColor="rgba(0,0,0,.3)";
-      ctx.shadowBlur=5;
-      roundRect(ctx,nameX,nameY,nameWidth,nameHeight,7);
-      ctx.fill();ctx.stroke();
-      ctx.shadowBlur=0;
-      ctx.fillStyle="#f1efff";
-      ctx.textAlign="center";
-      ctx.textBaseline="middle";
-      ctx.fillText(visibleNickname,drawX,nameY+nameHeight/2,maxNameWidth-10);
-      ctx.restore();
       // Deliberately do not draw the duplicate nickname above the avatar. Keep the existing ground-level name only.
     });
     requestAnimationFrame(drawScene);
