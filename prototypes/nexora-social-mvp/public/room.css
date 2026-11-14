@@ -462,3 +462,6 @@
 .nexora-creator-picker:not(.nexora-head-picker){display:none!important}
 .nexora-creator-stage svg{width:72px;height:72px}
 #nexora-profile-body,[data-tab="bodies"],[data-tab="body"]{display:none!important}
+
+/* Remove every old aura effect from the scene and profile previews. */
+.nexora-world-avatar::before,.nexora-world-avatar::after,.nexora-aura-orbit,.nexora-profile-avatar::before,.nexora-profile-avatar::after{display:none!important;content:none!important;opacity:0!important;filter:none!important;animation:none!important}
