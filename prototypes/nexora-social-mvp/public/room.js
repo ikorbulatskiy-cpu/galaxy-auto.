@@ -1,7 +1,7 @@
 (() => {
  "use strict";
  const $=id=>document.getElementById(id);
- const state={lastMessageId:0,poll:null,clockTimer:null,presenceTimer:null,playerIds:new Set()};
+ const state={lastMessageId:0,poll:null,clockTimer:null,presenceTimer:null,movementTimer:null,playerIds:new Set()};
  function updateVisitorClock(){
   const clock=$("visitor-clock");
   if(!clock)return;
@@ -58,6 +58,19 @@
   scene.insertAdjacentHTML("beforeend",'<section id="nexora-character-actions" class="nexora-character-actions hidden" role="dialog" aria-modal="true" aria-label="Действия"><div class="nexora-character-actions-card"><div class="nexora-character-actions-title">ДЕЙСТВИЯ</div><button id="nexora-action-info" type="button">Инфо</button><button id="nexora-action-emotions" type="button">Эмоции</button><button id="nexora-action-auras" type="button">Ауры</button><button id="nexora-action-developer" type="button" class="hidden">Режим разработчика</button><button id="nexora-action-exit" type="button" class="secondary">Выход</button></div></section><section id="nexora-developer-panel" class="nexora-developer-panel hidden" role="dialog" aria-modal="true" aria-label="Режим разработчика"><div class="nexora-developer-window"><header>Режим разработчика<button id="nexora-developer-close" type="button" aria-label="Закрыть">×</button></header><p>Доступ подтверждён для аккаунта «Первый».</p><span class="nexora-developer-role">Привилегия: Разработчик</span></div></section><section id="nexora-auras-panel" class="nexora-auras-panel nexora-emotions-panel hidden" role="dialog" aria-modal="true" aria-label="Ауры"><div class="nexora-emotions-window"><header>Ауры<button id="nexora-auras-close" type="button" aria-label="Закрыть">×</button></header><p class="nexora-auras-hint">Выбери свечение персонажа</p><div class="nexora-auras-list" id="nexora-auras-list"></div></div></section><section id="nexora-emotions-panel" class="nexora-emotions-panel hidden" role="dialog" aria-modal="true" aria-label="Эмоции"><div class="nexora-emotions-window"><header>Эмоции<button id="nexora-emotions-close" type="button" aria-label="Закрыть">×</button></header><div class="nexora-emotions-list" id="nexora-emotions-list"></div></div></section>');
   const worldAvatar=$("nexora-world-avatar");setSpriteImage($("nexora-world-body"),"body",1);setSpriteImage($("nexora-world-head"),"head",1);
   worldAvatar.setAttribute("aria-label","Открыть действия персонажа");
+  worldAvatar.addEventListener("pointerdown",event=>event.stopPropagation());
+  let lastSceneTap=0;
+  scene.addEventListener("pointerdown",event=>{
+   if(event.button!==0||event.target.closest("button,input,textarea,select,a,.nexora-room-player,.nexora-avatar-panel,.nexora-character-actions,.nexora-emotions-panel,.nexora-developer-panel"))return;
+   const now=Date.now(),rect=scene.getBoundingClientRect();
+   if(now-lastSceneTap<420){
+    lastSceneTap=0;
+    const x=Math.max(6,Math.min(94,(event.clientX-rect.left)/rect.width*100));
+    const bottom=Math.max(8,Math.min(65,(rect.bottom-event.clientY)/rect.height*100));
+    moveWorldAvatarTo(x,bottom);
+   }else lastSceneTap=now;
+  });
+
   worldAvatar.addEventListener("click",openCharacterActions);
   worldAvatar.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openCharacterActions();}});
   $("nexora-action-info").addEventListener("click",()=>{closeCharacterActions();openAvatar();});
@@ -115,6 +128,18 @@
  function closeAuras(){const panel=$("nexora-auras-panel");if(panel)panel.classList.add("hidden");}
  function openEmotions(){closeCharacterActions();$("nexora-emotions-panel").classList.remove("hidden");}
  function closeEmotions(){const panel=$("nexora-emotions-panel");if(panel)panel.classList.add("hidden");}
+ function moveWorldAvatarTo(x,bottom){
+  const world=$("nexora-world-avatar");if(!world)return;
+  const sprite=world.querySelector(".nexora-avatar-sprite");if(!sprite)return;
+  const currentX=parseFloat(world.style.left)||50,currentBottom=parseFloat(world.style.bottom)||13;
+  const distance=Math.hypot((x-currentX)*8,(bottom-currentBottom)*8);
+  world.style.left=x+"%";world.style.bottom=bottom+"%";
+  sprite.classList.remove("nexora-walking");
+  void sprite.offsetWidth;
+  sprite.classList.add("nexora-walking");
+  if(state.movementTimer)clearTimeout(state.movementTimer);
+  state.movementTimer=setTimeout(()=>{sprite.classList.remove("nexora-walking");state.movementTimer=null;},Math.max(650,Math.min(2600,distance*7)));
+ }
  function openCharacterActions(){
   ensureAvatarEditor();
   $("nexora-character-actions").classList.remove("hidden");
