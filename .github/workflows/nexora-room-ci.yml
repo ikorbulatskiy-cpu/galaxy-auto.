@@ -34,8 +34,6 @@ jobs:
           node --check prototypes/nexora-social-mvp/src/social.js
           node --check prototypes/nexora-social-mvp/src/developer.js
           node --check prototypes/nexora-social-mvp/src/galaxy-sockets.js
-          node --check prototypes/nexora-social-mvp/public/galaxy.js
-          node --check prototypes/nexora-social-mvp/public/galaxy-scene.js
           node --check prototypes/nexora-social-mvp/public/client.js
           node --check prototypes/nexora-social-mvp/public/sprite-engine.js
           node --check prototypes/nexora-social-mvp/public/world-objects.js
@@ -50,10 +48,6 @@ jobs:
           const fs = require("fs");
           const root = "prototypes/nexora-social-mvp/";
           const html = fs.readFileSync(root + "public/index.html", "utf8");
-          const galaxyHtml = fs.readFileSync(root + "public/galaxy.html", "utf8");
-          const galaxyCss = fs.readFileSync(root + "public/galaxy.css", "utf8");
-          const galaxyClient = fs.readFileSync(root + "public/galaxy.js", "utf8");
-          const galaxyScene = fs.readFileSync(root + "public/galaxy-scene.js", "utf8");
           const galaxySockets = fs.readFileSync(root + "src/galaxy-sockets.js", "utf8");
           const css = fs.readFileSync(root + "public/style.css", "utf8");
           const spriteCss = fs.readFileSync(root + "public/sprite-overhaul.css", "utf8");
@@ -113,13 +107,11 @@ jobs:
             [html.includes('id="public-profile-owner-tools"') && client.includes('ownerTools.classList.toggle("hidden", !developerIsOwner)') && client.includes('loadOwnerProfileTools'), "main developer tools are shown only in character profiles for the owner"],
             [developer.includes('router.post("/players/:id/access-code/reset"') && developer.includes('player.access_code.reset') && developer.includes('current.role !== "OWNER"'), "character access-code reset is owner-only and audited"],
             [client.includes('async function developerRequest(path, options = {})'), "developer requests support protected actions"],
-            [server.includes('app.get("/galaxy"') && server.includes("attachGalaxySockets(io"), "Galaxy page and isolated socket namespace are mounted"],
-            [galaxyHtml.includes('id="galaxy-canvas"') && galaxyHtml.includes('id="chat-form"') && galaxyHtml.includes('id="planet-select"'), "standalone Galaxy HUD, canvas and planet chat are present"],
-            [galaxySockets.includes('io.of("/galaxy")') && galaxySockets.includes("auth.authenticateToken") && galaxySockets.includes('socket.on("player:move"'), "Galaxy sockets use authenticated sessions and server-validated movement"],
-            [galaxyClient.includes('io("/galaxy"') && galaxyClient.includes('socket.emit("chat:send"') && galaxyClient.includes('socket.emit("planet:change"'), "Galaxy client supports chat and planet travel"],
-            [galaxyHtml.includes('id="context-actions-toggle"') && galaxyHtml.includes('data-action-choice="flower"') && !galaxyHtml.includes('id="emote"') && galaxyClient.includes('function playCharacterAction') && galaxyScene.includes('this.onSelect?.(hit,e.clientX,e.clientY)'), "character action menu is contextual, mobile-positioned and replaces the old emotion toolbar button"],
-            [galaxyScene.includes("NexoraSpriteEngine.draw") && galaxyScene.includes("this.camera"), "Galaxy scene uses the existing sprite atlas and pannable stage"],
-            [galaxyCss.includes("rgba(16,22,38,.9)") && galaxyCss.includes("#3b82f6"), "Galaxy UI uses the requested cosmic panel palette"]
+            [server.includes('app.get("/galaxy"') && server.includes('res.redirect(308, "/")'), "legacy Galaxy URL redirects to the single main NEXORA site"],
+            [!html.includes('id="integrated-galaxy-view"') && !html.includes("Galaxy 2D"), "main page no longer embeds the secondary Galaxy interface"],
+            [!client.includes("openIntegratedGalaxy") && !client.includes("integrated-galaxy-frame") && client.includes("Draw exactly one compact nickname plate"), "main world renders one nickname plate and has no embedded Galaxy client"],
+            [!css.includes("integrated-galaxy-view") && !css.includes("galaxy-primary-toolbar"), "secondary Galaxy overlay styles are removed"],
+            [galaxySockets.includes('io.of("/galaxy")') && galaxySockets.includes("auth.authenticateToken") && galaxySockets.includes('socket.on("player:move"'), "legacy server socket namespace remains authenticated"]
           ];
           for (const [ok, label] of checks) console.log((ok ? "PASS " : "FAIL ") + label);
           if (checks.some(([ok]) => !ok)) process.exit(1);
