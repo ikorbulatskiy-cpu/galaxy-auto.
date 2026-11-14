@@ -4,6 +4,7 @@ const { WebSocketServer } = require("ws");
 const { Client } = require("pg");
 const { pool } = require("./db");
 const { requireSession } = require("./auth");
+const { registerWebSocketRoute } = require("./websocket-router");
 
 const COOKIE_NAME = "nexora_session";
 const router = express.Router();
