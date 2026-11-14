@@ -1,7 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
-CREATE SCHEMA IF NOT EXISTS nexora_social_world;
+CREATE SCHEMA IF NOT EXISTS nexora_social_auth;
 
-CREATE TABLE IF NOT EXISTS nexora_social_world.accounts (
+CREATE TABLE IF NOT EXISTS nexora_social_auth.accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nickname VARCHAR(24) NOT NULL,
   nickname_normalized VARCHAR(24) NOT NULL UNIQUE,
@@ -12,18 +12,18 @@ CREATE TABLE IF NOT EXISTS nexora_social_world.accounts (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS nexora_social_world.sessions (
+CREATE TABLE IF NOT EXISTS nexora_social_auth.sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  account_id UUID NOT NULL REFERENCES nexora_social_world.accounts(id) ON DELETE CASCADE,
+  account_id UUID NOT NULL REFERENCES nexora_social_auth.accounts(id) ON DELETE CASCADE,
   token_hash TEXT NOT NULL UNIQUE,
   expires_at TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS sessions_account_idx ON nexora_social_world.sessions(account_id);
-CREATE INDEX IF NOT EXISTS sessions_expiry_idx ON nexora_social_world.sessions(expires_at);
+CREATE INDEX IF NOT EXISTS sessions_account_idx ON nexora_social_auth.sessions(account_id);
+CREATE INDEX IF NOT EXISTS sessions_expiry_idx ON nexora_social_auth.sessions(expires_at);
 
-CREATE TABLE IF NOT EXISTS nexora_social_world.account_preferences (
-  account_id UUID PRIMARY KEY REFERENCES nexora_social_world.accounts(id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS nexora_social_auth.account_preferences (
+  account_id UUID PRIMARY KEY REFERENCES nexora_social_auth.accounts(id) ON DELETE CASCADE,
   status VARCHAR(32) NOT NULL DEFAULT 'online',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
