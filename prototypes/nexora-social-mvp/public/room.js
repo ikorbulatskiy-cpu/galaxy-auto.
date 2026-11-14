@@ -162,7 +162,7 @@
  async function showRoom(account){
   currentNickname=String(account&&account.nickname||account&&account.name||"Персонаж").trim().slice(0,24)||"Персонаж";
   ensureAvatarEditor();
-  try{const response=await fetch("/api/account/profile",{cache:"no-store"});if(response.ok){const profile=await response.json(),character=profile.character||{};avatar.headId=Math.max(1,Math.min(24,Number(character.headId)||1));const head=$("nexora-world-head");if(head)head.setAttribute("href","/assets/sprites/characters/nexora-detailed-atlas.svg#head-"+avatar.headId);}}catch(error){console.warn("Could not load saved avatar:",error);}
+  try{const response=await fetch("/api/account/profile",{cache:"no-store"});if(response.ok){const profile=await response.json(),character=profile.character||{};avatar.headId=Math.max(1,Math.min(24,Number(character.headId)||1));avatar.bodyId=Math.max(1,Math.min(6,Number(character.bodyId)||1));const head=$("nexora-world-head"),body=$("nexora-world-body");if(head)head.setAttribute("href","/assets/sprites/characters/nexora-detailed-atlas.svg#head-"+avatar.headId);if(body)body.setAttribute("href","/assets/sprites/characters/nexora-user-bodies.svg#body-"+avatar.bodyId);}}catch(error){console.warn("Could not load saved avatar:",error);}
   const nameLabel=$("nexora-world-rank");if(nameLabel)nameLabel.textContent=currentNickname;
   $("intro-screen").classList.add("hidden");
   room.classList.remove("hidden");
