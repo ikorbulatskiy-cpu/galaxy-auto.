@@ -72,7 +72,7 @@
   draw(){
    if(this.destroyed)return;const c=this.ctx;c.clearRect(0,0,this.width,this.height);
    const sway=this.animation==="walk"?Math.sin(this.frame*Math.PI/4)*2:this.animation==="dance"?Math.sin(this.frame*Math.PI/2)*3:this.animation==="happy"||this.animation==="wave"?Math.sin(this.frame*Math.PI/3)*1.5:0;
-   const bob=this.animation==="idle"?Math.sin(this.frame*Math.PI/2)*1.2:this.animation==="walk"?Math.abs(Math.sin(this.frame*Math.PI/4))*2:this.animation==="dance"?Math.sin(this.frame*Math.PI/2)*3:0;
+   const bob=this.animation==="idle"?0:this.animation==="walk"?Math.abs(Math.sin(this.frame*Math.PI/4))*2:this.animation==="dance"?Math.sin(this.frame*Math.PI/2)*3:0;
    c.save();c.translate(sway,bob);
    for(const key of ["body","outfit","shoes","head","hair","accessories"]){
     const img=this.images.get(key);if(!img)continue;
