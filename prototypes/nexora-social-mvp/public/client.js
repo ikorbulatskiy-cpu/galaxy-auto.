@@ -737,7 +737,7 @@
     state.roomId = data.roomId || state.roomId;
     state.players.clear();
     data.players.forEach((player) => state.players.set(player.id, { ...player, y: player.y ?? .82, renderX: player.x, renderY: player.y ?? .82 }));
-    // Public chat is session-only: a fresh join never restores old messages.
+    // Restore the latest messages saved for this room in PostgreSQL.
     state.chat = [];
     state.unreadChat = 0;
     renderHistory();
@@ -1447,6 +1447,17 @@
     $("#planet-catalog").classList.remove("hidden");
     await loadPlanetCatalog();
   }
+  document.querySelectorAll("[data-map-planet]").forEach(button => button.addEventListener("click", () => {
+    const nextPlanet=button.dataset.mapPlanet;
+    if(nextPlanet===state.planet){$("#planets-panel").classList.add("hidden");return;}
+    gameScreen.classList.add("world-transitioning");
+    socket.timeout(8000).emit("planet:change",{planet:nextPlanet},(error,result)=>{
+      if(error||!result?.ok){gameScreen.classList.remove("world-transitioning");showToast(result?.error||"Не удалось перейти на планету.");return;}
+      $("#planets-panel").classList.add("hidden");
+      setTimeout(()=>gameScreen.classList.remove("world-transitioning"),650);
+      showToast("🪐 Вы прибыли: "+(PLANETS[nextPlanet]?.name||nextPlanet));
+    });
+  }));
   $("#planets-close").addEventListener("click",()=>$("#planets-panel").classList.add("hidden"));
   $("#planet-search").addEventListener("input",()=>{clearTimeout(planetSearchTimer);planetSearchTimer=setTimeout(loadPlanetCatalog,180);});
   $("#planet-category").addEventListener("change",loadPlanetCatalog);
