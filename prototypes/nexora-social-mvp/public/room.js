@@ -65,9 +65,8 @@
    const halfWidth=avatarRect.width/2/rect.width*100;
    const avatarHeight=avatarRect.height/rect.height*100;
    const x=Math.max(halfWidth,Math.min(100-halfWidth,(event.clientX-rect.left)/rect.width*100));
-   // The bottom strip is the floor: clicks higher in the room move the avatar
-   // deeper into the scene, while the feet never cross the lower room border.
-   const bottom=Math.max(12,Math.min(88-avatarHeight,(rect.bottom-event.clientY)/rect.height*100));
+   // Feet stay on the walkable floor plane and never sink below its edge.
+   const bottom=Math.max(13,Math.min(78-avatarHeight,(rect.bottom-event.clientY)/rect.height*100));
    moveWorldAvatarTo(x,bottom);
   });
 
@@ -97,6 +96,8 @@
    if(room.classList.contains("hidden")||event.target.closest("input,textarea,select,[contenteditable=true]"))return;
    if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a"){event.preventDefault();moveWorldAvatarBy(-5);}
    if(event.key==="ArrowRight"||event.key.toLowerCase()==="d"){event.preventDefault();moveWorldAvatarBy(5);}
+   if(event.key==="ArrowUp"||event.key.toLowerCase()==="w"){event.preventDefault();moveWorldAvatarTo(state.position.x,Math.min(54,state.position.bottom+4));}
+   if(event.key==="ArrowDown"||event.key.toLowerCase()==="s"){event.preventDefault();moveWorldAvatarTo(state.position.x,Math.max(13,state.position.bottom-4));}
   });
  }
  const characterEmotions=[["Убрать","",""],["❤️","Люблю","love"],["⛔","Занят","busy"],["🙂","Весело","happy"],["😄","Очень весело","very-happy"],["😛","Дразнюсь","teasing"],["😳","Смущение","shy"],["😞","Грустно","sad"],["😮","Удивление","surprised"],["😐","Апатия","apathetic"],["🤔","Сомнение","doubt"],["😎","Гордый","proud"],["😕","Недоумение","confused"],["😢","Очень грустно","very-sad"]];
@@ -137,7 +138,11 @@
   const world=$("nexora-world-avatar");if(!world)return;
   const sprite=world.querySelector(".nexora-avatar-sprite");if(!sprite)return;
   const currentX=parseFloat(world.style.left)||state.position.x||50,currentBottom=parseFloat(world.style.bottom)||state.position.bottom||12;
-  x=Math.max(7,Math.min(93,Number(x)||currentX));bottom=Math.max(8,Math.min(54,Number(bottom)||currentBottom));
+  const scene=$("room-scene"),rect=scene?.getBoundingClientRect(),worldRect=world.getBoundingClientRect();
+  const halfWidth=rect?worldRect.width/2/rect.width*100:5;
+  const spriteHeight=rect?worldRect.height/rect.height*100:18;
+  x=Math.max(halfWidth,Math.min(100-halfWidth,Number(x)||currentX));
+  bottom=Math.max(13,Math.min(78-spriteHeight,Number(bottom)||currentBottom));
   const distance=Math.hypot((x-currentX)*8,(bottom-currentBottom)*8);
   state.facing=x>=currentX?1:-1;state.position={x,bottom};
   world.style.left=x+"%";world.style.bottom=bottom+"%";world.dataset.facing=String(state.facing);
