@@ -225,20 +225,10 @@
   document.addEventListener("keyup",event=>movement.keys.delete(event.key.toLowerCase()));
   window.addEventListener("blur",()=>movement.keys.clear());
   scene.addEventListener("pointerdown",event=>{
-   if(event.target.closest(".nexora-world-avatar,.nexora-character-actions,.nexora-avatar-panel,.nexora-auras-panel,.nexora-emotions-panel,.nexora-joystick"))return;
-   if(event.pointerType==="touch")return;
+   if(event.target.closest(".nexora-world-avatar,.nexora-character-actions,.nexora-avatar-panel,.nexora-auras-panel,.nexora-emotions-panel"))return;
    const r=scene.getBoundingClientRect(),b=sceneBounds();
    movement.target={x:Math.max(b.minX,Math.min(b.maxX,(event.clientX-r.left)/r.width*100)),bottom:Math.max(b.minY,Math.min(b.maxY,(r.bottom-event.clientY)/r.height*100))};
    movement.keys.clear();startMovementLoop();
-  });
-  const pad=document.createElement("div");pad.className="nexora-joystick";pad.setAttribute("aria-label","Джойстик движения");
-  pad.innerHTML='<div class="nexora-joystick-ring"><div class="nexora-joystick-knob"></div></div>';scene.append(pad);
-  const ring=pad.querySelector(".nexora-joystick-ring"),knob=pad.querySelector(".nexora-joystick-knob");
-  const update=e=>{const r=ring.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),max=r.width*.34,len=Math.hypot(dx,dy),scale=len>max?max/len:1;movement.joy={x:dx*scale/max,y:-dy*scale/max};knob.style.transform="translate("+dx*scale+"px,"+dy*scale+"px)";startMovementLoop();};
-  pad.addEventListener("pointerdown",e=>{e.preventDefault();pad.setPointerCapture(e.pointerId);update(e);});
-  pad.addEventListener("pointermove",e=>{if(pad.hasPointerCapture(e.pointerId))update(e);});
-  const release=()=>{movement.joy={x:0,y:0};knob.style.transform="translate(0,0)";};
-  pad.addEventListener("pointerup",release);pad.addEventListener("pointercancel",release);pad.addEventListener("lostpointercapture",release);
  }
  function openCharacterActions(playerId=null){
   ensureAvatarEditor();
