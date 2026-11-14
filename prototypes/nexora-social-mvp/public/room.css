@@ -370,3 +370,10 @@
 .nexora-info-actions{flex:0 0 auto!important;padding-bottom:max(9px,env(safe-area-inset-bottom))!important}
 @media(max-height:700px){.nexora-avatar-window{height:calc(100dvh - 20px)!important;max-height:calc(100dvh - 20px)!important}.nexora-classic-profile{padding-top:8px!important;padding-bottom:12px!important}.nexora-classic-links{margin-bottom:14px!important}.nexora-classic-ask{margin-bottom:14px!important}.nexora-classic-photo img{height:clamp(82px,18dvh,124px)!important}}
 @media(max-width:380px){.nexora-avatar-window{width:calc(100vw - 18px)!important}.nexora-classic-top{grid-template-columns:minmax(88px,36%) minmax(0,1fr)!important;gap:8px!important}.nexora-classic-photo img{height:clamp(80px,17dvh,112px)!important}.nexora-classic-facts{gap:5px!important;font-size:11px!important}.nexora-classic-links,.nexora-classic-ask{font-size:12px!important}}
+
+
+/* Compact emotion glyph to the right of the character; centered nickname above. */
+.nexora-world-avatar{isolation:isolate!important}
+.nexora-current-emotion{position:absolute!important;left:calc(100% - 1px)!important;right:auto!important;top:55%!important;bottom:auto!important;transform:translateY(-50%)!important;display:flex!important;align-items:center!important;justify-content:center!important;width:23px!important;height:23px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#fff!important;font-family:"Apple Color Emoji","Segoe UI Emoji",sans-serif!important;font-size:20px!important;line-height:1!important;font-weight:400!important;text-shadow:0 1px 4px #000,0 0 5px #fff8!important;box-shadow:none!important;z-index:8!important;pointer-events:none!important}
+.nexora-current-emotion.hidden{display:none!important}
+.nexora-world-rank{left:50%!important;right:auto!important;bottom:calc(100% + 8px)!important;transform:translateX(-50%)!important;width:max-content!important;max-width:min(220px,80vw)!important;text-align:center!important;white-space:nowrap!important;margin:0!important;box-sizing:border-box!important}
