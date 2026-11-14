@@ -317,7 +317,7 @@
     }
   }
 
-  window.NexoraMovement = { join: connectRoom, leave: closeSocket, action: sendAction, beginPlacement, cancelPlacement: () => endPlacement(true), previewPlacement };
+  window.NexoraMovement = { join: connectRoom, leave: closeSocket, action: sendAction, beginPlacement, cancelPlacement: () => endPlacement(true), previewPlacement, step: delta => { if (roomId) moveTo(current.x + Number(delta || 0), 78); }, getPosition: () => ({ ...current }) };
   window.addEventListener("nexora:room-joined", event => connectRoom(event.detail?.roomId));
   window.addEventListener("nexora:room-left", closeSocket);
 
