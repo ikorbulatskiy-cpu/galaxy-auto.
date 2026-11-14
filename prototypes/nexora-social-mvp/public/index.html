@@ -199,15 +199,23 @@
         <section class="profile-social-hub" aria-label="Общение в профиле">
           <div class="profile-social-home">
             <div class="profile-section-title">Общение и контакты</div>
+            <button type="button" data-profile-social-tab="dating">💜 Знакомства</button>
             <button type="button" data-profile-social-tab="friends">👥 Друзья и социальное</button>
             <button type="button" data-profile-social-tab="messages">💬 Личные сообщения</button>
           </div>
           <div class="profile-social-content">
             <div class="profile-social-toolbar"><strong id="profile-social-title">Друзья и социальное</strong><button id="profile-social-back" type="button">← В профиль</button></div>
             <div class="profile-social-switch">
+              <button type="button" data-profile-social-tab="dating">💜 Знакомства</button>
               <button type="button" data-profile-social-tab="friends">👥 Друзья</button>
               <button type="button" data-profile-social-tab="messages">💬 Сообщения</button>
             </div>
+        <section id="social-dating-view" class="social-view hidden">
+          <input id="dating-search" type="search" maxlength="24" placeholder="Поиск людей для знакомства">
+          <div class="dating-intro">Ставь симпатии. Взаимный интерес создаёт совпадение 💫</div>
+          <div id="social-dating-list" class="social-list"></div>
+          <h4>Взаимные совпадения</h4><div id="social-matches-list" class="social-list"></div>
+        </section>
         <section id="social-friends-view" class="social-view hidden">
           <input id="social-search" type="search" maxlength="18" placeholder="Найти игрока по нику">
           <div id="social-search-results" class="social-list"></div>
