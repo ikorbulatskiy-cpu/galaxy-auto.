@@ -175,9 +175,9 @@ function attachSocketCompat(server) {
           text:result.rows[0].body,time:new Date(result.rows[0].created_at).getTime()
         };
         io.to(socket.data.roomId).emit("chat:message",message);
-        if (typeof ack === "function") ack({ok:true});
+        if (typeof ack === "function") ack(null,{ok:true});
       } catch (error) {
-        if (typeof ack === "function") ack({ok:false,error:error.message||"Не удалось отправить сообщение."});
+        if (typeof ack === "function") ack(null,{ok:false,error:error.message||"Не удалось отправить сообщение."});
       }
     });
 
