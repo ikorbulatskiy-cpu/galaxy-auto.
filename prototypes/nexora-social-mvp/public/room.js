@@ -32,10 +32,20 @@
   ctx.putImageData(frame,0,0);
  }
 
+ function trimmedSpriteDataUrl(canvas,w,h){
+ const d=canvas.getContext("2d").getImageData(0,0,w,h).data;let x0=w,y0=h,x1=-1,y1=-1;
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(d[(y*w+x)*4+3]>18){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}
+ if(x1<x0||y1<y0)return canvas.toDataURL("image/png");
+ x0=Math.max(0,x0-2);y0=Math.max(0,y0-2);x1=Math.min(w-1,x1+2);y1=Math.min(h-1,y1+2);
+ const out=document.createElement("canvas");out.width=x1-x0+1;out.height=y1-y0+1;
+ out.getContext("2d").drawImage(canvas,x0,y0,out.width,out.height,0,0,out.width,out.height);
+ return out.toDataURL("image/png");
+}
+
  function setSpriteImage(img,kind,id){
   if(!img)return;const key=kind+":"+id;
   if(!roomSpritePromises[key])roomSpritePromises[key]=new Promise((resolve,reject)=>{
-   const source=new Image();source.onload=()=>{const [x,y,w,h]=roomSpriteCrops[kind][id-1];if(x+w>source.naturalWidth||y+h>source.naturalHeight){reject(new Error("Sprite crop exceeds source"));return;}const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;const ctx=canvas.getContext("2d");if(!ctx){reject(new Error("Canvas unavailable"));return;}ctx.drawImage(source,x,y,w,h,0,0,w,h);removeScreenshotBackground(ctx,w,h);resolve(canvas.toDataURL("image/png"));};source.onerror=()=>reject(new Error("Cannot load "+kind+" atlas"));source.src="/assets/sprites/characters/IMG_415"+(kind==="head"?"7":"8")+".png?v=source-sprite-20261115";
+   const source=new Image();source.onload=()=>{const [x,y,w,h]=roomSpriteCrops[kind][id-1];if(x+w>source.naturalWidth||y+h>source.naturalHeight){reject(new Error("Sprite crop exceeds source"));return;}const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;const ctx=canvas.getContext("2d");if(!ctx){reject(new Error("Canvas unavailable"));return;}ctx.drawImage(source,x,y,w,h,0,0,w,h);removeScreenshotBackground(ctx,w,h);resolve(trimmedSpriteDataUrl(canvas,w,h));};source.onerror=()=>reject(new Error("Cannot load "+kind+" atlas"));source.src="/assets/sprites/characters/IMG_415"+(kind==="head"?"7":"8")+".png?v=source-sprite-20261115";
   });
   roomSpritePromises[key].then(src=>{img.src=src;}).catch(error=>console.error("NEXORA sprite:",error));
  }
@@ -178,18 +188,19 @@
   if(tab==="emperor"){box.innerHTML='<div class="nexora-emperor-card"><div class="nexora-emperor-art"><svg viewBox="0 0 128 128"><use href="/assets/sprites/characters/nexora-emperor-set.svg#emperor-set"></use></svg></div><b>Император Галактики</b><span>Капюшон · мантия · коса · фиолетовая аура</span><button type="button" data-emperor="1">Надеть комплект</button><button type="button" data-emperor="0">Снять комплект</button></div>';box.querySelectorAll("[data-emperor]").forEach(b=>b.addEventListener("click",()=>{avatar.outfitId=Number(b.dataset.emperor);showAvatarTab("emperor");}));return;}
   if(tab==="ranks"){box.innerHTML='<div class="nexora-rank-table">'+rankRows.map((r,i)=>'<div class="nexora-rank-row"><b>'+r[0]+'</b><span>'+r[1]+'</span><strong>'+r[2]+'</strong></div>').join("")+'</div>';return;}
   const isHead=tab==="heads",count=6;
-  box.innerHTML='<div class="nexora-choice-grid">'+Array.from({length:count},(_,i)=>'<button class="nexora-choice '+((isHead?avatar.headId:avatar.bodyId)===i+1?"selected":"")+'" data-choice="'+(i+1)+'" aria-label="'+(isHead?"Голова ":"Тело ")+(i+1)+'"><img src="/assets/sprites/characters/nexora-'+(isHead?"head-":"body-")+(i+1)+'.svg?v=standalone-sprites-20261115" alt=""></button>').join("")+'</div>';
-  box.querySelectorAll("[data-choice]").forEach(b=>b.addEventListener("click",()=>{const id=Number(b.dataset.choice);if(isHead)avatar.headId=id;else avatar.bodyId=id;showAvatarTab(tab);}));
+  box.innerHTML='<div class="nexora-choice-grid">'+Array.from({length:count},(_,i)=>'<button class="nexora-choice '+((isHead?avatar.headId:avatar.bodyId)===i+1?"selected":"")+'" data-choice="'+(i+1)+'" aria-label="'+(isHead?"Голова ":"Тело ")+(i+1)+'"><img alt=""></button>').join("")+'</div>';
+  box.querySelectorAll("[data-choice]").forEach(b=>{const id=Number(b.dataset.choice);setSpriteImage(b.querySelector("img"),isHead?"head":"body",id);b.addEventListener("click",()=>{if(isHead)avatar.headId=id;else avatar.bodyId=id;applyWorldAvatar();showAvatarTab(tab);});});
  }
+ function applyWorldAvatar(){const h=$("nexora-world-head"),b=$("nexora-world-body");if(h)setSpriteImage(h,"head",avatar.headId);if(b)setSpriteImage(b,"body",avatar.bodyId);}
  async function saveAvatar(){
   const b=$("nexora-avatar-save"),note=$("nexora-avatar-note");b.disabled=true;note.textContent="";
-  try{const r=await fetch("/api/character",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({headId:avatar.headId,bodyId:avatar.bodyId,outfitId:avatar.outfitId})});const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось сохранить");note.textContent="Внешность сохранена!";const head=$("nexora-world-head"),body=$("nexora-world-body"),outfit=$("nexora-world-outfit");if(head)setSpriteImage(head,"head",avatar.headId);if(body)setSpriteImage(body,"body",avatar.bodyId);if(outfit)outfit.setAttribute("href",avatar.outfitId?"/assets/sprites/characters/nexora-emperor-set.svg#emperor-set":"");}catch(e){note.textContent=e.message;}finally{b.disabled=false;}
+  try{const r=await fetch("/api/character",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({headId:avatar.headId,bodyId:avatar.bodyId,outfitId:avatar.outfitId})});const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось сохранить");note.textContent="Внешность сохранена!";const head=$("nexora-world-head"),body=$("nexora-world-body"),outfit=$("nexora-world-outfit");applyWorldAvatar();if(outfit)outfit.setAttribute("href",avatar.outfitId?"/assets/sprites/characters/nexora-emperor-set.svg#emperor-set":"");}catch(e){note.textContent=e.message;}finally{b.disabled=false;}
  }
 
  async function showRoom(account){
   currentNickname=String(account&&account.nickname||account&&account.name||"Персонаж").trim().slice(0,24)||"Персонаж";
   ensureAvatarEditor();
-  try{const response=await fetch("/api/account/profile",{cache:"no-store"});if(response.ok){const profile=await response.json(),character=profile.character||{};avatar.headId=Math.max(1,Math.min(6,Number(character.headId)||1));avatar.bodyId=Math.max(1,Math.min(6,Number(character.bodyId)||1));const head=$("nexora-world-head"),body=$("nexora-world-body");if(head)setSpriteImage(head,"head",avatar.headId);if(body)setSpriteImage(body,"body",avatar.bodyId);}}catch(error){console.warn("Could not load saved avatar:",error);}
+  try{const response=await fetch("/api/account/profile",{cache:"no-store"});if(response.ok){const profile=await response.json(),character=profile.character||profile.profile?.character||{};avatar.headId=Math.max(1,Math.min(6,Number(character.headId??character.head_id)||1));avatar.bodyId=Math.max(1,Math.min(6,Number(character.bodyId??character.body_id)||1));applyWorldAvatar();}}catch(error){console.warn("Could not load saved avatar:",error);}
   const nameLabel=$("nexora-world-rank");if(nameLabel)nameLabel.textContent=currentNickname;
   $("intro-screen").classList.add("hidden");
   room.classList.remove("hidden");
