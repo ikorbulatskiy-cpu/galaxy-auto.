@@ -941,3 +941,19 @@
  #room-scene .nexora-world-avatar{width:104px!important;height:150px!important}
  #room-scene .nexora-room-player{width:82px!important;height:132px!important}
 }
+
+
+/* NEXORA character scale, floor plane, floating nameplates and living faces. */
+#room-scene .nexora-world-avatar,#room-scene .nexora-room-player{width:64px!important;height:100px!important;transform:translateX(-50%)!important;transform-origin:center bottom!important;overflow:visible!important}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite,#room-scene .nexora-room-player .nexora-avatar-sprite{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;overflow:visible!important;transform-origin:center bottom!important}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite #nexora-world-body,#room-scene .nexora-room-player .nexora-room-player-body{left:0!important;top:0!important;width:100%!important;height:100%!important;object-fit:fill!important;object-position:center bottom!important}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite #nexora-world-head,#room-scene .nexora-room-player .nexora-room-player-head{left:25%!important;top:0!important;width:50%!important;height:24%!important;object-fit:fill!important;object-position:center center!important}
+#room-scene .nexora-world-avatar .nexora-world-rank,#room-scene .nexora-room-player .nexora-room-player-name{position:absolute!important;z-index:8!important;left:50%!important;right:auto!important;top:auto!important;bottom:calc(100% + 7px)!important;transform:translateX(-50%)!important;display:block!important;width:max-content!important;max-width:140px!important;margin:0!important;padding:3px 8px!important;border:1px solid #b8d8ff88!important;border-radius:999px!important;background:linear-gradient(180deg,#17284bef,#09152bef)!important;color:#fff!important;font:700 10px/1.2 Tahoma,Arial,sans-serif!important;letter-spacing:.15px!important;text-align:center!important;text-shadow:0 1px 3px #000!important;box-shadow:0 2px 9px #0008,0 0 8px #79baff33!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;animation:nexora-name-float 2.8s ease-in-out infinite!important}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite:not(.nexora-walking),#room-scene .nexora-room-player .nexora-avatar-sprite:not(.nexora-walking){animation:nexora-idle-breathe 3.2s ease-in-out infinite}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite.nexora-walking,#room-scene .nexora-room-player .nexora-avatar-sprite.nexora-walking{animation:nexora-walk-hop .38s ease-in-out infinite!important}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite #nexora-world-head,#room-scene .nexora-room-player .nexora-avatar-sprite .nexora-room-player-head{transform-origin:50% 80%!important;animation:nexora-head-look 5.6s ease-in-out infinite}
+@keyframes nexora-idle-breathe{0%,100%{translate:0 0}50%{translate:0 -1.5px}}
+@keyframes nexora-head-look{0%,38%,100%{translate:0 0}42%{translate:1px 0}48%{translate:-1px 0}54%{translate:0 0}}
+@keyframes nexora-name-float{0%,100%{translate:-50% 0}50%{translate:-50% -2px}}
+@media(max-width:520px){#room-scene .nexora-world-avatar,#room-scene .nexora-room-player{width:56px!important;height:88px!important}#room-scene .nexora-world-avatar .nexora-world-rank,#room-scene .nexora-room-player .nexora-room-player-name{font-size:9px!important;max-width:112px!important}}
+@media(prefers-reduced-motion:reduce){#room-scene .nexora-world-avatar .nexora-avatar-sprite,#room-scene .nexora-room-player .nexora-avatar-sprite,#room-scene .nexora-world-avatar .nexora-world-rank,#room-scene .nexora-room-player .nexora-room-player-name{animation:none!important}}
