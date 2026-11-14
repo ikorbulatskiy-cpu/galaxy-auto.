@@ -22,3 +22,39 @@
 .room-bottom-zone,.room-bottom-window,.room-bottom-window-edge{display:none!important}
 @media(max-width:600px){.retro-room{width:100vw;height:100dvh;min-height:0;border:0;grid-template-rows:22px minmax(0,1.8fr) minmax(0,1fr)}.planet-header{height:22px;min-height:22px}.room-zone{width:100%}}
 @media(max-height:500px){.retro-room{grid-template-rows:19px minmax(0,1.8fr) minmax(0,1fr)}.planet-header{height:19px;min-height:19px}.retro-composer{height:32px;flex-basis:32px}}
+
+/* NEXORA authority and avatar customization */
+.nexora-avatar-open{position:absolute;z-index:4;right:12px;top:12px;border:1px solid #9eb7ff88;border-radius:22px;padding:9px 14px;background:linear-gradient(135deg,#283c76ee,#111a39ee);color:#fff;font-weight:800;box-shadow:0 5px 22px #0009}
+.nexora-avatar-panel{position:absolute;z-index:8;inset:12px auto 12px 12px;width:min(440px,calc(100% - 24px));display:flex;flex-direction:column;overflow:hidden;border:1px solid #c7d3ff88;border-radius:18px;background:linear-gradient(155deg,#f9fbff,#e9edf7);color:#18213b;box-shadow:0 18px 60px #000b;font-family:Inter,Arial,sans-serif}
+.nexora-avatar-panel.hidden{display:none!important}
+.nexora-avatar-close{position:absolute;right:10px;top:8px;z-index:2;border:0;background:transparent;color:#303b5a;font-size:28px}
+.nexora-rank-head{display:flex;align-items:center;gap:15px;padding:20px 18px 12px;background:linear-gradient(120deg,#fff,#eef4ff)}
+.nexora-rank-head small{font-size:9px;letter-spacing:1.5px;color:#687392;font-weight:900}
+.nexora-rank-head h2{margin:3px 0;color:#39914e;font-size:22px}
+.nexora-rank-head span{font-size:12px;color:#5c6680}
+.nexora-aura-preview{width:64px;height:64px;flex:0 0 64px;display:grid;place-items:center;border-radius:50%;font-size:38px;color:#fff;background:radial-gradient(circle,#fff7b0 0 12%,#ffb83d 24%,#b94cff 47%,transparent 70%);filter:drop-shadow(0 0 10px #b54dff)}
+.nexora-aura-preview.aura-none{background:#dce5f4;color:#8493b2;filter:none}
+.nexora-aura-preview.aura-violet,.nexora-aura-preview.aura-purple{background:radial-gradient(circle,#fff 0 8%,#d8a2ff 24%,#7929d4 48%,transparent 72%);filter:drop-shadow(0 0 12px #a64cff)}
+.nexora-aura-preview.aura-silver{background:radial-gradient(circle,#fff 0 12%,#dfeaff 35%,#8a9ab2 52%,transparent 72%);filter:drop-shadow(0 0 12px #cbd9ef)}
+.nexora-aura-preview.aura-rose{background:radial-gradient(circle,#fff 0 12%,#ffb3d4 32%,#9e527e 54%,transparent 72%);filter:drop-shadow(0 0 12px #e58ab6)}
+.nexora-aura-preview.aura-blue{background:radial-gradient(circle,#fff 0 12%,#91e2ff 30%,#2468e8 54%,transparent 72%);filter:drop-shadow(0 0 12px #328dff)}
+.nexora-aura-preview.aura-red,.nexora-aura-preview.aura-ember{background:radial-gradient(circle,#fff 0 10%,#ffb06b 30%,#e12e2e 55%,transparent 72%);filter:drop-shadow(0 0 12px #f44)}
+.nexora-aura-preview.aura-green{background:radial-gradient(circle,#fff 0 10%,#d3ff98 30%,#36a34a 55%,transparent 72%);filter:drop-shadow(0 0 12px #54d65c)}
+.nexora-aura-preview.aura-gold,.nexora-aura-preview.aura-diamond{background:radial-gradient(circle,#fff 0 10%,#fff2a0 28%,#e49c22 50%,transparent 72%);filter:drop-shadow(0 0 12px #ffd44f)}
+.nexora-progress{height:7px;margin:0 18px 5px;border-radius:9px;background:#d9e0ed;overflow:hidden}.nexora-progress i{display:block;width:0;height:100%;background:linear-gradient(90deg,#4c8cff,#b25ee7);border-radius:9px}
+.nexora-rank-sub{padding:0 18px 12px;color:#69748d;font-size:11px}
+.nexora-tabs{display:grid;grid-template-columns:repeat(3,1fr);margin:0 12px 10px;padding:4px;border-radius:13px;background:#333744;box-shadow:0 3px 8px #0003}
+.nexora-tabs button{border:0;border-radius:10px;padding:10px 4px;background:transparent;color:#dce2f4;font-size:12px;font-weight:800}
+.nexora-tabs button.active{background:linear-gradient(#737b8e,#4a5060);box-shadow:inset 0 1px #ffffff55;color:#fff}
+.nexora-avatar-content{flex:1;min-height:100px;overflow:auto;padding:4px 12px 12px}
+.nexora-choice-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+.nexora-choice{aspect-ratio:1;border:1px solid #d4dbea;border-radius:12px;background:linear-gradient(#fff,#eef2f8);padding:5px;box-shadow:0 2px 5px #1a2a4814}
+.nexora-choice.selected{border:2px solid #6588ed;box-shadow:0 0 0 2px #6588ed33}
+.nexora-choice svg{display:block;width:100%;height:100%;overflow:visible}
+.nexora-rank-table{display:flex;flex-direction:column;gap:3px}
+.nexora-rank-row{display:grid;grid-template-columns:minmax(0,1fr) 70px 90px;align-items:center;gap:6px;padding:7px 8px;border-bottom:1px solid #d8deeb;font-size:11px}
+.nexora-rank-row span{color:#5c6680;font-variant-numeric:tabular-nums}
+.nexora-rank-row strong{text-align:right;color:#e2a14a;letter-spacing:1px;white-space:nowrap}
+.nexora-avatar-save{flex:0 0 auto;margin:0 12px 8px;padding:12px;border:0;border-radius:12px;background:linear-gradient(110deg,#4e70df,#9060c7);color:white;font-weight:850}
+#nexora-avatar-note{min-height:18px;margin:0 14px 8px;color:#397a4b;font-size:11px;text-align:center}
+@media(max-width:500px){.nexora-avatar-panel{inset:8px;width:calc(100% - 16px)}.nexora-choice-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.nexora-rank-row{grid-template-columns:minmax(0,1fr) 55px 70px;font-size:10px}}
