@@ -1,7 +1,7 @@
 (() => {
  "use strict";
  const $=id=>document.getElementById(id);
- const state={lastMessageId:0,poll:null,clockTimer:null,presenceTimer:null,movementTimer:null,viewingOtherPlayer:false,playerIds:new Set()};
+ const state={lastMessageId:0,poll:null,clockTimer:null,presenceTimer:null,movementTimer:null,viewingOtherPlayer:false,selectedPlayerId:null,playerIds:new Set()};
  function updateVisitorClock(){
   const clock=$("visitor-clock");
   if(!clock)return;
@@ -73,7 +73,7 @@
 
   worldAvatar.addEventListener("click",openCharacterActions);
   worldAvatar.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openCharacterActions();}});
-  $("nexora-action-info").addEventListener("click",()=>{closeCharacterActions();openAvatar();});
+  $("nexora-action-info").addEventListener("click",()=>{const playerId=state.selectedPlayerId;closeCharacterActions();if(playerId)openOtherPlayer(playerId);else openAvatar();});
   $("nexora-action-emotions").addEventListener("click",openEmotions);
   $("nexora-action-auras").addEventListener("click",openAuras);
   $("nexora-action-developer").addEventListener("click",openDeveloperMode);
@@ -140,16 +140,23 @@
   if(state.movementTimer)clearTimeout(state.movementTimer);
   state.movementTimer=setTimeout(()=>{sprite.classList.remove("nexora-walking");state.movementTimer=null;},Math.max(650,Math.min(2600,distance*7)));
  }
- function openCharacterActions(){
+ function openCharacterActions(playerId=null){
   ensureAvatarEditor();
-  $("nexora-character-actions").classList.remove("hidden");
-  const a=$("nexora-world-avatar");if(a)a.setAttribute("aria-expanded","true");
+  state.selectedPlayerId=playerId?String(playerId):null;
+  const menu=$("nexora-character-actions");
+  menu.classList.remove("hidden");
+  const a=playerId?document.querySelector('.nexora-room-player[data-player-id="'+CSS.escape(String(playerId))+'"]'):$("nexora-world-avatar");
+  if(a)a.setAttribute("aria-expanded","true");
+  const title=menu.querySelector(".nexora-character-actions-title");if(title)title.textContent=playerId?"ИГРОК":"ДЕЙСТВИЯ";
  }
  function openDeveloperMode(){if(!state.isDeveloper)return;closeCharacterActions();$("nexora-developer-panel").classList.remove("hidden");}
  function closeDeveloperMode(){const panel=$("nexora-developer-panel");if(panel)panel.classList.add("hidden");}
  function closeCharacterActions(){
   const menu=$("nexora-character-actions");if(menu)menu.classList.add("hidden");
+  document.querySelectorAll(".nexora-room-player[aria-expanded=true]").forEach(node=>node.setAttribute("aria-expanded","false"));
   const a=$("nexora-world-avatar");if(a)a.setAttribute("aria-expanded","false");
+  state.selectedPlayerId=null;
+  const title=menu?.querySelector(".nexora-character-actions-title");if(title)title.textContent="ДЕЙСТВИЯ";
  }
  function setInfoReadonly(readonly){
   const form=$("nexora-info-form");if(!form)return;
@@ -305,8 +312,8 @@
      scene.append(node);
      setSpriteImage(node.querySelector(".nexora-room-player-body"),"body",Math.max(1,Math.min(6,Number(player.bodyId)||1)));
      setSpriteImage(node.querySelector(".nexora-room-player-head"),"head",Math.max(1,Math.min(6,Number(player.headId)||1)));
-     node.addEventListener("click",event=>{event.stopPropagation();openOtherPlayer(node.dataset.playerId);});
-     node.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openOtherPlayer(node.dataset.playerId);}});
+     node.addEventListener("click",event=>{event.stopPropagation();openCharacterActions(node.dataset.playerId);});
+     node.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openCharacterActions(node.dataset.playerId);}});
     }
     const [x,y]=slots[index%slots.length];node.style.left=x+"%";node.style.bottom=y+"%";
     node.className="nexora-world-avatar nexora-room-player aura-"+(player.aura&&player.aura!=="none"?player.aura:"none");
