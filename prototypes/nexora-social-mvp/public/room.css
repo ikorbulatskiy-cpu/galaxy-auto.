@@ -441,3 +441,17 @@
 .nexora-aura-option.selected b{opacity:1}
 .nexora-auras-panel .nexora-emotions-window{max-width:340px}
 @media(max-width:380px){.nexora-auras-list{grid-template-columns:1fr}}
+
+
+/* Only the two aura designs supplied by the project owner remain selectable. */
+.nexora-world-avatar{filter:drop-shadow(0 5px 4px #0009)!important;animation:none!important}
+.nexora-world-avatar.aura-user-dark,.nexora-world-avatar.aura-user-blue{filter:drop-shadow(0 5px 4px #0009)!important}
+.nexora-world-avatar .nexora-user-aura{position:absolute;z-index:0;left:50%;top:50%;width:154px;height:145px;transform:translate(-50%,-54%);pointer-events:none;overflow:visible}
+.nexora-world-avatar .nexora-user-aura use{pointer-events:none}
+.nexora-world-avatar .nexora-avatar-sprite{position:relative;z-index:1}
+.nexora-aura-swatch.user-dark{background:radial-gradient(ellipse,#f5dfff 5%,#9b7aa8 42%,#28202f 72%);box-shadow:0 0 8px #b99acb}
+.nexora-aura-swatch.user-blue{background:radial-gradient(ellipse,#efffff 5%,#57caff 48%,#1756a7 75%);box-shadow:0 0 8px #56caff}
+.nexora-aura-preview.aura-user-dark{background:radial-gradient(circle,#ead6ff 8%,#67516f 52%,#201a28 76%);filter:drop-shadow(0 0 9px #9d78b3)}
+.nexora-aura-preview.aura-user-blue{background:radial-gradient(circle,#eaffff 8%,#50bfff 48%,#15559a 76%);filter:drop-shadow(0 0 9px #39baff)}
+.nexora-world-avatar.aura-none .nexora-user-aura{display:none}
+.nexora-world-avatar .nexora-emperor-title{display:none!important}
