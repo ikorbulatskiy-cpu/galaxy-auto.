@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1206 2622">
 <title>NEXORA screenshot head sprites</title>
-<defs><filter id="sprite-key" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0.287 0.967 0.098 0 0"/><feComponentTransfer><feFuncA type="table" tableValues="1 1 0.8 0.3 0 0.3 0.8 1 1"/></feComponentTransfer></filter></defs>
-<symbol id="head-1" viewBox="108 908 188 174" preserveAspectRatio="xMidYMid meet"><image href="IMG_4157.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
-<symbol id="head-2" viewBox="503 885 202 202" preserveAspectRatio="xMidYMid meet"><image href="IMG_4157.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
-<symbol id="head-3" viewBox="902 904 202 181" preserveAspectRatio="xMidYMid meet"><image href="IMG_4157.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
-<symbol id="head-4" viewBox="108 1249 191 210" preserveAspectRatio="xMidYMid meet"><image href="IMG_4157.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
-<symbol id="head-5" viewBox="503 1235 202 217" preserveAspectRatio="xMidYMid meet"><image href="IMG_4157.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
-<symbol id="head-6" viewBox="902 1273 202 195" preserveAspectRatio="xMidYMid meet"><image href="IMG_4157.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<defs><filter id="sprite-key" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 -0.299 -0.587 -0.114 0 1"/><feComponentTransfer><feFuncA type="table" tableValues="0 0 0.04 0.18 0.55 0.9 1 1 1"/></feComponentTransfer></filter></defs>
+<symbol id="head-1" viewBox="108 908 188 174" preserveAspectRatio="xMidYMid meet"><image href="IMG_4157.png" xlink:href="IMG_4157.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<symbol id="head-2" viewBox="503 885 202 202" preserveAspectRatio="xMidYMid meet"><image href="IMG_4157.png" xlink:href="IMG_4157.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<symbol id="head-3" viewBox="902 904 202 181" preserveAspectRatio="xMidYMid meet"><image href="IMG_4157.png" xlink:href="IMG_4157.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<symbol id="head-4" viewBox="108 1249 191 210" preserveAspectRatio="xMidYMid meet"><image href="IMG_4157.png" xlink:href="IMG_4157.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<symbol id="head-5" viewBox="503 1235 202 217" preserveAspectRatio="xMidYMid meet"><image href="IMG_4157.png" xlink:href="IMG_4157.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<symbol id="head-6" viewBox="902 1273 202 195" preserveAspectRatio="xMidYMid meet"><image href="IMG_4157.png" xlink:href="IMG_4157.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
 </svg>
