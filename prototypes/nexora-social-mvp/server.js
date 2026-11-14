@@ -34,7 +34,7 @@ const EMOTIONS = ["wave","kiss","dance","smile","sad","laugh","surprise","love",
 const players = new Map();
 
 app.use(express.json({ limit: "32kb" }));
-app.get("/galaxy", (_req, res) => res.sendFile(path.join(__dirname, "public", "galaxy.html")));
+app.get("/galaxy", (_req, res) => res.redirect(308, "/"));
 app.use(express.static(path.join(__dirname, "public")));
 function cookieOptions() {
   return { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 30 * 86400000 };
