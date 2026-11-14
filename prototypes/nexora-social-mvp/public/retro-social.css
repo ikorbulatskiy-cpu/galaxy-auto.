@@ -276,3 +276,19 @@
   #game-screen.retro-mode .chat-connection-status {font-size:7px!important}
   #game-screen.retro-mode .chat-new-count {font-size:7px!important}
 }
+
+/* Dedicated conversation viewport: message list scrolls independently of controls. */
+#game-screen.retro-mode .retro-chat-stream {
+  display:flex!important;flex:1 1 auto!important;flex-direction:column!important;
+  min-height:0!important;overflow:hidden!important;background:#e8e7dc!important;
+  border-top:1px solid #8b988b!important;border-bottom:1px solid #8b988b!important;
+}
+#game-screen.retro-mode .retro-chat-stream #chat-history {
+  display:flex!important;flex:1 1 auto!important;width:100%!important;height:100%!important;
+  min-height:0!important;max-height:none!important;overflow-y:auto!important;
+}
+#game-screen.retro-mode .retro-chat-stream #chat-history:empty::before {
+  content:"Здесь пока нет сообщений.\AНапиши первым!";
+  display:block;align-self:center;white-space:pre-line;text-align:center;
+  margin:auto;padding:14px;color:#667566;font:10px/1.5 Tahoma,Verdana,sans-serif;
+}
