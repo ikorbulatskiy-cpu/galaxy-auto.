@@ -377,3 +377,24 @@
 .nexora-current-emotion{position:absolute!important;left:calc(100% - 1px)!important;right:auto!important;top:55%!important;bottom:auto!important;transform:translateY(-50%)!important;display:flex!important;align-items:center!important;justify-content:center!important;width:23px!important;height:23px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#fff!important;font-family:"Apple Color Emoji","Segoe UI Emoji",sans-serif!important;font-size:20px!important;line-height:1!important;font-weight:400!important;text-shadow:0 1px 4px #000,0 0 5px #fff8!important;box-shadow:none!important;z-index:8!important;pointer-events:none!important}
 .nexora-current-emotion.hidden{display:none!important}
 .nexora-world-rank{left:50%!important;right:auto!important;bottom:calc(100% + 8px)!important;transform:translateX(-50%)!important;width:max-content!important;max-width:min(220px,80vw)!important;text-align:center!important;white-space:nowrap!important;margin:0!important;box-sizing:border-box!important}
+
+
+/* Plain Galaxy-style nickname close above the head; tiny emotion glyph close on the right. */
+.nexora-world-rank{
+ position:absolute!important;left:50%!important;right:auto!important;bottom:calc(100% + 1px)!important;
+ transform:translateX(-50%)!important;width:max-content!important;max-width:min(220px,80vw)!important;
+ margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+ background:transparent!important;box-shadow:none!important;
+ color:#fff!important;font:600 11px/1.15 Arial,sans-serif!important;
+ text-align:center!important;letter-spacing:0!important;text-shadow:1px 1px 2px #000,0 0 3px #000!important;
+ white-space:nowrap!important;overflow:visible!important;
+}
+.nexora-current-emotion{
+ left:calc(100% - 7px)!important;top:48%!important;right:auto!important;bottom:auto!important;
+ transform:translateY(-50%)!important;width:18px!important;height:18px!important;
+ padding:0!important;margin:0!important;border:0!important;border-radius:0!important;
+ background:transparent!important;box-shadow:none!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ font-size:16px!important;line-height:1!important;text-shadow:1px 1px 2px #000,0 0 3px #000!important;
+}
+.nexora-current-emotion.hidden{display:none!important}
