@@ -39,8 +39,6 @@
       const avatarY=y-48;
       if(window.NexoraSpriteEngine?.ready){window.NexoraSpriteEngine.draw(ctx,x,avatarY,scale,p.avatar,p.direction||"down",Boolean(p.moving),p.emotion?.type)}
       else{ctx.font="64px sans-serif";ctx.textAlign="center";ctx.fillText("🧑",x,avatarY)}
-      const nickname=p.nickname||"Игрок";
-      ctx.save();ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="rgba(5,12,26,.9)";ctx.fillStyle=p.isMe?"#ffdf91":"#ffffff";ctx.strokeText(nickname,x,avatarY-82);ctx.fillText(nickname,x,avatarY-82);ctx.restore();
       if(p.typing){
         const cx=x+34,cy=avatarY-43;
         ctx.save();ctx.fillStyle="#ffffff";ctx.strokeStyle="rgba(16,31,55,.28)";ctx.lineWidth=1;
