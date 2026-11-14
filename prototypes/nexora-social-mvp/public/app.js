@@ -27,7 +27,6 @@
   try{
    await ensureCharacter();
    modal("register",false);
-   $("player-label").textContent=state.account?.nickname||"Ты";
    window.NexoraRoom.show(state.account);
    toast("Персонаж создан. Добро пожаловать в Мишкин Домик!");
   }catch(err){$("finish-error").textContent=err.message;}
@@ -41,7 +40,6 @@
    const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось войти");
    state.account=d.account;$("login-code").value="";
    await ensureCharacter();modal("login",false);
-   $("player-label").textContent=state.account?.nickname||"Ты";
    window.NexoraRoom.show(state.account);
    toast("Вход выполнен. Добро пожаловать!");
   }catch(err){$("login-error").textContent=err.message;}
@@ -61,7 +59,7 @@
   catch{$("server-status").textContent="Нет связи с сервером";}
  }
  async function session(){
-  try{const r=await fetch("/api/auth/me");const d=await r.json();if(d.authenticated){state.account=d.account;const profile=await fetch("/api/account/profile");if(profile.ok){const p=await profile.json();if(p.character){$("player-label").textContent=d.account?.nickname||"Ты";window.NexoraRoom.show(d.account);}}}}
+  try{const r=await fetch("/api/auth/me");const d=await r.json();if(d.authenticated){state.account=d.account;const profile=await fetch("/api/account/profile");if(profile.ok){const p=await profile.json();if(p.character){window.NexoraRoom.show(d.account);}}}}
   catch(err){console.warn("Session restore failed:",err.message);}
  }
  status();session();setInterval(status,30000);
