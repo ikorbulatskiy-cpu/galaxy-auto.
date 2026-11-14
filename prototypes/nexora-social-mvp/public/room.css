@@ -910,3 +910,34 @@
   object-fit:contain!important;object-position:center bottom!important;
   max-width:none!important;max-height:none!important;transform:none!important;
 }
+
+
+/* NEXORA toon rig v3 — the head is anchored to the neck socket in the body art.
+   Both local and remote players use identical coordinates and image scaling. */
+#room-scene .nexora-world-avatar .nexora-avatar-sprite #nexora-world-body,
+#room-scene .nexora-room-player .nexora-room-player-body{
+  position:absolute!important;z-index:1!important;
+  left:0!important;top:0!important;right:0!important;bottom:0!important;
+  width:100%!important;height:100%!important;
+  object-fit:fill!important;object-position:center bottom!important;
+  max-width:none!important;max-height:none!important;transform:none!important;
+}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite #nexora-world-head,
+#room-scene .nexora-room-player .nexora-room-player-head{
+  position:absolute!important;z-index:2!important;
+  left:25%!important;top:0!important;right:auto!important;bottom:auto!important;
+  width:50%!important;height:24%!important;
+  object-fit:fill!important;object-position:center center!important;
+  max-width:none!important;max-height:none!important;transform:none!important;
+}
+/* Keep each character's head and torso locked together during movement and mirroring. */
+#room-scene .nexora-world-avatar .nexora-avatar-sprite,
+#room-scene .nexora-room-player .nexora-avatar-sprite{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  overflow:visible!important;isolation:isolate!important;
+}
+#room-scene .nexora-room-player .nexora-room-player-name{z-index:4!important}
+@media(max-width:520px){
+ #room-scene .nexora-world-avatar{width:104px!important;height:150px!important}
+ #room-scene .nexora-room-player{width:82px!important;height:132px!important}
+}
