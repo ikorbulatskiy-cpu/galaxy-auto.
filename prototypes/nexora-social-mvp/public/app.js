@@ -49,7 +49,7 @@
   }catch(err){$("login-error").textContent=err.message;}
   finally{b.disabled=false;}
  });
- const characterAtlas="/assets/sprites/characters/nexora-customization-atlas.svg";
+ const characterAtlas="/assets/sprites/characters/nexora-detailed-atlas.svg";
  function creatorSprite(body,head){
   return '<svg viewBox="0 0 128 160" role="img" aria-label="Предпросмотр персонажа" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="151" rx="43" ry="6" fill="#9cff64" opacity=".45"/><use href="'+characterAtlas+'#body-'+body+'" x="0" y="42" width="128" height="112"/><use href="'+characterAtlas+'#head-'+head+'" x="20" y="0" width="88" height="88"/></svg>';
  }
