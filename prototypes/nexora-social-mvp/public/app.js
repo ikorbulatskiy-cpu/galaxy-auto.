@@ -49,16 +49,30 @@
   }catch(err){$("login-error").textContent=err.message;}
   finally{b.disabled=false;}
  });
+ const characterAtlas="/assets/sprites/characters/nexora-customization-atlas.svg";
  function creatorSprite(body,head){
-  const skin=["#f4c9a8","#d99d7c","#f2d1b1","#bc805f","#e8b99a"][(head-1)%5],hair=["#30231f","#211c27","#d6b69a","#251a20","#4a3027","#17151d"][(head-1)%6],shirt=["#f1f1ed","#171717","#e9a9c4","#dce5ef","#a8c9d9","#7c8bd0"][(body-1)%6],pants=["#e8e8e8","#171717","#f3c4d6","#222735","#b8c9d8","#39466f"][(body-1)%6];
-  return '<svg viewBox="0 0 120 190" role="img" aria-label="Предпросмотр персонажа" shape-rendering="crispEdges"><ellipse cx="60" cy="180" rx="43" ry="6" fill="#9cff64" opacity=".45"/><path d="M43 83h34l9 55H34z" fill="'+shirt+'" stroke="#111" stroke-width="3"/><path d="M43 132h16l-3 39H38zM62 132h16l4 39H63z" fill="'+pants+'" stroke="#111" stroke-width="3"/><path d="M37 169h20v9H34zM63 169h21v9H62z" fill="#eee" stroke="#111" stroke-width="3"/><path d="M39 87 27 122l8 4 16-29M80 87l13 35-8 4-16-30" fill="'+skin+'" stroke="#111" stroke-width="3"/><path d="M42 22h36v48H42z" fill="'+skin+'" stroke="#111" stroke-width="3"/><path d="M39 42V25l9-12h28l10 13v29l-8-8-3-20-15 7-14-2-2 20z" fill="'+hair+'" stroke="#111" stroke-width="3"/><path d="M49 47h6v4h-6zM66 47h6v4h-6z" fill="#211a1a"/><path d="M55 60q5 4 10 0" fill="none" stroke="#8c4d43" stroke-width="2"/><path d="M46 84h28l-5 9H51z" fill="'+shirt+'" stroke="#111" stroke-width="2"/></svg>';
+  return '<svg viewBox="0 0 128 160" role="img" aria-label="Предпросмотр персонажа" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="151" rx="43" ry="6" fill="#9cff64" opacity=".45"/><use href="'+characterAtlas+'#body-'+body+'" x="0" y="42" width="128" height="112"/><use href="'+characterAtlas+'#head-'+head+'" x="20" y="0" width="88" height="88"/></svg>';
  }
  function renderCreator(){
-  const renderStrip=(kind,selected)=>{const root=$(kind+"-options");if(!root)return;const total=kind==="body"?12:12;root.innerHTML="";for(let n=0;n<5;n++){const id=((selected-1+n+total)%total)+1;const b=document.createElement("button");b.type="button";b.className="nexora-creator-choice"+(id===selected?" selected":"");b.setAttribute("aria-label",(kind==="body"?"Тело ":"Голова ")+id);const art=creatorSprite(kind==="body"?id:selected,kind==="head"?id:selected);
-   b.innerHTML=art.replace('viewBox="0 0 120 190"',kind==="body"?'viewBox="20 78 80 105"':'viewBox="25 5 70 78"');b.addEventListener("click",()=>{if(kind==="body")selectedBody=id;else selectedHead=id;renderCreator();});root.append(b);}};
-  renderStrip("body",selectedBody);renderStrip("head",selectedHead);$("creator-preview").innerHTML=creatorSprite(selectedBody,selectedHead);
+  const renderStrip=(kind,selected)=>{
+   const root=$(kind+"-options");if(!root)return;
+   const total=24;root.innerHTML="";
+   for(let n=0;n<5;n++){
+    const id=((selected-1+n+total)%total)+1;
+    const b=document.createElement("button");b.type="button";
+    b.className="nexora-creator-choice"+(id===selected?" selected":"");
+    b.setAttribute("aria-label",(kind==="body"?"Тело ":"Голова ")+id);
+    b.innerHTML=kind==="body"
+     ?'<svg viewBox="0 0 128 160" aria-hidden="true"><use href="'+characterAtlas+'#body-'+id+'" x="20" y="42" width="88" height="112"/></svg>'
+     :'<svg viewBox="0 0 128 100" aria-hidden="true"><use href="'+characterAtlas+'#head-'+id+'" x="18" y="0" width="92" height="92"/></svg>';
+    b.addEventListener("click",()=>{if(kind==="body")selectedBody=id;else selectedHead=id;renderCreator();});
+    root.append(b);
+   }
+  };
+  renderStrip("body",selectedBody);renderStrip("head",selectedHead);
+  $("creator-preview").innerHTML=creatorSprite(selectedBody,selectedHead);
  }
- ["body","head"].forEach(kind=>{["prev","next"].forEach(dir=>{$(kind+"-"+dir).addEventListener("click",()=>{if(kind==="body")selectedBody=((selectedBody-1+(dir==="next"?1:11))%12)+1;else selectedHead=((selectedHead-1+(dir==="next"?1:11))%12)+1;renderCreator();});});});
+ ["body","head"].forEach(kind=>{["prev","next"].forEach(dir=>{$(kind+"-"+dir).addEventListener("click",()=>{if(kind==="body")selectedBody=((selectedBody-1+(dir==="next"?1:23))%24)+1;else selectedHead=((selectedHead-1+(dir==="next"?1:23))%24)+1;renderCreator();});});});
  async function ensureCharacter(){
   const profileResponse=await fetch("/api/account/profile");
   if(!profileResponse.ok)throw Error("Не удалось загрузить профиль. Попробуй войти ещё раз.");
