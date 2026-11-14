@@ -1,16 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1206" height="2622" viewBox="0 0 1206 2622">
-<defs>
- <clipPath id="clip-body-1" clipPathUnits="userSpaceOnUse"><path d="M173 1000 L211 1000 L224 1014 L248 1022 L264 1042 L276 1080 L263 1095 L249 1083 L243 1057 L240 1124 L251 1148 L246 1160 L218 1160 L207 1148 L205 1098 L194 1098 L190 1148 L179 1160 L151 1160 L145 1148 L158 1120 L158 1058 L148 1083 L133 1095 L119 1080 L132 1041 L153 1022 L165 1014 Z"/></clipPath>
- <clipPath id="clip-body-2" clipPathUnits="userSpaceOnUse"><path d="M563 875 L648 875 L666 893 L690 899 L714 928 L725 956 L711 976 L695 968 L681 946 L672 1001 L684 1042 L704 1150 L689 1162 L655 1162 L643 1149 L631 1064 L619 1064 L607 1149 L592 1162 L558 1162 L545 1150 L565 1042 L577 1001 L568 946 L554 968 L538 976 L523 956 L534 928 L557 899 Z"/></clipPath>
- <clipPath id="clip-body-3" clipPathUnits="userSpaceOnUse"><path d="M964 920 L1045 920 L1064 941 L1085 968 L1095 1011 L1081 1031 L1064 1020 L1052 994 L1064 1084 L1080 1145 L1068 1162 L1027 1162 L1013 1148 L1004 1107 L995 1148 L980 1162 L939 1162 L927 1145 L943 1084 L955 994 L941 1020 L924 1031 L912 1011 L922 968 L944 941 Z"/></clipPath>
- <clipPath id="clip-body-4" clipPathUnits="userSpaceOnUse"><path d="M178 1271 L222 1271 L239 1286 L270 1295 L290 1322 L307 1358 L294 1380 L276 1368 L264 1341 L257 1400 L268 1452 L285 1520 L272 1540 L239 1540 L224 1525 L211 1450 L199 1450 L186 1525 L171 1540 L138 1540 L125 1520 L142 1452 L153 1400 L146 1341 L134 1368 L116 1380 L102 1358 L119 1322 L139 1295 L161 1286 Z"/></clipPath>
- <clipPath id="clip-body-5" clipPathUnits="userSpaceOnUse"><path d="M445 1250 L481 1268 L508 1273 L525 1294 L545 1285 L561 1257 L575 1264 L568 1303 L552 1325 L544 1370 L555 1410 L574 1435 L571 1462 L551 1469 L537 1449 L526 1408 L515 1379 L507 1452 L495 1526 L477 1540 L455 1532 L458 1508 L468 1439 L462 1390 L448 1441 L438 1510 L420 1539 L398 1534 L399 1507 L414 1425 L420 1369 L411 1326 L398 1307 L406 1289 L427 1299 Z"/></clipPath>
- <clipPath id="clip-body-6" clipPathUnits="userSpaceOnUse"><path d="M957 1268 L1038 1268 L1058 1285 L1081 1298 L1098 1324 L1091 1352 L1072 1355 L1057 1337 L1050 1390 L1065 1445 L1082 1517 L1068 1540 L1033 1540 L1019 1525 L1008 1455 L995 1455 L984 1525 L969 1540 L934 1540 L921 1517 L939 1445 L953 1390 L945 1337 L930 1355 L911 1352 L904 1324 L920 1298 L941 1285 Z"/></clipPath>
-</defs>
-<symbol id="body-1" viewBox="105 990 185 180"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-1)"/></symbol>
-<symbol id="body-2" viewBox="515 865 220 305"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-2)"/></symbol>
-<symbol id="body-3" viewBox="900 910 205 260"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-3)"/></symbol>
-<symbol id="body-4" viewBox="95 1260 220 290"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-4)"/></symbol>
-<symbol id="body-5" viewBox="390 1240 195 310"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-5)"/></symbol>
-<symbol id="body-6" viewBox="895 1258 215 292"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-6)"/></symbol>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1206 2622">
+<title>NEXORA screenshot body sprites</title>
+<defs><filter id="sprite-key" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="1 1 0.85 0.12 0 0.18 0.8 1 1"/></feComponentTransfer></filter></defs>
+<symbol id="body-1" viewBox="101 983 202 188" preserveAspectRatio="xMidYMid meet"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<symbol id="body-2" viewBox="480 856 253 304" preserveAspectRatio="xMidYMid meet"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<symbol id="body-3" viewBox="897 897 224 275" preserveAspectRatio="xMidYMid meet"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<symbol id="body-4" viewBox="101 1193 210 347" preserveAspectRatio="xMidYMid meet"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<symbol id="body-5" viewBox="434 1229 325 318" preserveAspectRatio="xMidYMid meet"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<symbol id="body-6" viewBox="897 1236 224 311" preserveAspectRatio="xMidYMid meet"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
 </svg>
