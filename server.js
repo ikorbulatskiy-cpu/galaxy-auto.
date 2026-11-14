@@ -20,6 +20,19 @@ app.post("/api/auth/logout",async(req,res)=>{const token=req.cookies&&req.cookie
 app.get("/api/account/profile",async(req,res)=>{try{const a=await getAccount(req);if(!a)return res.status(401).json({error:"Войдите в аккаунт."});const c=await pool.query("SELECT head_id,body_id,created_at FROM nexora_social_auth.characters WHERE account_id=$1",[a.id]);res.json({account:{nickname:a.nickname},character:c.rows[0]||null});}catch{res.status(503).json({error:"Не удалось загрузить профиль."});}});
 app.post("/api/account/recovery-code",async(req,res)=>{try{const a=await getAccount(req);if(!a)return res.status(401).json({error:"Войдите в аккаунт."});const code=makeRecoveryCode();await pool.query("UPDATE nexora_social_auth.accounts SET recovery_code_hash=$1 WHERE id=$2",[sha256(code),a.id]);res.json({recoveryCode:code});}catch{res.status(503).json({error:"Не удалось создать код восстановления."});}});
 app.post("/api/character",async(req,res)=>{try{const a=await getAccount(req);if(!a)return res.status(401).json({error:"Сначала войдите в аккаунт."});const headId=Number(req.body.headId),bodyId=Number(req.body.bodyId);if(!Number.isInteger(headId)||headId<1||headId>12||!Number.isInteger(bodyId)||bodyId<1||bodyId>12)return res.status(400).json({error:"Выберите голову и тело персонажа."});const r=await pool.query("INSERT INTO nexora_social_auth.characters(account_id,head_id,body_id) VALUES($1,$2,$3) ON CONFLICT(account_id) DO UPDATE SET head_id=EXCLUDED.head_id,body_id=EXCLUDED.body_id RETURNING id,head_id,body_id,created_at",[a.id,headId,bodyId]);res.status(201).json({ok:true,character:r.rows[0]});}catch(e){console.error("Character save failed:",e.code||"UNKNOWN");res.status(500).json({error:"Не удалось сохранить персонажа."});}});
+let walletSchemaPromise;
+function ensureWalletSchema(){
+ if(!walletSchemaPromise)walletSchemaPromise=pool.query("CREATE TABLE IF NOT EXISTS nexora_social_auth.account_wallets (account_id BIGINT PRIMARY KEY REFERENCES nexora_social_auth.accounts(id) ON DELETE CASCADE, diamonds BIGINT NOT NULL DEFAULT 0 CHECK (diamonds >= 0), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())").catch(error=>{walletSchemaPromise=null;throw error;});
+ return walletSchemaPromise;
+}
+app.get("/api/account/wallet",async(req,res)=>{
+ try{
+  const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
+  await ensureWalletSchema();
+  const result=await pool.query("INSERT INTO nexora_social_auth.account_wallets(account_id) VALUES($1) ON CONFLICT(account_id) DO UPDATE SET account_id=EXCLUDED.account_id RETURNING diamonds",[account.id]);
+  res.json({diamonds:Number(result.rows[0].diamonds)||0});
+ }catch(error){console.error("Wallet read failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Баланс DIAMONDS временно недоступен."});}
+});
 app.get("/api/account/online",async(_req,res)=>{try{const r=await pool.query("SELECT COUNT(DISTINCT account_id)::int AS total FROM nexora_social_auth.sessions WHERE expires_at>NOW()");res.json({online:r.rows[0].total});}catch{res.json({online:0});}});
 
 let roomChatSchemaPromise;
