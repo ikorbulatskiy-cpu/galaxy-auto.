@@ -17,10 +17,25 @@
 
  const roomSpriteCrops={head:[[108,908,188,174],[503,885,202,202],[902,904,202,181],[108,1249,191,210],[503,1235,202,217],[902,1273,202,195]],body:[[101,983,202,188],[480,856,253,304],[897,897,224,275],[101,1193,210,347],[434,1229,325,318],[897,1236,224,311]]};
  const roomSpritePromises={};
+ function removeScreenshotBackground(ctx,w,h){
+  const frame=ctx.getImageData(0,0,w,h),pixels=frame.data;
+  const corners=[[0,0],[w-1,0],[0,h-1],[w-1,h-1]];
+  const bg=[0,1,2].map(ch=>Math.round(corners.reduce((sum,[x,y])=>sum+pixels[(y*w+x)*4+ch],0)/corners.length));
+  for(let i=0;i<pixels.length;i+=4){
+   const oldAlpha=pixels[i+3]/255;
+   const distance=Math.hypot(pixels[i]-bg[0],pixels[i+1]-bg[1],pixels[i+2]-bg[2]);
+   const alpha=Math.max(0,Math.min(1,(distance-16)/42))*oldAlpha;
+   if(alpha<=0.01){pixels[i+3]=0;continue;}
+   for(let ch=0;ch<3;ch++)pixels[i+ch]=Math.max(0,Math.min(255,Math.round((pixels[i+ch]-bg[ch]*(1-alpha))/alpha)));
+   pixels[i+3]=Math.round(alpha*255);
+  }
+  ctx.putImageData(frame,0,0);
+ }
+
  function setSpriteImage(img,kind,id){
   if(!img)return;const key=kind+":"+id;
   if(!roomSpritePromises[key])roomSpritePromises[key]=new Promise((resolve,reject)=>{
-   const source=new Image();source.onload=()=>{const [x,y,w,h]=roomSpriteCrops[kind][id-1];if(x+w>source.naturalWidth||y+h>source.naturalHeight){reject(new Error("Sprite crop exceeds source"));return;}const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;const ctx=canvas.getContext("2d");if(!ctx){reject(new Error("Canvas unavailable"));return;}ctx.drawImage(source,x,y,w,h,0,0,w,h);resolve(canvas.toDataURL("image/png"));};source.onerror=()=>reject(new Error("Cannot load "+kind+" atlas"));source.src="/assets/sprites/characters/IMG_415"+(kind==="head"?"7":"8")+".png?v=source-sprite-20261115";
+   const source=new Image();source.onload=()=>{const [x,y,w,h]=roomSpriteCrops[kind][id-1];if(x+w>source.naturalWidth||y+h>source.naturalHeight){reject(new Error("Sprite crop exceeds source"));return;}const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;const ctx=canvas.getContext("2d");if(!ctx){reject(new Error("Canvas unavailable"));return;}ctx.drawImage(source,x,y,w,h,0,0,w,h);removeScreenshotBackground(ctx,w,h);resolve(canvas.toDataURL("image/png"));};source.onerror=()=>reject(new Error("Cannot load "+kind+" atlas"));source.src="/assets/sprites/characters/IMG_415"+(kind==="head"?"7":"8")+".png?v=source-sprite-20261115";
   });
   roomSpritePromises[key].then(src=>{img.src=src;}).catch(error=>console.error("NEXORA sprite:",error));
  }
