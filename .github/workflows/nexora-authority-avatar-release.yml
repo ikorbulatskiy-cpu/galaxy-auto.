@@ -1,0 +1,26 @@
+name: NEXORA authority avatar release check
+on:
+  push:
+    branches: [feature/nexora-authority-avatar-system]
+  pull_request:
+    branches: [nexora-social-mvp]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate server and browser scripts
+        run: |
+          node --check server.js
+          node --check prototypes/nexora-social-mvp/public/room.js
+          node --check prototypes/nexora-social-mvp/public/app.js
+      - name: Verify release assets and migration wiring
+        run: |
+          test -s database/migrations/004_authority_avatar_system.sql
+          test -s prototypes/nexora-social-mvp/public/assets/sprites/characters/nexora-customization-atlas.svg
+          grep -q '"004_authority_avatar_system"' scripts/migrate-social.js
+          grep -q 'authority_points' server.js
+          grep -q 'nexora-avatar-panel' prototypes/nexora-social-mvp/public/room.js
