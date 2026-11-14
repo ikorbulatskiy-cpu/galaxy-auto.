@@ -212,8 +212,10 @@ io.on("connection", (socket) => {
     const player=players.get(socket.id),nextRoomId=String(payload?.roomId||"");
     if(!player)return ack({ok:false,error:"Персонаж не подключён."});
     try{
-      const found=await pool.query("SELECT id FROM nexora_social_world.world_rooms WHERE id=$1 AND planet_key=$2",[nextRoomId,player.planet]);
+      const found=await pool.query("SELECT id,capacity FROM nexora_social_world.world_rooms WHERE id=$1 AND planet_key=$2",[nextRoomId,player.planet]);
       if(!found.rowCount)return ack({ok:false,error:"Комната недоступна."});
+      const occupants=[...players.values()].filter(item=>item.planet===player.planet&&item.roomId===nextRoomId&&item.id!==player.id).length;
+      if(occupants>=Number(found.rows[0].capacity))return ack({ok:false,error:"В комнате нет свободных мест."});
       if(nextRoomId===player.roomId)return ack({ok:true});
       const oldChannel=roomChannel(player);
       socket.to(oldChannel).emit("player:left",{id:player.id});socket.leave(oldChannel);
