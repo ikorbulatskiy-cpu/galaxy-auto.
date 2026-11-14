@@ -850,3 +850,36 @@
 /* Shared avatar movement: remote characters glide and hop with the local character. */
 #room-scene .nexora-room-player{transition:left .72s cubic-bezier(.2,.72,.25,1),bottom .72s cubic-bezier(.2,.72,.25,1)!important}
 #room-scene .nexora-room-player .nexora-avatar-sprite.nexora-walking{animation:nexora-walk-hop .34s ease-in-out infinite;transform-origin:center bottom}
+
+
+/* NEXORA sprite rig v2: preserve source crop anchors and use one shared
+   head/torso attachment layout for the local avatar and every remote player. */
+#room-scene .nexora-world-avatar .nexora-avatar-sprite,
+#room-scene .nexora-room-player .nexora-avatar-sprite{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  overflow:visible!important;isolation:isolate!important;
+}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite #nexora-world-body,
+#room-scene .nexora-room-player .nexora-room-player-body{
+  position:absolute!important;z-index:1!important;
+  left:22%!important;top:25%!important;right:auto!important;bottom:0!important;
+  width:56%!important;height:75%!important;
+  object-fit:contain!important;object-position:center bottom!important;
+  max-width:none!important;max-height:none!important;
+}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite #nexora-world-head,
+#room-scene .nexora-room-player .nexora-room-player-head{
+  position:absolute!important;z-index:2!important;
+  left:34%!important;top:18%!important;right:auto!important;bottom:auto!important;
+  width:32%!important;height:27%!important;
+  object-fit:contain!important;object-position:center bottom!important;
+  max-width:none!important;max-height:none!important;
+}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite.facing-left,
+#room-scene .nexora-room-player .nexora-avatar-sprite.facing-left{
+  transform:scaleX(-1)!important;transform-origin:center bottom!important;
+}
+@media(max-width:520px){
+  #room-scene .nexora-world-avatar{width:104px!important;height:150px!important}
+  #room-scene .nexora-room-player{width:82px!important;height:132px!important}
+}
