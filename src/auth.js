@@ -81,8 +81,8 @@ router.post("/register", async (req, res, next) => {
     await client.query("BEGIN");
     transactionStarted = true;
     const inserted = await client.query(
-      "INSERT INTO users (email, username, password_hash, character_code_hash) VALUES (NULL,$1,NULL,$2) RETURNING id,username",
-      [username, hashToken(normalizeCharacterCode(characterCode))]
+      "INSERT INTO users (email, username, password_hash, character_code_hash) VALUES ($1,$2,$3,$4) RETURNING id,username",
+      ["nexora-" + crypto.randomUUID() + "@accounts.invalid", username, await bcrypt.hash(randomToken(), 12), hashToken(normalizeCharacterCode(characterCode))]
     );
     const user = inserted.rows[0];
     await client.query("INSERT INTO profiles (user_id, display_name) VALUES ($1,$2)", [user.id, username]);
@@ -93,7 +93,7 @@ router.post("/register", async (req, res, next) => {
       "INSERT INTO characters (user_id,name,gender,appearance,is_active) VALUES ($1,$2,$3,$4::jsonb,TRUE)",
       [user.id, username, gender || "male", JSON.stringify({ spriteGender:gender || "male", body:parsed.data.body || "regular", head:"classic", skinTone:"medium", hair:"short", hairColor:"brown", eyes:"brown", outfit:(gender || "male") === "female" ? "pink" : "blue", shoes:"sneakers", adultConfirmed:true, privacyConsentAt:new Date().toISOString() })]
     );
-    await client.query("INSERT INTO user_locations (user_id,planet_id) SELECT $1,id FROM planets WHERE slug='newbies-1' ON CONFLICT (user_id) DO NOTHING", [user.id]);
+    await client.query("INSERT INTO user_locations (user_id,planet_id) SELECT $1,id FROM planets WHERE slug='nexora-prime' ON CONFLICT (user_id) DO NOTHING", [user.id]);
     const sessionToken = randomToken();
     await client.query("INSERT INTO sessions (user_id,token_hash,expires_at) VALUES ($1,$2,NOW() + INTERVAL '14 days')", [user.id, hashToken(sessionToken)]);
     await client.query("COMMIT");
