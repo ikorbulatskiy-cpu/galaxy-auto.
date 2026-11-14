@@ -67,7 +67,8 @@ async function migrate() {
       "accounts", "sessions", "characters", "friends", "messages", "gifts",
       "wallets", "inventory", "friend_requests", "user_blocks",
       "shop_catalog", "wallet_transactions", "player_reports", "custom_planet_objects",
-      "conversations", "direct_messages", "notifications", "auth_login_attempts"
+      "conversations", "direct_messages", "notifications", "auth_login_attempts",
+      "world_locations", "world_rooms", "room_messages"
     ];
     const verification = await client.query(
       `SELECT table_name
