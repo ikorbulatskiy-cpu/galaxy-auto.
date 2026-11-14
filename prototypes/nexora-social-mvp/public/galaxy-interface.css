@@ -209,3 +209,24 @@
   #world-room-toggle { min-height:31px; font-size:9px; }
   .world-room-list { max-height:34vh; }
 }
+.galaxy-map { position:relative; isolation:isolate; min-height:230px; margin:0 0 14px; overflow:hidden; border:1px solid rgba(170,164,255,.22); border-radius:20px; background:radial-gradient(ellipse at 48% 48%,#332d68 0,#151b45 42%,#080f2b 100%); }
+.galaxy-map-nebula { position:absolute; inset:-25%; z-index:-1; background:radial-gradient(ellipse at 25% 25%,#a26aff35,transparent 38%),radial-gradient(ellipse at 78% 68%,#43d6d533,transparent 35%); filter:blur(13px); }
+.galaxy-orbit { position:absolute; left:50%; top:51%; border:1px solid #b5b3ff2e; border-radius:50%; transform:translate(-50%,-50%) rotate(-18deg); pointer-events:none; }
+.orbit-a { width:190px;height:95px; }.orbit-b { width:310px;height:150px; }.orbit-c { width:440px;height:210px; }
+.galaxy-map-sun { position:absolute; left:50%; top:51%; display:grid; place-items:center; width:54px;height:54px; border-radius:50%; color:#fff1bf; font-size:24px; background:radial-gradient(circle,#fff4bc 0,#d99bff 24%,#7357df 55%,#4331a0 75%); box-shadow:0 0 32px #aa8aff99,0 0 80px #9b7cff55; transform:translate(-50%,-50%); }
+.galaxy-map-sun span { position:absolute; top:58px; color:#d8d4ff; font-size:7px; letter-spacing:.18em; }
+.galaxy-map-planet { position:absolute; display:grid; grid-template-columns:34px 1fr; column-gap:8px; align-items:center; min-width:125px; padding:7px 9px; border:1px solid #ffffff24; border-radius:13px; background:#080e2bd9; color:#f2f0ff; text-align:left; box-shadow:0 8px 24px #0006; }
+.galaxy-map-planet i { grid-row:span 2; width:29px;height:29px; border-radius:50%; box-shadow:inset -7px -5px 12px #0008,0 0 18px currentColor; }
+.galaxy-map-planet strong { font-size:10px; }.galaxy-map-planet small { color:#aab3db; font-size:8px; }
+.planet-starter { left:7%;top:18%; }.planet-starter i { color:#a18aff;background:radial-gradient(circle at 35% 30%,#f2c7ff,#7656d7 60%,#29245c); }
+.planet-club { right:5%;top:24%; }.planet-club i { color:#ff84d1;background:radial-gradient(circle at 35% 30%,#ffd1ed,#d34f9f 55%,#55205f); }
+.planet-beach { left:30%;bottom:8%; }.planet-beach i { color:#6ee6e2;background:radial-gradient(circle at 35% 30%,#c7ffff,#37a9bd 58%,#12456b); }
+.galaxy-map-planet:active { transform:scale(.96); }
+#game-screen.world-transitioning #world-canvas { animation:world-arrival .62s ease both; }
+@keyframes world-arrival { 0%{opacity:.35;filter:blur(5px);transform:scale(1.025)} 55%{opacity:.8;filter:blur(1px)} 100%{opacity:1;filter:none;transform:scale(1)} }
+@media (max-width:699px) {
+ .galaxy-map { min-height:205px; }.orbit-a{width:150px}.orbit-b{width:250px}.orbit-c{width:355px}
+ .galaxy-map-planet { min-width:112px;padding:6px 7px;grid-template-columns:28px 1fr; }
+ .galaxy-map-planet i { width:24px;height:24px; }
+ .planet-starter{left:3%;top:15%}.planet-club{right:2%;top:20%}.planet-beach{left:27%;bottom:5%}
+}
