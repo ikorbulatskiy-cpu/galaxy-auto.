@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#0b0b13">
 <meta name="description" content="NEXORA — знакомства, общение и виртуальный мир 18+.">
 <title>NEXORA — Meet. Connect. Discover.</title>
-<link rel="stylesheet" href="/styles.css?v=landing-20261114">
-<script defer src="/app.js?v=landing-20261114"></script>
+<link rel="stylesheet" href="/styles.css?v=auth-wizard-20261114">
+<script defer src="/app.js?v=auth-wizard-20261114"></script>
 </head>
 <body>
 <div class="site-shell">
@@ -15,7 +15,6 @@
   <a class="brand" href="/" aria-label="NEXORA"><span class="mark">✦</span>NEXORA</a>
   <div class="top-meta"><span id="connection">Проверка сервера…</span><time id="header-time"></time></div>
 </header>
-
 <main id="landing" class="landing">
   <section class="hero">
     <div class="hero-copy">
@@ -37,38 +36,68 @@
   <footer class="landing-footer"><span>© 2026 NEXORA</span><span>Meet. Connect. Discover.</span></footer>
 </main>
 
-<section id="auth-modal" class="modal" aria-hidden="true">
-  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
-    <button class="close" id="close-auth" type="button" aria-label="Закрыть">×</button>
-    <div class="dialog-kicker">ТВОЯ ИСТОРИЯ В NEXORA</div>
-    <h2 id="auth-title">Создать персонажа</h2>
-    <div class="auth-switch">
-      <button class="auth-mode active" type="button" data-auth="register">Создать персонажа</button>
-      <button class="auth-mode" type="button" data-auth="login">Войти</button>
-    </div>
-    <form id="auth-form" novalidate>
-      <label class="field-label">Ник<input class="field" id="nickname" minlength="3" maxlength="24" autocomplete="username" placeholder="Твой ник" required></label>
-      <label class="field-label hidden" id="recovery-login-label">Код восстановления<input class="field" id="recovery-login" autocomplete="one-time-code" placeholder="Код, выданный при создании персонажа"></label>
-      <p class="form-error" id="form-error" role="alert"></p>
-      <button class="button primary submit" id="submit-auth" type="submit">Создать персонажа</button>
-    </form>
-    <div class="account-state hidden" id="account-state">
-      <h3>Персонаж создан</h3>
-      <p class="player-nickname" id="account-name"></p>
-      <div class="recovery-panel"><b>Личный код восстановления</b><p id="recovery-value">Код доступен только владельцу аккаунта.</p><button class="button secondary" id="recovery-generate" type="button">Создать новый код</button></div>
-      <div class="character-panel">
-        <h3>Внешность персонажа</h3>
-        <div class="character-preview" id="character-preview">🧑</div>
-        <div class="character-selects">
-          <label class="field-label">Голова<select class="field" id="head-choice"><option value="1">Голова 1</option><option value="2">Голова 2</option><option value="3">Голова 3</option><option value="4">Голова 4</option><option value="5">Голова 5</option><option value="6">Голова 6</option><option value="7">Голова 7</option><option value="8">Голова 8</option><option value="9">Голова 9</option><option value="10">Голова 10</option><option value="11">Голова 11</option><option value="12">Голова 12</option></select></label>
-          <label class="field-label">Тело<select class="field" id="body-choice"><option value="1">Тело 1</option><option value="2">Тело 2</option><option value="3">Тело 3</option><option value="4">Тело 4</option><option value="5">Тело 5</option><option value="6">Тело 6</option><option value="7">Тело 7</option><option value="8">Тело 8</option><option value="9">Тело 9</option><option value="10">Тело 10</option><option value="11">Тело 11</option><option value="12">Тело 12</option></select></label>
-        </div>
-        <button class="button primary submit" id="create-character" type="button">Сохранить персонажа</button>
-        <p class="form-error" id="character-error" role="alert"></p>
-      </div>
-      <button class="button secondary submit" id="logout" type="button">Выйти</button>
-    </div>
+<section id="register-modal" class="modal" aria-hidden="true">
+ <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="register-title">
+  <button class="close" type="button" data-close="register" aria-label="Закрыть">×</button>
+  <div class="dialog-kicker">СОЗДАНИЕ ПЕРСОНАЖА</div>
+  <div class="wizard-progress"><span id="register-step-label">1 из 2</span><div class="wizard-track"><i id="register-progress-fill"></i></div></div>
+  <div id="register-step-1">
+   <h2 id="register-title">Придумай свой ник</h2>
+   <form id="register-form" novalidate>
+    <label class="field-label">Ник<input class="field" id="register-nickname" minlength="3" maxlength="24" autocomplete="username" placeholder="Введи свой ник" required></label>
+    <p class="form-error" id="register-error" role="alert"></p>
+    <button class="button primary submit" id="register-next" type="submit">Далее <span>→</span></button>
+   </form>
   </div>
+  <div id="register-step-2" class="hidden">
+   <h2>Персонаж почти готов</h2>
+   <div class="recovery-panel"><b>Твой личный код восстановления</b><p id="new-recovery-code" class="recovery-code"></p><small>Сохрани его. Он понадобится для входа, если ты выйдешь из аккаунта.</small></div>
+   <div class="character-panel">
+    <h3>Выбери внешность</h3>
+    <div class="character-preview" id="register-character-preview">🧑</div>
+    <div class="character-selects">
+     <label class="field-label">Голова<select class="field" id="register-head"><option value="1">Голова 1</option><option value="2">Голова 2</option><option value="3">Голова 3</option><option value="4">Голова 4</option><option value="5">Голова 5</option><option value="6">Голова 6</option><option value="7">Голова 7</option><option value="8">Голова 8</option><option value="9">Голова 9</option><option value="10">Голова 10</option><option value="11">Голова 11</option><option value="12">Голова 12</option></select></label>
+     <label class="field-label">Тело<select class="field" id="register-body"><option value="1">Тело 1</option><option value="2">Тело 2</option><option value="3">Тело 3</option><option value="4">Тело 4</option><option value="5">Тело 5</option><option value="6">Тело 6</option><option value="7">Тело 7</option><option value="8">Тело 8</option><option value="9">Тело 9</option><option value="10">Тело 10</option><option value="11">Тело 11</option><option value="12">Тело 12</option></select></label>
+    </div>
+   </div>
+   <p class="form-error" id="register-character-error" role="alert"></p>
+   <button class="button primary submit" id="finish-register" type="button">Завершить создание</button>
+  </div>
+ </div>
+</section>
+
+<section id="login-modal" class="modal" aria-hidden="true">
+ <div class="dialog login-dialog" role="dialog" aria-modal="true" aria-labelledby="login-title">
+  <button class="close" type="button" data-close="login" aria-label="Закрыть">×</button>
+  <div class="dialog-kicker">ВОЗВРАЩЕНИЕ В NEXORA</div>
+  <h2 id="login-title">Войти в персонажа</h2>
+  <form id="login-form" novalidate>
+   <label class="field-label">Ник<input class="field" id="login-nickname" minlength="3" maxlength="24" autocomplete="username" placeholder="Твой ник" required></label>
+   <label class="field-label">Код восстановления<input class="field" id="login-recovery" autocomplete="one-time-code" placeholder="Введи код восстановления" required></label>
+   <p class="form-error" id="login-error" role="alert"></p>
+   <button class="button primary submit" id="login-submit" type="submit">Войти</button>
+  </form>
+ </div>
+</section>
+
+<section id="account-modal" class="modal" aria-hidden="true">
+ <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="account-title">
+  <div class="dialog-kicker">ТВОЯ NEXORA</div>
+  <h2 id="account-title">Твой персонаж</h2>
+  <div class="account-state">
+   <p class="player-nickname" id="account-name"></p>
+   <div class="recovery-panel"><b>Личный код восстановления</b><p id="recovery-value">Код доступен только владельцу аккаунта.</p><button class="button secondary" id="recovery-generate" type="button">Создать новый код</button></div>
+   <div class="character-panel">
+    <h3>Внешность персонажа</h3><div class="character-preview">🧑</div>
+    <div class="character-selects">
+     <label class="field-label">Голова<select class="field" id="head-choice"><option value="1">Голова 1</option><option value="2">Голова 2</option><option value="3">Голова 3</option><option value="4">Голова 4</option><option value="5">Голова 5</option><option value="6">Голова 6</option><option value="7">Голова 7</option><option value="8">Голова 8</option><option value="9">Голова 9</option><option value="10">Голова 10</option><option value="11">Голова 11</option><option value="12">Голова 12</option></select></label>
+     <label class="field-label">Тело<select class="field" id="body-choice"><option value="1">Тело 1</option><option value="2">Тело 2</option><option value="3">Тело 3</option><option value="4">Тело 4</option><option value="5">Тело 5</option><option value="6">Тело 6</option><option value="7">Тело 7</option><option value="8">Тело 8</option><option value="9">Тело 9</option><option value="10">Тело 10</option><option value="11">Тело 11</option><option value="12">Тело 12</option></select></label>
+    </div>
+    <button class="button primary submit" id="save-character" type="button">Сохранить персонажа</button><p class="form-error" id="character-error" role="alert"></p>
+   </div>
+   <button class="button secondary submit" id="logout" type="button">Выйти</button>
+  </div>
+ </div>
 </section>
 <div class="toast" id="toast" role="status"></div>
 </div>
