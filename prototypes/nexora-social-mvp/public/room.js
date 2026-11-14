@@ -28,7 +28,8 @@
   catch(e){$("nexora-avatar-note").textContent=e.message;}
  }
  function renderAuthority(c){
-  const points=Number(c.authority_points)||0,rank=c.authority_title||"Новичок",aura=c.aura||"none";\n  const rankLabel=$("nexora-world-rank");if(rankLabel)rankLabel.textContent=rank+" "+("✦".repeat(Number(c.authority_stars)||0));
+  const points=Number(c.authority_points)||0,rank=c.authority_title||"Новичок",aura=c.aura||"none";
+  const rankLabel=$("nexora-world-rank");if(rankLabel)rankLabel.textContent=rank+" "+("✦".repeat(Number(c.authority_stars)||0));
   $("nexora-rank-title").textContent=rank+" "+("✦".repeat(Number(c.authority_stars)||0));$("nexora-world-avatar").className="nexora-world-avatar aura-"+aura;$("nexora-authority-count").textContent=points+" очков авторитета";
   $("nexora-aura-preview").className="nexora-aura-preview aura-"+aura;$("nexora-aura-preview").textContent="✦";
   const current=rankRows.findIndex(x=>x[0]===rank),next=rankRows[Math.min(rankRows.length-1,current+1)];
