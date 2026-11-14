@@ -595,11 +595,7 @@
       if(!spriteDrawn)drawAvatar(ctx,drawX,avatarGroundY,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
       drawAuraHalo(ctx,drawX,auraCenterY,scale,player.auraType,player.auraEnabled,state.auraQuality);
       if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20*scale,avatarGroundY-58*scale-Math.sin(Date.now()/120)*3);ctx.restore();}
-      // Nickname is plain text above the avatar. No button, plate, border, background, or decorative lines.
-      ctx.save();ctx.textAlign="center";ctx.font=(isMe?"750 ":"650 ")+Math.max(10,11*scale)+"px Inter,sans-serif";
-      const nickname=String(player.nickname||"Игрок").slice(0,24);
-      ctx.fillStyle=isMe?"#fff1b8":"#fff";ctx.shadowColor="#080b20";ctx.shadowBlur=4;
-      ctx.fillText(nickname,drawX,Math.max(12,avatarGroundY-82*scale),136);ctx.restore();
+      // Deliberately do not draw the duplicate nickname above the avatar. Keep the existing ground-level name only.
     });
     requestAnimationFrame(drawScene);
   }
@@ -968,13 +964,13 @@
 
 
   function closeCompetingPanels(except = "") {
-    const panels = ["#profile-menu","#social-panel","#public-profile","#profile-editor","#authority-panel","#shop-panel","#developer-panel","#planets-panel","#room-main-menu","#room-emotions-panel","#room-players-panel","#room-events-panel"];
+    const panels = ["#profile-menu","#social-panel","#public-profile","#profile-editor","#authority-panel","#shop-panel","#developer-panel","#planets-panel","#room-main-menu","#room-dice-panel","#room-emotions-panel","#room-players-panel","#room-events-panel"];
     panels.forEach(selector => { if (selector !== except) $(selector)?.classList.add("hidden"); });
     $("#chat-drawer")?.classList.remove("hidden");
   }
 
   function closeRoomFlyouts(except = "") {
-    const panels = {menu:"#room-main-menu",emotions:"#room-emotions-panel",players:"#room-players-panel",events:"#room-events-panel"};
+    const panels = {menu:"#room-main-menu",dice:"#room-dice-panel",emotions:"#room-emotions-panel",players:"#room-players-panel",events:"#room-events-panel"};
     Object.entries(panels).forEach(([key,selector]) => {
       if (key !== except) $(selector).classList.add("hidden");
       const button = document.querySelector('[data-room-toggle="'+key+'"]');
@@ -982,7 +978,7 @@
     });
   }
   function toggleRoomFlyout(name) {
-    const panels = {menu:"#room-main-menu",emotions:"#room-emotions-panel",players:"#room-players-panel",events:"#room-events-panel"};
+    const panels = {menu:"#room-main-menu",dice:"#room-dice-panel",emotions:"#room-emotions-panel",players:"#room-players-panel",events:"#room-events-panel"};
     const panel = $(panels[name]); const shouldOpen = panel.classList.contains("hidden");
     closeCompetingPanels(shouldOpen ? panels[name] : "");
     closeRoomFlyouts(shouldOpen ? name : "");
@@ -1003,7 +999,7 @@
   });
   document.querySelectorAll("[data-room-action]").forEach(button => button.addEventListener("click",() => {
     const action = button.dataset.roomAction;
-    if (action !== "search") closeRoomFlyouts();
+    if (action !== "search" && action !== "dice") closeRoomFlyouts();
     if (action === "profile") openMyProfile();
     else if (action === "rating") openSocialTab("rating");
     else if (action === "friends") openMyProfile("friends");
@@ -1017,11 +1013,27 @@
     else if (action === "shop") openShop();
     else if (action === "planets") $("#planets-button").click();
     else if (action === "galaxy") openIntegratedGalaxy();
+    else if (action === "dice") { closeCompetingPanels("#room-dice-panel"); closeRoomFlyouts(); $("#room-dice-panel").classList.remove("hidden"); }
     else if (action === "developer") $("#developer-open").click();
     else if (action === "exit") $("#exit-room").click();
     else if (action === "players") toggleRoomFlyout("players");
     else if (action === "events") toggleRoomFlyout("events");
   }));
+  const diceFaces=["⚀","⚁","⚂","⚃","⚄","⚅"];
+  let dicePlayerWins=0,diceBotWins=0;
+  $("#dice-roll")?.addEventListener("click",()=>{
+    const player=[1,2].map(()=>Math.floor(Math.random()*6)+1);
+    const bot=[1,2].map(()=>Math.floor(Math.random()*6)+1);
+    const playerTotal=player[0]+player[1],botTotal=bot[0]+bot[1];
+    $("#dice-player-value").textContent=player.map(n=>diceFaces[n-1]).join(" ");
+    $("#dice-bot-value").textContent=bot.map(n=>diceFaces[n-1]).join(" ");
+    if(playerTotal>botTotal){dicePlayerWins++;$("#dice-result").textContent="Ты победил! "+playerTotal+" : "+botTotal;}
+    else if(playerTotal<botTotal){diceBotWins++;$("#dice-result").textContent="NEXORA победила. "+playerTotal+" : "+botTotal;}
+    else $("#dice-result").textContent="Ничья! "+playerTotal+" : "+botTotal;
+    $("#dice-player-score").textContent=dicePlayerWins+" побед";
+    $("#dice-bot-score").textContent=diceBotWins+" побед";
+  });
+
   function openIntegratedGalaxy(options = {}) {
     const view = $("#integrated-galaxy-view");
     const frame = $("#integrated-galaxy-frame");
