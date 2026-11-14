@@ -814,3 +814,33 @@
   #room-scene .nexora-world-avatar{transition:left .2s linear,bottom .2s linear!important}
   #room-scene .nexora-world-avatar .nexora-avatar-sprite.nexora-walking{animation:none}
 }
+
+
+/* Remote avatars use the exact same rig, layering, scale and label as the local avatar. */
+#room-scene .nexora-room-player{
+  pointer-events:auto!important;cursor:pointer!important;z-index:3!important;
+  width:92px!important;height:138px!important;display:block!important;
+  transform:translateX(-50%)!important;filter:drop-shadow(0 4px 7px rgba(20,34,64,.24))!important;
+}
+#room-scene .nexora-room-player .nexora-avatar-sprite{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;overflow:visible!important;
+}
+#room-scene .nexora-room-player .nexora-room-player-body{
+  position:absolute!important;left:26%!important;top:25%!important;right:auto!important;bottom:0!important;
+  width:48%!important;height:75%!important;object-fit:contain!important;object-position:center bottom!important;
+}
+#room-scene .nexora-room-player .nexora-room-player-head{
+  position:absolute!important;left:32%!important;top:1%!important;right:auto!important;bottom:auto!important;
+  width:36%!important;height:34%!important;object-fit:contain!important;object-position:center bottom!important;
+}
+#room-scene .nexora-room-player .nexora-room-player-name{
+  position:absolute!important;left:50%!important;bottom:-19px!important;transform:translateX(-50%)!important;
+  max-width:110px!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  background:transparent!important;color:#fff!important;font:11px Tahoma,Arial,sans-serif!important;
+  text-align:center!important;text-shadow:0 1px 3px #000,0 0 5px #000!important;white-space:nowrap!important;
+}
+#room-scene .nexora-room-player:focus-visible{outline:2px solid #9bd4ff;outline-offset:4px}
+#nexora-info-form .nexora-readonly-photo{pointer-events:none}
+#nexora-info-form .nexora-readonly-photo span,
+#nexora-info-form .nexora-readonly-photo input{display:none!important}
+@media(max-width:520px){#room-scene .nexora-room-player{width:86px!important;height:130px!important}}
