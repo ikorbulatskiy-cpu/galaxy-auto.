@@ -35,6 +35,7 @@
   $("nexora-emotions-panel").addEventListener("click",event=>{if(event.target===$("nexora-emotions-panel"))closeEmotions();});
   buildEmotionOptions();
   buildAuraOptions();
+  const initialAura=selectableAuras.find(item=>item[0]===selectedAura)?.[2],initialAuraNode=$("nexora-world-aura");if(initialAuraNode)initialAuraNode.setAttribute("href",initialAura?"/assets/sprites/characters/nexora-user-auras.svg#"+initialAura:"");
   $("nexora-character-actions").addEventListener("click",event=>{if(event.target===$("nexora-character-actions"))closeCharacterActions();});
   $("nexora-avatar-close").addEventListener("click",closeAvatar);
   $("nexora-avatar-panel").addEventListener("click",event=>{if(event.target===$("nexora-avatar-panel"))closeAvatar();});
