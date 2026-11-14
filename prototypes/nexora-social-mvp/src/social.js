@@ -264,7 +264,7 @@ function createSocialRouter({ pool, auth, io }) {
          FROM nexora_social_world.accounts a
          LEFT JOIN nexora_social_world.characters c ON c.account_id=a.id
         WHERE a.id<>$1 AND ($2='' OR a.nickname ILIKE '%'||$2||'%')
-          AND ($3='' OR c.gender=$3)
+          AND ($3='' OR COALESCE(c.avatar->>'gender','')=$3)
           AND NOT EXISTS(SELECT 1 FROM nexora_social_world.user_blocks b
             WHERE (b.account_id=$1 AND b.blocked_account_id=a.id) OR (b.account_id=a.id AND b.blocked_account_id=$1))
         ORDER BY liked_by_me ASC,a.nickname LIMIT 60`,
