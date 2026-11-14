@@ -14,7 +14,12 @@
       if(e.target.closest("[data-close]")){modal.hidden=true;return}
       const b=e.target.closest("[data-planet-action]");if(!b)return;
       const action=b.dataset.planetAction;
-      if(action==="switch"){renderSwitch();return}
+      if(action==="switch"){
+        modal.hidden=true;
+        const move=window.nexoraTravelToNextPlanet;
+        if(typeof move==="function")move();
+        return;
+      }
       if(action==="back"){renderMain();return}
       if(action==="travel"){
         const slug=b.dataset.slug;modal.hidden=true;
@@ -42,7 +47,7 @@
     const title=titleFor(p),online=Number(p?.online||0);
     $("#nx-planet-actions-title",modal).textContent=title;
     $(".nx-planet-actions-content",modal).innerHTML=
-      '<button class="nx-planet-action" data-planet-action="switch"><span>🪐</span><span><b>Сменить планету</b><small>Выбрать другое место в галактике</small></span><i>›</i></button>'+
+      '<button class="nx-planet-action" data-planet-action="switch"><span>🪐</span><span><b>Сменить планету</b><small>Сразу перелететь на следующую планету</small></span><i>›</i></button>'+
       '<button class="nx-planet-action" data-planet-action="info"><span>ⓘ</span><span><b>Инфо планеты</b><small>Описание и владелец</small></span><i>›</i></button>'+
       '<button class="nx-planet-action" data-planet-action="invite"><span>✉</span><span><b>Позвать на планету</b><small>Отправить приглашение друзьям</small></span><i>›</i></button>'+
       '<div class="nx-planet-online"><span>● Сейчас онлайн</span><b>'+online+'</b><small>Игроков на планете</small></div>'+
