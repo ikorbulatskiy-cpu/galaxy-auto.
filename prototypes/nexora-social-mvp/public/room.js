@@ -16,7 +16,7 @@
  function ensureAvatarEditor(){
   if($("nexora-world-avatar"))return;
   const scene=$("room-scene");
-  scene.insertAdjacentHTML("beforeend",'<div id="nexora-world-avatar" class="nexora-world-avatar aura-none" role="button" tabindex="0" aria-label="Открыть информацию о персонаже" aria-expanded="false"><svg viewBox="0 0 128 128"><use id="nexora-world-body" href="/assets/sprites/characters/nexora-customization-atlas.svg#body-1" x="32" y="18" width="64" height="104"></use><use id="nexora-world-head" href="/assets/sprites/characters/nexora-customization-atlas.svg#head-1" x="32" y="18" width="64" height="64"></use><use id="nexora-world-outfit" href="" x="0" y="0" width="128" height="128"></use></svg><div id="nexora-world-rank" class="nexora-world-rank">Новичок ✦</div></div><section id="nexora-avatar-panel" class="nexora-avatar-panel hidden" aria-label="Персонаж и авторитет"><button id="nexora-avatar-close" class="nexora-avatar-close">×</button><header class="nexora-rank-head"><div id="nexora-profile-avatar" class="nexora-profile-avatar aura-none"><svg viewBox="0 0 128 128"><use id="nexora-profile-body" href="/assets/sprites/characters/nexora-customization-atlas.svg#body-1" x="32" y="18" width="64" height="104"></use><use id="nexora-profile-head" href="/assets/sprites/characters/nexora-customization-atlas.svg#head-1" x="32" y="18" width="64" height="64"></use><use id="nexora-profile-outfit" href="" x="0" y="0" width="128" height="128"></use></svg></div><div class="nexora-aura-preview" id="nexora-aura-preview">✦</div><div><small>ТВОЙ АВТОРИТЕТ</small><h2 id="nexora-rank-title">Новичок</h2><span id="nexora-authority-count">0 очков</span></div></header><div class="nexora-progress"><i id="nexora-authority-progress"></i></div><div class="nexora-rank-sub" id="nexora-rank-next">Следующее звание: Бывалый</div><div class="nexora-tabs"><button class="active" data-tab="heads">Головы</button><button data-tab="bodies">Костюмы</button><button data-tab="emperor">Император</button><button data-tab="ranks">Ранги</button></div><div id="nexora-avatar-content" class="nexora-avatar-content"></div><button id="nexora-avatar-save" class="nexora-avatar-save">Сохранить внешний вид</button><p id="nexora-avatar-note" role="status"></p></section>');
+  scene.insertAdjacentHTML("beforeend",'<div id="nexora-world-avatar" class="nexora-world-avatar aura-none" role="button" tabindex="0" aria-label="Открыть информацию о персонаже" aria-expanded="false"><svg viewBox="0 0 128 128"><use id="nexora-world-body" href="/assets/sprites/characters/nexora-customization-atlas.svg#body-1" x="32" y="18" width="64" height="104"></use><use id="nexora-world-head" href="/assets/sprites/characters/nexora-customization-atlas.svg#head-1" x="32" y="18" width="64" height="64"></use><use id="nexora-world-outfit" href="" x="0" y="0" width="128" height="128"></use></svg><div id="nexora-world-rank" class="nexora-world-rank">Новичок ✦</div></div><section id="nexora-avatar-panel" class="nexora-avatar-panel hidden" aria-label="Информация о пользователе"><div class="nexora-avatar-window"><div class="nexora-user-info-title">ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ</div><button id="nexora-avatar-close" class="nexora-avatar-close" aria-label="Закрыть">×</button><div id="nexora-profile-loading" class="nexora-profile-loading" role="status"><i></i><b>Загружаем информацию…</b><span>Ожидаем ответ сервера</span></div><div id="nexora-profile-loaded" class="nexora-profile-loaded hidden"><header class="nexora-rank-head"><div id="nexora-profile-avatar" class="nexora-profile-avatar aura-none"><svg viewBox="0 0 128 128"><use id="nexora-profile-body" href="/assets/sprites/characters/nexora-customization-atlas.svg#body-1" x="32" y="18" width="64" height="104"></use><use id="nexora-profile-head" href="/assets/sprites/characters/nexora-customization-atlas.svg#head-1" x="32" y="18" width="64" height="64"></use><use id="nexora-profile-outfit" href="" x="0" y="0" width="128" height="128"></use></svg></div><div class="nexora-aura-preview" id="nexora-aura-preview">✦</div><div><small>ТВОЙ АВТОРИТЕТ</small><h2 id="nexora-rank-title">Новичок</h2><span id="nexora-authority-count">0 очков</span></div></header><div class="nexora-progress"><i id="nexora-authority-progress"></i></div><div class="nexora-rank-sub" id="nexora-rank-next">Следующее звание: Бывалый</div><div class="nexora-tabs"><button class="active" data-tab="heads">Головы</button><button data-tab="bodies">Костюмы</button><button data-tab="emperor">Император</button><button data-tab="ranks">Ранги</button></div><div id="nexora-avatar-content" class="nexora-avatar-content"></div><button id="nexora-avatar-save" class="nexora-avatar-save">Сохранить внешний вид</button><p id="nexora-avatar-note" role="status"></p></div></div></section>');
   const worldAvatar=$("nexora-world-avatar");
   const toggleProfile=()=>{if($("nexora-avatar-panel").classList.contains("hidden"))openAvatar();else closeAvatar();};
   worldAvatar.addEventListener("click",toggleProfile);
@@ -27,9 +27,24 @@
  }
  function closeAvatar(){$("nexora-avatar-panel").classList.add("hidden");const a=$("nexora-world-avatar");if(a)a.setAttribute("aria-expanded","false");}
  async function openAvatar(){
-  ensureAvatarEditor();$("nexora-avatar-panel").classList.remove("hidden");const worldAvatar=$("nexora-world-avatar");if(worldAvatar)worldAvatar.setAttribute("aria-expanded","true");
-  try{const r=await fetch("/api/account/profile");if(!r.ok)throw Error("Не удалось загрузить профиль");const d=await r.json();if(d.character){avatar.headId=Number(d.character.head_id)||1;avatar.bodyId=Number(d.character.body_id)||1;avatar.outfitId=Number(d.character.outfit_id)||0;renderAuthority(d.character);}showAvatarTab("heads");}
-  catch(e){$("nexora-avatar-note").textContent=e.message;}
+  ensureAvatarEditor();
+  $("nexora-avatar-panel").classList.remove("hidden");
+  $("nexora-profile-loading").classList.remove("hidden");
+  $("nexora-profile-loaded").classList.add("hidden");
+  $("nexora-profile-loading").innerHTML='<i></i><b>Загружаем информацию…</b><span>Скорость зависит от соединения</span>';
+  const worldAvatar=$("nexora-world-avatar");if(worldAvatar)worldAvatar.setAttribute("aria-expanded","true");
+  try{
+   const r=await fetch("/api/account/profile",{cache:"no-store"});
+   if(!r.ok)throw Error("Сервер не смог загрузить профиль");
+   const d=await r.json();
+   if(d.character){avatar.headId=Number(d.character.head_id)||1;avatar.bodyId=Number(d.character.body_id)||1;avatar.outfitId=Number(d.character.outfit_id)||0;renderAuthority(d.character);}
+   $("nexora-profile-loading").classList.add("hidden");
+   $("nexora-profile-loaded").classList.remove("hidden");
+   showAvatarTab("heads");
+  }catch(e){
+   $("nexora-profile-loading").innerHTML='<i class="nexora-loader-error">!</i><b>Не удалось загрузить информацию</b><span>'+String(e.message||"Проверь интернет-соединение")+'</span><button type="button" data-profile-retry>Повторить загрузку</button>';
+   $("nexora-profile-loading").querySelector("[data-profile-retry]").addEventListener("click",openAvatar);
+  }
  }
  function renderAuthority(c){
   const points=Number(c.authority_points)||0,rank=c.authority_title||"Новичок",aura=c.aura||"none";
