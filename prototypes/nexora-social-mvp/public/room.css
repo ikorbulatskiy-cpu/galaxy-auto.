@@ -465,3 +465,11 @@
 
 /* Remove every old aura effect from the scene and profile previews. */
 .nexora-world-avatar::before,.nexora-world-avatar::after,.nexora-aura-orbit,.nexora-profile-avatar::before,.nexora-profile-avatar::after{display:none!important;content:none!important;opacity:0!important;filter:none!important;animation:none!important}
+
+/* Original user-provided aura sprites and body layers */
+.nexora-world-avatar{isolation:isolate}
+.nexora-user-aura{position:absolute;z-index:0;left:50%;bottom:-3px;width:165%;height:145%;transform:translateX(-50%);overflow:visible;pointer-events:none}
+.nexora-avatar-sprite{position:relative;z-index:1;overflow:visible}
+.nexora-aura-thumb{flex:0 0 38px;width:38px;height:38px;display:grid;place-items:center;overflow:hidden;background:#111827;border:1px solid #52617a}
+.nexora-aura-thumb svg{width:100%;height:100%;display:block}
+.nexora-aura-option{min-height:54px}
