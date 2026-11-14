@@ -309,10 +309,10 @@ function createSocialRouter({ pool, auth, io }) {
       const reverse=await client.query("SELECT 1 FROM nexora_social_world.likes WHERE from_account_id=$1 AND to_account_id=$2",[targetId,req.account.id]);
       matched=reverse.rowCount>0;
       if(matched){
-        notice=await client.query("INSERT INTO nexora_social_world.notifications(account_id,actor_account_id,type,payload) VALUES($1,$2,'match',jsonb_build_object('accountId',$2::text)) RETURNING id,created_at",[req.account.id,targetId]);
-        await client.query("INSERT INTO nexora_social_world.notifications(account_id,actor_account_id,type,payload) VALUES($1,$2,'match',jsonb_build_object('accountId',$2::text))",[targetId,req.account.id]);
+        notice=await client.query("INSERT INTO nexora_social_world.notifications(account_id,actor_account_id,type,payload) VALUES($1,$2,'match',jsonb_build_object('accountId',CAST($2 AS BIGINT)::text)) RETURNING id,created_at",[req.account.id,targetId]);
+        await client.query("INSERT INTO nexora_social_world.notifications(account_id,actor_account_id,type,payload) VALUES($1,$2,'match',jsonb_build_object('accountId',CAST($2 AS BIGINT)::text))",[targetId,req.account.id]);
       }else{
-        notice=await client.query("INSERT INTO nexora_social_world.notifications(account_id,actor_account_id,type,payload) VALUES($1,$2,'like',jsonb_build_object('accountId',$2::text)) RETURNING id,created_at",[targetId,req.account.id]);
+        notice=await client.query("INSERT INTO nexora_social_world.notifications(account_id,actor_account_id,type,payload) VALUES($1,$2,'like',jsonb_build_object('accountId',CAST($2 AS BIGINT)::text)) RETURNING id,created_at",[targetId,req.account.id]);
       }
       await client.query("COMMIT");
     }catch(error){await client.query("ROLLBACK");throw error;}finally{client.release();}
