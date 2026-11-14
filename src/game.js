@@ -139,7 +139,7 @@ router.delete("/characters/:characterId", requireSession, async (req, res, next)
 
 router.get("/planets", requireSession, async (req,res,next)=>{
  try{
-  const r=await pool.query("SELECT p.id,p.slug,p.name,p.description,p.access_type,p.ticket_price,p.settings,p.owner_user_id,COALESCE(u.username,'') AS owner_name,(p.owner_user_id=$1) AS is_owner,EXISTS(SELECT 1 FROM planet_favorites pf WHERE pf.user_id=$1 AND pf.planet_id=p.id) AS is_favorite,EXISTS(SELECT 1 FROM user_locations ul WHERE ul.user_id=$1 AND ul.planet_id=p.id) AS is_current,(SELECT COUNT(*)::int FROM rooms rm WHERE rm.planet_id=p.id AND rm.is_active=TRUE) AS rooms,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp JOIN rooms rm ON rm.id=rp.room_id WHERE rm.planet_id=p.id AND rp.connected_at>NOW()-INTERVAL '2 minutes' AND NOT EXISTS(SELECT 1 FROM galaxy_preferences gp WHERE gp.user_id=rp.user_id AND gp.invisible=TRUE)) AS online,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp JOIN rooms rm ON rm.id=rp.room_id JOIN friendships f ON f.status='accepted' AND ((f.requester_id=$1 AND f.addressee_id=rp.user_id) OR (f.addressee_id=$1 AND f.requester_id=rp.user_id)) WHERE rm.planet_id=p.id AND rp.connected_at>NOW()-INTERVAL '2 minutes') AS friends_online FROM planets p LEFT JOIN users u ON u.id=p.owner_user_id WHERE p.is_active=TRUE AND NOT EXISTS(SELECT 1 FROM planet_bans pb WHERE pb.planet_id=p.id AND pb.user_id=$1 AND (pb.expires_at IS NULL OR pb.expires_at>NOW())) AND (p.access_type<>'vip' OR p.owner_user_id=$1 OR EXISTS(SELECT 1 FROM planet_access pa WHERE pa.planet_id=p.id AND pa.user_id=$1 AND (pa.expires_at IS NULL OR pa.expires_at>NOW()) AND (COALESCE(p.settings->>'legacy_access_mode','')<>'private' OR pa.access_level='staff'))) ORDER BY (p.slug='newbies-1') DESC,p.name",[req.user.id]);
+  const r=await pool.query("SELECT p.id,p.slug,p.name,p.description,p.category,p.access_type,p.ticket_price,p.settings,p.owner_user_id,COALESCE(u.username,'') AS owner_name,(p.owner_user_id=$1) AS is_owner,EXISTS(SELECT 1 FROM planet_favorites pf WHERE pf.user_id=$1 AND pf.planet_id=p.id) AS is_favorite,EXISTS(SELECT 1 FROM user_locations ul WHERE ul.user_id=$1 AND ul.planet_id=p.id) AS is_current,(SELECT COUNT(*)::int FROM rooms rm WHERE rm.planet_id=p.id AND rm.is_active=TRUE) AS rooms,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp JOIN rooms rm ON rm.id=rp.room_id WHERE rm.planet_id=p.id AND rp.connected_at>NOW()-INTERVAL '2 minutes' AND NOT EXISTS(SELECT 1 FROM galaxy_preferences gp WHERE gp.user_id=rp.user_id AND gp.invisible=TRUE)) AS online,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp JOIN rooms rm ON rm.id=rp.room_id JOIN friendships f ON f.status='accepted' AND ((f.requester_id=$1 AND f.addressee_id=rp.user_id) OR (f.addressee_id=$1 AND f.requester_id=rp.user_id)) WHERE rm.planet_id=p.id AND rp.connected_at>NOW()-INTERVAL '2 minutes') AS friends_online FROM planets p LEFT JOIN users u ON u.id=p.owner_user_id WHERE p.is_active=TRUE AND NOT EXISTS(SELECT 1 FROM planet_bans pb WHERE pb.planet_id=p.id AND pb.user_id=$1 AND (pb.expires_at IS NULL OR pb.expires_at>NOW())) AND (p.access_type<>'vip' OR p.owner_user_id=$1 OR EXISTS(SELECT 1 FROM planet_access pa WHERE pa.planet_id=p.id AND pa.user_id=$1 AND (pa.expires_at IS NULL OR pa.expires_at>NOW()) AND (COALESCE(p.settings->>'legacy_access_mode','')<>'private' OR pa.access_level='staff'))) ORDER BY (p.slug='newbies-1') DESC,p.name",[req.user.id]);
   res.json({planets:r.rows});
  }catch(e){next(e)}
 });
@@ -293,10 +293,42 @@ router.get("/rooms", requireSession, async (req, res, next) => {
     const location = await pool.query("SELECT p.slug FROM user_locations l JOIN planets p ON p.id=l.planet_id WHERE l.user_id=$1", [req.user.id]);
     if (!location.rowCount) return res.status(409).json({ error: "Сначала выбери планету отправления." });
     if (planetSlug && planetSlug !== location.rows[0].slug) return res.status(409).json({ error: "Сначала перелетите на выбранную планету." });
-    const result = await pool.query("SELECT r.id,r.slug,r.name,r.description,r.capacity,p.slug AS planet_slug,p.name AS planet_name,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp WHERE rp.room_id=r.id AND rp.connected_at>NOW()-INTERVAL '2 minutes' AND NOT EXISTS(SELECT 1 FROM galaxy_preferences gp WHERE gp.user_id=rp.user_id AND gp.invisible=TRUE)) AS online FROM rooms r JOIN planets p ON p.id=r.planet_id WHERE r.is_active=TRUE AND p.is_active=TRUE AND p.slug=$1 ORDER BY r.name",[location.rows[0].slug]);
+    const result = await pool.query("SELECT r.id,r.slug,r.name,r.description,r.category,r.capacity,p.slug AS planet_slug,p.name AS planet_name,(SELECT COUNT(DISTINCT rp.user_id)::int FROM room_presence rp WHERE rp.room_id=r.id AND rp.connected_at>NOW()-INTERVAL '2 minutes' AND NOT EXISTS(SELECT 1 FROM galaxy_preferences gp WHERE gp.user_id=rp.user_id AND gp.invisible=TRUE)) AS online FROM rooms r JOIN planets p ON p.id=r.planet_id WHERE r.is_active=TRUE AND p.is_active=TRUE AND p.slug=$1 ORDER BY r.name",[location.rows[0].slug]);
     res.json({ rooms: result.rows });
   } catch (error) { next(error); }
 });
+router.post("/mini-games/dice/roll", requireSession, async (req,res,next) => {
+  const parsed=z.object({roomId:z.string().uuid()}).strict().safeParse(req.body);
+  if(!parsed.success)return res.status(400).json({error:"Выбери комнату для броска кубика."});
+  const client=await pool.connect();
+  try{
+    await client.query("BEGIN");
+    const room=await client.query(
+      `SELECT r.id FROM rooms r
+       JOIN user_locations l ON l.planet_id=r.planet_id AND l.user_id=$2
+       JOIN room_presence rp ON rp.room_id=r.id AND rp.user_id=$2
+       WHERE r.id=$1 AND r.is_active=TRUE AND rp.connected_at>NOW()-INTERVAL '2 minutes'
+       LIMIT 1 FOR UPDATE OF r`,
+      [parsed.data.roomId,req.user.id]
+    );
+    if(!room.rowCount){await client.query("ROLLBACK");return res.status(403).json({error:"Сначала войди в эту комнату."});}
+    const recent=await client.query(
+      "SELECT 1 FROM mini_game_rounds WHERE user_id=$1 AND created_at>NOW()-INTERVAL '3 seconds' LIMIT 1",
+      [req.user.id]
+    );
+    if(recent.rowCount){await client.query("ROLLBACK");return res.status(429).json({error:"Подожди немного перед следующим броском."});}
+    const roll=require("crypto").randomInt(1,7);
+    const result={kind:"dice",roll,label:"🎲 Выпало "+roll};
+    const saved=await client.query(
+      "INSERT INTO mini_game_rounds(user_id,room_id,game_slug,result) VALUES($1,$2,'dice',$3::jsonb) RETURNING id,created_at",
+      [req.user.id,parsed.data.roomId,JSON.stringify(result)]
+    );
+    await client.query("COMMIT");
+    res.status(201).json({round:{id:saved.rows[0].id,roll,label:result.label,createdAt:saved.rows[0].created_at}});
+  }catch(error){await client.query("ROLLBACK");next(error)}
+  finally{client.release()}
+});
+
 router.get("/rooms/:roomId/presence", requireSession, async (req,res,next)=>{
   if (!/^[0-9a-f-]{36}$/i.test(req.params.roomId)) return res.status(400).json({error:"Некорректная комната."});
   try {
