@@ -81,3 +81,7 @@
 .nexora-aura-preview.aura-emperor{outline:2px solid #bd72ff;outline-offset:3px;box-shadow:0 0 16px #a64cff,0 0 28px #7e2bd4}
 @keyframes nexora-aura-pulse{0%,100%{opacity:.82;transform:rotate(-13deg) scale(.98)}50%{opacity:1;transform:rotate(-13deg) scale(1.04)}}
 @media(prefers-reduced-motion:reduce){.nexora-world-avatar .nexora-aura-orbit{animation:none}}
+
+.nexora-profile-avatar{width:54px;height:86px;flex:0 0 54px;position:relative;display:grid;place-items:center;border-radius:14px;background:radial-gradient(ellipse,#a14de455,transparent 72%);filter:drop-shadow(0 0 6px #a64cff)}
+.nexora-profile-avatar svg{width:100%;height:100%;overflow:visible}
+.nexora-profile-avatar.aura-emperor{outline:1px solid #c48aff;outline-offset:2px;box-shadow:0 0 12px #a64cff}
