@@ -7,7 +7,7 @@
  function modal(name,open){const m=$(name+"-modal");m.classList.toggle("open",open);m.setAttribute("aria-hidden",String(!open));}
  function resetRegister(){$("register-step-one").classList.remove("hidden");$("register-step-two").classList.add("hidden");$("step-label").textContent="1 из 2";$("step-progress").style.width="50%";$("register-error").textContent="";$("finish-error").textContent="";$("register-next").disabled=false;}
  $("open-register").addEventListener("click",()=>{resetRegister();modal("register",true);setTimeout(()=>$("register-nickname").focus(),60);});
- $("open-login").addEventListener("click",()=>{ $("login-error").textContent="";modal("login",true);setTimeout(()=>$("login-nickname").focus(),60);});
+ $("open-login").addEventListener("click",()=>{ $("login-error").textContent="";modal("login",true);setTimeout(()=>$("login-code").focus(),60);});
  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>modal(b.dataset.close,false)));
  document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)modal(m.id.replace("-modal",""),false);}));
  $("register-form").addEventListener("submit",async e=>{e.preventDefault();$("register-error").textContent="";const nickname=$("register-nickname").value.trim();if(nickname.length<3){$("register-error").textContent="Ник должен содержать минимум 3 символа.";return;}const b=$("register-next");b.disabled=true;
