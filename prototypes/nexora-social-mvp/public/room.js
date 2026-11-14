@@ -5,7 +5,7 @@
  function updateVisitorClock(){
   const clock=$("visitor-clock");
   if(!clock)return;
-  try{clock.textContent=new Intl.DateTimeFormat(undefined,{hour:"2-digit",minute:"2-digit",hourCycle:" h23"}).format(new Date());}
+  try{clock.textContent=new Intl.DateTimeFormat(undefined,{hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).format(new Date());}
   catch{clock.textContent=new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
  }
  const room=$("room-screen");
