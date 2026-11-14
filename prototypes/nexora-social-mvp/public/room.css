@@ -758,3 +758,6 @@
   .nexora-choice-grid{gap:7px!important}
   .nexora-choice-grid .nexora-choice img{height:62px!important}
 }
+
+/* Developer privilege and clean profile info */
+.nexora-privilege-line{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 9px;border:1px solid #8297bd;background:#e9effa;color:#26385b;font-size:12px}.nexora-privilege-line strong{font-weight:700;color:#314f91}.nexora-developer-panel{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:18px;background:#05091acc}.nexora-developer-panel.hidden{display:none!important}.nexora-developer-window{width:min(420px,100%);padding:18px;background:#e8edf8;color:#172544;border:2px solid #7893c7;box-shadow:0 12px 40px #0009}.nexora-developer-window header{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:16px}.nexora-developer-window header button{font-size:22px;border:0;background:transparent;color:inherit}.nexora-developer-role{display:inline-block;padding:7px 10px;background:#d2def5;color:#243f7c;font-weight:800}
