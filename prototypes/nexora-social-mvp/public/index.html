@@ -71,6 +71,7 @@
           <button type="button" data-room-action="shop">🛍️<span>Магазин</span></button>
           <button type="button" data-room-action="planets">🪐<span>Планеты</span></button>
           <button type="button" data-room-action="galaxy">🌌<span>Galaxy 2D</span></button>
+          <button type="button" data-room-action="dice">🎲<span>Кости</span></button>
           <button type="button" data-room-action="rating">🏆<span>Рейтинг</span></button>
           <button type="button" data-room-toggle="events" aria-expanded="false">🔔<span>События</span></button>
           <button type="button" data-room-action="developer" id="room-developer-action" class="hidden">🛠️<span>Разработчик</span></button>
@@ -83,6 +84,18 @@
             <p>Введи имя персонажа или название планеты.</p>
           </div>
         </section>
+      </aside>
+
+      <aside id="room-dice-panel" class="room-flyout room-dice-panel hidden" aria-label="Игра в кости">
+        <div class="room-flyout-head"><div><small>QUICK GAME</small><strong>Игра в кости</strong></div><button type="button" data-room-close="dice" aria-label="Закрыть">×</button></div>
+        <p class="room-dice-caption">Брось две кости против NEXORA. У кого сумма больше, тот и победил.</p>
+        <div class="room-dice-duel">
+          <div class="room-dice-player"><span>ТЫ</span><strong id="dice-player-value">⚀ ⚀</strong><small id="dice-player-score">0 побед</small></div>
+          <b class="room-dice-versus">VS</b>
+          <div class="room-dice-player"><span>NEXORA</span><strong id="dice-bot-value">⚀ ⚀</strong><small id="dice-bot-score">0 побед</small></div>
+        </div>
+        <p id="dice-result" class="room-dice-result" aria-live="polite">Нажми «Бросить кости», чтобы начать.</p>
+        <button id="dice-roll" class="room-dice-roll" type="button">🎲 Бросить кости</button>
       </aside>
 
       <aside id="room-emotions-panel" class="room-flyout room-emotions-panel hidden" aria-label="Эмоции">
@@ -316,6 +329,6 @@
   <script src="/world-scene.js"></script>
   <script src="/world-objects.js"></script>
   <script src="/sprite-engine.js"></script>
-  <script src="/client.js?v=2"></script>
+  <script src="/client.js?v=3"></script>
 </body>
 </html>

@@ -2369,3 +2369,17 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 .profile-menu,.profile-editor,.social-panel,.shop-panel,.planets-panel,.developer-panel,.authority-panel,.room-flyout,.public-profile{position:fixed!important;z-index:155!important}
 .toast{z-index:170}
 @media(max-width:600px){.galaxy-primary-toolbar{left:6px;right:6px;gap:4px;padding:4px}.galaxy-primary-toolbar button{min-height:31px;padding:6px 8px;font-size:10px}}
+
+
+/* Dice mini-game in the hamburger menu */
+.room-dice-panel{width:min(390px,calc(100vw - 24px));padding:14px;background:linear-gradient(155deg,rgba(24,39,69,.98),rgba(9,16,34,.98));border:1px solid rgba(135,166,235,.42);border-radius:18px;box-shadow:0 22px 60px #000b}
+.room-dice-caption{margin:12px 2px;color:#b9c9e8;font-size:12px;line-height:1.5}
+.room-dice-duel{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin:16px 0}
+.room-dice-player{display:grid;justify-items:center;gap:7px;padding:12px 6px;border:1px solid #91a9dc33;border-radius:13px;background:#ffffff08}
+.room-dice-player>span{font-size:9px;letter-spacing:1.5px;color:#9eb7e4;font-weight:800}
+.room-dice-player>strong{font-size:30px;line-height:1.2;letter-spacing:3px;color:#fff}
+.room-dice-player>small{font-size:10px;color:#a9c1e9}
+.room-dice-versus{font-size:11px;color:#f4d38d}
+.room-dice-result{min-height:34px;margin:10px 0;text-align:center;color:#f4dfaa;font-weight:750}
+.room-dice-roll{display:block;width:100%;padding:12px;border:1px solid #a7b7ff;border-radius:11px;background:linear-gradient(110deg,#347fe8,#805de0);color:#fff;font:inherit;font-weight:800}
+.room-dice-roll:active{transform:scale(.98)}
