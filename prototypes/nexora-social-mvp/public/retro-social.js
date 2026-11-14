@@ -106,8 +106,8 @@
     themeButton.innerHTML = enabled ? "✦<span>Обычный</span>" : "▦<span>Ретро</span>";
     try { localStorage.setItem(themeKey,enabled ? "on" : "off"); } catch {}
   }
-  let enabled = false;
-  try { enabled = localStorage.getItem(themeKey) === "on"; } catch {}
+  let enabled = true;
+  try { enabled = localStorage.getItem(themeKey) !== "off"; } catch {}
   setRetro(enabled);
   themeButton.addEventListener("click",() => setRetro(!game.classList.contains("retro-mode")));
 })();
