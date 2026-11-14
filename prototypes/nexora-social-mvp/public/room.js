@@ -41,7 +41,7 @@
  function setSpriteImage(img,kind,id){
   if(!img)return;
   const safeId=Math.max(1,Math.min(6,Number(id)||1));
-  if(kind==="head"){img.src="/assets/sprites/characters/nexora-devil-head-"+safeId+".svg?v=devil-heads-v1";return;}
+  if(kind==="head"){img.src="/assets/sprites/characters/nexora-devil-head-"+safeId+".svg?v=devil-heads-v2-20261115";return;}
   if(kind==="body"){img.src="/assets/sprites/characters/nexora-body-"+safeId+".svg?v=body-art-v3-20261115";return;}
   const key=kind+":"+id;
   if(!roomSpritePromises[key])roomSpritePromises[key]=new Promise((resolve,reject)=>{
