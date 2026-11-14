@@ -50,21 +50,28 @@
   </div>
  </section>
  <section id="room-screen" class="hidden" aria-label="2D-комната Мишкин Домик">
-  <header class="room-top"><button id="room-home" aria-label="На главную">←</button><div class="room-title">🏠 МИШКИН ДОМИК</div><span id="room-nickname">Игрок</span></header>
-  <div id="room-scene" class="room-scene">
-   <div class="room-wall"></div><div class="room-sun"></div><div class="room-cloud cloud-a"></div><div class="room-cloud cloud-b"></div><div class="room-rainbow"></div><div class="room-grass"></div><div class="room-fence"></div>
-   <span class="room-flower f1">🌼</span><span class="room-flower f2">🌷</span><span class="room-flower f3">🌸</span>
-   <button class="room-avatar avatar-one" style="left:22%;top:65%"><span class="avatar-face">👧🏻</span><span>Ангелочек</span></button>
-   <button class="room-avatar avatar-two" style="left:45%;top:72%"><span class="avatar-face">👩🏼</span><span>Любовь</span></button>
-   <button class="room-avatar avatar-three" style="left:72%;top:63%"><span class="avatar-face">👩🏻</span><span>Милашка</span></button>
-   <button class="room-avatar avatar-four" style="left:88%;top:76%"><span class="avatar-face">👩🏽</span><span>Звёздочка</span></button>
-   <div id="player-avatar" class="room-avatar player-avatar"><span id="player-bubble" class="player-bubble"></span><span class="avatar-face">🙂</span><span id="player-label">Ты</span></div>
+  <div class="retro-room">
+   <header class="retro-top"><button id="room-home" aria-label="На главную">←</button><strong>🏠 МИШКИН ДОМИК</strong><span id="room-clock">20:15</span></header>
+   <section class="retro-chat" aria-label="Общий чат">
+    <div class="chat-space" aria-hidden="true"></div>
+    <div id="emoji-panel" class="emoji-panel hidden" aria-label="Эмодзи"><button data-emoji="😊">😊</button><button data-emoji="😍">😍</button><button data-emoji="🥰">🥰</button><button data-emoji="💕">💕</button><button data-emoji="❤️">❤️</button><button data-emoji="🌸">🌸</button><button data-emoji="⭐">⭐</button><button data-emoji="🦋">🦋</button><button data-emoji="💎">💎</button><button data-emoji="🌈">🌈</button></div>
+    <form id="chat-form" class="retro-composer"><button id="toggle-emojis" type="button" aria-label="Эмодзи">☺</button><input id="chatInput" maxlength="500" placeholder="Написать сообщение..." autocomplete="off"><button id="send-chat" type="submit">Отправить</button></form>
+    <div id="chat-error" class="chat-error" role="status"></div>
+   </section>
+   <main id="room-scene" class="retro-scene" aria-label="2D комната">
+    <div class="wall-pattern"></div><div class="sun"></div><div class="rainbow"></div><div class="cloud c1"></div><div class="cloud c2"></div><div class="ground"></div><div class="fence"></div><div class="bush b1"></div><div class="bush b2"></div><div class="bush b3"></div>
+    <span class="flower f1">🌸</span><span class="flower f2">🌺</span><span class="flower f3">🌷</span><span class="flower f4">🌻</span><span class="flower f5">🌼</span><span class="flower f6">🌸</span><span class="flower f7">🌺</span><span class="flower f8">🌷</span><span class="flower f9">🌻</span><span class="flower f10">🌼</span><span class="flower f11">🌸</span>
+    <span class="float heart h1">💕</span><span class="float heart h2">💖</span><span class="float heart h3">💗</span><span class="float heart h4">💕</span><span class="float star s1">⭐</span><span class="float star s2">✨</span><span class="float star s3">⭐</span><span class="float star s4">✨</span><span class="float butterfly but1">🦋</span><span class="float butterfly but2">🦋</span>
+    <div class="avatar a1" data-name="[FEAR] Ангелочек" style="--frame:#ff8fc4;left:12%" tabindex="0" role="button"><span class="nick">[FEAR] Ангелочек</span><span class="bubble"></span><span class="avatar-frame">👱🏻‍♀️</span></div>
+    <div class="avatar a2" data-name="{KISS} Любовь" style="--frame:#ff4d64;left:29%" tabindex="0" role="button"><span class="nick">{KISS} Любовь</span><span class="bubble"></span><span class="avatar-frame">👩🏻</span></div>
+    <div class="avatar a3" data-name="{AVRORA} Милашка" style="--frame:#c18aff;left:46%" tabindex="0" role="button"><span class="nick">{AVRORA} Милашка</span><span class="bubble"></span><span class="avatar-frame">👩🏽</span></div>
+    <div class="avatar a4" data-name="{KOT} Звёздочка" style="--frame:#9bdc45;left:63%" tabindex="0" role="button"><span class="nick">{KOT} Звёздочка</span><span class="bubble"></span><span class="avatar-frame">👩🏻‍🦰</span></div>
+    <div class="avatar player-avatar" id="player-avatar" data-name="Ты" style="left:82%"><span id="player-bubble" class="bubble"></span><span class="nick" id="player-label">Ты</span><span class="avatar-frame player-frame">🙂</span></div>
+    <div class="hint">Выбери персонажа и дважды нажми в комнате, чтобы переместить</div>
+    <div id="action-panel" class="actions hidden"><button data-action="👋 Помахать">👋 Помахать</button><button data-action="🤗 Обнять">🤗 Обнять</button><button data-action="💋 Поцеловать">💋 Поцеловать</button><button data-action="💃 Танцевать">💃 Танцевать</button><button data-action="😂 Смеяться">😂 Смеяться</button></div>
+   </main>
+   <footer class="retro-bottom"><button id="toggle-actions">🎭 Действие</button><button id="diamonds" class="diamonds">💎 DIAMONDS <span id="diamond-balance">0</span></button><button id="leave-room" class="exit">🚪 Выход</button></footer>
   </div>
-  <section class="room-chat"><div class="chat-heading">💬 Общий чат комнаты</div><div id="chat-messages" class="chat-messages" aria-live="polite"></div><div id="chat-error" class="chat-error"></div><form id="chat-form" class="chat-compose"><input id="chatInput" maxlength="500" placeholder="Написать сообщение…" autocomplete="off"><button id="send-chat" type="submit" aria-label="Отправить">➤</button></form></section>
-  <nav class="room-tools"><button id="toggle-actions">🎭 Действия</button><button id="toggle-emojis">😊 Эмоции</button><button id="leave-room">↩ Выйти</button>
-   <div id="action-panel" class="room-popover hidden"><div class="action-grid"><button data-action="👋 Привет!">👋 Привет</button><button data-action="❤️ Обнимает">❤️ Обнять</button><button data-action="💃 Танцует">💃 Танец</button></div></div>
-   <div id="emoji-panel" class="room-popover hidden"><div class="emoji-grid"><button data-emoji="😀">😀</button><button data-emoji="😍">😍</button><button data-emoji="😘">😘</button><button data-emoji="❤️">❤️</button><button data-emoji="😂">😂</button><button data-emoji="🥰">🥰</button><button data-emoji="🌹">🌹</button><button data-emoji="✨">✨</button></div></div>
-  </nav>
  </section>
  <div id="toast" class="toast" role="status"></div>
 </div>
