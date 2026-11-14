@@ -508,3 +508,23 @@
 /* Match the torso width to the head so the body no longer looks oversized. */
 #creator-preview .creator-preview-body,
 .nexora-world-avatar .nexora-avatar-sprite #nexora-world-body{left:28%!important;top:22%!important;right:auto!important;bottom:0!important;width:44%!important;height:78%!important;object-fit:contain!important}
+
+/* Final avatar proportions: smaller head, narrow torso, and feet resting on the floor. */
+.nexora-world-avatar{bottom:0!important}
+.nexora-world-avatar .nexora-avatar-sprite{height:100%!important}
+.nexora-world-avatar .nexora-avatar-sprite #nexora-world-body{
+  left:28%!important;top:19%!important;right:auto!important;bottom:0!important;
+  width:44%!important;height:81%!important;object-fit:fill!important;
+}
+.nexora-world-avatar .nexora-avatar-sprite #nexora-world-head{
+  left:31%!important;top:0!important;width:38%!important;height:33%!important;
+  object-fit:fill!important;
+}
+#creator-preview .creator-preview-body{
+  left:28%!important;top:19%!important;right:auto!important;bottom:0!important;
+  width:44%!important;height:81%!important;object-fit:fill!important;
+}
+#creator-preview .creator-preview-head{
+  left:31%!important;top:0!important;width:38%!important;height:33%!important;
+  object-fit:fill!important;
+}
