@@ -194,3 +194,17 @@
 .nexora-world-rank{bottom:calc(100% + 8px)!important;}
 .nexora-profile-avatar .nexora-demon-layers{position:relative!important;inset:auto!important;width:100%!important;height:100%!important;}
 .nexora-profile-avatar .nexora-demon-layers img{height:120%!important;bottom:0!important;}
+
+
+/* Restore the original demon proportions; trim only the aura visually. */
+.nexora-world-avatar{width:148px!important;height:150px!important;bottom:13%!important;overflow:visible!important;display:block!important;filter:none!important;}
+.nexora-world-avatar .nexora-demon-layers{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;overflow:visible!important;}
+.nexora-world-avatar .nexora-demon-layers img{position:absolute!important;left:0!important;top:auto!important;right:auto!important;bottom:0!important;width:100%!important;height:100%!important;object-fit:contain!important;object-position:center bottom!important;}
+.nexora-world-avatar .nexora-demon-body{z-index:1!important;transform:translateY(9px)!important;transform-origin:center bottom!important;}
+.nexora-world-avatar .nexora-demon-aura{z-index:2!important;transform:scale(1.16)!important;transform-origin:center bottom!important;}
+.nexora-profile-avatar .nexora-demon-layers{position:relative!important;inset:auto!important;width:100%!important;height:100%!important;}
+.nexora-profile-avatar .nexora-demon-layers img{width:100%!important;height:100%!important;object-fit:contain!important;transform:none!important;}
+.nexora-profile-avatar .nexora-demon-body{z-index:1!important;}
+.nexora-profile-avatar .nexora-demon-aura{z-index:2!important;transform:scale(1.12)!important;transform-origin:center bottom!important;}
+.nexora-world-rank{bottom:calc(100% + 8px)!important;}
+@media(max-width:520px){.nexora-world-avatar{width:132px!important;height:136px!important;}}
