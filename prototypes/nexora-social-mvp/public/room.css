@@ -1154,3 +1154,36 @@
  border-top:1px solid #78849c!important;
  opacity:1!important;
 }
+
+
+/* NEXORA: green Earth room and a firm floor baseline. */
+#room-scene.retro-scene{
+  background-color:#78bd58!important;
+  background-image:
+    radial-gradient(ellipse at 18% 22%,#a9dc79 0 1.5%,transparent 1.7%),
+    radial-gradient(ellipse at 78% 36%,#8dce68 0 2%,transparent 2.2%),
+    linear-gradient(180deg,#91cf68 0%,#83c45e 66%,#70b34e 100%)!important;
+}
+#room-scene.retro-scene::after{
+  height:13%!important;
+  bottom:0!important;
+  background-color:#58a83f!important;
+  background-image:
+    repeating-linear-gradient(90deg,#62b64a 0 3px,#55a63e 3px 6px),
+    linear-gradient(180deg,#67b94c,#4c9838)!important;
+  border-top:2px solid #367f31!important;
+  opacity:1!important;
+  z-index:1!important;
+}
+#room-scene .nexora-world-avatar{
+  bottom:13%!important;
+  z-index:2!important;
+}
+#room-scene .nexora-world-avatar .nexora-demon-layers{
+  bottom:0!important;
+}
+#room-scene .nexora-world-avatar .nexora-demon-body{
+  bottom:0!important;
+  transform:none!important;
+  object-position:center bottom!important;
+}
