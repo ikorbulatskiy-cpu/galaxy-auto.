@@ -4,7 +4,7 @@
   const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   let modal,current;
   const planets=()=>window.nexoraWorldGetPlanets?.()||[];
-  const currentPlanet=()=>planets().find(p=>p.is_current)||planets().find(p=>p.slug===window.nexoraActivePlanet)||null;
+  const currentPlanet=()=>{const label=$("#nx-top-planet")?.textContent?.trim();return planets().find(p=>p.name===label)||planets().find(p=>p.is_current)||null};
   function ensureModal(){
     if(modal?.isConnected)return modal;
     modal=document.createElement("section");modal.id="nx-planet-actions-modal";modal.className="nx-planet-actions-modal";modal.hidden=true;
