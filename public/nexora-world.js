@@ -52,10 +52,26 @@
   lastPlayers=users.slice(0,14);const stage=document.getElementById("nx-avatars");if(!stage)return;
   const all=lastPlayers.slice();if(!all.some(u=>u.is_me))all.unshift({username:"you",character_name:meName,character_appearance:meAppearance,character_aura:meAura,is_me:true});
   const favorites=getFavorites();
-  stage.innerHTML=all.map(u=>{const key=String(u.character_id||u.id||u.username||u.character_name||"player"),name=u.character_name||u.username||"Игрок",fav=favorites.some(x=>x.key===key),aura=u.character_aura||"none";return '<div class="nx-avatar-card aura-'+esc(aura)+' '+(u.is_me?"me":"")+'" data-player-key="'+esc(key)+'" data-player-username="'+esc(u.username||"")+'" data-player-user-id="'+esc(u.user_id||"")+'"><div class="nx-avatar-name">'+(u.is_me?"♛ ":"")+esc(name)+'</div><button type="button" class="nx-fav-toggle '+(fav?"is-favorite":"")+'" data-favorite="'+esc(key)+'" data-favorite-name="'+esc(name)+'" title="Добавить в избранное">'+(fav?"★":"☆")+'</button>'+((aura&&aura!=="none")?'<span class="nx-rank-mark">'+(aura==="angel"?"✧":aura==="god"?"☼":aura==="almighty"?"♛":aura==="universe"?"✹":"★")+'</span>':"")+avatar(u.character_appearance||{})+cosmetics(u.character_appearance||{})+'</div>'}).join("");if(window.NexoraSpriteAvatar)window.NexoraSpriteAvatar.mountAll(stage);
-  stage.querySelectorAll("[data-favorite]").forEach(b=>b.onclick=e=>{e.stopPropagation();const key=b.dataset.favorite,name=b.dataset.favoriteName,items=getFavorites(),exists=items.some(x=>x.key===key);saveFavorites(exists?items.filter(x=>x.key!==key):items.concat([{key,name}]));renderPlayers(lastPlayers);renderFavorites()});
-  const count=users.length;document.getElementById("nx-online").textContent="Игроков: "+count;document.getElementById("nx-event-online").textContent="● "+count+" игроков";
-  document.getElementById("nx-player-list").innerHTML='<h4>В комнате:</h4>'+all.map(u=>'<div class="nx-player">'+avatar(u.character_appearance||{},true)+'<span>'+esc(u.character_name||u.username)+'</span></div>').join("");if(window.NexoraSpriteAvatar)window.NexoraSpriteAvatar.mountAll(document.getElementById("nx-player-list"));
+  stage.innerHTML=all.map(u=>{
+   const key=String(u.character_id||u.id||u.username||u.character_name||"player");
+   const name=u.character_name||u.username||"Игрок";
+   const fav=favorites.some(x=>x.key===key),aura=u.character_aura||"none";
+   const rank=(aura&&aura!=="none")?'<span class="nx-rank-mark" aria-hidden="true">'+(aura==="angel"?"✧":aura==="god"?"☼":aura==="almighty"?"♛":aura==="universe"?"✹":"★")+'</span>':"";
+   return '<div class="nx-avatar-card aura-'+esc(aura)+' '+(u.is_me?"me":"")+'" data-player-key="'+esc(key)+'" data-player-username="'+esc(u.username||"")+'" data-player-user-id="'+esc(u.user_id||"")+'">'+
+    '<div class="nx-avatar-visual">'+rank+avatar(u.character_appearance||{})+cosmetics(u.character_appearance||{})+'</div>'+
+    '<button type="button" class="nx-fav-toggle '+(fav?"is-favorite":"")+'" data-favorite="'+esc(key)+'" data-favorite-name="'+esc(name)+'" title="Добавить в избранное" aria-label="Добавить в избранное">'+(fav?"★":"☆")+'</button>'+
+    '<div class="nx-avatar-name" title="'+esc(name)+'">'+(u.is_me?"♛ ":"")+esc(name)+'</div></div>';
+  }).join("");
+  if(window.NexoraSpriteAvatar)window.NexoraSpriteAvatar.mountAll(stage);
+  stage.querySelectorAll("[data-favorite]").forEach(b=>b.onclick=e=>{
+   e.stopPropagation();const key=b.dataset.favorite,name=b.dataset.favoriteName,items=getFavorites(),exists=items.some(x=>x.key===key);
+   saveFavorites(exists?items.filter(x=>x.key!==key):items.concat([{key,name}]));renderPlayers(lastPlayers);renderFavorites();
+  });
+  const count=users.length;
+  document.getElementById("nx-online").textContent="Игроков: "+count;
+  document.getElementById("nx-event-online").textContent="● "+count+" игроков";
+  document.getElementById("nx-player-list").innerHTML='<h4>В комнате:</h4>'+all.map(u=>'<div class="nx-player">'+avatar(u.character_appearance||{},true)+'<span>'+esc(u.character_name||u.username)+'</span></div>').join("");
+  if(window.NexoraSpriteAvatar)window.NexoraSpriteAvatar.mountAll(document.getElementById("nx-player-list"));
  } function appendMessage(m){
   const log=document.getElementById("nx-chat-log");if(!log)return;
   const line=document.createElement("div");line.className="nx-chat-line";
