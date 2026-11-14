@@ -166,7 +166,7 @@
  }
  function movementVector(){
   let x=(movement.keys.has("d")||movement.keys.has("arrowright")?1:0)-(movement.keys.has("a")||movement.keys.has("arrowleft")?1:0)+movement.joy.x;
-  let y=(movement.keys.has("w")||movement.keys.has("arrowup")?1:0)-(movement.keys.has("s")||movement.keys.has("arrowdown")?1:0)-movement.joy.y;
+  let y=(movement.keys.has("w")||movement.keys.has("arrowup")?1:0)-(movement.keys.has("s")||movement.keys.has("arrowdown")?1:0)+movement.joy.y;
   const len=Math.hypot(x,y);if(len>1){x/=len;y/=len;}return {x,y};
  }
  function startMovementLoop(){
