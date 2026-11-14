@@ -11,3 +11,5 @@
 .toast{position:fixed;z-index:30;left:50%;bottom:20px;transform:translate(-50%,15px);opacity:0;pointer-events:none;padding:11px 16px;border:1px solid #8790c8;border-radius:12px;background:#222d5a;color:#fff;font-size:12px;transition:.2s;max-width:calc(100% - 30px);text-align:center}.toast.visible{opacity:1;transform:translate(-50%,0)}
 @media(max-width:760px){.site-header{height:54px;padding:0 14px}.intro-screen{min-height:calc(100dvh - 54px);grid-template-columns:1fr;gap:14px;padding:14px 0 12px}.intro-art{height:30vh;min-height:190px;max-height:280px;order:2}.intro-card{padding:20px 18px;order:1}.intro-card h1{font-size:43px}.intro-card p{margin-bottom:17px}.intro-screen footer{order:3;font-size:8px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* NEXORA room styles are loaded from room.css. */
