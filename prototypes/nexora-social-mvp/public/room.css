@@ -183,3 +183,14 @@
 /* Pin the demon feet to the floor line and show the player nickname above it */
 .nexora-world-avatar{bottom:13%!important;height:150px!important;}
 .nexora-world-rank{bottom:calc(100% + 10px)!important;left:50%;transform:translateX(-50%);max-width:min(220px,80vw);padding:5px 12px;font-size:12px;line-height:1.25;text-align:center;letter-spacing:.2px;overflow:hidden;text-overflow:ellipsis;}
+
+
+/* Final visual alignment: trim transparent canvas from both demon layers. */
+.nexora-world-avatar{bottom:13%!important;height:150px!important;overflow:visible!important;}
+.nexora-demon-layers{position:absolute!important;inset:0!important;overflow:visible!important;}
+.nexora-demon-layers img{left:0!important;right:auto!important;top:auto!important;bottom:0!important;width:100%!important;height:120%!important;object-fit:fill!important;object-position:center bottom!important;}
+.nexora-demon-body{z-index:1!important;}
+.nexora-demon-aura{z-index:2!important;}
+.nexora-world-rank{bottom:calc(100% + 8px)!important;}
+.nexora-profile-avatar .nexora-demon-layers{position:relative!important;inset:auto!important;width:100%!important;height:100%!important;}
+.nexora-profile-avatar .nexora-demon-layers img{height:120%!important;bottom:0!important;}
