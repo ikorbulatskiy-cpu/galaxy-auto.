@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101633"><meta name="description" content="NEXORA — социальный виртуальный мир">
+<title>NEXORA — Social World</title>
+<link rel="stylesheet" href="/styles.css?v=auth-clean-20261114"><link rel="stylesheet" href="/room.css?v=nickname-center-20261115">
+<script defer src="/app.js?v=explicit-login-20261115"></script><script defer src="/room.js?v=emotion-icon-right-20261115"></script>
+</head>
+<body>
+<div class="app-shell">
+ <header class="site-header"><a class="brand" href="/">✦ NEXORA</a><span id="server-status">Подключение к серверу…</span></header>
+ <main id="intro-screen" class="intro-screen">
+  <section class="intro-card nexora-retro-menu" aria-label="Главное меню NEXORA">
+   <div class="nexora-retro-title"><span class="nexora-retro-star">✦</span><span>NEXORA</span><small>ВИРТУАЛЬНАЯ ГАЛАКТИКА</small></div>
+   <div class="nexora-retro-divider"></div>
+   <div class="nexora-retro-welcome">Добро пожаловать!</div>
+   <p class="nexora-retro-hint">Выбери действие</p>
+   <nav class="nexora-retro-actions" aria-label="Действия">
+    <button class="main-button" id="open-login" type="button">Войти в Галактику <span>›</span></button>
+    <button class="second-button" id="open-register" type="button">Регистрация <span>›</span></button>
+   </nav>
+   <div class="nexora-retro-bottom"><span>● СЕРВЕР</span><span>NEXORA 1.0</span></div>
+  </section>
+  <footer>СОЗДАЙ ПЕРСОНАЖА · НАЙДИ СВОЮ ПЛАНЕТУ · ОБЩАЙСЯ</footer>
+ </main>
+ <section id="register-modal" class="modal" aria-hidden="true">
+  <div class="auth-card">
+   <button class="close" data-close="register" aria-label="Закрыть">×</button>
+   <div class="eyebrow">СОЗДАНИЕ ПЕРСОНАЖА</div>
+   <div class="step-row"><b id="step-label">1 из 2</b><div class="progress"><i id="step-progress"></i></div></div>
+   <div id="register-step-one"><h2>Придумай ник</h2><form id="register-form">
+    <label>Ник<input id="register-nickname" minlength="3" maxlength="24" placeholder="Твой ник" autocomplete="username" required></label>
+    <p class="error" id="register-error"></p><button class="main-button" id="register-next" type="submit">Далее →</button>
+   </form></div>
+   <div id="register-step-two" class="hidden"><h2>Добро пожаловать!</h2>
+    <div class="code-box"><b>Твой код восстановления</b><strong id="recovery-code"></strong><small>Сохрани код. Он понадобится для следующего входа.</small></div>
+    <p class="error" id="finish-error"></p><button class="main-button" id="enter-world">Завершить создание персонажа</button>
+   </div>
+  </div>
+ </section>
+ <section id="login-modal" class="modal" aria-hidden="true">
+  <div class="auth-card login-card"><button class="close" data-close="login" aria-label="Закрыть">×</button>
+   <div class="eyebrow">ВОЗВРАЩЕНИЕ ВО ВСЕЛЕННУЮ</div><h2>Уже есть персонаж?</h2>
+   <form id="login-form"><label>Код восстановления<input id="login-code" maxlength="11" placeholder="" autocomplete="one-time-code" autocapitalize="none" spellcheck="false" required></label>
+    <p class="error" id="login-error"></p><button class="main-button" id="login-submit" type="submit">Войти →</button>
+   </form>
+  </div>
+ </section>
+ <section id="room-screen" class="hidden" aria-label="Пустая 2D-комната NEXORA">
+  <div class="retro-room">
+   <header class="room-zone planet-header" aria-label="Планета и местное время"><span class="planet-name">Земля</span><time id="visitor-clock" aria-label="Местное время">--:--</time></header>
+   <section class="room-zone retro-chat" aria-label="Окно чата">
+     <div class="chat-space" aria-live="polite"></div>
+     <form id="chat-form" class="retro-composer">
+      <input id="chatInput" maxlength="500" placeholder="Написать сообщение..." autocomplete="off">
+      <button id="send-chat" type="submit">➤</button>
+     </form>
+     <div id="chat-error" class="chat-error" role="status"></div>
+   </section>
+   <main id="room-scene" class="room-zone retro-scene" aria-label="Средняя зона игровой комнаты">
+   </main>
+  </div>
+ </section>
+ <div id="toast" class="toast" role="status"></div>
+</div>
+</body></html>
