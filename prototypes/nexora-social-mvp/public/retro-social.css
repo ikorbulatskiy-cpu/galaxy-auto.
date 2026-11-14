@@ -101,3 +101,178 @@
 .retro-status-foot {padding:7px;background:#d4d0c8;color:#333;border-top:1px solid #777;line-height:1.4}
 #retro-status-panel .retro-status-save {display:block;width:100%;margin-top:6px;padding:7px;border:1px solid #1e3246;background:#4a6b82;color:#fff;font-weight:bold}
 @media(max-width:520px){.retro-status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#retro-status-panel{max-height:82dvh}}
+
+
+/* NEXORA RETRO CHAT 2.0: complete compact messenger layout */
+#game-screen.retro-mode .chat-drawer {
+  position:fixed!important;
+  z-index:120!important;
+  left:50%!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:calc(66px + env(safe-area-inset-bottom))!important;
+  transform:translateX(-50%);
+  display:flex!important;
+  flex-direction:column!important;
+  gap:0!important;
+  width:min(430px,calc(100vw - 16px))!important;
+  height:min(570px,calc(100dvh - 150px - env(safe-area-inset-top) - env(safe-area-inset-bottom)))!important;
+  min-height:210px!important;
+  max-height:none!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:2px solid #1e3246!important;
+  background:#d4d0c8!important;
+  color:#111!important;
+  box-shadow:3px 3px 0 #101820!important;
+  font:11px Tahoma,Verdana,Arial,sans-serif!important;
+}
+#game-screen.retro-mode .chat-drawer.hidden {display:none!important}
+#game-screen.retro-mode .drawer-head {
+  flex:0 0 38px!important;
+  min-height:38px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:5px!important;
+  padding:4px 7px!important;
+  border:0!important;
+  border-bottom:2px solid #1e3246!important;
+  background:linear-gradient(#66869a,#3d6077)!important;
+  color:#fff!important;
+}
+#game-screen.retro-mode .retro-chat-brand {display:flex;align-items:center;gap:7px;min-width:0}
+#game-screen.retro-mode .retro-chat-mark {
+  display:grid;place-items:center;width:26px;height:26px;flex:0 0 26px;
+  border:1px solid #1e3246;background:#d4d0c8;color:#17364b;font-size:16px;
+}
+#game-screen.retro-mode .chat-title {display:grid;gap:2px;min-width:0}
+#game-screen.retro-mode .chat-title strong {font:bold 11px Tahoma,Verdana,sans-serif!important;letter-spacing:.04em!important}
+#game-screen.retro-mode #chat-online-label {font:9px Tahoma,Verdana,sans-serif!important;color:#e2f0e8!important}
+#game-screen.retro-mode #chat-online-label i {display:inline-block;width:6px;height:6px;margin-right:3px;border-radius:50%;background:#8dff8d}
+#game-screen.retro-mode .chat-head-actions {display:flex;align-items:center;gap:5px;min-width:0}
+#game-screen.retro-mode .chat-connection-status {font:8px Tahoma,Verdana,sans-serif!important;color:#e8f1f5!important}
+#game-screen.retro-mode .chat-connection-status i {width:6px;height:6px}
+#game-screen.retro-mode .chat-new-count {font:8px Tahoma,Verdana,sans-serif!important;color:#fff6a6!important;white-space:nowrap}
+#game-screen.retro-mode .world-room-picker {
+  flex:0 0 auto!important;
+  padding:4px 6px 3px!important;
+  border:0!important;
+  border-bottom:1px solid #8b988b!important;
+  background:#c4c0b8!important;
+}
+#game-screen.retro-mode #world-room-toggle {
+  display:block;width:100%;min-height:27px!important;padding:4px 7px!important;
+  border:1px solid #536d5a!important;border-radius:0!important;
+  background:linear-gradient(#f4f2e9,#c8d5c4)!important;color:#18351c!important;
+  text-align:left;font: bold 10px Tahoma,Verdana,sans-serif!important;
+}
+#game-screen.retro-mode .chat-tabs {
+  flex:0 0 auto!important;display:flex!important;gap:3px!important;
+  padding:4px 6px!important;background:#b8b5ad!important;
+  border-bottom:1px solid #777!important;
+}
+#game-screen.retro-mode .chat-tabs button {
+  min-height:25px!important;padding:3px 7px!important;
+  border:1px solid #667b67!important;border-radius:0!important;
+  background:#d7d9ce!important;color:#253a29!important;
+  font:10px Tahoma,Verdana,sans-serif!important;text-align:center!important;
+}
+#game-screen.retro-mode .chat-tabs button.active {
+  background:#47784b!important;color:#fff!important;border-color:#254b2b!important;
+}
+#game-screen.retro-mode .chat-history {
+  flex:1 1 auto!important;min-height:0!important;max-height:none!important;
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  gap:5px!important;padding:7px!important;overflow-y:auto!important;
+  overscroll-behavior:contain;background:#e8e7dc!important;color:#172317!important;
+  font:11px Tahoma,Verdana,Arial,sans-serif!important;
+}
+#game-screen.retro-mode .history-message {
+  display:block!important;align-self:flex-start!important;
+  width:fit-content!important;max-width:88%!important;
+  margin:0!important;padding:5px 7px!important;
+  border:1px solid #9ba997!important;border-radius:3px!important;
+  background:#fffef4!important;color:#172317!important;
+  box-shadow:1px 1px 0 #c3c7b9!important;
+  font:11px/1.3 Tahoma,Verdana,Arial,sans-serif!important;
+  overflow-wrap:anywhere!important;
+}
+#game-screen.retro-mode .history-message.is-self {
+  align-self:flex-end!important;
+  border-color:#8cae8b!important;background:#d7ead0!important;
+}
+#game-screen.retro-mode .history-message.is-system {
+  align-self:center!important;max-width:96%!important;
+  border:1px dashed #8092a0!important;background:#d9e2e6!important;
+  color:#344c5c!important;text-align:center!important;
+}
+#game-screen.retro-mode .history-author {
+  display:inline!important;width:auto!important;min-height:0!important;margin:0 4px 0 0!important;padding:0!important;
+  border:0!important;background:none!important;color:#24552c!important;
+  font:bold 10px Tahoma,Verdana,sans-serif!important;text-align:left!important;
+}
+#game-screen.retro-mode .history-message.is-self .history-author {color:#174f7a!important}
+#game-screen.retro-mode .history-text {display:inline!important;color:#172317!important;white-space:pre-wrap!important}
+#game-screen.retro-mode .history-message time {
+  display:block!important;margin:3px 0 0!important;color:#69766a!important;
+  text-align:right!important;font:8px Tahoma,Verdana,sans-serif!important;
+}
+#game-screen.retro-mode .chat-footer-tools {
+  flex:0 0 auto!important;display:flex!important;justify-content:flex-end!important;
+  padding:2px 6px!important;border:0!important;border-top:1px solid #aaa!important;
+  background:#d4d0c8!important;
+}
+#game-screen.retro-mode .chat-clear-button {
+  min-height:20px!important;padding:2px 5px!important;border:1px solid #999!important;
+  border-radius:0!important;background:#e7e5dc!important;color:#3e493f!important;
+  font:9px Tahoma,Verdana,sans-serif!important;
+}
+#game-screen.retro-mode #chat-emoji-picker {
+  flex:0 0 auto!important;display:flex!important;flex-wrap:wrap!important;gap:3px!important;
+  padding:4px!important;border-top:1px solid #9b9b8f!important;background:#c8c5bb!important;
+}
+#game-screen.retro-mode #chat-emoji-picker.hidden {display:none!important}
+#game-screen.retro-mode #chat-emoji-picker button {
+  width:28px!important;height:27px!important;min-height:27px!important;padding:0!important;
+  border:1px solid #8a9387!important;border-radius:0!important;background:#efeee5!important;
+}
+#game-screen.retro-mode .chat-form {
+  flex:0 0 auto!important;display:flex!important;align-items:center!important;gap:4px!important;
+  margin:0!important;padding:5px!important;border:0!important;
+  border-top:2px solid #1e3246!important;background:#c1beb5!important;
+}
+#game-screen.retro-mode .chat-form input {
+  flex:1 1 auto!important;width:0!important;min-width:0!important;height:32px!important;min-height:32px!important;
+  padding:5px 7px!important;border:2px inset #a5a59b!important;border-radius:0!important;
+  background:#fff!important;color:#111!important;font:11px Tahoma,Verdana,sans-serif!important;
+}
+#game-screen.retro-mode .chat-form button {
+  flex:0 0 31px!important;width:31px!important;height:32px!important;min-height:32px!important;
+  padding:0!important;border:1px solid #365a40!important;border-radius:0!important;
+  background:linear-gradient(#6b9b70,#3d7046)!important;color:#fff!important;
+  box-shadow:none!important;font:16px Tahoma,Verdana,sans-serif!important;
+}
+#game-screen.retro-mode .chat-form button:disabled {opacity:.55}
+#game-screen.retro-mode .chat-form .chat-emoji-button {background:linear-gradient(#e8e5d9,#b9b7aa)!important;color:#243b2a!important;border-color:#777!important}
+@media(max-width:520px) {
+  #game-screen.retro-mode .chat-drawer {
+    left:7px!important;right:7px!important;top:auto!important;bottom:calc(65px + env(safe-area-inset-bottom))!important;
+    width:auto!important;transform:none!important;
+    height:min(48dvh,390px)!important;min-height:190px!important;
+  }
+  #game-screen.retro-mode .drawer-head {flex-basis:34px!important;min-height:34px!important;padding:3px 5px!important}
+  #game-screen.retro-mode .retro-chat-mark {width:23px;height:23px;flex-basis:23px}
+  #game-screen.retro-mode .chat-title strong {font-size:10px!important}
+  #game-screen.retro-mode #chat-online-label {font-size:8px!important}
+  #game-screen.retro-mode .chat-history {padding:5px!important;gap:4px!important}
+  #game-screen.retro-mode .history-message {max-width:91%!important;padding:4px 6px!important;font-size:10px!important}
+  #game-screen.retro-mode .chat-form {padding:4px!important}
+  #game-screen.retro-mode .chat-form input {height:30px!important;min-height:30px!important;font-size:11px!important}
+  #game-screen.retro-mode .chat-form button {height:30px!important;min-height:30px!important;flex-basis:29px!important;width:29px!important}
+}
+@media(max-width:360px) {
+  #game-screen.retro-mode .chat-drawer {left:4px!important;right:4px!important}
+  #game-screen.retro-mode .chat-connection-status {font-size:7px!important}
+  #game-screen.retro-mode .chat-new-count {font-size:7px!important}
+}
