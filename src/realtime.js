@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const { WebSocketServer } = require("ws");
 const { Client } = require("pg");
 const { pool } = require("./db");
+const { registerWebSocketRoute } = require("./websocket-router");
 
 const COOKIE_NAME = "nexora_session";
 const hash = value => crypto.createHash("sha256").update(value).digest("hex");
@@ -12,7 +13,8 @@ function cookieValue(header, name) {
 }
 
 function attachRealtime(server) {
-  const wss = new WebSocketServer({ server, path: "/ws", maxPayload: 4096 });
+  const wss = new WebSocketServer({ noServer: true, maxPayload: 4096 });
+  registerWebSocketRoute(server, "/ws", wss);
   const rooms = new Map();
   const instanceId = crypto.randomUUID();
   const removeLocalPresence = event => {
