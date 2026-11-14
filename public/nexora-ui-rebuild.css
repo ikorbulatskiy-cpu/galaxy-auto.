@@ -224,3 +224,21 @@
 @media(prefers-reduced-motion:reduce){
   #dashboard>#tab-world .nx-chat-line,#dashboard>#tab-world .nx-bottom-nav button{scroll-behavior:auto!important;transition:none!important}
 }
+
+/* Room discovery and mini-game controls */
+#dashboard>#tab-world .nx-chat-title{display:flex!important;align-items:center!important}
+#dashboard>#tab-world .nx-chat-title>span:first-child{min-width:0!important;flex:1 1 auto!important}
+#dashboard>#tab-world .nx-dice-roll{
+  flex:0 0 38px!important;width:38px!important;height:34px!important;min-height:34px!important;
+  display:grid!important;place-items:center!important;padding:0!important;
+  border:1px solid #9b8acb!important;border-radius:10px!important;
+  background:linear-gradient(145deg,#51477d,#2a3650)!important;
+  color:#fff!important;font-size:19px!important;line-height:1!important;
+  box-shadow:0 3px 10px #0005!important;
+}
+#dashboard>#tab-world .nx-dice-roll:disabled{opacity:.45!important;cursor:wait!important}
+#dashboard>#tab-world .nx-room-select optgroup{font-weight:800!important;color:#d8bd83!important}
+#dashboard>#tab-world .nx-room-select option{font-weight:500!important;color:#f2f5f8!important;background:#172230!important}
+@media(max-width:700px){
+ #dashboard>#tab-world .nx-dice-roll{flex-basis:34px!important;width:34px!important;height:32px!important;min-height:32px!important}
+}
