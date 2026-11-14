@@ -21,16 +21,29 @@
   if($("nexora-world-avatar"))return;
   const scene=$("room-scene");
   scene.insertAdjacentHTML("beforeend",'<div id="nexora-world-avatar" class="nexora-world-avatar aura-none" role="button" tabindex="0" aria-label="Открыть инфо" aria-expanded="false"><span class="nexora-demon-layers" aria-label="Основной персонаж"><img class="nexora-demon-body" src="/assets/sprites/characters/nexora-demon-body.webp" alt=""><img class="nexora-demon-aura" src="/assets/sprites/characters/nexora-demon-aura.webp" alt=""></span><div id="nexora-world-rank" class="nexora-world-rank">Персонаж</div></div><section id="nexora-avatar-panel" class="nexora-avatar-panel hidden" aria-label="Инфо" aria-modal="true" role="dialog"><div class="nexora-avatar-window"><header class="nexora-info-header"><span>ИНФО</span><button id="nexora-avatar-close" class="nexora-avatar-close" type="button" aria-label="Закрыть">×</button></header><div id="nexora-profile-loading" class="nexora-profile-loading" role="status"><i></i><b>Загружаем анкету…</b><span>Скорость зависит от интернет-соединения</span></div><div id="nexora-profile-error" class="nexora-profile-error hidden" role="alert"></div><form id="nexora-info-form" class="nexora-info-form hidden"><div class="nexora-classic-profile"><div class="nexora-classic-top"><label class="nexora-classic-photo"><img id="nexora-info-photo" alt="Твоё фото" src=""><span>＋ Фото</span><input id="nexora-info-photo-file" type="file" accept="image/jpeg,image/png,image/webp"></label><div class="nexora-classic-facts"><div class="nexora-classic-planet">🌍 <strong id="nexora-info-planet">Земля</strong></div><label>💞 <input name="relationship" maxlength="80" placeholder="Отношения"></label><label>💎 <input name="privileges" maxlength="100" placeholder="Привилегии"></label><label>🧍 <input name="status" maxlength="100" placeholder="Статус"></label><label>🔎 <input name="lookingFor" maxlength="100" placeholder="Ищет…"></label></div></div><div class="nexora-classic-links"><span>Блог (0)</span><span>Фото (0)</span></div><label class="nexora-classic-ask">Спроси меня<input name="askMe" maxlength="300" placeholder="Напиши вопрос, на который готов ответить"></label><div class="nexora-classic-section">Анкета</div><div class="nexora-classic-questionnaire"><label>Пол<select name="gender"><option value="">Не указано</option><option value="Мужской">Мужской</option><option value="Женский">Женский</option><option value="Другое">Другое</option></select></label><label>🎂 Дата рождения<input name="birthDate" type="date" max="2100-12-31"></label><label class="wide">🌍 Город<input name="city" maxlength="80" placeholder="Твой город"></label><label class="wide">Род занятий<textarea name="occupation" maxlength="120" rows="2" placeholder="Чем занимаешься"></textarea></label><label class="wide">Интересы<textarea name="interests" maxlength="220" rows="2" placeholder="Спорт, музыка, путешествия…"></textarea></label><label class="wide">О себе<textarea name="about" maxlength="600" rows="3" placeholder="Расскажи немного о себе"></textarea></label></div></div><div class="nexora-info-actions"><button id="nexora-info-save" type="submit">Сохранить</button><span id="nexora-info-note" role="status"></span></div></form></div></section>');
+  scene.insertAdjacentHTML("beforeend",'<section id="nexora-character-actions" class="nexora-character-actions hidden" role="dialog" aria-modal="true" aria-label="Действия"><div class="nexora-character-actions-card"><div class="nexora-character-actions-title">ДЕЙСТВИЯ</div><button id="nexora-action-info" type="button">Инфо</button><button id="nexora-action-exit" type="button" class="secondary">Выход</button></div></section>');
   applyDemonAura();
   const worldAvatar=$("nexora-world-avatar");
-  worldAvatar.setAttribute("aria-label","Открыть инфо");
-  worldAvatar.addEventListener("click",openAvatar);
-  worldAvatar.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openAvatar();}});
+  worldAvatar.setAttribute("aria-label","Открыть действия персонажа");
+  worldAvatar.addEventListener("click",openCharacterActions);
+  worldAvatar.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openCharacterActions();}});
+  $("nexora-action-info").addEventListener("click",()=>{closeCharacterActions();openAvatar();});
+  $("nexora-action-exit").addEventListener("click",closeCharacterActions);
+  $("nexora-character-actions").addEventListener("click",event=>{if(event.target===$("nexora-character-actions"))closeCharacterActions();});
   $("nexora-avatar-close").addEventListener("click",closeAvatar);
   $("nexora-avatar-panel").addEventListener("click",event=>{if(event.target===$("nexora-avatar-panel"))closeAvatar();});
   $("nexora-info-form").addEventListener("submit",saveCharacterInfo);
   $("nexora-info-photo-file").addEventListener("change",previewCharacterPhoto);
-  document.addEventListener("keydown",event=>{if(event.key==="Escape")closeAvatar();});
+  document.addEventListener("keydown",event=>{if(event.key==="Escape"){closeAvatar();closeCharacterActions();}});
+ }
+ function openCharacterActions(){
+  ensureAvatarEditor();
+  $("nexora-character-actions").classList.remove("hidden");
+  const a=$("nexora-world-avatar");if(a)a.setAttribute("aria-expanded","true");
+ }
+ function closeCharacterActions(){
+  const menu=$("nexora-character-actions");if(menu)menu.classList.add("hidden");
+  const a=$("nexora-world-avatar");if(a)a.setAttribute("aria-expanded","false");
  }
  function closeAvatar(){
   $("nexora-avatar-panel").classList.add("hidden");
