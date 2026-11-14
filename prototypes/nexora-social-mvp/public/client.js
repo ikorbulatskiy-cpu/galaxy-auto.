@@ -567,7 +567,7 @@
       advancePlayerMovement(player, now);
       const drawX = (player.renderX ?? player.x) * w;
       // Keep every avatar on one shared ground line. The former name position becomes the feet line.
-      const depth = .82;
+      const depth = .72;
       const scale = .78 + ((.82-.60)/.26)*.24;
       const y = depth*h;
       const avatarGroundY = y + 53*scale;
@@ -592,7 +592,7 @@
       drawAura(ctx,drawX,auraCenterY,scale,player.auraType,player.auraEnabled,state.auraQuality);
       const spriteDirection=player.direction||"down";
       const spriteDrawn=window.NexoraSpriteEngine?.draw(ctx,drawX,avatarGroundY,scale,player.avatar,spriteDirection,Boolean(player.moving),emotion);
-      if(!spriteDrawn)drawAvatar(ctx,drawX,avatarGroundY,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
+      if(!spriteDrawn)drawAvatar(ctx,drawX,avatarGroundY-37*scale,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
       drawAuraHalo(ctx,drawX,auraCenterY,scale,player.auraType,player.auraEnabled,state.auraQuality);
 
       // Draw exactly one compact nickname plate below the avatar feet.
@@ -648,7 +648,7 @@
         $("#planet-title").textContent=(PLANETS[state.planet]||{name:"Авторская планета"}).name;
         $("#room-location-title").textContent=(PLANETS[state.planet]||{location:"Космическое пространство"}).location;
         syncOnlineRoomName();
-        resize();requestAnimationFrame(drawScene);refreshSocial();refreshDeveloperAccess();renderRoomPlayers();openIntegratedGalaxy();finish(true);
+        resize();requestAnimationFrame(drawScene);refreshSocial();refreshDeveloperAccess();renderRoomPlayers();finish(true);
       });
       socket.once("connect",onConnect);socket.once("connect_error",onError);
       if(socket.connected)onConnect();else socket.connect();
@@ -1033,7 +1033,6 @@
     }
     else if (action === "shop") openShop();
     else if (action === "planets") $("#planets-button").click();
-    else if (action === "galaxy") openIntegratedGalaxy();
     else if (action === "dice") { closeCompetingPanels("#room-dice-panel"); closeRoomFlyouts(); $("#room-dice-panel").classList.remove("hidden"); }
     else if (action === "developer") $("#developer-open").click();
     else if (action === "exit") $("#exit-room").click();
@@ -1055,39 +1054,6 @@
     $("#dice-bot-score").textContent=diceBotWins+" побед";
   });
 
-  function openIntegratedGalaxy(options = {}) {
-    const view = $("#integrated-galaxy-view");
-    const frame = $("#integrated-galaxy-frame");
-    if (!view || !frame) return;
-    closeCompetingPanels();
-    view.classList.remove("hidden");
-    const travelTo = options.travelTo ? String(options.travelTo) : "";
-    if (travelTo) frame.src = "/galaxy?embedded=1&travelTo=" + encodeURIComponent(travelTo);
-    else if (!frame.getAttribute("src") || frame.getAttribute("src") === "about:blank") frame.src = "/galaxy?embedded=1";
-  }
-  $("#integrated-galaxy-back")?.addEventListener("click", () => {
-    const view = $("#integrated-galaxy-view");
-    const frame = $("#integrated-galaxy-frame");
-    if (frame) frame.src = "about:blank";
-    view?.classList.add("hidden");
-  });
-  document.querySelectorAll("[data-galaxy-feature]").forEach(button => button.addEventListener("click", () => {
-    const feature = button.dataset.galaxyFeature;
-    if (feature === "menu") toggleRoomFlyout("menu");
-    else if (feature === "profile") openMyProfile();
-    else if (feature === "friends") openMyProfile("friends");
-    else if (feature === "messages") openMyProfile("messages");
-    else if (feature === "shop") openShop();
-    else if (feature === "planets") $("#planets-button")?.click();
-    else if (feature === "developer" && !$("#developer-open")?.classList.contains("hidden")) openDeveloperPanel("overview");
-  }));
-  const developerSource = $("#developer-open");
-  const developerShortcut = document.querySelector(".galaxy-developer-shortcut");
-  if (developerSource && developerShortcut) {
-    const syncDeveloperShortcut = () => developerShortcut.classList.toggle("hidden", developerSource.classList.contains("hidden"));
-    syncDeveloperShortcut();
-    new MutationObserver(syncDeveloperShortcut).observe(developerSource, { attributes: true, attributeFilter: ["class"] });
-  }
   document.querySelectorAll("[data-room-emotion]").forEach(button => button.addEventListener("click",() => {
     socket.emit("emotion:play",{emotion:button.dataset.roomEmotion});
     closeRoomFlyouts();
@@ -1113,13 +1079,6 @@
     renderRoomPlayers();
     renderDeveloperPlayerActions(player, ownProfile);
   }
-
-  window.addEventListener("message",event=>{
-    if(event.origin!==location.origin||event.source!==$("#integrated-galaxy-frame")?.contentWindow)return;
-    if(event.data?.type!=="NEXORA_GALAXY_PLAYER_SELECTED")return;
-    const player=state.players.get(String(event.data.playerId));
-    if(player){openProfile(player);$("#integrated-galaxy-frame")?.contentWindow?.postMessage({type:"NEXORA_GALAXY_CLOSE_CONTEXT"},location.origin);}
-  });
 
   $("#profile-info-button").addEventListener("click",()=>{const id=state.selected;$("#profile-menu").classList.add("hidden");if(id!=null)openPublicProfile(id);});
 
@@ -1336,8 +1295,6 @@
       $("#recovery-result").classList.add("hidden");
       loginError.textContent = "";
       gameScreen.classList.add("hidden");
-      $("#integrated-galaxy-frame")?.setAttribute("src","about:blank");
-      $("#integrated-galaxy-view")?.classList.add("hidden");
       loginScreen.classList.remove("hidden");
       $("#auth-home").classList.remove("hidden");
       $("#register-mode").classList.add("hidden");
@@ -2467,7 +2424,16 @@
       planetLabel.classList.toggle("hidden",!p.isFriend);
       planetButton.classList.toggle("hidden",!canTravelToFriend);
       planetButton.disabled=!canTravelToFriend;
-      planetButton.onclick=()=>openIntegratedGalaxy({travelTo:p.id});
+      planetButton.onclick=()=>{
+        if(!p.planetKey)return;
+        planetButton.disabled=true;
+        socket.emit("planet:change",{planet:p.planetKey},result=>{
+          planetButton.disabled=false;
+          if(!result?.ok)return showToast(result?.error||"Не удалось перейти на планету друга.");
+          $("#public-profile").classList.add("hidden");
+          showToast("Вы перешли на планету друга.");
+        });
+      };
       const friendButton=$("#public-profile-friend"),messageButton=$("#public-profile-message");
       friendButton.classList.toggle("hidden",p.isMe||p.isFriend);
       friendButton.textContent=p.requestIncoming?"Принять заявку":p.requestPending?"Заявка отправлена":"Добавить в друзья";
