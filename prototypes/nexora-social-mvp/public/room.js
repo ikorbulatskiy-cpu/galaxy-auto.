@@ -137,12 +137,12 @@
  function moveWorldAvatarTo(x,bottom){
   const world=$("nexora-world-avatar");if(!world)return;
   const sprite=world.querySelector(".nexora-avatar-sprite");if(!sprite)return;
-  const currentX=parseFloat(world.style.left)||state.position.x||50,currentBottom=parseFloat(world.style.bottom)||state.position.bottom||12;
+  const currentX=parseFloat(world.style.left)||state.position.x||50,currentBottom=13;
   const scene=$("room-scene"),rect=scene?.getBoundingClientRect(),worldRect=world.getBoundingClientRect();
   const halfWidth=rect?worldRect.width/2/rect.width*100:5;
   const spriteHeight=rect?worldRect.height/rect.height*100:18;
   x=Math.max(halfWidth,Math.min(100-halfWidth,Number(x)||currentX));
-  bottom=Math.max(13,Math.min(78-spriteHeight,Number(bottom)||currentBottom));
+  bottom=13;
   const distance=Math.hypot((x-currentX)*8,(bottom-currentBottom)*8);
   state.facing=x>=currentX?1:-1;state.position={x,bottom};
   world.style.left=x+"%";world.style.bottom=bottom+"%";world.dataset.facing=String(state.facing);
@@ -158,7 +158,7 @@
  }
  function moveWorldAvatarBy(dx){
   const world=$("nexora-world-avatar");if(!world||room.classList.contains("hidden"))return;
-  const x=parseFloat(world.style.left)||state.position.x||50,bottom=parseFloat(world.style.bottom)||state.position.bottom||12;
+  const x=parseFloat(world.style.left)||state.position.x||50,bottom=13;
   moveWorldAvatarTo(x+dx,bottom);
  }
  function openCharacterActions(playerId=null){
@@ -224,7 +224,7 @@
   try{
    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),25000);
    let response;try{response=await fetch("/api/account/profile",{cache:"no-store",signal:controller.signal});}finally{clearTimeout(timeout);}
-   const data=await response.json();if(!response.ok)throw Error(data.error||"Не удалось загрузить анкету");
+   const data=await response.json();if(!response.ok)throw Error(response.status===401?"Сессия закончилась. Войди в аккаунт заново.":(data.error||"Не удалось загрузить анкету (ошибка "+response.status+")."));
    const p=data.profile||{};
    const fields=$("nexora-info-form").elements;
    ["gender","birthDate","city","occupation","interests","about","status","relationship","lookingFor","askMe"].forEach(k=>{if(fields[k])fields[k].value=p[k]||"";});
@@ -291,7 +291,7 @@
   currentNickname=String(account&&account.nickname||account&&account.name||"Персонаж").trim().slice(0,24)||"Персонаж";
   ensureAvatarEditor();
   try{const response=await fetch("/api/account/profile",{cache:"no-store"});if(response.ok){const profile=await response.json(),character=profile.character||profile.profile?.character||{};state.isDeveloper=Boolean(profile.account?.isDeveloper||profile.profile?.isDeveloper);const developerButton=$("nexora-action-developer");if(developerButton)developerButton.classList.toggle("hidden",!state.isDeveloper);avatar.headId=Math.max(1,Math.min(6,Number(character.headId??character.head_id)||1));avatar.bodyId=Math.max(1,Math.min(6,Number(character.bodyId??character.body_id)||1));applyWorldAvatar();}}catch(error){console.warn("Could not load saved avatar:",error);}
-  const nameLabel=$("nexora-world-rank");if(nameLabel){nameLabel.textContent=currentNickname;nameLabel.classList.toggle("nexora-developer-name",state.isDeveloper);}
+  const nameLabel=$("nexora-world-rank");if(nameLabel){nameLabel.textContent=currentNickname;}
   $("intro-screen").classList.add("hidden");
   room.classList.remove("hidden");
   updateVisitorClock();
@@ -338,9 +338,9 @@
      node.addEventListener("click",event=>{event.stopPropagation();openCharacterActions(node.dataset.playerId);});
      node.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openCharacterActions(node.dataset.playerId);}});
     }
-    const [slotX,slotY]=slots[index%slots.length];const x=Number.isFinite(Number(player.xPercent))?Number(player.xPercent):slotX;const y=Math.max(13,Number.isFinite(Number(player.bottomPercent))?Number(player.bottomPercent):slotY);const oldX=parseFloat(node.style.left),oldY=parseFloat(node.style.bottom);const moved=Number.isFinite(oldX)&&(Math.abs(oldX-x)>.15||Math.abs(oldY-y)>.15);node.style.left=x+"%";node.style.bottom=y+"%";node.dataset.facing=String(Number(player.facing)||1);const playerSprite=node.querySelector(".nexora-avatar-sprite");if(playerSprite){playerSprite.classList.toggle("facing-left",Number(player.facing)===-1);if(moved){playerSprite.classList.remove("nexora-walking");void playerSprite.offsetWidth;playerSprite.classList.add("nexora-walking");setTimeout(()=>playerSprite.classList.remove("nexora-walking"),760);}}
+    const [slotX,slotY]=slots[index%slots.length];const x=Number.isFinite(Number(player.xPercent))?Number(player.xPercent):slotX;const y=13;const oldX=parseFloat(node.style.left),oldY=parseFloat(node.style.bottom);const moved=Number.isFinite(oldX)&&(Math.abs(oldX-x)>.15||Math.abs(oldY-y)>.15);node.style.left=x+"%";node.style.bottom=y+"%";node.dataset.facing=String(Number(player.facing)||1);const playerSprite=node.querySelector(".nexora-avatar-sprite");if(playerSprite){playerSprite.classList.toggle("facing-left",Number(player.facing)===-1);if(moved){playerSprite.classList.remove("nexora-walking");void playerSprite.offsetWidth;playerSprite.classList.add("nexora-walking");setTimeout(()=>playerSprite.classList.remove("nexora-walking"),760);}}
     node.className="nexora-world-avatar nexora-room-player aura-"+(player.aura&&player.aura!=="none"?player.aura:"none");
-    const playerName=node.querySelector(".nexora-room-player-name");playerName.textContent=String(player.nickname||"Игрок").slice(0,24);playerName.classList.toggle("nexora-developer-name",Boolean(player.isDeveloper));
+    const playerName=node.querySelector(".nexora-room-player-name");playerName.textContent=String(player.nickname||"Игрок").slice(0,24);
     const title=node.querySelector(".nexora-emperor-title");if(title)title.hidden=!String(player.authorityTitle||"").includes("Император");
     const aura=node.querySelector(".nexora-room-player-aura");if(aura)aura.setAttribute("href",player.aura&&player.aura!=="none"?"/assets/sprites/characters/nexora-user-auras.svg?v=sprite-alpha-fix-v3-20261115#aura-"+player.aura:"");
    });
