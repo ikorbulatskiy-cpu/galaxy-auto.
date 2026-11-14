@@ -988,7 +988,6 @@
 #room-scene .nexora-world-avatar .nexora-avatar-sprite:not(.nexora-walking),
 #room-scene .nexora-room-player .nexora-avatar-sprite:not(.nexora-walking){animation:none!important}
 #room-scene .nexora-world-avatar,#room-scene .nexora-room-player{
-  bottom:max(13%,var(--nexora-floor-edge,13%))!important;
   transform:translateX(-50%)!important;transform-origin:center bottom!important;
 }
 @media(max-width:520px){
