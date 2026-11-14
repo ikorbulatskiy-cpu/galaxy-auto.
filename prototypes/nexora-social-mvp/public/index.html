@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101633"><meta name="description" content="NEXORA — социальный виртуальный мир">
 <title>NEXORA — Social World</title>
-<link rel="stylesheet" href="/styles.css?v=auth-clean-20261114"><link rel="stylesheet" href="/room.css?v=chat-green-area-20261114-1">
+<link rel="stylesheet" href="/styles.css?v=auth-clean-20261114"><link rel="stylesheet" href="/room.css?v=three-equal-zones-20261114-1">
 <script defer src="/app.js?v=auth-clean-20261114"></script><script defer src="/room.js?v=planet-header-20261114-1"></script>
 </head>
 <body>
@@ -50,18 +50,21 @@
  </section>
  <section id="room-screen" class="hidden" aria-label="Пустая 2D-комната NEXORA">
   <div class="retro-room">
-   <header class="planet-header"><span class="planet-name">Земля</span><time id="visitor-clock" aria-label="Местное время">--:--</time></header>
-   <section class="retro-chat" aria-label="Окно чата">
-    <div class="chat-space" aria-live="polite"></div>
-    <form id="chat-form" class="retro-composer">
-     <input id="chatInput" maxlength="500" placeholder="Написать сообщение..." autocomplete="off">
-     <button id="send-chat" type="submit">➤</button>
-    </form>
-    <div id="chat-error" class="chat-error" role="status"></div>
+   <section class="room-zone room-top-zone" aria-label="Верхняя зона чата">
+    <header class="planet-header"><span class="planet-name">Земля</span><time id="visitor-clock" aria-label="Местное время">--:--</time></header>
+    <section class="retro-chat" aria-label="Окно чата">
+     <div class="chat-space" aria-live="polite"></div>
+     <form id="chat-form" class="retro-composer">
+      <input id="chatInput" maxlength="500" placeholder="Написать сообщение..." autocomplete="off">
+      <button id="send-chat" type="submit">➤</button>
+     </form>
+     <div id="chat-error" class="chat-error" role="status"></div>
+    </section>
    </section>
-   <main id="room-scene" class="retro-scene" aria-label="Пустая просторная виртуальная комната">
-    <div class="room-blue-area" aria-label="Голубая площадка планеты"></div>
+   <main id="room-scene" class="room-zone retro-scene" aria-label="Средняя зона игровой комнаты">
+    <div class="room-blue-area" aria-label="Зелёная площадка игровой комнаты"></div>
    </main>
+   <section class="room-zone room-bottom-zone" aria-label="Нижняя зона комнаты"></section>
   </div>
  </section>
  <div id="toast" class="toast" role="status"></div>
