@@ -59,8 +59,17 @@
   catch{$("server-status").textContent="Нет связи с сервером";}
  }
  async function session(){
-  try{const r=await fetch("/api/auth/me");const d=await r.json();if(d.authenticated){state.account=d.account;const profile=await fetch("/api/account/profile");if(profile.ok){const p=await profile.json();if(p.character){window.NexoraRoom.show(d.account);}}}}
-  catch(err){console.warn("Session restore failed:",err.message);}
+  // Do not silently enter the room from a remembered cookie.
+  // Returning players must explicitly authenticate with their recovery code.
+  try{
+   const r=await fetch("/api/auth/me",{cache:"no-store"});
+   if(!r.ok)throw Error("Не удалось проверить аккаунт");
+   const d=await r.json();
+   state.account=null;
+   if(d.authenticated){
+    $("open-login").textContent="Войти в свой аккаунт";
+   }
+  }catch(err){console.warn("Session check failed:",err.message);}
  }
  status();session();setInterval(status,30000);
 })();
