@@ -62,7 +62,7 @@
 
 /* Final Galaxy-style interaction layer: the player sheet floats above chat and never clips to the scene. */
 html,body{ -webkit-text-size-adjust:100%; }
-#dashboard>#tab-world .nx-player-sheet{
+.nx-player-sheet{
  position:fixed!important;z-index:12050!important;left:50%!important;right:auto!important;
  bottom:calc(58px + 190px + env(safe-area-inset-bottom) + 8px)!important;
  transform:translateX(-50%)!important;width:min(414px,calc(100vw - 16px))!important;
@@ -72,7 +72,7 @@ html,body{ -webkit-text-size-adjust:100%; }
  box-shadow:0 12px 38px #000b,0 0 0 1px #ffffff14 inset!important;
  color:#f6f2e8!important;backdrop-filter:blur(16px);
 }
-#dashboard>#tab-world .nx-player-sheet[hidden]{display:none!important}
+.nx-player-sheet[hidden]{display:none!important}
 .nx-player-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 8px;border-bottom:1px solid #ffffff20}
 .nx-player-sheet-title{min-width:0;display:grid;gap:2px}
 .nx-player-sheet-title small{font-size:8px;letter-spacing:1.4px;color:#d5bd80;font-weight:900}
