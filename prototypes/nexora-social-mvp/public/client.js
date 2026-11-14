@@ -594,6 +594,27 @@
       const spriteDrawn=window.NexoraSpriteEngine?.draw(ctx,drawX,avatarGroundY,scale,player.avatar,spriteDirection,Boolean(player.moving),emotion);
       if(!spriteDrawn)drawAvatar(ctx,drawX,avatarGroundY,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
       drawAuraHalo(ctx,drawX,auraCenterY,scale,player.auraType,player.auraEnabled,state.auraQuality);
+
+      // Draw exactly one compact nickname plate below the avatar feet.
+      const groundNickname=String(player.nickname||"Игрок").trim().slice(0,18);
+      ctx.save();
+      ctx.font="700 10px sans-serif";
+      ctx.textAlign="center";
+      ctx.textBaseline="middle";
+      const plateWidth=Math.min(150,Math.max(44,ctx.measureText(groundNickname).width+18));
+      const plateHeight=18;
+      const plateX=Math.max(plateWidth/2+4,Math.min(w-plateWidth/2-4,drawX));
+      const plateY=Math.min(h-plateHeight-3,avatarGroundY+5);
+      ctx.fillStyle="rgba(8,12,28,.88)";
+      roundRect(ctx,plateX-plateWidth/2,plateY,plateWidth,plateHeight,7);
+      ctx.fill();
+      ctx.strokeStyle="rgba(190,190,255,.28)";
+      ctx.lineWidth=1;
+      ctx.stroke();
+      ctx.fillStyle="#f4f2ff";
+      ctx.fillText(groundNickname,plateX,plateY+plateHeight/2,plateWidth-12);
+      ctx.restore();
+
       if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20*scale,avatarGroundY-58*scale-Math.sin(Date.now()/120)*3);ctx.restore();}
       // Deliberately do not draw the duplicate nickname above the avatar. Keep the existing ground-level name only.
     });
