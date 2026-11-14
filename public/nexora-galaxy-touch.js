@@ -37,6 +37,16 @@
       if(b.hasAttribute("data-player-prev")) return selectPlayer((list.indexOf(selected)-1+list.length)%list.length);
       if(b.hasAttribute("data-player-next")) return selectPlayer((list.indexOf(selected)+1)%list.length);
       const action=b.dataset.playerAction;
+      if(action==="info") {
+        const n=$(".nx-avatar-name",selected)?.textContent?.trim().replace(/^♛\\s*/,"")||"Персонаж";
+        window.NexoraExtras?.showCharacterInfo(n,selected.dataset.playerUserId);
+      }
+      if(action==="move") window.NexoraMovement?.beginPlacement();
+      if(action==="friend") {
+        const id=selected?.dataset.playerUserId;
+        if(id&&window.NexoraAPI?.request) window.NexoraAPI.request("/api/social/friends/"+encodeURIComponent(id),{method:"POST",body:"{}"}).then(()=>window.toast?.("Заявка в друзья отправлена.")).catch(err=>window.toast?.(err.message||"Не удалось отправить заявку."));
+      }
+      if(action==="message") window.switchTab?.("messages");
       if(action==="favorite") {
         const fav=selected?.querySelector("[data-favorite]");
         if(fav) fav.click();
@@ -84,6 +94,10 @@
     actions.innerHTML=me
       ? '<button type="button" data-player-action="move-left">← Влево</button><button type="button" data-player-action="move-right">Вправо →</button><button type="button" data-player-action="emote" data-emote="wave">Привет</button><button type="button" data-player-action="emote" data-emote="dance">Танец</button><button type="button" data-player-action="emote" data-emote="happy">Радость</button><button type="button" data-player-action="emote" data-emote="heart">Сердце</button>'
       : '<button type="button" data-player-action="favorite">☆ В избранное</button><span class="nx-player-sheet-note">Выбран персонаж · '+(userId?"ID "+userId:username?"@"+username:"информация профиля")+'</span>';
+    actions.insertAdjacentHTML("afterbegin",
+      '<button type="button" data-player-action="info">ⓘ Инфо</button>' +
+      (me ? '<button type="button" data-player-action="move">↗ Переместиться</button>' :
+       '<button type="button" data-player-action="friend">♟ В друзья</button><button type="button" data-player-action="message">✉ Написать</button>'));
     if(!me) {
       const fav=selected.querySelector("[data-favorite]");
       if(fav?.classList.contains("is-favorite")) actions.querySelector('[data-player-action="favorite"]').textContent="★ Убрать из избранного";
