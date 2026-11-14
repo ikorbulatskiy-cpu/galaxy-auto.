@@ -602,3 +602,62 @@
 @media(max-width:520px){
   #room-scene .nexora-world-avatar{width:100px!important;height:148px!important}
 }
+
+
+/* NEXORA chat-world polish: compact, natural character proportions and a soft blue aura. */
+#room-scene .nexora-world-avatar{
+  left:50%!important;
+  bottom:13%!important;
+  width:112px!important;
+  height:158px!important;
+  transform:translateX(-50%)!important;
+  transform-origin:center bottom!important;
+  filter:drop-shadow(0 4px 7px rgba(20,34,64,.24))!important;
+}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite{
+  position:absolute!important;inset:0!important;
+  width:100%!important;height:100%!important;
+  overflow:visible!important;
+}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite #nexora-world-body{
+  position:absolute!important;
+  left:22%!important;top:28%!important;right:auto!important;bottom:0!important;
+  width:56%!important;height:72%!important;
+  object-fit:contain!important;object-position:center bottom!important;
+  transform:none!important;
+}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite #nexora-world-head{
+  position:absolute!important;
+  left:34%!important;top:4%!important;right:auto!important;bottom:auto!important;
+  width:32%!important;height:28%!important;
+  object-fit:contain!important;object-position:center center!important;
+  transform:none!important;
+}
+#room-scene .nexora-world-avatar > svg.nexora-user-aura{
+  position:absolute!important;z-index:0!important;
+  left:50%!important;top:49%!important;
+  width:150%!important;height:132%!important;
+  transform:translate(-50%,-50%)!important;
+  overflow:visible!important;pointer-events:none!important;
+  filter:drop-shadow(0 0 5px rgba(104,190,255,.28))!important;
+}
+#room-scene .nexora-world-avatar.aura-blue-1 > svg.nexora-user-aura{
+  opacity:.88!important;
+}
+#room-scene .nexora-world-avatar:hover,
+#room-scene .nexora-world-avatar:focus-visible{
+  transform:translateX(-50%) scale(1.02)!important;
+}
+#creator-preview .creator-preview-body{
+  left:22%!important;top:28%!important;right:auto!important;bottom:0!important;
+  width:56%!important;height:72%!important;
+  object-fit:contain!important;object-position:center bottom!important;
+}
+#creator-preview .creator-preview-head{
+  left:34%!important;top:4%!important;right:auto!important;bottom:auto!important;
+  width:32%!important;height:28%!important;
+  object-fit:contain!important;object-position:center center!important;
+}
+@media(max-width:520px){
+  #room-scene .nexora-world-avatar{width:104px!important;height:150px!important}
+}
