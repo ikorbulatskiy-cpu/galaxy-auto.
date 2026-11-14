@@ -52,8 +52,8 @@
  }
  function showCharacterEmotion(emoji,label){
   const avatar=$("nexora-world-avatar");if(!avatar)return;
-  let bubble=$("nexora-current-emotion");if(!bubble){bubble=document.createElement("div");bubble.id="nexora-current-emotion";bubble.className="nexora-current-emotion";avatar.append(bubble);}
-  bubble.textContent=label?emoji+" "+label:"";bubble.classList.toggle("hidden",!label);
+  let bubble=$("nexora-current-emotion");if(!bubble){bubble=document.createElement("div");bubble.id="nexora-current-emotion";bubble.className="nexora-current-emotion";bubble.setAttribute("aria-label","Эмоция персонажа");avatar.append(bubble);}
+  bubble.textContent=label?emoji:"";bubble.title=label||"";bubble.classList.toggle("hidden",!label);
  }
  function openEmotions(){closeCharacterActions();$("nexora-emotions-panel").classList.remove("hidden");}
  function closeEmotions(){const panel=$("nexora-emotions-panel");if(panel)panel.classList.add("hidden");}
