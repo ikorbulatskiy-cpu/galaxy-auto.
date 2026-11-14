@@ -106,35 +106,7 @@
     p.hidden=false;
   }
 
-  function ensureFlightButton() {
-    const s=stage(); if(!s || $(".nx-flight-trigger",s))return;
-    const b=document.createElement("button");
-    b.type="button"; b.className="nx-flight-trigger"; b.textContent="🚀 Перелёт";
-    b.addEventListener("click",()=>{
-      closeWorldPanels();
-      const input=$("#nx-planet-search");
-      if(input){ input.focus({preventScroll:true}); input.scrollIntoView({block:"nearest",behavior:"smooth"}); }
-      if(flightPanel) flightPanel.hidden=false;
-    });
-    s.append(b);
-    if(!flightPanel) {
-      flightPanel=document.createElement("div");
-      flightPanel.className="nx-flight-picker";
-      flightPanel.hidden=true;
-      flightPanel.innerHTML='<label>Перелёт на планету<input type="text" inputmode="search" placeholder="Название планеты" aria-label="Название планеты"></label><button type="button" data-flight-go>Перелететь</button><button type="button" data-flight-close aria-label="Закрыть">×</button>';
-      document.body.append(flightPanel);
-      flightPanel.addEventListener("click",e=>{
-        if(e.target.closest("[data-flight-close]")){flightPanel.hidden=true;return}
-        if(!e.target.closest("[data-flight-go]"))return;
-        const q=$("input",flightPanel).value.trim().toLocaleLowerCase("ru");
-        const options=window.nexoraWorldGetPlanets?.()||[];
-        const planet=options.find(x=>x.slug===q||x.name.toLocaleLowerCase("ru")===q||x.name.toLocaleLowerCase("ru").includes(q));
-        if(!planet){$("input",flightPanel).focus();return}
-        closeWorldPanels(); flightPanel.hidden=true; hidePlayer();
-        window.nexoraTravelTo?.(planet.slug);
-      });
-    }
-  }
+  function ensureFlightButton() { /* Planet travel is handled by the drawer and native flight overlay. */ }
 
   document.addEventListener("click",e=>{
     const card=e.target.closest("#nx-avatars .nx-avatar-card");
