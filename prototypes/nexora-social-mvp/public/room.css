@@ -1059,3 +1059,27 @@
 .nexora-management-form{max-width:none!important;margin:8px 0!important;padding:8px!important;border:1px solid #555!important;background:#242424!important}
 .nexora-management-form label{color:#b9f34b!important;font:12px Arial,sans-serif!important}
 @media(max-width:560px){.nexora-developer-panel{padding:7px!important}.nexora-developer-window{width:calc(100vw - 14px)!important;max-height:92dvh!important}.nexora-management-tabs button{flex:1 1 30%!important;min-width:0!important;padding:7px 5px!important;font-size:11px!important}.nexora-management-content{padding:6px!important}}
+
+/* Galaxy dating-style aura collection: layered, bright SVG art around every avatar. */
+.nexora-world-avatar{filter:drop-shadow(0 5px 4px #0009)!important;isolation:isolate}
+.nexora-world-avatar .nexora-user-aura{position:absolute!important;z-index:0!important;left:50%!important;top:50%!important;width:190px!important;height:176px!important;transform:translate(-50%,-53%)!important;overflow:visible!important;pointer-events:none!important;opacity:1!important;display:block!important}
+.nexora-world-avatar.aura-none .nexora-user-aura{display:none!important}
+.nexora-world-avatar:not(.aura-none) .nexora-user-aura{visibility:visible!important;opacity:1!important}
+.nexora-world-avatar.aura-star .nexora-user-aura{color:#35cfff;animation:galaxy-aura-float 2.6s ease-in-out infinite alternate}
+.nexora-world-avatar.aura-romance .nexora-user-aura{color:#ff63cf;animation:galaxy-aura-heart 2s ease-in-out infinite alternate}
+.nexora-world-avatar.aura-nebula .nexora-user-aura{color:#b35aff;animation:galaxy-aura-nebula 3.4s ease-in-out infinite alternate}
+.nexora-world-avatar.aura-comet .nexora-user-aura{color:#39f4b6;animation:galaxy-aura-comet 1.8s ease-in-out infinite alternate}
+.nexora-world-avatar.aura-supernova .nexora-user-aura{color:#ff7548;animation:galaxy-aura-fire 1.4s ease-in-out infinite alternate}
+.nexora-world-avatar.aura-halo .nexora-user-aura{color:#ffd45d;animation:galaxy-aura-gold 2.3s ease-in-out infinite alternate}
+@keyframes galaxy-aura-float{to{transform:translate(-50%,-56%) scale(1.035);filter:drop-shadow(0 0 10px #3bcfff)}}
+@keyframes galaxy-aura-heart{to{transform:translate(-50%,-53%) scale(1.06);filter:drop-shadow(0 0 12px #ff4fc8)}}
+@keyframes galaxy-aura-nebula{to{transform:translate(-50%,-53%) rotate(5deg) scale(1.04);filter:drop-shadow(0 0 13px #a64cff)}}
+@keyframes galaxy-aura-comet{to{transform:translate(-50%,-53%) rotate(-4deg) scale(1.045);filter:drop-shadow(0 0 11px #2fffc0)}}
+@keyframes galaxy-aura-fire{to{transform:translate(-50%,-53%) scale(1.07);filter:drop-shadow(0 0 15px #ff493c)}}
+@keyframes galaxy-aura-gold{to{transform:translate(-50%,-53%) scale(1.045);filter:drop-shadow(0 0 13px #ffd34e)}}
+.nexora-auras-panel{display:flex!important}.nexora-auras-panel.hidden{display:none!important}#nexora-action-auras{display:block!important}
+.nexora-aura-option{display:flex!important;min-height:92px!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:5px!important}
+.nexora-aura-thumb{display:grid!important;width:78px!important;height:70px!important;place-items:center!important;overflow:visible!important}.nexora-aura-thumb svg{width:100%!important;height:100%!important;overflow:visible!important}
+.nexora-aura-option.selected{border-color:#9dff45!important;box-shadow:0 0 0 2px #9dff4555,0 0 18px #8cff3b55!important}
+@media(max-width:520px){.nexora-world-avatar .nexora-user-aura{width:164px!important;height:154px!important}.nexora-aura-option{min-height:82px!important}.nexora-aura-thumb{width:66px!important;height:60px!important}}
+@media(prefers-reduced-motion:reduce){.nexora-world-avatar .nexora-user-aura{animation:none!important}}
