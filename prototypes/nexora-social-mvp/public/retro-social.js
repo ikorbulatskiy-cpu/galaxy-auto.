@@ -75,16 +75,24 @@
     try {
       // Reuse the existing profile editor so bio and avatar values are loaded before saving.
       document.getElementById("my-profile")?.click();
-      await new Promise(resolve => setTimeout(resolve,350));
-      const input = document.getElementById("profile-status");
-      const save = document.getElementById("profile-save");
+      const deadline = Date.now() + 5000;
+      let input = document.getElementById("profile-status");
+      let save = document.getElementById("profile-save");
+      while ((!input || !save || document.getElementById("profile-editor")?.classList.contains("hidden") || save.disabled) && Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve,100));
+        input = document.getElementById("profile-status");
+        save = document.getElementById("profile-save");
+      }
       if(!input || !save || document.getElementById("profile-editor")?.classList.contains("hidden")) {
         throw new Error("Не удалось открыть профиль для сохранения статуса.");
       }
       input.value = selectedStatus;
       save.click();
-      await new Promise(resolve => setTimeout(resolve,450));
-      if(!document.getElementById("profile-editor-error")?.textContent) closeStatusPanel();
+      while (!document.getElementById("profile-editor")?.classList.contains("hidden") && Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve,100));
+      }
+      if(document.getElementById("profile-editor")?.classList.contains("hidden")) closeStatusPanel();
+      else throw new Error(document.getElementById("profile-editor-error")?.textContent || "Сохранение статуса не подтвердилось.");
     } catch(error) {
       window.alert(error.message || "Не удалось сохранить статус.");
     } finally { saveButton.disabled = false; }
