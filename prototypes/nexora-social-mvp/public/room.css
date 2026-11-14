@@ -1187,3 +1187,14 @@
   transform:none!important;
   object-position:center bottom!important;
 }
+
+/* Smooth full-plane character movement and mobile touch joystick. */
+#room-scene{touch-action:pan-y}
+#room-scene .nexora-world-avatar{transition:none!important;transform:translateX(-50%)!important;transform-origin:center bottom!important}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite{transform-origin:center bottom}
+#room-scene .nexora-world-avatar.is-moving .nexora-avatar-sprite{animation:nexora-world-bob .24s ease-in-out infinite alternate}
+@keyframes nexora-world-bob{from{translate:0 0}to{translate:0 -3px}}
+.nexora-joystick{position:absolute;z-index:70;left:14px;bottom:16px;width:112px;height:112px;display:none;touch-action:none;user-select:none}
+.nexora-joystick-ring{position:absolute;inset:9px;border:2px solid #ffffff99;border-radius:50%;background:#182b1c66;box-shadow:0 3px 16px #0005;display:grid;place-items:center}
+.nexora-joystick-knob{width:38px;height:38px;border:2px solid #f5ffe9;border-radius:50%;background:#9bd86dcc;box-shadow:0 2px 8px #0006;pointer-events:none}
+@media(hover:none),(pointer:coarse){.nexora-joystick{display:block}#room-scene{touch-action:pan-y}}
