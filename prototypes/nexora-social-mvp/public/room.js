@@ -22,6 +22,7 @@
   worldAvatar.addEventListener("click",toggleProfile);
   worldAvatar.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();toggleProfile();}});
   $("nexora-avatar-close").addEventListener("click",closeAvatar);
+  $("nexora-avatar-panel").addEventListener("click",event=>{if(event.target===$("nexora-avatar-panel"))closeAvatar();});
   $("nexora-avatar-save").addEventListener("click",saveAvatar);
   document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>showAvatarTab(b.dataset.tab)));
  }
@@ -42,8 +43,12 @@
    $("nexora-profile-loaded").classList.remove("hidden");
    showAvatarTab("heads");
   }catch(e){
-   $("nexora-profile-loading").innerHTML='<i class="nexora-loader-error">!</i><b>Не удалось загрузить информацию</b><span>'+String(e.message||"Проверь интернет-соединение")+'</span><button type="button" data-profile-retry>Повторить загрузку</button>';
-   $("nexora-profile-loading").querySelector("[data-profile-retry]").addEventListener("click",openAvatar);
+   const loading=$("nexora-profile-loading");loading.replaceChildren();
+   const mark=document.createElement("i");mark.className="nexora-loader-error";mark.textContent="!";
+   const title=document.createElement("b");title.textContent="Не удалось загрузить информацию";
+   const detail=document.createElement("span");detail.textContent=String(e.message||"Проверь интернет-соединение");
+   const retry=document.createElement("button");retry.type="button";retry.textContent="Повторить загрузку";retry.addEventListener("click",openAvatar);
+   loading.append(mark,title,detail,retry);
   }
  }
  function renderAuthority(c){
