@@ -4,8 +4,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101633"><meta name="description" content="NEXORA — социальный виртуальный мир">
 <title>NEXORA — Social World</title>
-<link rel="stylesheet" href="/styles.css?v=retro-main-menu-20261115"><link rel="stylesheet" href="/room.css?v=plain-nick-close-emotion-20261115">
-<script defer src="/app.js?v=explicit-login-20261115"></script><script defer src="/room.js?v=emotion-icon-right-20261115"></script>
+<link rel="stylesheet" href="/styles.css?v=character-creator-retro-20261115"><link rel="stylesheet" href="/room.css?v=ear-emotion-gap-20261115">
+<script defer src="/app.js?v=character-creator-20261115"></script><script defer src="/room.js?v=emotion-icon-right-20261115"></script>
 </head>
 <body>
 <div class="app-shell">
@@ -26,14 +26,21 @@
   <footer>© 2026 NEXORA · MEET · CONNECT · DISCOVER</footer>
  </main>
  <section id="register-modal" class="modal" aria-hidden="true">
-  <div class="auth-card">
+  <div class="auth-card nexora-register-card">
    <button class="close" data-close="register" aria-label="Закрыть">×</button>
    <div class="eyebrow">СОЗДАНИЕ ПЕРСОНАЖА</div>
-   <div class="step-row"><b id="step-label">1 из 2</b><div class="progress"><i id="step-progress"></i></div></div>
+   <div class="step-row"><b id="step-label">1 из 3</b><div class="progress"><i id="step-progress"></i></div></div>
    <div id="register-step-one"><h2>Придумай ник</h2><form id="register-form">
     <label>Ник<input id="register-nickname" minlength="3" maxlength="24" placeholder="Твой ник" autocomplete="username" required></label>
     <p class="error" id="register-error"></p><button class="main-button" id="register-next" type="submit">Далее →</button>
    </form></div>
+   <div id="register-step-customize" class="hidden">
+    <div class="nexora-creator-title">Выбор персонажа</div>
+    <section class="nexora-creator-picker"><h3>Выбери тело:</h3><div class="nexora-creator-strip"><button type="button" id="body-prev" aria-label="Предыдущее тело">‹</button><div id="body-options" class="nexora-creator-options"></div><button type="button" id="body-next" aria-label="Следующее тело">›</button></div></section>
+    <div class="nexora-creator-stage"><div id="creator-preview" class="nexora-creator-preview"></div><span class="nexora-creator-spark">✦</span></div>
+    <section class="nexora-creator-picker nexora-head-picker"><h3>Выбери голову:</h3><div class="nexora-creator-strip"><button type="button" id="head-prev" aria-label="Предыдущая голова">‹</button><div id="head-options" class="nexora-creator-options"></div><button type="button" id="head-next" aria-label="Следующая голова">›</button></div></section>
+    <p class="error" id="customize-error"></p><div class="nexora-creator-actions"><button type="button" id="customize-back">Назад</button><button type="button" id="customize-continue">Продолжить</button></div>
+   </div>
    <div id="register-step-two" class="hidden"><h2>Добро пожаловать!</h2>
     <div class="code-box"><b>Твой код восстановления</b><strong id="recovery-code"></strong><small>Сохрани код. Он понадобится для следующего входа.</small></div>
     <p class="error" id="finish-error"></p><button class="main-button" id="enter-world">Завершить создание персонажа</button>
