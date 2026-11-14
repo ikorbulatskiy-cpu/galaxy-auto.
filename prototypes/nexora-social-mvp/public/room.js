@@ -29,7 +29,7 @@
  }
  function renderAuthority(c){
   const points=Number(c.authority_points)||0,rank=c.authority_title||"Новичок",aura=c.aura||"none";
-  $("nexora-rank-title").textContent=rank+" "+("✦".repeat(Number(c.authority_stars)||0));$("nexora-world-avatar").className="nexora-world-avatar aura-emperor aura-"+aura;const profileAvatar=$("nexora-profile-avatar");if(profileAvatar)profileAvatar.className="nexora-profile-avatar aura-emperor aura-"+aura;$("nexora-authority-count").textContent=points+" очков авторитета";
+  $("nexora-rank-title").textContent=rank+" "+("✦".repeat(Number(c.authority_stars)||0));const isEmperor=rank==="Император Галактики"||rank==="Император";const worldAvatar=$("nexora-world-avatar");worldAvatar.className="nexora-world-avatar aura-"+aura+(isEmperor?" aura-emperor":"");const emperorTitle=worldAvatar.querySelector(".nexora-emperor-title");if(emperorTitle)emperorTitle.hidden=!isEmperor;const profileAvatar=$("nexora-profile-avatar");if(profileAvatar)profileAvatar.className="nexora-profile-avatar aura-"+aura+(isEmperor?" aura-emperor":"");$("nexora-authority-count").textContent=points+" очков авторитета";
   $("nexora-aura-preview").className="nexora-aura-preview aura-"+aura;$("nexora-aura-preview").textContent="✦";
   const current=rankRows.findIndex(x=>x[0]===rank),next=rankRows[Math.min(rankRows.length-1,current+1)];
   const currentMin=Number(c.rank_min_points)||0,nextMin=next?Number(next[1].split(/[–+]/)[0]):currentMin;
