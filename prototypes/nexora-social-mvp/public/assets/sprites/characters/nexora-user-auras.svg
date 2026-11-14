@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 174 160">
-  <symbol id="aura-dark-1" viewBox="0 0 159 160"><image href="IMG_4159.jpeg" xlink:href="IMG_4159.jpeg" x="0" y="0" width="477" height="160"/></symbol>
-  <symbol id="aura-dark-2" viewBox="0 0 159 160"><image href="IMG_4159.jpeg" xlink:href="IMG_4159.jpeg" x="-159" y="0" width="477" height="160"/></symbol>
-  <symbol id="aura-dark-3" viewBox="0 0 159 160"><image href="IMG_4159.jpeg" xlink:href="IMG_4159.jpeg" x="-318" y="0" width="477" height="160"/></symbol>
-  <symbol id="aura-blue-1" viewBox="0 0 174 160"><image href="IMG_4160.jpeg" xlink:href="IMG_4160.jpeg" x="0" y="0" width="348" height="160"/></symbol>
-  <symbol id="aura-blue-2" viewBox="0 0 174 160"><image href="IMG_4160.jpeg" xlink:href="IMG_4160.jpeg" x="-174" y="0" width="348" height="160"/></symbol>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 174 160"><defs><filter id="aura-bg" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0.235 0.793 0.08 0 0"/><feComponentTransfer><feFuncA type="table" tableValues="1 1 0.8 0.3 0 0.3 0.8 1 1"/></feComponentTransfer></filter></defs>
+  <symbol id="aura-dark-1" viewBox="0 0 159 160"><image href="IMG_4159.jpeg" xlink:href="IMG_4159.jpeg" x="0" y="0" width="477" height="160" filter="url(#aura-bg)"/></symbol>
+  <symbol id="aura-dark-2" viewBox="0 0 159 160"><image href="IMG_4159.jpeg" xlink:href="IMG_4159.jpeg" x="-159" y="0" width="477" height="160" filter="url(#aura-bg)"/></symbol>
+  <symbol id="aura-dark-3" viewBox="0 0 159 160"><image href="IMG_4159.jpeg" xlink:href="IMG_4159.jpeg" x="-318" y="0" width="477" height="160" filter="url(#aura-bg)"/></symbol>
+  <symbol id="aura-blue-1" viewBox="0 0 174 160"><image href="IMG_4160.jpeg" xlink:href="IMG_4160.jpeg" x="0" y="0" width="348" height="160" filter="url(#aura-bg)"/></symbol>
+  <symbol id="aura-blue-2" viewBox="0 0 174 160"><image href="IMG_4160.jpeg" xlink:href="IMG_4160.jpeg" x="-174" y="0" width="348" height="160" filter="url(#aura-bg)"/></symbol>
 </svg>
