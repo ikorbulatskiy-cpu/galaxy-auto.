@@ -73,15 +73,5 @@
   }
  }
  $("chat-form").addEventListener("submit",event=>{event.preventDefault();sendMessage();});
- const actionsButton=$("room-actions");
- if(actionsButton)actionsButton.addEventListener("click",()=>{
-  const toast=$("toast");
-  toast.textContent="Действия персонажа появятся здесь.";
-  toast.classList.add("visible");
-  clearTimeout(state.toastTimer);
-  state.toastTimer=setTimeout(()=>toast.classList.remove("visible"),2500);
- });
- const exitButton=$("room-exit");
- if(exitButton)exitButton.addEventListener("click",leaveRoom);
  window.NexoraRoom={show:showRoom,leave:leaveRoom};
 })();
