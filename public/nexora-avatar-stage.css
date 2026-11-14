@@ -114,3 +114,113 @@
  #dashboard>#tab-world .nx-avatar-visual svg{width:56px!important;height:84px!important}
  #dashboard>#tab-world .nx-avatar-name{max-width:60px!important;font-size:7px!important}
 }
+
+/* Final avatar composition: nickname above the head, feet planted on a dark bordered platform. */
+#dashboard>#tab-world .nx-scene{
+ isolation:isolate!important;
+}
+#dashboard>#tab-world .nx-floor{
+ z-index:1!important;
+ height:96px!important;min-height:96px!important;max-height:96px!important;
+ border-top:2px solid #b7bec7!important;
+ background:
+  linear-gradient(180deg,#535d69 0%,#303944 24%,#202832 100%),
+  repeating-linear-gradient(90deg,#ffffff0b 0 1px,transparent 1px 72px)!important;
+ box-shadow:inset 0 8px 14px #0005,0 -3px 12px #0005!important;
+}
+#dashboard>#tab-world .nx-avatars{
+ position:absolute!important;left:0!important;right:0!important;top:auto!important;
+ bottom:96px!important;height:146px!important;min-height:146px!important;
+ display:flex!important;flex-direction:row!important;align-items:flex-end!important;
+ justify-content:flex-start!important;gap:14px!important;
+ padding:0 14px!important;margin:0!important;
+ overflow-x:auto!important;overflow-y:visible!important;
+ scrollbar-width:none!important;z-index:5!important;
+}
+#dashboard>#tab-world .nx-avatars::-webkit-scrollbar{display:none!important}
+#dashboard>#tab-world .nx-avatar-card,
+#dashboard>#tab-world .nx-avatar-card.me{
+ position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+ transform:none!important;translate:none!important;
+ display:flex!important;flex:0 0 84px!important;flex-direction:column!important;
+ align-items:center!important;justify-content:flex-end!important;
+ width:84px!important;min-width:84px!important;max-width:84px!important;
+ height:146px!important;margin:0!important;padding:0!important;gap:2px!important;
+ overflow:visible!important;animation:none!important;filter:none!important;
+}
+#dashboard>#tab-world .nx-avatar-name{
+ order:0!important;position:relative!important;z-index:7!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ box-sizing:border-box!important;flex:0 0 19px!important;
+ width:84px!important;max-width:84px!important;min-width:0!important;height:19px!important;min-height:19px!important;
+ margin:0 0 2px!important;padding:2px 5px!important;
+ overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+ border:1px solid #929eaa!important;border-radius:3px!important;
+ background:linear-gradient(180deg,#222b36 0%,#111820 100%)!important;
+ box-shadow:0 2px 5px #0009,inset 0 1px #ffffff1c!important;
+ color:#f4f1e9!important;font:700 9px/1.1 Arial,sans-serif!important;
+ text-shadow:0 1px 2px #000!important;letter-spacing:.1px!important;
+}
+#dashboard>#tab-world .nx-avatar-card.me .nx-avatar-name{
+ border-color:#e0c17a!important;color:#ffe8b1!important;
+ background:linear-gradient(180deg,#343126,#171a20)!important;
+}
+#dashboard>#tab-world .nx-avatar-visual{
+ order:1!important;position:relative!important;z-index:2!important;
+ display:flex!important;align-items:flex-end!important;justify-content:center!important;
+ flex:0 0 108px!important;width:84px!important;height:108px!important;min-height:108px!important;
+ margin:0!important;padding:0!important;overflow:visible!important;pointer-events:none!important;
+}
+#dashboard>#tab-world .nx-avatar-visual canvas[data-nexora-sprite],
+#dashboard>#tab-world .nx-avatar-visual svg{
+ display:block!important;flex:0 0 auto!important;
+ width:72px!important;height:108px!important;max-width:none!important;max-height:108px!important;
+ margin:0 auto!important;object-fit:contain!important;object-position:center bottom!important;
+ filter:none!important;
+}
+#dashboard>#tab-world .nx-avatar-platform{
+ order:2!important;position:relative!important;z-index:4!important;
+ display:block!important;flex:0 0 8px!important;
+ width:84px!important;height:8px!important;min-height:8px!important;
+ margin:0!important;padding:0!important;
+ border:1px solid #8995a3!important;border-radius:2px!important;
+ background:linear-gradient(180deg,#5a6571 0%,#252e38 48%,#111820 100%)!important;
+ box-shadow:0 3px 5px #000b,inset 0 1px #ffffff44!important;
+}
+#dashboard>#tab-world .nx-avatar-card .nx-fav-toggle{
+ position:absolute!important;z-index:9!important;top:23px!important;right:-2px!important;
+ width:19px!important;height:19px!important;min-width:19px!important;
+ padding:0!important;border:1px solid #9ba5b0!important;border-radius:50%!important;
+ background:#121a23!important;color:#ffe4a1!important;font-size:11px!important;line-height:17px!important;
+}
+#dashboard>#tab-world .nx-avatar-visual .nx-rank-mark{
+ top:0!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;
+}
+#dashboard>#tab-world .nx-avatar-card:before,
+#dashboard>#tab-world .nx-avatar-card:after{animation:none!important}
+#dashboard>#tab-world .nx-avatar-card:after{top:-2px!important;left:50%!important;transform:translateX(-50%)!important}
+@media(max-width:600px){
+ #dashboard>#tab-world .nx-floor{height:88px!important;min-height:88px!important;max-height:88px!important}
+ #dashboard>#tab-world .nx-avatars{bottom:88px!important;height:126px!important;min-height:126px!important;gap:9px!important;padding:0 8px!important}
+ #dashboard>#tab-world .nx-avatar-card,#dashboard>#tab-world .nx-avatar-card.me{
+  flex-basis:70px!important;width:70px!important;min-width:70px!important;max-width:70px!important;height:126px!important
+ }
+ #dashboard>#tab-world .nx-avatar-name{flex-basis:18px!important;width:70px!important;max-width:70px!important;height:18px!important;min-height:18px!important;font-size:8px!important}
+ #dashboard>#tab-world .nx-avatar-visual{flex-basis:96px!important;width:70px!important;height:96px!important;min-height:96px!important}
+ #dashboard>#tab-world .nx-avatar-visual canvas[data-nexora-sprite],
+ #dashboard>#tab-world .nx-avatar-visual svg{width:64px!important;height:96px!important;max-height:96px!important}
+ #dashboard>#tab-world .nx-avatar-platform{flex-basis:7px!important;width:70px!important;height:7px!important;min-height:7px!important}
+ #dashboard>#tab-world .nx-avatar-card .nx-fav-toggle{top:21px!important;right:-1px!important}
+}
+@media(max-width:380px){
+ #dashboard>#tab-world .nx-avatars{gap:7px!important;padding:0 6px!important}
+ #dashboard>#tab-world .nx-avatar-card,#dashboard>#tab-world .nx-avatar-card.me{flex-basis:64px!important;width:64px!important;min-width:64px!important;max-width:64px!important}
+ #dashboard>#tab-world .nx-avatar-name{width:64px!important;max-width:64px!important;font-size:7px!important}
+ #dashboard>#tab-world .nx-avatar-visual{width:64px!important}
+ #dashboard>#tab-world .nx-avatar-visual canvas[data-nexora-sprite],
+ #dashboard>#tab-world .nx-avatar-visual svg{width:58px!important;height:87px!important;max-height:87px!important}
+ #dashboard>#tab-world .nx-avatar-platform{width:64px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ #dashboard>#tab-world .nx-avatar-card,#dashboard>#tab-world .nx-avatar-card *{animation:none!important;transition:none!important}
+}
