@@ -2,7 +2,7 @@
 :root{--room-divider:#536ca8;--room-divider-width:1px}
 #room-screen{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);background:#080d2b;color:#fff;font-family:Tahoma,Arial,sans-serif;overflow:hidden}
 #room-screen.hidden{display:none!important}
-.retro-room{width:min(100vw,1000px);height:min(100dvh,900px);min-height:360px;display:grid;grid-template-rows:22px minmax(0,1.8fr) minmax(0,1fr);overflow:hidden;background:#080d2b;border:2px solid #5365a0;border-bottom:0;box-shadow:0 0 35px #0009}
+.retro-room{width:min(100vw,1000px);height:min(100dvh,900px);min-height:360px;display:grid;grid-template-rows:22px minmax(0,1.2fr) minmax(0,1fr);overflow:hidden;background:#080d2b;border:2px solid #5365a0;border-bottom:0;box-shadow:0 0 35px #0009}
 .room-zone{position:relative;min-height:0;overflow:hidden;box-sizing:border-box}
 .planet-header{height:22px;min-height:22px;position:relative;display:flex;align-items:center;justify-content:center;background-color:#3679bd;background-image:linear-gradient(45deg,#ffffff20 25%,transparent 25%,transparent 75%,#ffffff20 75%),linear-gradient(45deg,#ffffff20 25%,transparent 25%,transparent 75%,#ffffff20 75%);background-position:0 0,4px 4px;background-size:8px 8px;border-bottom:1px solid #9bc8ed;box-shadow:inset 0 0 7px #061c4b}
 .planet-name{font-size:12px;font-weight:bold;letter-spacing:.5px;color:#e7f1ff;text-shadow:0 1px 3px #0008}
@@ -20,5 +20,5 @@
 .retro-scene{display:block;position:relative;background-color:#030511;background-image:radial-gradient(1px 1px at 8% 17%,#d8e9ff 99%,transparent),radial-gradient(1px 1px at 22% 61%,#9dbdff 99%,transparent),radial-gradient(1px 1px at 39% 28%,#fff 99%,transparent),radial-gradient(1px 1px at 57% 72%,#9dbdff 99%,transparent),radial-gradient(1px 1px at 73% 19%,#fff 99%,transparent),radial-gradient(1px 1px at 91% 48%,#b9d5ff 99%,transparent),linear-gradient(180deg,#030511 0%,#080d28 72%,#111b3b 100%);background-size:100% 100%;border:0;isolation:isolate}
 .retro-scene::after{content:"";position:absolute;left:0;right:0;bottom:0;height:13%;background:repeating-linear-gradient(90deg,#18213e 0 2px,#202b4a 2px 4px);border-top:1px solid #34446e;opacity:.75}
 .room-bottom-zone,.room-bottom-window,.room-bottom-window-edge{display:none!important}
-@media(max-width:600px){.retro-room{width:100vw;height:100dvh;min-height:0;border:0;grid-template-rows:22px minmax(0,1.8fr) minmax(0,1fr)}.planet-header{height:22px;min-height:22px}.room-zone{width:100%}}
-@media(max-height:500px){.retro-room{grid-template-rows:19px minmax(0,1.8fr) minmax(0,1fr)}.planet-header{height:19px;min-height:19px}.retro-composer{height:32px;flex-basis:32px}}
+@media(max-width:600px){.retro-room{width:100vw;height:100dvh;min-height:0;border:0;grid-template-rows:22px minmax(0,1.2fr) minmax(0,1fr)}.planet-header{height:22px;min-height:22px}.room-zone{width:100%}}
+@media(max-height:500px){.retro-room{grid-template-rows:19px minmax(0,1.2fr) minmax(0,1fr)}.planet-header{height:19px;min-height:19px}.retro-composer{height:32px;flex-basis:32px}}
