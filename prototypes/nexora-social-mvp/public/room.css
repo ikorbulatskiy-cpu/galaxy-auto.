@@ -212,3 +212,8 @@
 
 /* Screenshot-based floor correction: move the intact avatar stack down to the floor line. */
 .nexora-world-avatar{bottom:calc(13% - 31px)!important;}
+
+
+/* Match the demon baseline to the aura and place both on the upper floor boundary. */
+.nexora-world-avatar{bottom:calc(13% - 5px)!important;}
+.nexora-world-avatar .nexora-demon-body{transform:none!important;transform-origin:center bottom!important;}
