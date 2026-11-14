@@ -1,52 +1,37 @@
 (() => {
  "use strict";
  const $=id=>document.getElementById(id);
- let authenticated=false, pendingAccount=null, pendingRecovery=null;
- const toast=message=>{const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),2600);};
- function openModal(name){const el($(name+"-modal"));el.classList.add("open");el.setAttribute("aria-hidden","false");}
- function el(x){return typeof x==="string"?$(x):x;}
- function closeModal(name){const modal=$(name+"-modal");modal.classList.remove("open");modal.setAttribute("aria-hidden","true");}
- function resetRegister(){ $("register-step-1").classList.remove("hidden");$("register-step-2").classList.add("hidden");$("register-step-label").textContent="1 из 2";$("register-progress-fill").style.width="50%";$("register-error").textContent="";$("register-character-error").textContent="";$("register-next").disabled=false; }
- function showAccount(account,code){
-  authenticated=true;["register","login"].forEach(closeModal);$("landing").classList.add("hidden");openModal("account");
-  $("account-name").textContent=account.nickname;
-  if(code){$("recovery-value").textContent=code;$("recovery-value").classList.add("recovery-code");}
-  else{$("recovery-value").textContent="Код доступен только владельцу аккаунта. При необходимости создай новый.";$("recovery-value").classList.remove("recovery-code");}
-  loadPlayerProfile();
- }
- async function loadPlayerProfile(){try{const r=await fetch("/api/account/profile");if(!r.ok)return;const d=await r.json();if(d.character){$("head-choice").value=String(d.character.head_id);$("body-choice").value=String(d.character.body_id);}}catch{}}
- document.querySelectorAll('[data-open="register"]').forEach(b=>b.addEventListener("click",()=>{resetRegister();openModal("register");setTimeout(()=>$("register-nickname").focus(),80);}));
- document.querySelectorAll('[data-open="login"]').forEach(b=>b.addEventListener("click",()=>{ $("login-error").textContent="";openModal("login");setTimeout(()=>$("login-nickname").focus(),80);}));
- document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));
- document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m&&!authenticated)closeModal(m.id.replace("-modal",""));}));
- document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!authenticated)["register","login"].forEach(closeModal);});
- $("register-form").addEventListener("submit",async e=>{
-  e.preventDefault();$("register-error").textContent="";
-  const nickname=$("register-nickname").value.trim();if(nickname.length<3){$("register-error").textContent="Ник должен содержать минимум 3 символа.";return;}
-  const b=$("register-next");b.disabled=true;
-  try{
-   const r=await fetch("/api/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nickname})});const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось создать персонажа");
-   pendingAccount=d.account;pendingRecovery=d.recoveryCode;
-   $("new-recovery-code").textContent=pendingRecovery||"Код не получен. Не закрывай окно и обратись в поддержку.";
-   $("register-step-1").classList.add("hidden");$("register-step-2").classList.remove("hidden");$("register-step-label").textContent="2 из 2";$("register-progress-fill").style.width="100%";
-  }catch(err){$("register-error").textContent=err.message;b.disabled=false;}
+ const state={account:null,recoveryCode:null,x:.5,y:.82,direction:"down",moving:false,keys:new Set(),last:0};
+ const avatar={skin:"#e8b58f",suit:"#6179e8",hair:"#352a43",gender:"other"};
+ const toast=msg=>{const t=$("toast");t.textContent=msg;t.classList.add("visible");clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove("visible"),2400);};
+ function modal(name,open){const m=$(name+"-modal");m.classList.toggle("open",open);m.setAttribute("aria-hidden",String(!open));}
+ function resetRegister(){$("register-step-one").classList.remove("hidden");$("register-step-two").classList.add("hidden");$("step-label").textContent="1 из 2";$("step-progress").style.width="50%";$("register-error").textContent="";$("finish-error").textContent="";$("register-next").disabled=false;}
+ $("open-register").addEventListener("click",()=>{resetRegister();modal("register",true);setTimeout(()=>$("register-nickname").focus(),60);});
+ $("open-login").addEventListener("click",()=>{ $("login-error").textContent="";modal("login",true);setTimeout(()=>$("login-nickname").focus(),60);});
+ document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>modal(b.dataset.close,false)));
+ document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)modal(m.id.replace("-modal",""),false);}));
+ $("register-form").addEventListener("submit",async e=>{e.preventDefault();$("register-error").textContent="";const nickname=$("register-nickname").value.trim();if(nickname.length<3){$("register-error").textContent="Ник должен содержать минимум 3 символа.";return;}const b=$("register-next");b.disabled=true;
+  try{const r=await fetch("/api/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nickname})});const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось создать персонажа");state.account=d.account;state.recoveryCode=d.recoveryCode;$("recovery-code").textContent=d.recoveryCode||"Код не получен";$("register-step-one").classList.add("hidden");$("register-step-two").classList.remove("hidden");$("step-label").textContent="2 из 2";$("step-progress").style.width="100%";}
+  catch(err){$("register-error").textContent=err.message;b.disabled=false;}
  });
- $("finish-register").addEventListener("click",async()=>{
-  const b=$("finish-register");b.disabled=true;$("register-character-error").textContent="";
-  try{const r=await fetch("/api/character",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({headId:Number($("register-head").value),bodyId:Number($("register-body").value)})});const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось сохранить внешность");showAccount(pendingAccount,pendingRecovery);toast("Персонаж создан. Сохрани код восстановления.");pendingAccount=null;pendingRecovery=null;}
-  catch(err){$("register-character-error").textContent=err.message;b.disabled=false;}
- });
- $("login-form").addEventListener("submit",async e=>{
-  e.preventDefault();$("login-error").textContent="";const b=$("login-submit");b.disabled=true;
-  try{const r=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nickname:$("login-nickname").value.trim(),recoveryCode:$("login-recovery").value.trim()})});const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось войти");showAccount(d.account,null);$("login-recovery").value="";toast("С возвращением!");}
-  catch(err){$("login-error").textContent=err.message;}
-  finally{b.disabled=false;}
- });
- $("recovery-generate").addEventListener("click",async()=>{try{const r=await fetch("/api/account/recovery-code",{method:"POST"}),d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось создать код");$("recovery-value").textContent=d.recoveryCode;$("recovery-value").classList.add("recovery-code");toast("Новый код создан. Старый больше не действует.");}catch(e){toast(e.message);}});
- $("save-character").addEventListener("click",async()=>{const b=$("save-character");b.disabled=true;$("character-error").textContent="";try{const r=await fetch("/api/character",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({headId:Number($("head-choice").value),bodyId:Number($("body-choice").value)})}),d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось сохранить персонажа");toast("Внешность персонажа сохранена.");}catch(e){$("character-error").textContent=e.message;}finally{b.disabled=false;}});
- $("logout").addEventListener("click",async()=>{try{await fetch("/api/auth/logout",{method:"POST"});}catch{}authenticated=false;closeModal("account");$("landing").classList.remove("hidden");$("login-nickname").value="";$("login-recovery").value="";resetRegister();toast("Вы вышли из аккаунта.");});
- async function checkSession(){try{const r=await fetch("/api/auth/me"),d=await r.json();if(d.authenticated)showAccount(d.account,null);}catch{}}
- async function updateStatus(){try{const [s,t]=await Promise.all([fetch("/api/status"),fetch("/api/account/online")]);const status=await s.json(),online=await t.json();$("connection").textContent=status.database==="connected"?"● Сервер онлайн · "+online.online+" онлайн":"● Сервер доступен";}catch{$("connection").textContent="● Нет связи с сервером";}}
- function updateTime(){$("header-time").textContent=new Intl.DateTimeFormat("ru-RU",{hour:"2-digit",minute:"2-digit"}).format(new Date());}
- resetRegister();checkSession();updateStatus();updateTime();setInterval(updateTime,30000);setInterval(updateStatus,30000);
+ $("enter-world").addEventListener("click",async()=>{const b=$("enter-world");b.disabled=true;$("finish-error").textContent="";try{const r=await fetch("/api/character",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({headId:1,bodyId:1})});const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось подготовить персонажа");enterRoom(state.account);toast("Персонаж создан. Код восстановления сохранён.");}catch(err){$("finish-error").textContent=err.message;}finally{b.disabled=false;}});
+ $("login-form").addEventListener("submit",async e=>{e.preventDefault();$("login-error").textContent="";const b=$("login-submit");b.disabled=true;try{const r=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nickname:$("login-nickname").value.trim(),recoveryCode:$("login-code").value.trim()})});const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось войти");$("login-code").value="";enterRoom(d.account);toast("Добро пожаловать обратно!");}catch(err){$("login-error").textContent=err.message;}finally{b.disabled=false;}});
+ function enterRoom(account){state.account=account;modal("register",false);modal("login",false);$("intro-screen").classList.add("hidden");$("room-screen").classList.remove("hidden");$("player-label").textContent=account?.nickname||"Ты в комнате";resize();loadAppearance();requestAnimationFrame(loop);}
+ async function loadAppearance(){try{const r=await fetch("/api/account/profile");if(r.ok){const d=await r.json();if(d.character){avatar.headId=d.character.head_id;avatar.bodyId=d.character.body_id;}}}catch{}}
+ $("leave-room").addEventListener("click",async()=>{await fetch("/api/auth/logout",{method:"POST"}).catch(()=>{});state.account=null;$("room-screen").classList.add("hidden");$("intro-screen").classList.remove("hidden");toast("Ты вышел из мира.");});
+ function drawScene(ctx,w,h,time,withPlayer){if(window.NexoraWorldScene)NexoraWorldScene.draw(ctx,w,h,"starter",time);if(window.NexoraWorldObjects){const items=NexoraWorldObjects.get("starter",w,h,time);NexoraWorldObjects.render(ctx,items);}if(withPlayer&&window.NexoraSpriteEngine){const px=state.x*w,py=state.y*h;if(!NexoraSpriteEngine.draw(ctx,px,py,Math.max(.75,Math.min(1.25,w/700)),avatar,state.direction,state.moving,""))drawFallback(ctx,px,py);}}
+ function drawFallback(ctx,x,y){ctx.save();ctx.fillStyle="#e9b58f";ctx.beginPath();ctx.arc(x,y-47,13,0,Math.PI*2);ctx.fill();ctx.fillStyle="#6179e8";ctx.fillRect(x-13,y-34,26,27);ctx.fillStyle="#303958";ctx.fillRect(x-11,y-8,9,15);ctx.fillRect(x+2,y-8,9,15);ctx.restore();}
+ function sizeCanvas(canvas){const rect=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);const w=Math.max(1,Math.floor(rect.width*dpr)),h=Math.max(1,Math.floor(rect.height*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}return{w,h,dpr};}
+ function resize(){for(const id of ["intro-canvas","room-canvas"]){const c=$(id);if(!c)continue;const {w,h}=sizeCanvas(c);const ctx=c.getContext("2d");ctx.setTransform(1,0,0,1,0,0);drawScene(ctx,w,h,performance.now(),id==="room-canvas");}}
+ function loop(time){if($("room-screen").classList.contains("hidden"))return;const dt=Math.min((time-state.last)/1000||0,.04);state.last=time;const speed=.34*dt;state.moving=state.keys.size>0;if(state.keys.has("left")){state.x-=speed;state.direction="left";}if(state.keys.has("right")){state.x+=speed;state.direction="right";}if(state.keys.has("up")){state.y-=speed;state.direction="up";}if(state.keys.has("down")){state.y+=speed;state.direction="down";}state.x=Math.max(.06,Math.min(.94,state.x));state.y=Math.max(.48,Math.min(.94,state.y));const c=$("room-canvas");const {w,h}=sizeCanvas(c);const ctx=c.getContext("2d");ctx.setTransform(1,0,0,1,0,0);drawScene(ctx,w,h,time,true);requestAnimationFrame(loop);}
+ function keyName(k){return ({ArrowUp:"up",w:"up",W:"up",ArrowDown:"down",s:"down",S:"down",ArrowLeft:"left",a:"left",A:"left",ArrowRight:"right",d:"right",D:"right"})[k];}
+ window.addEventListener("keydown",e=>{const k=keyName(e.key);if(k&&!$("room-screen").classList.contains("hidden")){e.preventDefault();state.keys.add(k);}});
+ window.addEventListener("keyup",e=>{const k=keyName(e.key);if(k)state.keys.delete(k);});
+ window.addEventListener("blur",()=>state.keys.clear());
+ document.querySelectorAll("[data-move]").forEach(b=>{const k=b.dataset.move;const start=e=>{e.preventDefault();state.keys.add(k);};const stop=e=>{e.preventDefault();state.keys.delete(k);};b.addEventListener("pointerdown",start);["pointerup","pointercancel","pointerleave"].forEach(ev=>b.addEventListener(ev,stop));});
+ window.addEventListener("resize",resize);
+ async function status(){try{const [s,o]=await Promise.all([fetch("/api/status"),fetch("/api/account/online")]);const sd=await s.json(),od=await o.json();$("server-status").textContent=sd.database==="connected"?"● Сервер NEXORA онлайн":"● Сервер доступен";$("room-online").textContent=String(Math.max(1,od.online||1));}catch{$("server-status").textContent="Нет связи с сервером";}}
+ async function session(){try{const r=await fetch("/api/auth/me"),d=await r.json();if(d.authenticated)enterRoom(d.account);}catch{}}
+ drawIntro();status();session();setInterval(status,30000);
+ function drawIntro(){const c=$("intro-canvas");const {w,h}=sizeCanvas(c);const ctx=c.getContext("2d");drawScene(ctx,w,h,performance.now(),true);}
 })();
