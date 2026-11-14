@@ -1087,3 +1087,70 @@
 /* Explicitly override the legacy hidden-state rule for the redesigned aura chooser. */
 #nexora-auras-panel{display:flex!important}
 #nexora-auras-panel.hidden{display:none!important}
+
+
+/* Единая ретро-палитра профиля персонажа для всего игрового окна и чата. */
+.retro-room{
+ background:#353d54!important;
+ border:2px solid #69748e!important;
+ box-shadow:0 0 35px #000b,inset 0 0 0 1px #202a43!important;
+}
+.planet-header{
+ background-color:#30394f!important;
+ background-image:repeating-linear-gradient(135deg,#3b465e 0 6px,#30394f 6px 12px)!important;
+ border-bottom:1px solid #69748e!important;
+ box-shadow:inset 0 -1px #202a43!important;
+}
+.planet-name{color:#c7dc70!important;text-shadow:1px 1px #171d2b!important}
+#visitor-clock{color:#e2e4eb!important;text-shadow:1px 1px #171d2b!important}
+.retro-chat{
+ background:#353d54!important;
+ border-bottom:1px solid #69748e!important;
+ box-shadow:inset 0 0 18px #151c2c88!important;
+}
+.chat-space{
+ background:repeating-linear-gradient(0deg,#353d54 0 2px,#323a51 2px 4px)!important;
+ scrollbar-color:#8993a9 #252d42!important;
+}
+.chat-line{color:#e2e4eb!important;font-family:Arial,sans-serif!important}
+.chat-line b{color:#c7dc70!important;text-shadow:1px 1px #202638!important}
+.chat-line span{color:#f0f1f5!important}
+.chat-line.mine b{color:#f0d68b!important}
+.retro-composer{
+ background:#30394f!important;
+ border-top:1px solid #69748e!important;
+}
+.retro-composer input{
+ border:1px solid #78849c!important;
+ border-radius:3px!important;
+ background:#252e43!important;
+ color:#f0f1f5!important;
+ box-shadow:inset 0 1px 4px #0008!important;
+}
+.retro-composer input::placeholder{color:#aeb7c9!important}
+.retro-composer input:focus{border-color:#c7dc70!important;box-shadow:0 0 0 2px #c7dc7033!important}
+.retro-composer button{
+ border:1px solid #83905d!important;
+ border-radius:3px!important;
+ background:repeating-linear-gradient(135deg,#b9ce68 0 5px,#9fb456 5px 10px)!important;
+ color:#202638!important;
+ text-shadow:1px 1px #e6f0b4!important;
+}
+.chat-error{color:#ff9ba8!important}
+.retro-scene{
+ background-color:#30394f!important;
+ background-image:
+ radial-gradient(1px 1px at 8% 17%,#e6edc9 99%,transparent),
+ radial-gradient(1px 1px at 22% 61%,#aebbd0 99%,transparent),
+ radial-gradient(1px 1px at 39% 28%,#fff 99%,transparent),
+ radial-gradient(1px 1px at 57% 72%,#aebbd0 99%,transparent),
+ radial-gradient(1px 1px at 73% 19%,#e8edcf 99%,transparent),
+ radial-gradient(1px 1px at 91% 48%,#b9c5d9 99%,transparent),
+ linear-gradient(180deg,#30394f 0%,#353d54 70%,#414a60 100%)!important;
+ border-top:1px solid #69748e!important;
+}
+.retro-scene::after{
+ background:repeating-linear-gradient(90deg,#30394f 0 2px,#3d465d 2px 4px)!important;
+ border-top:1px solid #78849c!important;
+ opacity:1!important;
+}
