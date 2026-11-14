@@ -71,3 +71,5 @@ body.nx-drawer-open .nx-drawer-backdrop{opacity:1;visibility:visible;pointer-eve
  #dashboard>#tab-world .nx-avatar-card canvas[data-nexora-sprite]{width:46px!important;height:94px!important}
  #dashboard>#tab-world .nx-avatar-name{max-width:65px!important;font-size:8px!important;padding:3px 5px!important}
 }
+
+#dashboard>#tab-world .nx-player-list{display:none!important}
