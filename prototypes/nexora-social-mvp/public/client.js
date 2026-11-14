@@ -595,15 +595,11 @@
       if(!spriteDrawn)drawAvatar(ctx,drawX,avatarGroundY,scale,player.avatar,player.facing||1,emotion,Boolean(player.moving));
       drawAuraHalo(ctx,drawX,auraCenterY,scale,player.auraType,player.auraEnabled,state.auraQuality);
       if(player.action?.until>Date.now()){ctx.save();ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText(player.action.icon,drawX+20*scale,avatarGroundY-58*scale-Math.sin(Date.now()/120)*3);ctx.restore();}
-      // One clean nickname plate above the head. No duplicate label or decorative lines over the avatar.
+      // Nickname is plain text above the avatar. No button, plate, border, background, or decorative lines.
       ctx.save();ctx.textAlign="center";ctx.font=(isMe?"750 ":"650 ")+Math.max(10,11*scale)+"px Inter,sans-serif";
       const nickname=String(player.nickname||"Игрок").slice(0,24);
-      const labelWidth=Math.min(150,Math.max(48,ctx.measureText(nickname).width+18));
-      const labelHeight=21,labelX=Math.max(5,Math.min(w-labelWidth-5,drawX-labelWidth/2));
-      const labelY=Math.max(5,avatarGroundY-95*scale);
-      ctx.fillStyle="rgba(7,13,31,.82)";roundRect(ctx,labelX,labelY,labelWidth,labelHeight,8);ctx.fill();
       ctx.fillStyle=isMe?"#fff1b8":"#fff";ctx.shadowColor="#080b20";ctx.shadowBlur=4;
-      ctx.fillText(nickname,labelX+labelWidth/2,labelY+14.5,labelWidth-10);ctx.restore();
+      ctx.fillText(nickname,drawX,Math.max(12,avatarGroundY-82*scale),136);ctx.restore();
     });
     requestAnimationFrame(drawScene);
   }
