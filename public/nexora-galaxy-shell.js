@@ -74,7 +74,7 @@
     if(trigger){
       trigger.setAttribute("aria-expanded","false");
       trigger.addEventListener("click",e=>{
-        e.preventDefault();e.stopPropagation();
+        e.preventDefault();e.stopImmediatePropagation();
         menu.hidden?openDrawer():closeDrawer();
       },true);
     }
