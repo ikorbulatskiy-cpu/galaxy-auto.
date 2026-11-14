@@ -634,7 +634,7 @@
   let pendingRegistration = null;
   async function enterWorld() {
     loginError.textContent="";
-    const meResponse=await fetch("/api/me",{credentials:"same-origin"});
+    const meResponse=await fetch("/api/auth/me",{credentials:"same-origin"});
     if(!meResponse.ok){loginError.textContent="Сначала создай персонажа или войди по коду восстановления.";return false;}
     return new Promise(resolve=>{
       let finished=false;
@@ -659,7 +659,7 @@
     if(!code){loginError.textContent="Введи код восстановления.";return;}
     const button=$("#login-button");button.disabled=true;
     try{
-      const response=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({recoveryCode:code})});
+      const response=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({characterCode:code})});
       const data=await response.json();if(!response.ok)throw new Error(data.error||"Не удалось войти.");
       const entered=await enterWorld();if(!entered)throw new Error(loginError.textContent||"Не удалось загрузить персонажа.");
     }catch(error){loginError.textContent=error.message||"Не удалось выполнить вход.";}finally{button.disabled=false;}
@@ -668,13 +668,13 @@
     if(!pendingRegistration)return;const button=$("#confirm-registration");button.disabled=true;$("#age-confirm-error").textContent="";
     try{
       const response=await fetch("/api/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({
-        nickname:pendingRegistration.nickname,skipNickname:pendingRegistration.skipNickname,avatar:pendingRegistration.avatar,
-        acceptedPersonalData:true,acceptedLegalTerms:true,ageConfirmed:true,legalVersion:"2026-11-14"
+        username:pendingRegistration.skipNickname?("Pilot"+Math.random().toString(36).slice(2,8)):pendingRegistration.nickname,
+        gender:pendingRegistration.avatar.gender,body:"regular",adultConfirmed:true
       })});
       const data=await response.json();if(!response.ok)throw new Error(data.error||"Не удалось создать персонажа.");
       $("#age-confirm-modal").classList.add("hidden");
       const entered=await enterWorld();if(!entered)loginError.textContent=loginError.textContent||"Аккаунт создан. Войди по коду восстановления.";
-      $("#recovery-code-display").textContent=data.recoveryCode||"Код восстановления не получен.";
+      $("#recovery-code-display").textContent=data.characterCode||"Код восстановления не получен.";
       $("#recovery-success-modal").classList.remove("hidden");pendingRegistration=null;
     }catch(error){$("#age-confirm-error").textContent=error.message||"Не удалось создать персонажа.";}
     finally{button.disabled=!$("#age-terms-checkbox").checked;}
@@ -826,7 +826,7 @@
     const balance = $("#topbar-koins");
     if (!balance) return;
     try {
-      const response = await fetch("/api/profile", { credentials: "same-origin" });
+      const response = await fetch("/api/world/me", { credentials: "same-origin" });
       const data = await response.json().catch(() => ({}));
       if (response.ok && data.profile) balance.textContent = Number(data.profile.koins || 0).toLocaleString("ru-RU");
       else balance.textContent = "—";
