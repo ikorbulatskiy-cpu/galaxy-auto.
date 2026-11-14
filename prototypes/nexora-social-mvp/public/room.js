@@ -73,6 +73,7 @@
   }
  }
  $("chat-form").addEventListener("submit",event=>{event.preventDefault();sendMessage();});
- $("room-home").addEventListener("click",leaveRoom);
+ const homeButton=$("room-home");
+ if(homeButton)homeButton.addEventListener("click",leaveRoom);
  window.NexoraRoom={show:showRoom,leave:leaveRoom};
 })();
