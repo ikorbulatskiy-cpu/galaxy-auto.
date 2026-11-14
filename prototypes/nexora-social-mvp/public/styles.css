@@ -44,3 +44,13 @@
 #register-modal .auth-card label{color:#d8ffba}
 #register-modal .auth-card input{border-radius:0!important;border:2px inset #6fae4b!important;background:#06160a!important}
 @media(max-width:560px){#register-modal .nexora-register-card{width:100vw!important;height:100dvh!important;max-height:100dvh!important;padding:14px 12px!important;border-width:3px!important}.nexora-creator-stage{min-height:155px;flex-basis:155px}.nexora-creator-choice{height:74px}.nexora-head-picker .nexora-creator-choice{height:62px}.nexora-creator-strip{grid-template-columns:31px minmax(0,1fr) 31px;gap:4px}.nexora-creator-strip>button{height:48px;font-size:28px}.nexora-creator-actions{gap:10px}.nexora-creator-actions button{min-height:47px;font-size:17px}}
+
+
+/* Final creator pass: sprite-atlas parts are independently selectable and layered in the preview. */
+#register-modal .nexora-register-card{width:min(810px,calc(100vw - 28px))!important}
+#register-modal .nexora-creator-options{grid-template-columns:repeat(5,minmax(0,1fr));}
+#register-modal .nexora-creator-choice svg{width:100%;height:100%;max-width:72px;max-height:100%;overflow:visible;image-rendering:pixelated}
+#register-modal .nexora-creator-stage{background:radial-gradient(ellipse at 50% 75%,#397b2c 0%,#0b2c12 42%,#031008 82%)}
+#register-modal .nexora-creator-preview svg{width:100%;height:100%;max-height:270px;overflow:visible;image-rendering:pixelated}
+#register-modal .nexora-creator-spark{right:23%;top:23%;color:#c2ff92;text-shadow:0 0 10px #9cff64}
+@media(max-width:560px){#register-modal .nexora-creator-preview{width:clamp(105px,34vw,145px)}}
