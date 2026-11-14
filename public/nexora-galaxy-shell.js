@@ -64,7 +64,7 @@
       go.type="button";go.className="nx-travel-button";go.innerHTML='<span>🚀</span> Перелететь';
       go.addEventListener("click",travelFromInput);
       tools?.append(go);
-      input?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();travelFromInput()}});
+      input?.addEventListener("change",travelFromInput);
     }
 
     // All navigation is consolidated into the hamburger drawer.
