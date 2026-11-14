@@ -1,0 +1,60 @@
+/* Galaxy-style touch controls: safe-area aware, compact, and clipped to the visible phone viewport. */
+#dashboard>#tab-world .nx-avatar-name{cursor:pointer;touch-action:manipulation;user-select:none}
+#dashboard>#tab-world .nx-avatar-name:focus-visible{outline:2px solid #f5d042;outline-offset:2px}
+#dashboard>#tab-world .nx-player-switcher{
+ position:absolute;z-index:30;left:8px;right:8px;bottom:38px;display:grid;
+ grid-template-columns:38px minmax(0,1fr) 38px;align-items:center;gap:7px;
+ padding:6px;border:1px solid #ffffff55;border-radius:12px;background:#202630f2;
+ box-shadow:0 5px 18px #0008;backdrop-filter:blur(12px)
+}
+#dashboard>#tab-world .nx-player-switcher[hidden]{display:none!important}
+#dashboard>#tab-world .nx-player-switcher button{
+ min-width:0;height:34px;border:1px solid #ffffff24;border-radius:9px;
+ background:#3b4652;color:#fff;font-size:17px;font-weight:800;touch-action:manipulation
+}
+#dashboard>#tab-world .nx-player-switcher .nx-player-switcher-name{
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;
+ color:#f6dfa0;font-size:11px;font-weight:800
+}
+#dashboard>#tab-world .nx-player-switcher .nx-player-switcher-actions{
+ grid-column:1/-1;display:flex;gap:6px
+}
+#dashboard>#tab-world .nx-player-switcher .nx-player-switcher-actions button{
+ flex:1;height:30px;font-size:10px
+}
+#dashboard>#tab-world .nx-avatar-card.nx-player-selected{filter:drop-shadow(0 0 7px #ffe08b)}
+#dashboard>#tab-world .nx-avatar-card.nx-player-selected .nx-avatar-name{border-color:#ffe08b;background:#4c402c;color:#fff4cb}
+#dashboard>#tab-world .nx-action-bar{display:flex!important;flex-wrap:nowrap!important;justify-content:flex-start!important;
+ overflow-x:auto!important;overflow-y:hidden!important;max-width:100%;padding:3px 2px;scrollbar-width:none;touch-action:pan-x}
+#dashboard>#tab-world .nx-action-bar::-webkit-scrollbar{display:none}
+#dashboard>#tab-world .nx-action-bar button{flex:0 0 auto;min-width:48px;min-height:28px;white-space:nowrap}
+#dashboard>#tab-world .nx-settings-panel{width:min(390px,calc(100vw - 20px));max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px);overflow:auto}
+#dashboard>#tab-world .nx-setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 2px;border-bottom:1px solid #ffffff18}
+#dashboard>#tab-world .nx-setting-row small{display:block;color:#aeb6c2;font-size:10px;margin-top:3px}
+#dashboard>#tab-world .nx-setting-row input{width:20px;height:20px;flex:0 0 20px;accent-color:#76c840}
+#dashboard>#tab-world .nx-scene{touch-action:pan-y}
+#dashboard>#tab-world .nx-avatar-card,.nx-player-switcher button{ -webkit-tap-highlight-color:transparent }
+@media(max-width:600px){
+ #dashboard>#tab-world>.nx-world{
+  grid-template-rows:calc(48px + env(safe-area-inset-top)) minmax(110px,1fr) clamp(164px,23dvh,194px) calc(54px + env(safe-area-inset-bottom))!important;
+  width:100vw!important;max-width:430px!important;max-height:100dvh!important
+ }
+ #dashboard>#tab-world .nx-topbar{min-width:0;overflow:hidden}
+ #dashboard>#tab-world .nx-chat-panel{min-width:0;min-height:0;overflow:hidden}
+ #dashboard>#tab-world .nx-chat-log{min-height:0;overflow:auto;overscroll-behavior:contain}
+ #dashboard>#tab-world .nx-scene{min-width:0;max-width:100%;overflow:hidden!important}
+ #dashboard>#tab-world .nx-avatars{max-width:100%;overflow:hidden!important}
+ #dashboard>#tab-world .nx-avatar-card{max-width:60px}
+ #dashboard>#tab-world .nx-avatar-name{display:block;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px!important}
+ #dashboard>#tab-world .nx-action-bar{left:5px!important;right:5px!important;bottom:4px!important;gap:4px!important}
+ #dashboard>#tab-world .nx-player-switcher{bottom:36px;left:6px;right:6px}
+ #dashboard>#tab-world .nx-bottom-nav{min-width:0;overflow:hidden}
+ #dashboard>#tab-world .nx-menu-panel,#dashboard>#tab-world .nx-favorites-panel,
+ #dashboard>#tab-world .nx-help-panel,#dashboard>#tab-world .nx-settings-panel,
+ #dashboard>#tab-world .nx-events-panel{width:calc(100vw - 20px);max-width:400px;max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 20px)}
+}
+@media(max-height:700px) and (max-width:600px){
+ #dashboard>#tab-world>.nx-world{grid-template-rows:calc(44px + env(safe-area-inset-top)) minmax(90px,1fr) 150px calc(50px + env(safe-area-inset-bottom))!important}
+ #dashboard>#tab-world .nx-avatar-card canvas[data-nexora-sprite]{height:84px!important;width:44px!important}
+ #dashboard>#tab-world .nx-player-switcher{bottom:34px}
+}
