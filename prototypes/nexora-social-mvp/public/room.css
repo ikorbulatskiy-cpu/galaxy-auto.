@@ -78,7 +78,7 @@
 
 /* Functional emperor costume and animated rank auras */
 .nexora-world-avatar{animation:nexora-aura-pulse 2.8s ease-in-out infinite alternate}
-@keyframes nexora-aura-pulse{from{filter:drop-shadow(0 0 4px #a66bff) drop-shadow(0 5px 4px #0009)}to{filter:drop-shadow(0 0 13px #c78aff) drop-shadow(0 0 23px #8c37ff) drop-shadow(0 5px 4px #0009)}}
+@keyframes nexora-aura-pulse{from{opacity:.88}to{opacity:1}}
 .nexora-world-avatar.aura-none{animation:none}
 .nexora-world-avatar.aura-blue{animation:nexora-blue-pulse 2s ease-in-out infinite alternate}
 @keyframes nexora-blue-pulse{from{filter:drop-shadow(0 0 4px #65caff)}to{filter:drop-shadow(0 0 15px #256aff) drop-shadow(0 0 24px #256aff)}}
@@ -94,3 +94,5 @@
 
 .nexora-world-rank{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);max-width:180px;white-space:nowrap;padding:4px 8px;border:1px solid #d9c1ff99;border-radius:999px;background:#160d32dd;color:#f6e8ff;font:700 9px/1.2 Inter,Arial,sans-serif;text-shadow:0 1px 3px #000;box-shadow:0 0 12px #a65bff55}
 .nexora-world-avatar.aura-gold .nexora-world-rank,.nexora-world-avatar.aura-diamond .nexora-world-rank{border-color:#f6d98b;color:#fff1b6}
+
+.nexora-aura-preview:not(.aura-none){animation:nexora-aura-pulse 1.8s ease-in-out infinite alternate}
