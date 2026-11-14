@@ -97,7 +97,7 @@
   $("nexora-info-form").addEventListener("submit",saveCharacterInfo);
   $("nexora-info-photo-file").addEventListener("change",previewCharacterPhoto);
   document.addEventListener("keydown",event=>{
-   if(event.key==="Escape"){closeAvatar();closeCharacterActions();closeEmotions();closeDeveloperMode();return;}
+   if(event.key==="Escape"){closeAvatar();closeCharacterActions();closeEmotions();closeReport();closeDeveloperMode();return;}
    if(room.classList.contains("hidden")||event.target.closest("input,textarea,select,[contenteditable=true]"))return;
    if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a"){event.preventDefault();moveWorldAvatarBy(-5);}
    if(event.key==="ArrowRight"||event.key.toLowerCase()==="d"){event.preventDefault();moveWorldAvatarBy(5);}
@@ -188,7 +188,7 @@
   const content=$("nexora-management-content"),tabs=$("nexora-management-tabs");if(!content||!tabs)return;
   const developer=state.isDeveloper,senior=state.role==="senior_moderator";
   tabs.querySelectorAll("[data-admin-tab]").forEach(button=>{const key=button.dataset.adminTab;button.classList.toggle("active",key===managementTab);button.classList.toggle("hidden",(!developer&&(key==="staff"||key==="economy"))||(!developer&&!senior&&key==="staff"));});
-  const meta=$("nexora-management-meta");if(meta)meta.textContent="Полномочия: "+({developer:"Разработчик",senior_moderator:"Старший модератор",moderator:"Модератор"}[state.role]||"Игрок");
+  const meta=$("nexora-management-meta");if(meta)meta.textContent="Полномочия: "+({developer:"Разработчик",senior_moderator:"Старший модератор",moderator:"Модератор"}[state.role]||"Игрок")+" · В сети: "+managementData.players.filter(p=>p.online).length+" · Жалоб: "+managementData.reports.length;
   content.replaceChildren();
   if(managementTab==="players"||managementTab==="staff"){
    const search=adminElement("input","nexora-management-search");search.placeholder="Поиск игрока по нику или идентификатору";search.type="search";content.append(search);
@@ -214,6 +214,7 @@
   const addModerationAction=(action,label,danger=false,minutes=30)=>{const b=adminElement("button",danger?"danger":"",label);b.type="button";b.addEventListener("click",()=>{card.querySelector(".nexora-management-form")?.remove();const form=adminElement("form","nexora-management-form"),reason=adminElement("textarea");reason.required=true;reason.maxLength=500;reason.placeholder="Обязательно укажите причину";const submit=adminElement("button","", "Подтвердить действие"),cancel=adminElement("button","","Отмена");submit.type="submit";cancel.type="button";cancel.addEventListener("click",()=>form.remove());form.append(reason,submit,cancel);form.addEventListener("submit",event=>{event.preventDefault();adminRequest("/api/management/action",{accountId:player.id,action,reason:reason.value,minutes});});card.append(form);reason.focus();});actions.append(b);};
   addModerationAction("warning","Предупредить");addModerationAction("mute","Запретить чат");addModerationAction("kick","Отключить");
   if((state.isDeveloper||state.role==="senior_moderator")&&player.role!=="developer")addModerationAction("ban","Заблокировать",true,60);
+  if(state.isDeveloper||state.role==="senior_moderator")addModerationAction("unban","Снять блокировку",false,60);
   if(state.isDeveloper&&player.role!=="developer"){const select=adminElement("select","nexora-management-role");[["player","Игрок"],["moderator","Модератор"],["senior_moderator","Старший модератор"]].forEach(([value,label])=>select.append(new Option(label,value)));select.value=player.role;const set=adminElement("button","","Назначить роль");set.type="button";set.addEventListener("click",()=>adminRequest("/api/management/role",{accountId:player.id,role:select.value}));actions.append(select,set);}
   card.append(actions);return card;
  }
