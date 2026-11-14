@@ -118,6 +118,11 @@
    planets=p.planets||[];const active=c.characters?.find(x=>x.is_active)||c.characters?.[0];if(active){meName=active.name;meAppearance=active.appearance||{};meAura=active.aura||"none";activeCharacterId=active.id}
    const current=planets.find(x=>x.is_current)||planets.find(x=>x.slug==="newbies-1")||planets[0];activePlanet=current?.slug||"";const list=document.getElementById("nx-planet-options");list.innerHTML=planets.map(x=>`<option value="${esc(x.name)}" label="${esc(x.slug)} · ${Number(x.online||0)} онлайн"></option>`).join("");applyPlanetScene(current);
    await loadRooms();
+   const inviteSlug=new URLSearchParams(location.search).get("planet");
+   if(inviteSlug&&planets.some(item=>item.slug===inviteSlug)&&inviteSlug!==activePlanet){
+    const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete("planet");history.replaceState({}, "", cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);
+    await travel(inviteSlug);
+   }
   }catch(e){status(e.message);if(window.toast)toast(e.message)}
  }
  async function travel(slug){
