@@ -528,3 +528,14 @@
   left:31%!important;top:0!important;width:38%!important;height:33%!important;
   object-fit:fill!important;
 }
+
+/* Keep selected aura SVG visible around the grounded avatar. */
+#nexora-world-avatar:not(.aura-none) > svg.nexora-user-aura{
+  display:block!important;visibility:visible!important;opacity:1!important;
+  position:absolute!important;z-index:0!important;left:50%!important;top:50%!important;
+  width:165%!important;height:145%!important;max-width:none!important;max-height:none!important;
+  transform:translate(-50%,-54%)!important;overflow:visible!important;pointer-events:none!important;
+  filter:drop-shadow(0 0 7px #b98cff)!important;
+}
+#nexora-world-avatar:not(.aura-none) > svg.nexora-user-aura use{visibility:visible!important;opacity:1!important}
+#nexora-world-avatar.aura-none > svg.nexora-user-aura{display:none!important}
