@@ -757,6 +757,7 @@
     if (!list || !toggle) return;
     const current = state.rooms.find(room => room.id === state.roomId);
     toggle.textContent = current ? "📍 " + current.locationName + " · " + current.name : "📍 Выбрать комнату";
+    const locationLabel=$("#room-location-title"); if(locationLabel&&current)locationLabel.textContent=current.locationName+" · "+current.name;
     list.replaceChildren();
     if (!state.rooms.length) {
       const empty = document.createElement("p"); empty.textContent = "Комнаты загружаются…"; list.append(empty); return;
