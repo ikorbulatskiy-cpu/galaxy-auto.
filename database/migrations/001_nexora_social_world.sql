@@ -1,3 +1,4 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE SCHEMA IF NOT EXISTS nexora_social_world;
 
 CREATE TABLE IF NOT EXISTS nexora_social_world.accounts (
