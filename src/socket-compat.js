@@ -58,13 +58,13 @@ function attachSocketCompat(server) {
   async function joinWorld(socket, requestedSlug) {
     const user = socket.data.user;
     const characterResult = await pool.query(
-      "SELECT id,name,gender,appearance,authority,aura,is_active FROM characters WHERE user_id=$1 AND is_active=TRUE LIMIT 1",
+      "SELECT id,name,gender,appearance,authority,is_active FROM characters WHERE user_id=$1 AND is_active=TRUE LIMIT 1",
       [user.id]
     );
     let character = characterResult.rows[0];
     if (!character) {
       const created = await pool.query(
-        "INSERT INTO characters (user_id,name,is_active) VALUES ($1,$2,TRUE) RETURNING id,name,gender,appearance,authority,aura,is_active",
+        "INSERT INTO characters (user_id,name,is_active) VALUES ($1,$2,TRUE) RETURNING id,name,gender,appearance,authority,is_active",
         [user.id,user.username]
       );
       character = created.rows[0];
@@ -118,7 +118,7 @@ function attachSocketCompat(server) {
       y:Number(position.rows[0]?.y||78)/100,authority:Number(character.authority||0),
       appearance:character.appearance||{},gender:character.gender||"unspecified",
       coins:Number(wallet.rows[0]?.coins||0),diamonds:Number(wallet.rows[0]?.diamonds||0),
-      title:"Новичок",auraEnabled:Boolean(character.aura)
+      title:"Новичок",auraEnabled:false
     };
     socket.data.player = player;
     socket.data.roomId = room.id;
