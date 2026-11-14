@@ -48,15 +48,17 @@
 $("customize-back").addEventListener("click",()=>{$("register-step-customize").classList.add("hidden");$("register-step-one").classList.remove("hidden");$("step-label").textContent="1 из 3";$("step-progress").style.width="33%";});
  $("customize-continue").addEventListener("click",async()=>{const b=$("customize-continue");b.disabled=true;$("customize-error").textContent="";try{const r=await fetch("/api/character",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({headId:state.headId,bodyId:state.bodyId})});const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось сохранить внешний вид персонажа");state.characterCreated=true;$("register-step-customize").classList.add("hidden");$("register-step-two").classList.remove("hidden");$("step-label").textContent="3 из 3";$("step-progress").style.width="100%";}catch(err){$("customize-error").textContent=err.message;}finally{b.disabled=false;}});
 
- $("head-prev").addEventListener("click",()=>changeCreatorChoice("head",-1));$("head-next").addEventListener("click",()=>changeCreatorChoice("head",1));
+ $("head-prev").addEventListener("click",()=>changeCreatorChoice("head",-1));$("head-next").addEventListener("click",()=>changeCreatorChoice("head",1));$("body-prev").addEventListener("click",()=>changeCreatorChoice("body",-1));$("body-next").addEventListener("click",()=>changeCreatorChoice("body",1));
  function changeCreatorChoice(kind,delta){const key=kind==="head"?"headId":"bodyId",max=kind==="head"?24:6;state[key]=((state[key]-1+delta+max)%max)+1;renderCreator();}
  function renderCreator(){
-  const bodyList=$("body-options"),headList=$("head-options"),preview=$("creator-preview");if(!headList||!preview)return;if(bodyList){bodyList.replaceChildren();const picker=bodyList.closest(".nexora-creator-picker");if(picker)picker.hidden=true;}
+  const bodyList=$("body-options"),headList=$("head-options"),preview=$("creator-preview");if(!headList||!preview)return;
+  const bodyPicker=bodyList&&bodyList.closest(".nexora-creator-picker");if(bodyPicker)bodyPicker.hidden=false;
   const headHref="/assets/sprites/characters/nexora-detailed-atlas.svg#head-";
+  const bodyHref="/assets/sprites/characters/nexora-user-bodies.svg#body-";
   const makeChoice=(kind,id,href,selected)=>{const button=document.createElement("button");button.type="button";button.className="nexora-creator-choice"+(selected?" selected":"");button.setAttribute("aria-label",(kind==="head"?"Голова ":"Тело ")+id);button.setAttribute("aria-pressed",String(selected));const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("viewBox",kind==="head"?"0 0 64 64":"0 0 64 104");const use=document.createElementNS("http://www.w3.org/2000/svg","use");use.setAttribute("href",href+id);if(kind==="body"){use.setAttribute("x","0");use.setAttribute("y","0");use.setAttribute("width","64");use.setAttribute("height","104");}svg.append(use);button.append(svg);button.addEventListener("click",()=>{state[kind==="head"?"headId":"bodyId"]=id;renderCreator();});return button;};
-  
+  if(bodyList){bodyList.replaceChildren();for(let i=1;i<=6;i++)bodyList.append(makeChoice("body",i,bodyHref,state.bodyId===i));}
   headList.replaceChildren();for(let i=1;i<=24;i++)headList.append(makeChoice("head",i,headHref,state.headId===i));
-  preview.innerHTML='<svg viewBox="0 0 64 64" role="img" aria-label="Предпросмотр головы"><use href="'+headHref+state.headId+'" x="0" y="0" width="64" height="64"></use></svg>';
+  preview.innerHTML='<svg viewBox="0 0 64 104" role="img" aria-label="Предпросмотр персонажа"><use href="'+bodyHref+state.bodyId+'" x="0" y="0" width="64" height="104"></use><use href="'+headHref+state.headId+'" x="0" y="0" width="64" height="64"></use></svg>';
  }
   async function ensureCharacter(){
   const profileResponse=await fetch("/api/account/profile");
