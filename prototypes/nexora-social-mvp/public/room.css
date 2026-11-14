@@ -428,3 +428,16 @@
 @keyframes nexora-aura-pulse{0%,100%{opacity:.82;transform:rotate(-13deg) scale(.98)}50%{opacity:1;transform:rotate(-13deg) scale(1.04)}}
 @keyframes nexora-flame-drift{0%,100%{transform:translate(-50%,-50%) rotate(-7deg) scale(.94);opacity:.48}50%{transform:translate(-50%,-50%) rotate(8deg) scale(1.08);opacity:.82}}
 @media(prefers-reduced-motion:reduce){.nexora-world-avatar .nexora-aura-orbit,.nexora-world-avatar::before,.nexora-world-avatar::after{animation:none}}
+
+
+/* Aura picker in the character actions menu */
+.nexora-auras-hint{margin:0;padding:9px 12px;color:#b7c8b1;font:11px/1.4 Arial,sans-serif;border-bottom:1px solid #31503b}
+.nexora-auras-list{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px;max-height:min(55vh,390px);overflow:auto}
+.nexora-aura-option{display:flex;align-items:center;gap:8px;min-width:0;padding:8px 9px;border:1px solid #34513a;border-radius:2px;background:#101a13;color:#d7e8d2;text-align:left;font:11px Arial,sans-serif;cursor:pointer}
+.nexora-aura-option:hover,.nexora-aura-option.selected{border-color:#9bdc83;background:#203525;box-shadow:inset 0 0 0 1px #507d50}
+.nexora-aura-swatch{flex:0 0 18px;width:18px;height:18px;border-radius:50%;background:var(--swatch);box-shadow:0 0 5px var(--swatch),0 0 11px var(--swatch)}
+.nexora-aura-option span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nexora-aura-option b{margin-left:auto;color:#a6ef8c;opacity:0}
+.nexora-aura-option.selected b{opacity:1}
+.nexora-auras-panel .nexora-emotions-window{max-width:340px}
+@media(max-width:380px){.nexora-auras-list{grid-template-columns:1fr}}
