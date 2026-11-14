@@ -862,8 +862,8 @@
 #room-scene .nexora-world-avatar .nexora-avatar-sprite #nexora-world-body,
 #room-scene .nexora-room-player .nexora-room-player-body{
   position:absolute!important;z-index:1!important;
-  left:22%!important;top:25%!important;right:auto!important;bottom:0!important;
-  width:56%!important;height:75%!important;
+  left:5%!important;top:25%!important;right:auto!important;bottom:0!important;
+  width:90%!important;height:75%!important;
   object-fit:contain!important;object-position:center bottom!important;
   max-width:none!important;max-height:none!important;
 }
