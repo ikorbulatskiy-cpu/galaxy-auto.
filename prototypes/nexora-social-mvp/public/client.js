@@ -804,7 +804,7 @@
     if (player) player.bubble = bubble;
   });
   socket.on("chat:message",message=>{addHistory(message);if(!message.system&&String(message.playerId)!==String(state.me?.id))pushRoomEvent("Новое сообщение",message.nickname+": "+message.text,"💬");});
-  socket.on("player:action:played",event=>{const icon=({wave:"👋",smile:"😊",hug:"🤗",kiss:"💋",dance:"💃",flower:"🌹"})[event.action]||"✦";[event.fromId,event.toId].forEach(id=>{const p=state.players.get(String(id));if(p)p.action={icon,until:Date.now()+1900};});pushRoomEvent("Социальное действие",event.from+" · "+event.label+" · "+event.to,icon);});
+  socket.on("player:action:played",event=>{const icon=({wave:"👋",smile:"😊",hug:"🤗",kiss:"💋",dance:"💃",flower:"🌹"})[event.action]||"✦";const animation=({wave:"wave",smile:"happy",hug:"love",kiss:"kiss",dance:"dance",flower:"love"})[event.action]||"happy";[event.fromId,event.toId].forEach(id=>{const p=state.players.get(String(id));if(p){p.action={icon,until:Date.now()+1900};p.emotion={type:animation,until:Date.now()+2300};}});pushRoomEvent("Социальное действие",event.from+" · "+event.label+" · "+event.to,icon);});
   socket.on("emotion:played", ({ id, emotion }) => {
     const player = state.players.get(id);
     if (player) {
