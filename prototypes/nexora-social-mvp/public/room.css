@@ -661,3 +661,14 @@
 @media(max-width:520px){
   #room-scene .nexora-world-avatar{width:104px!important;height:150px!important}
 }
+
+/* Natural sprite bounds and a closer head-to-body connection. */
+#room-scene .nexora-world-avatar{width:112px!important;height:158px!important;bottom:13%!important}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite #nexora-world-body{left:22%!important;top:25%!important;width:56%!important;height:75%!important;object-fit:contain!important;object-position:center bottom!important}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite #nexora-world-head{left:34%!important;top:18%!important;width:32%!important;height:27%!important;object-fit:contain!important;object-position:center bottom!important}
+#creator-preview .creator-preview-body{left:22%!important;top:25%!important;width:56%!important;height:75%!important;object-fit:contain!important;object-position:center bottom!important}
+#creator-preview .creator-preview-head{left:34%!important;top:18%!important;width:32%!important;height:27%!important;object-fit:contain!important;object-position:center bottom!important}
+.nexora-choice-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}
+.nexora-choice-grid .nexora-choice{min-height:86px!important;display:grid!important;place-items:center!important;padding:8px!important}
+.nexora-choice-grid .nexora-choice img{display:block!important;width:100%!important;height:72px!important;object-fit:contain!important;object-position:center bottom!important}
+@media(max-width:520px){#room-scene .nexora-world-avatar{width:104px!important;height:150px!important}.nexora-choice-grid{gap:8px!important}.nexora-choice-grid .nexora-choice img{height:62px!important}}
