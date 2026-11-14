@@ -99,10 +99,12 @@ function attachSocketCompat(server) {
       [user.id,planet.id]
     );
     await pool.query("DELETE FROM room_presence WHERE user_id=$1", [user.id]);
+    const presenceId = crypto.randomUUID();
     await pool.query(
       "INSERT INTO room_presence(connection_id,room_id,user_id,character_id) VALUES($1,$2,$3,$4)",
-      [socket.id,room.id,user.id,character.id]
+      [presenceId,room.id,user.id,character.id]
     );
+    socket.data.presenceId = presenceId;
     const position = await pool.query(
       `INSERT INTO room_player_positions(room_id,user_id,x,y) VALUES($1,$2,50+random()*20,78)
        ON CONFLICT(room_id,user_id) DO UPDATE SET updated_at=NOW()
@@ -236,7 +238,7 @@ function attachSocketCompat(server) {
       if(activeSockets.get(user.id)===socket)activeSockets.delete(user.id);
       const roomId=socket.data.roomId;
       try{
-        await pool.query("DELETE FROM room_presence WHERE connection_id=$1",[socket.id]);
+        await pool.query("DELETE FROM room_presence WHERE connection_id=$1",[socket.data.presenceId]);
         if(roomId)socket.to(roomId).emit("player:left",{id:user.id});
       }catch(error){console.error("Socket presence cleanup failed:",error.message);}
     });
