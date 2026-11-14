@@ -455,3 +455,10 @@
 .nexora-aura-preview.aura-user-blue{background:radial-gradient(circle,#eaffff 8%,#50bfff 48%,#15559a 76%);filter:drop-shadow(0 0 9px #39baff)}
 .nexora-world-avatar.aura-none .nexora-user-aura{display:none}
 .nexora-world-avatar .nexora-emperor-title{display:none!important}
+
+/* Temporary clean slate: remove all legacy body and aura visuals until new art is supplied. */
+.nexora-world-avatar::before,.nexora-world-avatar::after,.nexora-aura-orbit,.nexora-user-aura,.nexora-demon-layers{display:none!important;content:none!important;opacity:0!important;filter:none!important;animation:none!important}
+#nexora-action-auras,#nexora-auras-panel,.nexora-auras-panel,.nexora-aura-option,.nexora-aura-preview{display:none!important}
+.nexora-creator-picker:not(.nexora-head-picker){display:none!important}
+.nexora-creator-stage svg{width:72px;height:72px}
+#nexora-profile-body,[data-tab="bodies"],[data-tab="body"]{display:none!important}
