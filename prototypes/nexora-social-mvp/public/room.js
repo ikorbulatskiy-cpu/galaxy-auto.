@@ -175,7 +175,7 @@
    const data=await response.json();if(!response.ok)throw Error(data.error||"Не удалось загрузить анкету игрока");
    const p=data.profile||{},player=data.player||{},fields=form.elements;
    ["gender","birthDate","city","occupation","interests","about","status","relationship","lookingFor","askMe"].forEach(k=>{if(fields[k])fields[k].value=p[k]||"";});
-   $("nexora-info-planet").textContent=player.nickname||"Игрок";
+   const planet=document.querySelector(".planet-name");$("nexora-info-planet").textContent=planet?planet.textContent.trim():"Земля";
    $("nexora-info-privileges").textContent=p.privileges||"—";
    $("nexora-info-photo").src=p.photoDataUrl||"";$("nexora-info-photo").classList.toggle("has-photo",Boolean(p.photoDataUrl));
    const header=document.querySelector("#nexora-avatar-panel .nexora-info-header span");if(header)header.textContent="ИНФО: "+String(player.nickname||"ИГРОК").toUpperCase();
