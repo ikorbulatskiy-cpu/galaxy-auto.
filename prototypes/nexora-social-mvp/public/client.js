@@ -1476,15 +1476,61 @@
   window.addEventListener("nexora:sprites-ready",()=>{preview();if(!$("#profile-editor").classList.contains("hidden"))drawProfilePreview();});
   ["edit-gender","edit-skin","edit-hair","edit-outfit","edit-suit","edit-hair-color","edit-shoes","edit-accessory"].forEach(id=>$("#"+id).addEventListener("change",drawProfilePreview));
 
+  async function loadDating(query = "") {
+    const [discovery, matches] = await Promise.all([
+      socialApi("/dating?q=" + encodeURIComponent(query)),
+      socialApi("/matches")
+    ]);
+    const box = $("#social-dating-list");
+    box.replaceChildren();
+    if (!discovery.users.length) emptySocial(box, "Пока никого не найдено. Попробуй другой поиск.");
+    discovery.users.forEach(user => {
+      const subtitle = (user.online ? "● В сети" : "○ Не в сети") +
+        (user.planet ? " · " + user.planet : "") +
+        (user.profile_status ? " · " + user.profile_status : "");
+      const actions = [{ text: "Профиль", run: () => openPublicProfile(user.id) }];
+      if (user.matched) actions.unshift({ text: "💜 Совпадение", run: () => openPublicProfile(user.id) });
+      else if (user.likedByMe) actions.unshift({ text: "✓ Симпатия отправлена", run: () => {} });
+      else actions.unshift({ text: "💜 Нравится", run: async () => {
+        try {
+          const result = await socialApi("/likes/" + encodeURIComponent(user.id), { method: "POST", body: "{}" });
+          showToast(result.matched ? "💜 У вас взаимная симпатия!" : "Симпатия отправлена.");
+          await loadDating($("#dating-search").value);
+        } catch (error) { showToast(error.message); }
+      }});
+      box.append(makeSocialRow(user.nickname, subtitle, actions));
+    });
+    const matchBox = $("#social-matches-list");
+    matchBox.replaceChildren();
+    if (!matches.matches.length) emptySocial(matchBox, "Совпадений пока нет. Они появятся при взаимной симпатии.");
+    matches.matches.forEach(user => matchBox.append(makeSocialRow("💜 " + user.nickname,
+      (user.online ? "● В сети" : "○ Не в сети") + (user.planet ? " · " + user.planet : ""),
+      [{ text: "Профиль", run: () => openPublicProfile(user.id) },
+       { text: "Написать", run: async () => {
+         try {
+           const result = await socialApi("/conversations", { method: "POST", body: JSON.stringify({ peerId: user.id }) });
+           await openMyProfile("messages"); await loadConversations(); await openConversation(result.conversationId);
+         } catch (error) { showToast(error.message); }
+       }}])));
+  }
+  let datingSearchTimer;
+  $("#dating-search").addEventListener("input", event => {
+    clearTimeout(datingSearchTimer);
+    datingSearchTimer = setTimeout(() => loadDating(event.target.value).catch(error => showToast(error.message)), 220);
+  });
+
   function showProfileSocialTab(tab) {
-    if (!["friends","messages"].includes(tab)) return;
+    if (!["dating","friends","messages"].includes(tab)) return;
     const panel = $("#profile-editor");
     panel.classList.add("social-mode");
-    $("#profile-social-title").textContent = tab === "friends" ? "Друзья и социальное" : "Личные сообщения";
+    $("#profile-social-title").textContent = tab === "dating" ? "Знакомства" : tab === "friends" ? "Друзья и социальное" : "Личные сообщения";
+    $("#social-dating-view").classList.toggle("hidden", tab !== "dating");
     $("#social-friends-view").classList.toggle("hidden", tab !== "friends");
     $("#social-messages-view").classList.toggle("hidden", tab !== "messages");
     document.querySelectorAll("[data-profile-social-tab]").forEach(button => button.classList.toggle("active", button.dataset.profileSocialTab === tab));
-    if (tab === "friends") {
+    if (tab === "dating") {
+      loadDating($("#dating-search").value).catch(error => showToast(error.message));
+    } else if (tab === "friends") {
       loadFriends().catch(error => showToast(error.message));
       loadNotifications().then(() => socialApi("/notifications/read", { method: "POST" })).then(loadNotifications).catch(error => showToast(error.message));
     } else {
@@ -1494,6 +1540,7 @@
   document.querySelectorAll("[data-profile-social-tab]").forEach(button => button.addEventListener("click", () => showProfileSocialTab(button.dataset.profileSocialTab)));
   $("#profile-social-back").addEventListener("click", () => {
     $("#profile-editor").classList.remove("social-mode");
+    $("#social-dating-view").classList.add("hidden");
     $("#social-friends-view").classList.add("hidden");
     $("#social-messages-view").classList.add("hidden");
   });
@@ -1504,6 +1551,7 @@
     const save = $("#profile-save");
     const errorBox = $("#profile-editor-error");
     panel.classList.remove("social-mode");
+    $("#social-dating-view").classList.add("hidden");
     $("#social-friends-view").classList.add("hidden");
     $("#social-messages-view").classList.add("hidden");
     errorBox.textContent = "";
