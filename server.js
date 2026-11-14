@@ -109,9 +109,9 @@ app.get("/api/status", async (_req, res) => {
   }
 });
 
-app.get("/galaxy", (_req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
+app.get("/galaxy", (_req, res) => res.sendFile(path.join(__dirname, "prototypes", "nexora-social-mvp", "public", "index.html")));
 
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "prototypes", "nexora-social-mvp", "public")));
 app.use((err, req, res, _next) => {
   if (res.headersSent) return;
   if (err && (err.type === "entity.parse.failed" || err.status === 400)) {
