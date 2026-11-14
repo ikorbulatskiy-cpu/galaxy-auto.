@@ -197,3 +197,15 @@
   .chat-drawer { height:30dvh; min-height:130px; }
   .room-toolbar button { min-height:36px; }
 }
+
+.world-room-picker { position:relative; padding:8px 11px 2px; }
+#world-room-toggle { width:100%; min-height:34px; padding:7px 10px; border:1px solid rgba(174,164,255,.2); border-radius:11px; background:rgba(139,119,255,.1); color:#e9eaff; text-align:left; font-size:10px; font-weight:700; }
+.world-room-list { position:absolute; z-index:40; left:10px; right:10px; top:calc(100% + 4px); max-height:min(42vh,320px); overflow:auto; padding:9px; border:1px solid var(--gx-border); border-radius:14px; background:rgba(8,13,35,.98); box-shadow:0 16px 48px #000b; }
+.world-room-location { display:block; padding:7px 6px 4px; color:#a99cff; font-size:9px; letter-spacing:.08em; text-transform:uppercase; }
+.world-room-option { display:block; width:100%; min-height:34px; margin:2px 0; padding:7px 9px; border:1px solid transparent; border-radius:9px; background:#ffffff08; color:#e7e9ff; text-align:left; font-size:11px; }
+.world-room-option.active { border-color:#9c86ff66; background:#9b83ff24; }
+@media (max-width:699px) {
+  .world-room-picker { padding:5px 9px 1px; }
+  #world-room-toggle { min-height:31px; font-size:9px; }
+  .world-room-list { max-height:34vh; }
+}
