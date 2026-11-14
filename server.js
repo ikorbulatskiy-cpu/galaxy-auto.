@@ -6,7 +6,7 @@ const COOKIE_NAME="nexora_session",SESSION_DAYS=30;
 app.disable("x-powered-by");app.set("trust proxy",process.env.TRUST_PROXY_HOPS?Number(process.env.TRUST_PROXY_HOPS):1);
 app.use(helmet({contentSecurityPolicy:{directives:{defaultSrc:["'self'"],baseUri:["'self'"],objectSrc:["'none'"],frameAncestors:["'none'"],scriptSrc:["'self'"],styleSrc:["'self'","'unsafe-inline'"],imgSrc:["'self'","data:","https:"],connectSrc:["'self'"]}}}));
 app.use(express.json({limit:"1500kb"}));app.use(cookieParser());app.use(express.static(publicDirectory));
-const authLimiter=rateLimit({windowMs:15*60*1000,limit:12,standardHeaders:true,legacyHeaders:false});
+const authLimiter=rateLimit({windowMs:15*60*1000,limit:12,standardHeaders:true,legacyHeaders:false}),managementLimiter=rateLimit({windowMs:60*1000,limit:60,standardHeaders:true,legacyHeaders:false});
 const clean=v=>String(v||"").trim(),DEVELOPER_NICKNAME=clean(process.env.NEXORA_DEVELOPER_NICKNAME||"Первый").toLocaleLowerCase("ru"),isDeveloperAccount=account=>Boolean(account&&clean(account.nickname).toLocaleLowerCase("ru")===DEVELOPER_NICKNAME),sha256=v=>crypto.createHash("sha256").update(v).digest("hex");
 function setSessionCookie(res,token){res.cookie(COOKIE_NAME,token,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:SESSION_DAYS*86400000});}
 let moderationSchemaPromise;
@@ -138,7 +138,7 @@ app.get("/api/management/overview",async(req,res)=>{
   res.json({role:actor.role,players:players.rows.map(p=>({...p,id:String(p.id),diamonds:Number(p.diamonds)||0,online:Boolean(p.online)})),reports:reports.rows,actions:actions.rows});
  }catch(error){console.error("Management overview failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось загрузить управление сервером."});}
 });
-app.post("/api/management/role",async(req,res)=>{
+app.post("/api/management/role",managementLimiter,async(req,res)=>{
  try{
   const actor=await requireStaff(req,res,true);if(!actor)return;
   const targetId=String(req.body?.accountId||""),role=String(req.body?.role||"");
@@ -151,14 +151,14 @@ app.post("/api/management/role",async(req,res)=>{
   res.json({ok:true,message:"Полномочия успешно изменены."});
  }catch(error){console.error("Management role failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось изменить полномочия."});}
 });
-app.post("/api/management/action",async(req,res)=>{
+app.post("/api/management/action",managementLimiter,async(req,res)=>{
  try{
   const actor=await requireStaff(req,res);if(!actor)return;
   const targetId=String(req.body?.accountId||""),action=String(req.body?.action||""),reason=clean(req.body?.reason).slice(0,500);
   if(!/^[0-9a-f-]{36}$/i.test(targetId)||!["warning","mute","ban","kick","unban"].includes(action)||!reason)return res.status(400).json({error:"Укажите игрока, действие и причину."});
   if(targetId===String(actor.id))return res.status(400).json({error:"Нельзя применить это действие к себе."});
   if((action==="ban"||action==="unban")&&!actor.isDeveloper&&!actor.isSeniorModerator)return res.status(403).json({error:"Для блокировки нужны расширенные полномочия."});
-  const target=await pool.query("SELECT id FROM nexora_social_auth.accounts WHERE id=$1",[targetId]);if(!target.rowCount)return res.status(404).json({error:"Игрок не найден."});
+  const target=await pool.query("SELECT a.id,COALESCE(ar.role,CASE WHEN LOWER(a.nickname)=LOWER($2) THEN 'developer' ELSE 'player' END) AS role FROM nexora_social_auth.accounts a LEFT JOIN nexora_social_auth.account_roles ar ON ar.account_id=a.id WHERE a.id=$1",[targetId,DEVELOPER_NICKNAME]);if(!target.rowCount)return res.status(404).json({error:"Игрок не найден."});if(!actor.isDeveloper&&(target.rows[0].role==="developer"||(target.rows[0].role==="senior_moderator"&&actor.role==="moderator")))return res.status(403).json({error:"У вас нет полномочий применять действия к этому сотруднику."});
   const minutes=Math.max(1,Math.min(actor.isDeveloper?525600:1440,Number(req.body?.minutes)||60));
   if(action==="mute"||action==="ban")await pool.query("INSERT INTO nexora_social_auth.moderation_restrictions(account_id,kind,reason,created_by,expires_at) VALUES($1,$2,$3,$4,NOW()+($5::text||' minutes')::interval)",[targetId,action==="ban"?"ban":"mute",reason,actor.id,minutes]);
   if(action==="unban")await pool.query("DELETE FROM nexora_social_auth.moderation_restrictions WHERE account_id=$1 AND kind='ban'",[targetId]);
@@ -167,7 +167,7 @@ app.post("/api/management/action",async(req,res)=>{
   res.json({ok:true,message:({warning:"Игрок получил предупреждение.",mute:"Чат временно ограничен.",ban:"Игрок временно заблокирован.",kick:"Игрок отключён от сервера.",unban:"Блокировка снята."})[action]});
  }catch(error){console.error("Management action failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось выполнить действие."});}
 });
-app.post("/api/management/economy",async(req,res)=>{
+app.post("/api/management/economy",managementLimiter,async(req,res)=>{
  let client;
  try{
   const actor=await requireStaff(req,res,true);if(!actor)return;
@@ -181,7 +181,7 @@ app.post("/api/management/economy",async(req,res)=>{
  }catch(error){if(client)await client.query("ROLLBACK").catch(()=>{});console.error("Management economy failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось изменить баланс."});}
  finally{client?.release();}
 });
-app.post("/api/management/reports",async(req,res)=>{
+app.post("/api/management/reports",managementLimiter,async(req,res)=>{
  try{
   const actor=await getAccount(req);if(!actor)return res.status(401).json({error:"Войдите в аккаунт."});
   const targetId=String(req.body?.accountId||""),reason=clean(req.body?.reason).slice(0,80),details=clean(req.body?.details).slice(0,1000);
@@ -190,7 +190,7 @@ app.post("/api/management/reports",async(req,res)=>{
   res.status(201).json({ok:true,id:saved.rows[0].id,message:"Жалоба отправлена модераторам."});
  }catch(error){console.error("Management report failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось отправить жалобу."});}
 });
-app.post("/api/management/reports/:id",async(req,res)=>{
+app.post("/api/management/reports/:id",managementLimiter,async(req,res)=>{
  try{
   const actor=await requireStaff(req,res);if(!actor)return;
   const id=Number(req.params.id),status=String(req.body?.status||"");
