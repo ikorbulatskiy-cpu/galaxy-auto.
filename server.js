@@ -98,14 +98,14 @@ app.post("/api/room/messages",async(req,res)=>{
 });
 let roomPresenceSchemaPromise;
 function ensureRoomPresenceSchema(){
- if(!roomPresenceSchemaPromise)roomPresenceSchemaPromise=pool.query("CREATE TABLE IF NOT EXISTS nexora_social_auth.room_presence (account_id TEXT PRIMARY KEY, nickname VARCHAR(24) NOT NULL, last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(), x_percent REAL NOT NULL DEFAULT 50, bottom_percent REAL NOT NULL DEFAULT 12, facing SMALLINT NOT NULL DEFAULT 1); ALTER TABLE nexora_social_auth.room_presence ADD COLUMN IF NOT EXISTS x_percent REAL NOT NULL DEFAULT 50, ADD COLUMN IF NOT EXISTS bottom_percent REAL NOT NULL DEFAULT 12, ADD COLUMN IF NOT EXISTS facing SMALLINT NOT NULL DEFAULT 1").catch(error=>{roomPresenceSchemaPromise=null;throw error;});
+ if(!roomPresenceSchemaPromise)roomPresenceSchemaPromise=pool.query("CREATE TABLE IF NOT EXISTS nexora_social_auth.room_presence (account_id TEXT PRIMARY KEY, nickname VARCHAR(24) NOT NULL, last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(), x_percent REAL NOT NULL DEFAULT 50, bottom_percent REAL NOT NULL DEFAULT 22, facing SMALLINT NOT NULL DEFAULT 1); ALTER TABLE nexora_social_auth.room_presence ADD COLUMN IF NOT EXISTS x_percent REAL NOT NULL DEFAULT 50, ADD COLUMN IF NOT EXISTS bottom_percent REAL NOT NULL DEFAULT 12, ADD COLUMN IF NOT EXISTS facing SMALLINT NOT NULL DEFAULT 1").catch(error=>{roomPresenceSchemaPromise=null;throw error;});
  return roomPresenceSchemaPromise;
 }
 app.post("/api/room/presence",async(req,res)=>{
  try{
   const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
   await ensureRoomPresenceSchema();
-  const x=Math.max(7,Math.min(93,Number.isFinite(Number(req.body?.xPercent))?Number(req.body.xPercent):50)),bottom=Math.max(8,Math.min(54,Number.isFinite(Number(req.body?.bottomPercent))?Number(req.body.bottomPercent):12)),facing=Number(req.body?.facing)===-1?-1:1;
+  const x=Math.max(7,Math.min(93,Number.isFinite(Number(req.body?.xPercent))?Number(req.body.xPercent):50)),bottom=Math.max(5,Math.min(88,Number.isFinite(Number(req.body?.bottomPercent))?Number(req.body.bottomPercent):22)),facing=Number(req.body?.facing)===-1?-1:1;
   await pool.query("INSERT INTO nexora_social_auth.room_presence(account_id,nickname,last_seen,x_percent,bottom_percent,facing) VALUES($1,$2,NOW(),$3,$4,$5) ON CONFLICT(account_id) DO UPDATE SET nickname=EXCLUDED.nickname,last_seen=NOW(),x_percent=EXCLUDED.x_percent,bottom_percent=EXCLUDED.bottom_percent,facing=EXCLUDED.facing",[String(account.id),account.nickname,x,bottom,facing]);
   await ensureAvatarEquipmentSchema();
   const online=await pool.query("SELECT p.account_id,p.nickname,p.x_percent,p.bottom_percent,p.facing,c.head_id,c.body_id,c.outfit_id,COALESCE(ar.rank_name,'Новичок') AS authority_title,COALESCE(ar.aura,'none') AS aura,COALESCE(ar.stars,0)::int AS authority_stars FROM nexora_social_auth.room_presence p LEFT JOIN nexora_social_auth.characters c ON c.account_id::text=p.account_id::text LEFT JOIN LATERAL (SELECT * FROM nexora_social_auth.authority_ranks WHERE min_points<=COALESCE(c.authority_points,0) ORDER BY min_points DESC LIMIT 1) ar ON TRUE WHERE p.last_seen>NOW()-INTERVAL '45 seconds' ORDER BY p.account_id ASC LIMIT 24");
