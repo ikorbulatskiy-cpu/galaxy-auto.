@@ -81,7 +81,9 @@ $("customize-back").addEventListener("click",()=>{$("register-step-customize").c
 }
 
  function getSprite(kind,id){
-  if(kind==="head")return Promise.resolve("/assets/sprites/characters/nexora-devil-head-"+Math.max(1,Math.min(6,Number(id)||1))+".svg?v=devil-heads-v1");
+  const safeId=Math.max(1,Math.min(6,Number(id)||1));
+  if(kind==="head")return Promise.resolve("/assets/sprites/characters/nexora-devil-head-"+safeId+".svg?v=devil-heads-v1");
+  if(kind==="body")return Promise.resolve("/assets/sprites/characters/nexora-body-"+safeId+".svg?v=body-art-v2-20261115");
   const key=kind+":"+id;
   if(spritePromises[key])return spritePromises[key];
   spritePromises[key]=new Promise((resolve,reject)=>{
