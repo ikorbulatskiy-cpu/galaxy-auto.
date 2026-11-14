@@ -2,13 +2,13 @@
   "name": "nexora",
   "version": "0.6.0",
   "private": true,
-  "description": "NEXORA — Meet. Connect. Discover.",
+  "description": "NEXORA clean server with PostgreSQL preserved; application features will be rebuilt from scratch.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "db:migrate": "node scripts/migrate.js",
-    "check": "node --check server.js && for file in src/*.js scripts/*.js public/*.js; do node --check \"$file\"; done",
-    "test": "node --test test/*.test.js"
+    "check": "node --check server.js && node --check src/db.js && node --check scripts/migrate.js",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=20"
