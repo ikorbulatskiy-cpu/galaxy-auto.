@@ -883,3 +883,30 @@
   #room-scene .nexora-world-avatar{width:104px!important;height:150px!important}
   #room-scene .nexora-room-player{width:82px!important;height:132px!important}
 }
+
+
+/* NEXORA unified head/body attachment — same anchor in the room and both editors. */
+#room-scene .nexora-world-avatar .nexora-avatar-sprite,
+#room-scene .nexora-room-player .nexora-avatar-sprite,
+#creator-preview .nexora-creator-preview-stack{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  overflow:visible!important;isolation:isolate!important;
+}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite #nexora-world-body,
+#room-scene .nexora-room-player .nexora-room-player-body,
+#creator-preview .creator-preview-body{
+  position:absolute!important;z-index:1!important;
+  left:22%!important;top:25%!important;right:auto!important;bottom:0!important;
+  width:56%!important;height:75%!important;
+  object-fit:contain!important;object-position:center bottom!important;
+  max-width:none!important;max-height:none!important;transform:none!important;
+}
+#room-scene .nexora-world-avatar .nexora-avatar-sprite #nexora-world-head,
+#room-scene .nexora-room-player .nexora-room-player-head,
+#creator-preview .creator-preview-head{
+  position:absolute!important;z-index:2!important;
+  left:31%!important;top:15%!important;right:auto!important;bottom:auto!important;
+  width:38%!important;height:34%!important;
+  object-fit:contain!important;object-position:center bottom!important;
+  max-width:none!important;max-height:none!important;transform:none!important;
+}
