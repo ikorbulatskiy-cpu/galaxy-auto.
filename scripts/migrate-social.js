@@ -8,7 +8,7 @@ async function main() {
   try {
     await client.query("CREATE SCHEMA IF NOT EXISTS nexora_social_auth");
     await client.query("CREATE TABLE IF NOT EXISTS nexora_social_auth.social_schema_migrations(version VARCHAR(120) PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
-    const migrations = ["001_nexora_social_world", "002_nexora_characters_recovery", "003_nexora_nickname_only"];
+    const migrations = ["001_nexora_social_world", "002_nexora_characters_recovery", "003_nexora_nickname_only", "004_authority_avatar_system"];
     for (const version of migrations) {
       const applied = await client.query("SELECT 1 FROM nexora_social_auth.social_schema_migrations WHERE version=$1", [version]);
       if (applied.rowCount) { console.log("Already applied:", version); continue; }
