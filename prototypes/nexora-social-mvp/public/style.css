@@ -2367,3 +2367,6 @@ h1 { font-size: 39px; text-shadow: 0 0 24px rgba(165,145,255,.28); }
 .room-dice-result{min-height:34px;margin:10px 0;text-align:center;color:#f4dfaa;font-weight:750}
 .room-dice-roll{display:block;width:100%;padding:12px;border:1px solid #a7b7ff;border-radius:11px;background:linear-gradient(110deg,#347fe8,#805de0);color:#fff;font:inherit;font-weight:800}
 .room-dice-roll:active{transform:scale(.98)}
+
+/* Dating and mutual-match views */
+.dating-intro{margin:8px 0 14px;padding:11px 13px;border:1px solid rgba(183,145,255,.22);border-radius:14px;background:rgba(126,91,210,.09);color:#d8ceff;font-size:12px;line-height:1.5}.social-dating-view .social-list{display:grid;gap:8px}.social-dating-view .social-row{border-color:rgba(183,145,255,.18)}
