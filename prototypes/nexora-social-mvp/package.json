@@ -5,9 +5,8 @@
   "description": "NEXORA production launcher. Runs the unified Galaxy-first full application from the repository root.",
   "main": "../../server.js",
   "scripts": {
-    "prestart": "NODE_PATH=$(pwd)/node_modules node ../../scripts/migrate.js",
-    "start": "NODE_PATH=$(pwd)/node_modules node ../../server.js",
-    "dev": "NODE_PATH=$(pwd)/node_modules node --watch ../../server.js"
+    "start": "NODE_PATH=$(pwd)/node_modules node server.js",
+    "dev": "NODE_PATH=$(pwd)/node_modules node --watch server.js"
   },
   "engines": {
     "node": ">=20"
