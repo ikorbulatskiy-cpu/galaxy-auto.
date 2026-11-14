@@ -19,6 +19,7 @@ jobs:
           node-version: 22
       - name: Check browser JavaScript
         run: |
+          node --check server.js
           node --check prototypes/nexora-social-mvp/public/app.js
           node --check prototypes/nexora-social-mvp/public/sprite-engine.js
           node --check prototypes/nexora-social-mvp/public/world-scene.js
@@ -37,10 +38,10 @@ jobs:
           const checks = [
             [html.includes('id="intro-canvas"') && html.includes('id="open-register"') && html.includes('id="open-login"'), "2D welcome screen and two entry buttons exist"],
             [html.includes('id="register-step-one"') && html.includes('id="register-step-two"') && html.includes('id="step-label"'), "registration has two visible steps"],
-            [html.includes('id="login-nickname"') && html.includes('id="login-code"'), "login is separate and uses nickname plus recovery code"],
+            [!html.includes('id="login-nickname"') && html.includes('id="login-code"'), "existing-character login asks only for recovery code"],
             [html.includes('id="room-canvas"') && html.includes('id="room-screen"'), "the 2D room canvas exists"],
             [html.includes('/sprite-engine.js') && html.includes('/world-scene.js') && html.includes('/world-objects.js'), "2D scene and character renderers are loaded"],
-            [app.includes('fetch("/api/auth/register"') && app.includes('fetch("/api/auth/login"') && app.includes('fetch("/api/auth/me"'), "existing PostgreSQL-backed auth endpoints are retained"],
+            [app.includes('fetch("/api/auth/register"') && app.includes('fetch("/api/auth/login"') && app.includes('fetch("/api/auth/me"') && app.includes('JSON.stringify({recoveryCode:'), "PostgreSQL auth uses recovery-code-only login"],
             [app.includes('NexoraSpriteEngine.draw') && app.includes('NexoraWorldScene.draw') && app.includes('NexoraWorldObjects.get'), "room uses original 2D scene, props and character sprites"],
             [app.includes('data-move') && app.includes('ArrowUp') && app.includes('pointerdown'), "keyboard and touch movement are wired"]
           ];
