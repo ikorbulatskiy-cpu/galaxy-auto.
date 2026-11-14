@@ -1021,3 +1021,10 @@
 .nexora-management-form label{margin-top:5px;color:#52617e;font-size:12px;font-weight:800}
 .nexora-management-form button{padding:11px;font-size:13px}
 @media(max-width:560px){.nexora-developer-panel{padding:7px!important}.nexora-developer-window{width:calc(100vw - 14px)!important;max-height:92dvh!important;padding:11px!important}.nexora-management-tabs button{min-width:0;padding:8px 6px;font-size:10px}.nexora-management-actions button{flex:1 1 42%;}}
+
+
+.nexora-management-form textarea,.nexora-report-form textarea,.nexora-report-form select{width:100%;box-sizing:border-box;padding:10px;border:1px solid #b6c4dd;border-radius:6px;background:#fff;color:#172544;font:inherit;resize:vertical}
+.nexora-report-form{display:grid;gap:12px;padding:14px;color:#243454}
+.nexora-report-form label{display:grid;gap:6px;font-size:12px;font-weight:800}
+.nexora-report-form button{padding:10px;border:1px solid #7187b6;border-radius:6px;background:linear-gradient(#7187b6,#50658f);color:#fff;font-weight:800}
+.nexora-report-form p{min-height:16px;margin:0;color:#287044;font-size:12px}
