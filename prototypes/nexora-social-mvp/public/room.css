@@ -85,3 +85,20 @@
 .nexora-profile-avatar{width:54px;height:86px;flex:0 0 54px;position:relative;display:grid;place-items:center;border-radius:14px;background:radial-gradient(ellipse,#a14de455,transparent 72%);filter:drop-shadow(0 0 6px #a64cff)}
 .nexora-profile-avatar svg{width:100%;height:100%;overflow:visible}
 .nexora-profile-avatar.aura-emperor{outline:1px solid #c48aff;outline-offset:2px;box-shadow:0 0 12px #a64cff}
+
+/* Elemental flame halos: layered animated energy around the complete avatar silhouette */
+.nexora-world-avatar::before,.nexora-world-avatar::after{content:"";position:absolute;z-index:0;pointer-events:none;left:50%;top:47%;width:118%;height:88%;transform:translate(-50%,-50%);border-radius:48% 52% 44% 56%;mix-blend-mode:screen;opacity:.72;filter:blur(8px);background:conic-gradient(from 0deg,transparent 0 8%,var(--avatar-aura,#a84cff) 12%,transparent 19%,transparent 28%,var(--avatar-aura,#a84cff) 33%,transparent 41%,transparent 54%,var(--avatar-aura,#a84cff) 60%,transparent 68%,transparent 80%,var(--avatar-aura,#a84cff) 86%,transparent 94%);animation:nexora-flame-drift 4.8s ease-in-out infinite}
+.nexora-world-avatar::after{width:140%;height:102%;opacity:.35;filter:blur(15px);animation-direction:reverse;animation-duration:6.2s}
+.nexora-world-avatar.aura-none{--avatar-aura:transparent}
+.nexora-world-avatar.aura-violet,.nexora-world-avatar.aura-purple,.nexora-world-avatar.aura-emperor{--avatar-aura:#b65aff}
+.nexora-world-avatar.aura-silver{--avatar-aura:#dceaff}
+.nexora-world-avatar.aura-rose{--avatar-aura:#ff83bd}
+.nexora-world-avatar.aura-blue{--avatar-aura:#3c9dff}
+.nexora-world-avatar.aura-red,.nexora-world-avatar.aura-ember{--avatar-aura:#ff542d}
+.nexora-world-avatar.aura-green{--avatar-aura:#64f06a}
+.nexora-world-avatar.aura-gold,.nexora-world-avatar.aura-diamond{--avatar-aura:#ffc34b}
+.nexora-world-avatar.aura-emperor .nexora-aura-orbit{inset:-17px -32px 4px;border-width:3px;box-shadow:0 0 10px #fff,0 0 24px #c77aff,0 0 48px #8b35ff,inset 0 0 24px #9a42ff}
+.nexora-world-avatar.aura-emperor .nexora-emperor-title{font-size:8px;padding:4px 10px;letter-spacing:1px}
+.nexora-profile-avatar.aura-emperor{background:radial-gradient(ellipse,#a14de488 0%,#7d2bc955 42%,transparent 75%);filter:drop-shadow(0 0 8px #d18aff) drop-shadow(0 0 17px #8c37ff)}
+@keyframes nexora-flame-drift{0%,100%{transform:translate(-50%,-50%) rotate(-7deg) scale(.94);opacity:.48}50%{transform:translate(-50%,-50%) rotate(8deg) scale(1.08);opacity:.82}}
+@media(prefers-reduced-motion:reduce){.nexora-world-avatar::before,.nexora-world-avatar::after{animation:none}}
