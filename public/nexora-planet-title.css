@@ -4,7 +4,7 @@
 #tab-world .nx-logo{display:none!important}
 #tab-world .nx-planet-title-trigger{
  appearance:none!important;display:flex!important;flex:1 1 auto!important;min-width:0!important;max-width:none!important;
- align-items:center!important;justify-content:flex-start!important;min-height:39px!important;
+ align-items:center!important;justify-content:flex-start!important;flex-direction:row!important;min-height:39px!important;
  margin:0!important;padding:5px 11px!important;border:1px solid #d8bd83!important;border-radius:10px!important;
  border-left:1px solid #d8bd83!important;border-right:1px solid #d8bd83!important;
  background:linear-gradient(135deg,#39264f,#201a35)!important;color:#ffe6a6!important;
