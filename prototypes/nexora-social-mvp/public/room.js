@@ -59,16 +59,16 @@
   const worldAvatar=$("nexora-world-avatar");setSpriteImage($("nexora-world-body"),"body",1);setSpriteImage($("nexora-world-head"),"head",1);
   worldAvatar.setAttribute("aria-label","Открыть действия персонажа");
   worldAvatar.addEventListener("pointerdown",event=>event.stopPropagation());
-  let lastSceneTap=0;
   scene.addEventListener("pointerdown",event=>{
    if(event.button!==0||event.target.closest("button,input,textarea,select,a,.nexora-room-player,.nexora-avatar-panel,.nexora-character-actions,.nexora-emotions-panel,.nexora-developer-panel"))return;
-   const now=Date.now(),rect=scene.getBoundingClientRect();
-   if(now-lastSceneTap<420){
-    lastSceneTap=0;
-    const x=Math.max(6,Math.min(94,(event.clientX-rect.left)/rect.width*100));
-    const bottom=Math.max(8,Math.min(65,(rect.bottom-event.clientY)/rect.height*100));
-    moveWorldAvatarTo(x,bottom);
-   }else lastSceneTap=now;
+   const rect=scene.getBoundingClientRect(),avatarRect=worldAvatar.getBoundingClientRect();
+   const halfWidth=avatarRect.width/2/rect.width*100;
+   const avatarHeight=avatarRect.height/rect.height*100;
+   const x=Math.max(halfWidth,Math.min(100-halfWidth,(event.clientX-rect.left)/rect.width*100));
+   // The bottom strip is the floor: clicks higher in the room move the avatar
+   // deeper into the scene, while the feet never cross the lower room border.
+   const bottom=Math.max(12,Math.min(88-avatarHeight,(rect.bottom-event.clientY)/rect.height*100));
+   moveWorldAvatarTo(x,bottom);
   });
 
   worldAvatar.addEventListener("click",openCharacterActions);
