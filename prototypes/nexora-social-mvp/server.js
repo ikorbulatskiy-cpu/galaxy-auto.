@@ -348,19 +348,20 @@ io.on("connection", (socket) => {
     }
     if (!valid) return ack({ ok: false, error: "Планета недоступна: проверьте приглашение, блокировку и свободные места." });
     if (player.planet === nextPlanet) return ack({ ok: true });
-    const oldPlanet = player.planet;
-    socket.to(roomName(oldPlanet)).emit("player:left", { id: player.id });
-    socket.leave(roomName(oldPlanet));
+    const oldChannel = roomChannel(player);
+    socket.to(oldChannel).emit("player:left", { id: player.id });
+    socket.leave(oldChannel);
     player.planet = nextPlanet;
-    socket.join(roomName(nextPlanet));
-    await pool.query("UPDATE nexora_social_world.characters SET planet=$1,updated_at=NOW() WHERE account_id=$2", [nextPlanet,player.accountId]);
+    player.roomId = await ensureDefaultRoom(nextPlanet);
+    socket.join(roomChannel(player));
+    await pool.query("UPDATE nexora_social_world.characters SET planet=$1,room_id=$2,updated_at=NOW() WHERE account_id=$3", [nextPlanet,player.roomId,player.accountId]);
     if (nextPlanet.startsWith("custom-")) {
       const id = nextPlanet.slice(7);
       await pool.query("INSERT INTO nexora_social_world.planet_members(planet_id,account_id) VALUES($1,$2) ON CONFLICT DO NOTHING", [id,player.accountId]);
       await pool.query("UPDATE nexora_social_world.planet_invites SET used_at=NOW() WHERE planet_id=$1 AND invited_account_id=$2 AND used_at IS NULL AND expires_at>NOW()", [id,player.accountId]);
     }
-    await sendPlanetState(socket, nextPlanet);
-    socket.to(roomName(nextPlanet)).emit("player:joined", publicPlayer(player));
+    await sendPlanetState(socket, player);
+    socket.to(roomChannel(player)).emit("player:joined", publicPlayer(player));
     ack({ ok: true, planet: nextPlanet });
   });
 
