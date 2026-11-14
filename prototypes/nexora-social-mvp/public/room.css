@@ -504,3 +504,7 @@
 #nexora-auras-panel .nexora-auras-hint{display:block!important}
 .nexora-world-avatar:not(.aura-none) .nexora-user-aura{display:block!important;visibility:visible!important;opacity:1!important}
 .nexora-world-avatar.aura-none .nexora-user-aura{display:none!important}
+
+/* Match the torso width to the head so the body no longer looks oversized. */
+#creator-preview .creator-preview-body,
+.nexora-world-avatar .nexora-avatar-sprite #nexora-world-body{left:28%!important;top:22%!important;right:auto!important;bottom:0!important;width:44%!important;height:78%!important;object-fit:contain!important}
