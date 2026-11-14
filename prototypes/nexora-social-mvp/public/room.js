@@ -120,7 +120,9 @@
   $("nexora-character-actions").classList.remove("hidden");
   const a=$("nexora-world-avatar");if(a)a.setAttribute("aria-expanded","true");
  }
- function openDeveloperMode(){if(!state.isDeveloper)return;closeCharacterActions();$("nexora-developer-panel").classList.remove("hidden");}\n function closeDeveloperMode(){const panel=$("nexora-developer-panel");if(panel)panel.classList.add("hidden");}\n function closeCharacterActions(){
+ function openDeveloperMode(){if(!state.isDeveloper)return;closeCharacterActions();$("nexora-developer-panel").classList.remove("hidden");}
+ function closeDeveloperMode(){const panel=$("nexora-developer-panel");if(panel)panel.classList.add("hidden");}
+ function closeCharacterActions(){
   const menu=$("nexora-character-actions");if(menu)menu.classList.add("hidden");
   const a=$("nexora-world-avatar");if(a)a.setAttribute("aria-expanded","false");
  }
@@ -141,7 +143,8 @@
    const data=await response.json();if(!response.ok)throw Error(data.error||"Не удалось загрузить анкету");
    const p=data.profile||{};
    const fields=$("nexora-info-form").elements;
-   ["gender","birthDate","city","occupation","interests","about","status","relationship","lookingFor","askMe"].forEach(k=>{if(fields[k])fields[k].value=p[k]||"";});\n   const isDeveloper=Boolean(p.isDeveloper||data.account?.isDeveloper);state.isDeveloper=isDeveloper;const privilegeLabel=$("nexora-info-privileges");if(privilegeLabel)privilegeLabel.textContent=isDeveloper?"Разработчик":(p.privileges||"—");const developerButton=$("nexora-action-developer");if(developerButton)developerButton.classList.toggle("hidden",!isDeveloper);
+   ["gender","birthDate","city","occupation","interests","about","status","relationship","lookingFor","askMe"].forEach(k=>{if(fields[k])fields[k].value=p[k]||"";});
+   const isDeveloper=Boolean(p.isDeveloper||data.account?.isDeveloper);state.isDeveloper=isDeveloper;const privilegeLabel=$("nexora-info-privileges");if(privilegeLabel)privilegeLabel.textContent=isDeveloper?"Разработчик":(p.privileges||"—");const developerButton=$("nexora-action-developer");if(developerButton)developerButton.classList.toggle("hidden",!isDeveloper);
    $("nexora-info-photo").src=p.photoDataUrl||"";
    $("nexora-info-photo").classList.toggle("has-photo",Boolean(p.photoDataUrl));
    $("nexora-info-note").textContent="";
