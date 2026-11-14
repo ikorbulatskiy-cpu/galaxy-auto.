@@ -95,11 +95,19 @@
   socket.on("player:moved",event=>{const p=players.find(x=>String(x.id)===String(event.id));if(p){p.x=event.x;p.y=event.y;scene.movePlayer(event.id,event.x,event.y)}});
   socket.on("chat:message",message=>addChat(message));
   socket.on("player:bubble",event=>scene.bubble(event.id,event.text||event.bubble?.text||""));
+  socket.on("player:typing",event=>{const p=players.find(x=>String(x.id)===String(event.id));if(p){p.typing=Boolean(event.typing);scene.upsert(p)}});
+
   socket.on("emotion:played",event=>{const p=players.find(x=>String(x.id)===String(event.id));if(p){p.emotion={type:event.emotion};scene.upsert(p)}});
   socket.on("player:action:played",event=>{const actor=players.find(p=>String(p.id)===String(event.fromId)),target=players.find(p=>String(p.id)===String(event.toId));const motion=({wave:"wave",smile:"smile",hug:"love",kiss:"kiss",dance:"dance",flower:"love"})[event.action]||"smile";if(actor){actor.emotion={type:motion,until:Date.now()+1800};scene.upsert(actor);scene.bubble(actor.id,event.label)}if(target){target.emotion={type:"smile",until:Date.now()+1300};scene.upsert(target);scene.bubble(target.id,event.label+" тебе")}toast(event.from+" "+event.label+" "+event.to)});
   socket.on("profile:updated",p=>{const i=players.findIndex(x=>String(x.id)===String(p.id));if(i>=0)players[i]=p;setPlayers(players)});
 
-  $("#chat-form").addEventListener("submit",e=>{e.preventDefault();const input=$("#chat-input"),text=input.value.trim();if(!text)return;socket.emit("chat:send",{text},result=>{if(!result?.ok)toast(result?.error||"Не удалось отправить сообщение")});input.value=""});
+  const chatInput=$("#chat-input");let typingStopTimer=null;let typingActive=false;
+  function setTyping(active){if(!socket.connected)return;if(typingActive===active)return;typingActive=active;socket.emit("player:typing",{typing:active})}
+  chatInput.addEventListener("input",()=>{const active=chatInput.value.trim().length>0;setTyping(active);clearTimeout(typingStopTimer);if(active)typingStopTimer=setTimeout(()=>setTyping(false),1800)});
+  chatInput.addEventListener("blur",()=>{clearTimeout(typingStopTimer);setTyping(false)});
+    $("#chat-form").addEventListener("submit",e=>{e.preventDefault();const input=$("#chat-input"),text=input.value.trim();if(!text)return;socket.emit("chat:send",{text},result=>{if(!result?.ok)toast(result?.error||"Не удалось отправить сообщение")});input.value=""});
+  chatInput.addEventListener("keydown",e=>{if(e.key==="Enter"){clearTimeout(typingStopTimer);setTyping(false)}});
+
   $("#emoji-button").addEventListener("click",()=>{$("#chat-input").value+=" 🙂";$("#chat-input").focus()});
   $("#chat-toggle").addEventListener("click",()=>{chatCollapsed=!chatCollapsed;$("#chat-log").hidden=chatCollapsed;$("#chat-form").hidden=chatCollapsed;$("#chat-toggle").textContent=chatCollapsed?"Развернуть +":"Свернуть −"});
   $("#players-toggle").addEventListener("click",()=>$("#players-panel").hidden=!$("#players-panel").hidden);
