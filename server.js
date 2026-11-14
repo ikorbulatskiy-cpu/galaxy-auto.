@@ -21,5 +21,31 @@ app.get("/api/account/profile",async(req,res)=>{try{const a=await getAccount(req
 app.post("/api/account/recovery-code",async(req,res)=>{try{const a=await getAccount(req);if(!a)return res.status(401).json({error:"Войдите в аккаунт."});const code=makeRecoveryCode();await pool.query("UPDATE nexora_social_auth.accounts SET recovery_code_hash=$1 WHERE id=$2",[sha256(code),a.id]);res.json({recoveryCode:code});}catch{res.status(503).json({error:"Не удалось создать код восстановления."});}});
 app.post("/api/character",async(req,res)=>{try{const a=await getAccount(req);if(!a)return res.status(401).json({error:"Сначала войдите в аккаунт."});const headId=Number(req.body.headId),bodyId=Number(req.body.bodyId);if(!Number.isInteger(headId)||headId<1||headId>12||!Number.isInteger(bodyId)||bodyId<1||bodyId>12)return res.status(400).json({error:"Выберите голову и тело персонажа."});const r=await pool.query("INSERT INTO nexora_social_auth.characters(account_id,head_id,body_id) VALUES($1,$2,$3) ON CONFLICT(account_id) DO UPDATE SET head_id=EXCLUDED.head_id,body_id=EXCLUDED.body_id RETURNING id,head_id,body_id,created_at",[a.id,headId,bodyId]);res.status(201).json({ok:true,character:r.rows[0]});}catch(e){console.error("Character save failed:",e.code||"UNKNOWN");res.status(500).json({error:"Не удалось сохранить персонажа."});}});
 app.get("/api/account/online",async(_req,res)=>{try{const r=await pool.query("SELECT COUNT(DISTINCT account_id)::int AS total FROM nexora_social_auth.sessions WHERE expires_at>NOW()");res.json({online:r.rows[0].total});}catch{res.json({online:0});}});
+
+let roomChatSchemaPromise;
+function ensureRoomChatSchema(){
+ if(!roomChatSchemaPromise)roomChatSchemaPromise=pool.query("CREATE SCHEMA IF NOT EXISTS nexora_social_auth; CREATE TABLE IF NOT EXISTS nexora_social_auth.room_messages (id BIGSERIAL PRIMARY KEY, account_id TEXT NOT NULL, nickname VARCHAR(24) NOT NULL, message VARCHAR(500) NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()); CREATE INDEX IF NOT EXISTS room_messages_created_id_idx ON nexora_social_auth.room_messages(id)").catch(error=>{roomChatSchemaPromise=null;throw error;});
+ return roomChatSchemaPromise;
+}
+app.get("/api/room/messages",async(req,res)=>{
+ try{
+  const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
+  await ensureRoomChatSchema();
+  const after=Math.max(0,Number.parseInt(req.query.after||"0",10)||0);
+  const query=after>0
+   ? await pool.query("SELECT id,nickname,message,created_at,account_id FROM nexora_social_auth.room_messages WHERE id>$1 ORDER BY id ASC LIMIT 80",[after])
+   : await pool.query("SELECT id,nickname,message,created_at,account_id FROM (SELECT id,nickname,message,created_at,account_id FROM nexora_social_auth.room_messages ORDER BY id DESC LIMIT 60) recent ORDER BY id ASC");
+  res.json({messages:query.rows.map(row=>({id:row.id,nickname:row.nickname,message:row.message,createdAt:row.created_at,mine:String(row.account_id)===String(account.id)}))});
+ }catch(error){console.error("Room chat read failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Чат временно недоступен."});}
+});
+app.post("/api/room/messages",async(req,res)=>{
+ try{
+  const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
+  const message=clean(req.body.message);if(!message||message.length>500)return res.status(400).json({error:"Сообщение должно содержать от 1 до 500 символов."});
+  await ensureRoomChatSchema();
+  const saved=await pool.query("INSERT INTO nexora_social_auth.room_messages(account_id,nickname,message) VALUES($1,$2,$3) RETURNING id,nickname,message,created_at,account_id",[String(account.id),account.nickname,message]);
+  const row=saved.rows[0];res.status(201).json({ok:true,message:{id:row.id,nickname:row.nickname,message:row.message,createdAt:row.created_at,mine:true}});
+ }catch(error){console.error("Room chat send failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось отправить сообщение."});}
+});
 app.get("/galaxy",(_req,res)=>res.redirect(308,"/"));app.get("*",(_req,res)=>res.sendFile(path.join(publicDirectory,"index.html")));
 app.listen(PORT,"0.0.0.0",()=>console.log("NEXORA server is running on port "+PORT));
