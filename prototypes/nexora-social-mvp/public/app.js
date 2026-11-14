@@ -54,7 +54,7 @@ $("customize-back").addEventListener("click",()=>{$("register-step-customize").c
   const bodyList=$("body-options"),headList=$("head-options"),preview=$("creator-preview");if(!headList||!preview)return;
   const bodyPicker=bodyList&&bodyList.closest(".nexora-creator-picker");if(bodyPicker)bodyPicker.hidden=false;
   const headHref="/assets/sprites/characters/nexora-detailed-atlas.svg#head-";
-  const bodyHref="/assets/sprites/characters/nexora-user-bodies.svg?v=source-path-fix-20261115#body-";
+  const bodyHref="/assets/sprites/characters/nexora-user-bodies.svg?v=adjacent-assets-fix-20261115#body-";
   const makeChoice=(kind,id,href,selected)=>{const button=document.createElement("button");button.type="button";button.className="nexora-creator-choice"+(selected?" selected":"");button.setAttribute("aria-label",(kind==="head"?"Голова ":"Тело ")+id);button.setAttribute("aria-pressed",String(selected));const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("viewBox",kind==="head"?"0 0 64 64":"0 0 64 104");const use=document.createElementNS("http://www.w3.org/2000/svg","use");use.setAttribute("href",href+id);if(kind==="body"){use.setAttribute("x","0");use.setAttribute("y","0");use.setAttribute("width","64");use.setAttribute("height","104");}svg.append(use);button.append(svg);button.addEventListener("click",()=>{state[kind==="head"?"headId":"bodyId"]=id;renderCreator();});return button;};
   if(bodyList){bodyList.replaceChildren();for(let i=1;i<=6;i++)bodyList.append(makeChoice("body",i,bodyHref,state.bodyId===i));}
   headList.replaceChildren();for(let i=1;i<=24;i++)headList.append(makeChoice("head",i,headHref,state.headId===i));
