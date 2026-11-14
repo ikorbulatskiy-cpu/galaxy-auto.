@@ -7,10 +7,10 @@
  <clipPath id="clip-body-5" clipPathUnits="userSpaceOnUse"><path d="M445 1250 L481 1268 L508 1273 L525 1294 L545 1285 L561 1257 L575 1264 L568 1303 L552 1325 L544 1370 L555 1410 L574 1435 L571 1462 L551 1469 L537 1449 L526 1408 L515 1379 L507 1452 L495 1526 L477 1540 L455 1532 L458 1508 L468 1439 L462 1390 L448 1441 L438 1510 L420 1539 L398 1534 L399 1507 L414 1425 L420 1369 L411 1326 L398 1307 L406 1289 L427 1299 Z"/></clipPath>
  <clipPath id="clip-body-6" clipPathUnits="userSpaceOnUse"><path d="M957 1268 L1038 1268 L1058 1285 L1081 1298 L1098 1324 L1091 1352 L1072 1355 L1057 1337 L1050 1390 L1065 1445 L1082 1517 L1068 1540 L1033 1540 L1019 1525 L1008 1455 L995 1455 L984 1525 L969 1540 L934 1540 L921 1517 L939 1445 L953 1390 L945 1337 L930 1355 L911 1352 L904 1324 L920 1298 L941 1285 Z"/></clipPath>
 </defs>
-<symbol id="body-1" viewBox="105 990 185 180"><image href="../../../IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-1)"/></symbol>
-<symbol id="body-2" viewBox="515 865 220 305"><image href="../../../IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-2)"/></symbol>
-<symbol id="body-3" viewBox="900 910 205 260"><image href="../../../IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-3)"/></symbol>
-<symbol id="body-4" viewBox="95 1260 220 290"><image href="../../../IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-4)"/></symbol>
-<symbol id="body-5" viewBox="390 1240 195 310"><image href="../../../IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-5)"/></symbol>
-<symbol id="body-6" viewBox="895 1258 215 292"><image href="../../../IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-6)"/></symbol>
+<symbol id="body-1" viewBox="105 990 185 180"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-1)"/></symbol>
+<symbol id="body-2" viewBox="515 865 220 305"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-2)"/></symbol>
+<symbol id="body-3" viewBox="900 910 205 260"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-3)"/></symbol>
+<symbol id="body-4" viewBox="95 1260 220 290"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-4)"/></symbol>
+<symbol id="body-5" viewBox="390 1240 195 310"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-5)"/></symbol>
+<symbol id="body-6" viewBox="895 1258 215 292"><image href="IMG_4158.png" x="0" y="0" width="1206" height="2622" clip-path="url(#clip-body-6)"/></symbol>
 </svg>
