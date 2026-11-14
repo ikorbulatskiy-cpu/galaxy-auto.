@@ -44,16 +44,18 @@
  window.addEventListener("resize",drawPlanetObjects);
  function cosmetics(look={}){const raw=Array.isArray(look.accessories)?look.accessories:String(look.accessories||"").split(",");const items=raw.map(x=>String(x).trim()).filter(Boolean).slice(0,3);if(look.wings)items.unshift("Крылья");if(look.halo)items.unshift("Ореол");return items.length?'<div class="nx-avatar-accessories">'+items.map(x=>'<span>'+esc(x)+'</span>').join("")+'</div>':""}
  function addEvent(message,kind="info"){const box=document.getElementById("nx-event-list");if(!box)return;const row=document.createElement("div");row.className="nx-event-item nx-event-"+kind;const stamp=document.createElement("time");stamp.textContent=new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});const body=document.createElement("span");body.textContent=message;row.append(stamp,body);box.prepend(row);while(box.children.length>18)box.lastElementChild.remove();const summary=document.getElementById("nx-system-message");if(summary)summary.textContent=message}
- function animatePortal(username,action){
-  const name=String(username||"");
-  const card=[...document.querySelectorAll("#nx-avatars .nx-avatar-card")].find(node=>node.dataset.playerUsername===name);
-  if(!card)return;
+ function animatePortal(username,action,userId){
+  const name=String(username||""),id=String(userId||"");
+  const card=[...document.querySelectorAll("#nx-avatars .nx-avatar-card")].find(node=>(name&&node.dataset.playerUsername===name)||(id&&node.dataset.playerUserId===id));
+  if(!card)return name||"Игрок";
+  const displayName=card.querySelector(".nx-avatar-name")?.textContent?.trim()||name||"Игрок";
   card.classList.remove("nx-portal-arriving","nx-portal-leaving");
   const fx=card.querySelector(".nx-avatar-portal-fx");if(fx)fx.remove();
   void card.offsetWidth;
   card.classList.add(action==="leaving"?"nx-portal-leaving":"nx-portal-arriving");
   const portal=document.createElement("span");portal.className="nx-avatar-portal-fx";portal.setAttribute("aria-hidden","true");card.append(portal);
   window.setTimeout(()=>{card.classList.remove("nx-portal-arriving","nx-portal-leaving");portal.remove()},1050);
+  return displayName;
  }
  function waitForRoomJoin(roomId,timeout=8000){
   if(!roomId||window.nexoraActiveRoom===roomId)return Promise.resolve(true);
@@ -247,14 +249,14 @@
    if(packet.type==="planet_modules"){window.dispatchEvent(new CustomEvent("nexora:planet-modules",{detail:{modules:packet.modules||[],planetName:packet.planetName||""}}))}
    if(packet.type==="presence"&&packet.roomId===room.id){
     if(packet.action==="left"){
-     if(galaxyPrefs.system_messages)addEvent((packet.username||"Игрок")+" улетел с планеты.","leave");
-     animatePortal(packet.username,"leaving");
+     const leavingName=animatePortal(packet.username,"leaving",packet.userId);
+     if(galaxyPrefs.system_messages)addEvent(leavingName+" улетел с планеты.","leave");
      if(galaxyPrefs.sound_enabled)playGalaxyNotice();
      window.setTimeout(()=>loadPresence(room.id),850);
     }else if(packet.action==="joined"){
      if(galaxyPrefs.system_messages)addEvent((packet.username||"Игрок")+" прилетел на планету.","join");
      if(galaxyPrefs.sound_enabled)playGalaxyNotice();
-     loadPresence(room.id).then(()=>window.setTimeout(()=>animatePortal(packet.username,"arriving"),80));
+     loadPresence(room.id).then(()=>window.setTimeout(()=>animatePortal(packet.username,"arriving",packet.userId),80));
     }
    }
    if(packet.type==="error"){if(roomAckTimer)clearTimeout(roomAckTimer);roomAckTimer=null;status(packet.message);addEvent(packet.message,"warning")}
