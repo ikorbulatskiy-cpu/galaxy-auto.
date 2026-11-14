@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+<title>NEXORA Emperor of the Galaxy outfit</title>
+<defs>
+ <linearGradient id="robe" x2="1" y2="1"><stop stop-color="#251044"/><stop offset=".48" stop-color="#57249a"/><stop offset="1" stop-color="#160b2b"/></linearGradient>
+ <linearGradient id="trim"><stop stop-color="#f6d889"/><stop offset=".5" stop-color="#fff1b8"/><stop offset="1" stop-color="#b77a25"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#e9b6ff" stop-opacity=".85"/><stop offset="1" stop-color="#8c35ff" stop-opacity="0"/></radialGradient>
+</defs>
+<g id="emperor-set">
+ <ellipse cx="64" cy="66" rx="54" ry="58" fill="url(#glow)" opacity=".38"/>
+ <path d="M36 38Q29 4 64 4Q99 4 92 38L83 54H45Z" fill="#160c2a" stroke="#d6a8ff" stroke-width="2.2"/>
+ <path d="M42 35Q43 10 64 10Q85 10 86 35L77 48H51Z" fill="#38205b"/>
+ <path d="M42 43Q29 47 21 68L12 115Q35 127 64 125Q93 127 116 115L107 68Q99 47 86 43L77 56H51Z" fill="url(#robe)" stroke="#c79aff" stroke-width="2.2"/>
+ <path d="M43 47L31 112L48 120L64 82L80 120L97 112L85 47L76 57H52Z" fill="#32135a" stroke="url(#trim)" stroke-width="2"/>
+ <path d="M51 48L64 63L77 48L72 43H56Z" fill="#f1d18a" stroke="#fff0c1" stroke-width="1.4"/>
+ <path d="M64 64L58 83L64 104L70 83Z" fill="#9b54e8" stroke="#e5c3ff" stroke-width="1.2"/>
+ <path d="M25 70L18 111M103 70L110 111" stroke="#e4c27c" stroke-width="3"/>
+ <path d="M23 58L42 45L49 59L37 72L19 70Z M105 58L86 45L79 59L91 72L109 70Z" fill="#4a2675" stroke="url(#trim)" stroke-width="2"/>
+ <path d="M104 111L113 27" stroke="#c7a7f1" stroke-width="4" stroke-linecap="round"/>
+ <path d="M112 30Q94 7 78 18Q96 16 103 39Q108 44 112 30Z" fill="#d9d2ef" stroke="#8d6db8" stroke-width="2"/>
+ <path d="M109 39L113 27" stroke="#fff" stroke-width="1.5"/>
+ <path d="M53 39L56 27L64 34L72 27L75 39Z" fill="#f5d47f" stroke="#fff0b7" stroke-width="1.4"/>
+ <circle cx="64" cy="39" r="3" fill="#c98cff"/>
+</g>
+</svg>
