@@ -15,6 +15,7 @@ const featuresRouter = require("./src/features");
 const { attachRealtime } = require("./src/realtime");
 const movement = require("./src/movement");
 const mediaRouter = require("./src/media");
+const { attachSocketCompat } = require("./src/socket-compat");
 
 const app = express();
 const server = http.createServer(app);
@@ -128,6 +129,7 @@ app.use((err, req, res, _next) => {
 
 attachRealtime(server);
 movement.attachMovement(server);
+attachSocketCompat(server);
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`NEXORA запущен на порту ${PORT}`);
 });
