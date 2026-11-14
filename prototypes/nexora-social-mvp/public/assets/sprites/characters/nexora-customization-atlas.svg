@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="520" height="480" viewBox="0 0 520 480">
 <defs>
-<clipPath id="headClip"><path d="M207 187 C215 197 221 207 229 212 C238 199 250 195 263 196 C277 195 290 201 299 212 C307 205 310 195 313 187 L315 225 C314 241 308 255 300 268 C294 282 280 294 263 299 C245 297 231 286 220 272 C208 258 199 242 198 226 C194 213 199 198 207 187 Z"/></clipPath>
-<clipPath id="bodyClip"><path d="M232 282 C242 279 251 279 263 281 C275 280 285 284 294 292 L310 309 L315 330 L304 347 L294 337 L289 319 L284 354 L295 407 L303 421 L301 432 L275 438 L265 431 L263 390 L257 363 L251 390 L246 430 L233 438 L208 435 L205 425 L216 409 L223 355 L219 321 L211 339 L198 345 L190 329 L199 307 L218 291 Z"/></clipPath>
+<clipPath id="headClip" clipPathUnits="userSpaceOnUse"><path d="M207 187 C215 197 221 207 229 212 C238 199 250 195 263 196 C277 195 290 201 299 212 C307 205 310 195 313 187 L315 225 C314 241 308 255 300 268 C294 282 280 294 263 299 C245 297 231 286 220 272 C208 258 199 242 198 226 C194 213 199 198 207 187 Z"/></clipPath>
+<clipPath id="bodyClip" clipPathUnits="userSpaceOnUse"><path d="M232 282 C242 279 251 279 263 281 C275 280 285 284 294 292 L310 309 L315 330 L304 347 L294 337 L289 319 L284 354 L295 407 L303 421 L301 432 L275 438 L265 431 L263 390 L257 363 L251 390 L246 430 L233 438 L208 435 L205 425 L216 409 L223 355 L219 321 L211 339 L198 345 L190 329 L199 307 L218 291 Z"/></clipPath>
 </defs>
 <symbol id="head-1" viewBox="180 178 145 135" preserveAspectRatio="xMidYMid meet"><image href="nexora-demon-body.webp" x="0" y="0" width="520" height="480" clip-path="url(#headClip)"/></symbol>
 <symbol id="body-1" viewBox="185 278 145 170" preserveAspectRatio="xMidYMid meet"><image href="nexora-demon-body.webp" x="0" y="0" width="520" height="480" clip-path="url(#bodyClip)"/></symbol>
