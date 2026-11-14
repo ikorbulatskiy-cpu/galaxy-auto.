@@ -1,0 +1,103 @@
+/* NEXORA retro social layer: inspired by early mobile chat clients, without replacing the responsive world UI. */
+#game-screen.retro-mode {
+  --retro-blue:#001870; --retro-green:#3a7a3a; --retro-frame:#1e3246;
+  --retro-bar:#4a6b82; --retro-light:#aaffaa; --retro-gold:#ffd700;
+  font-family:Tahoma,Verdana,Arial,sans-serif;
+}
+#game-screen.retro-mode .topbar,
+#game-screen.retro-mode .drawer-head,
+#game-screen.retro-mode .chat-form,
+#game-screen.retro-mode .chat-footer-tools,
+#game-screen.retro-mode .room-toolbar {
+  border-radius:0!important; box-shadow:none!important;
+}
+#game-screen.retro-mode .topbar {
+  background:#4a6b82!important; border:2px solid #1e3246!important;
+}
+#game-screen.retro-mode .top-brand-name,
+#game-screen.retro-mode .room-location strong {text-shadow:1px 1px #000!important;letter-spacing:0!important}
+#game-screen.retro-mode .chat-drawer {
+  border:2px solid #1e3246!important; border-radius:0!important;
+  background:#2a5a2a!important; box-shadow:none!important; backdrop-filter:none!important;
+}
+#game-screen.retro-mode .drawer-head {
+  background:linear-gradient(#3a8a3a,#2a6a2a)!important;
+  border-bottom:2px solid #1a4a1a!important; padding:7px 9px!important;
+}
+#game-screen.retro-mode .chat-title strong {font-family:Tahoma,Verdana,sans-serif!important;font-size:13px!important}
+#game-screen.retro-mode .chat-history {
+  background:#3a7a3a!important; color:#fff!important; gap:2px!important;
+  padding:7px!important; font-family:Tahoma,Verdana,Arial,sans-serif!important;
+}
+#game-screen.retro-mode .history-message {
+  display:block!important; padding:2px 3px!important; border:0!important;
+  border-radius:0!important; background:transparent!important; color:#fff!important;
+  font-size:11px!important; line-height:1.25!important; box-shadow:none!important;
+}
+#game-screen.retro-mode .history-message.is-system {background:#6488ea!important;color:#fff!important}
+#game-screen.retro-mode .history-message.is-whisper {color:#ffd700!important}
+#game-screen.retro-mode .history-author {
+  display:inline!important; padding:0!important; border:0!important; background:none!important;
+  color:#ffff80!important; font-weight:700!important; text-decoration:none!important;
+}
+#game-screen.retro-mode .history-text {display:inline!important;color:inherit!important}
+#game-screen.retro-mode .history-message time {display:inline!important;color:#aaffaa!important;font-size:9px!important}
+#game-screen.retro-mode .chat-form {
+  background:#2a5a2a!important; border-top:2px solid #1a4a1a!important;
+  padding:6px!important; margin:0!important;
+}
+#game-screen.retro-mode .chat-form input {
+  min-height:30px!important; border:2px solid #1a4a1a!important;
+  border-radius:0!important; background:#fff!important;color:#111!important;
+  font:12px Tahoma,Verdana,sans-serif!important;
+}
+#game-screen.retro-mode .chat-form button {
+  border:2px solid #6aaa6a!important;border-radius:0!important;
+  background:#4a8a4a!important;color:#fff!important;
+}
+#game-screen.retro-mode .world-room-picker {background:#2a5a2a!important}
+#game-screen.retro-mode #world-room-toggle {
+  border:1px solid #1a4a1a!important;border-radius:0!important;
+  background:#3a7a3a!important;color:#fff!important;
+}
+#game-screen.retro-mode .room-toolbar {
+  border:1px solid #1e3246!important;background:#4a6b82!important;
+}
+#game-screen.retro-mode .room-toolbar button {
+  border-radius:0!important;color:#fff!important;text-shadow:1px 1px #000!important;
+}
+#game-screen.retro-mode .room-flyout,
+#game-screen.retro-mode .profile-editor,
+#game-screen.retro-mode .public-profile,
+#game-screen.retro-mode .social-panel,
+#game-screen.retro-mode .shop-panel,
+#game-screen.retro-mode .planets-panel {
+  border:1px solid #000!important;border-radius:0!important;
+  background:#d4d0c8!important;color:#111!important;box-shadow:2px 2px #111!important;
+  backdrop-filter:none!important;
+}
+#game-screen.retro-mode .room-flyout-head,
+#game-screen.retro-mode .profile-editor-head {
+  border-radius:0!important;background:#4a6b82!important;color:#fff!important;
+}
+#game-screen.retro-mode .room-flyout button,
+#game-screen.retro-mode .profile-editor button {border-radius:0!important}
+#retro-status-panel {
+  position:fixed;z-index:180;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(620px,calc(100vw - 20px));max-height:min(76dvh,620px);overflow:auto;
+  padding:0;background:#d4d0c8;color:#111;border:2px solid #1e3246;
+  box-shadow:3px 3px #050914;font:11px Tahoma,Verdana,Arial,sans-serif;
+}
+#retro-status-panel[hidden]{display:none}
+.retro-status-head {display:flex;align-items:center;justify-content:space-between;padding:7px 9px;background:#4a6b82;color:#fff;border-bottom:2px solid #1e3246}
+.retro-status-head strong {font-size:12px;text-shadow:1px 1px #000}
+.retro-status-head button {width:25px;height:22px;border:1px solid #1e3246;background:#d4d0c8;color:#111}
+.retro-status-grid {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;padding:5px;background:#2a2a2a}
+.retro-status-column {min-width:0;background:#3a3a3a}
+.retro-status-column h4 {padding:5px 3px;text-align:center;background:#5a5a2a;color:#ff0;font-size:10px;border:1px solid #7a7a3a}
+.retro-status-option {display:flex;align-items:center;gap:5px;width:100%;min-height:31px;padding:4px;border:0;border-bottom:1px solid #555;background:#3a3a3a;color:#ddd;text-align:left;font:10px Tahoma,Verdana,sans-serif}
+.retro-status-option:active,.retro-status-option.selected {background:#2a6a2a;color:#fff}
+.retro-status-icon {width:18px;flex:0 0 18px;text-align:center;font-size:14px}
+.retro-status-foot {padding:7px;background:#d4d0c8;color:#333;border-top:1px solid #777;line-height:1.4}
+#retro-status-panel .retro-status-save {display:block;width:100%;margin-top:6px;padding:7px;border:1px solid #1e3246;background:#4a6b82;color:#fff;font-weight:bold}
+@media(max-width:520px){.retro-status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#retro-status-panel{max-height:82dvh}}
