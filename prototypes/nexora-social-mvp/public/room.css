@@ -819,20 +819,22 @@
 /* Remote avatars use the exact same rig, layering, scale and label as the local avatar. */
 #room-scene .nexora-room-player{
   pointer-events:auto!important;cursor:pointer!important;z-index:3!important;
-  width:92px!important;height:138px!important;display:block!important;
+  width:82px!important;height:132px!important;display:block!important;
   transform:translateX(-50%)!important;filter:drop-shadow(0 4px 7px rgba(20,34,64,.24))!important;
 }
 #room-scene .nexora-room-player .nexora-avatar-sprite{
   position:absolute!important;inset:0!important;width:100%!important;height:100%!important;overflow:visible!important;
 }
 #room-scene .nexora-room-player .nexora-room-player-body{
-  position:absolute!important;left:26%!important;top:25%!important;right:auto!important;bottom:0!important;
-  width:48%!important;height:75%!important;object-fit:contain!important;object-position:center bottom!important;
+  position:absolute!important;left:11%!important;top:22%!important;right:auto!important;bottom:0!important;
+  width:78%!important;height:78%!important;object-fit:contain!important;object-position:center bottom!important;
 }
 #room-scene .nexora-room-player .nexora-room-player-head{
-  position:absolute!important;left:32%!important;top:1%!important;right:auto!important;bottom:auto!important;
-  width:36%!important;height:34%!important;object-fit:contain!important;object-position:center bottom!important;
+  position:absolute!important;left:28%!important;top:1%!important;right:auto!important;bottom:auto!important;
+  width:44%!important;height:38%!important;object-fit:contain!important;object-position:center bottom!important;
 }
+#room-scene .nexora-room-player .nexora-avatar-sprite.facing-left,
+#room-scene .nexora-world-avatar .nexora-avatar-sprite.facing-left{transform:scaleX(-1)}
 #room-scene .nexora-room-player .nexora-room-player-name{
   position:absolute!important;left:50%!important;bottom:-19px!important;transform:translateX(-50%)!important;
   max-width:110px!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
@@ -843,4 +845,8 @@
 #nexora-info-form .nexora-readonly-photo{pointer-events:none}
 #nexora-info-form .nexora-readonly-photo span,
 #nexora-info-form .nexora-readonly-photo input{display:none!important}
-@media(max-width:520px){#room-scene .nexora-room-player{width:86px!important;height:130px!important}}
+@media(max-width:520px){#room-scene .nexora-room-player{width:82px!important;height:132px!important}}
+
+/* Shared avatar movement: remote characters glide and hop with the local character. */
+#room-scene .nexora-room-player{transition:left .72s cubic-bezier(.2,.72,.25,1),bottom .72s cubic-bezier(.2,.72,.25,1)!important}
+#room-scene .nexora-room-player .nexora-avatar-sprite.nexora-walking{animation:nexora-walk-hop .34s ease-in-out infinite;transform-origin:center bottom}
