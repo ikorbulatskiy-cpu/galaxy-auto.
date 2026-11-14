@@ -96,3 +96,7 @@
 .nexora-world-avatar.aura-gold .nexora-world-rank,.nexora-world-avatar.aura-diamond .nexora-world-rank{border-color:#f6d98b;color:#fff1b6}
 
 .nexora-aura-preview:not(.aura-none){animation:nexora-aura-pulse 1.8s ease-in-out infinite alternate}
+
+.nexora-profile-avatar{width:58px;height:72px;flex:0 0 58px;display:grid;place-items:center;border-radius:12px;background:radial-gradient(circle,#e7d6ff,#b5a0df 70%,#8d7ab8);filter:drop-shadow(0 0 6px #a65bff66)}
+.nexora-profile-avatar svg{width:100%;height:100%;overflow:visible}
+.nexora-rank-head{gap:10px}
