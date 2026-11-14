@@ -38,10 +38,6 @@
       if(p.auraEnabled&&p.auraType&&p.auraType!=="NONE"){const colors={GREEN:"#65ffad",GOLD_SOFT:"#ffd86d",GOLD_PREMIUM:"#ffc63f",FIRE_RED:"#ff715f",VIOLET:"#c17aff",CYAN:"#61eaff"};ctx.save();ctx.shadowColor=colors[p.auraType]||"#7abfff";ctx.shadowBlur=20;ctx.strokeStyle=colors[p.auraType]||"#7abfff";ctx.globalAlpha=.62;ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(x,y-43,31,54,0,0,Math.PI*2);ctx.stroke();ctx.restore()}
       if(window.NexoraSpriteEngine?.ready){window.NexoraSpriteEngine.draw(ctx,x,y,scale,p.avatar,p.direction||"down",Boolean(p.moving),p.emotion?.type)}
       else{ctx.font="64px sans-serif";ctx.textAlign="center";ctx.fillText("🧑",x,y)}
-      const title=p.title||"Новичок",name=p.nickname||"Игрок";ctx.font="bold 12px Arial";const width=Math.max(ctx.measureText(name).width,ctx.measureText(title).width)+18;
-      ctx.fillStyle="rgba(8,15,31,.94)";ctx.strokeStyle=p.isMe?"#e9c86e":"#5c8dc9";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(x-width/2,y-110,width,34,6);ctx.fill();ctx.stroke();
-      ctx.fillStyle="#a9c8ef";ctx.font="9px Arial";ctx.textAlign="center";ctx.fillText("✦ "+title,x,y-98);
-      ctx.fillStyle=p.isMe?"#ffdc83":"#f2f6ff";ctx.font="bold 11px Arial";ctx.fillText(name,x,y-84);
       p.bubbles=p.bubbles.filter(b=>b.until>Date.now());p.bubbles.forEach((b,i)=>{const by=y-137-i*34;ctx.font="12px Arial";const bw=Math.min(230,ctx.measureText(b.text).width+22);ctx.fillStyle="#fff4dd";ctx.beginPath();ctx.roundRect(x-bw/2,by-24,bw,27,8);ctx.fill();ctx.beginPath();ctx.moveTo(x-6,by+3);ctx.lineTo(x+6,by+3);ctx.lineTo(x,by+10);ctx.fill();ctx.fillStyle="#25212a";ctx.textAlign="center";ctx.fillText(b.text.slice(0,100),x,by-7,bw-12)});
     }
     draw(t){this.ctx.clearRect(0,0,this.width,this.height);this.drawBackground(this.ctx,t);for(const p of this.players.values())this.drawPlayer(this.ctx,p,t);if(this.cursor!==null){const x=this.cursor*this.width,y=this.height*.83;this.ctx.save();this.ctx.fillStyle="#9be9ff";this.ctx.shadowColor="#54caff";this.ctx.shadowBlur=20;this.ctx.font="34px Arial";this.ctx.textAlign="center";this.ctx.fillText("➤",x,y-4);this.ctx.restore()}this.frame=requestAnimationFrame(time=>this.draw(time))}
