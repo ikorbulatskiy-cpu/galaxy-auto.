@@ -58,3 +58,74 @@
  #dashboard>#tab-world .nx-avatar-card canvas[data-nexora-sprite]{height:84px!important;width:44px!important}
  #dashboard>#tab-world .nx-player-switcher{bottom:34px}
 }
+
+
+/* Final Galaxy-style interaction layer: the player sheet floats above chat and never clips to the scene. */
+html,body{ -webkit-text-size-adjust:100%; }
+#dashboard>#tab-world .nx-player-sheet{
+ position:fixed!important;z-index:12050!important;left:50%!important;right:auto!important;
+ bottom:calc(58px + 190px + env(safe-area-inset-bottom) + 8px)!important;
+ transform:translateX(-50%)!important;width:min(414px,calc(100vw - 16px))!important;
+ max-height:min(38dvh,330px)!important;overflow:auto!important;
+ padding:10px!important;border:1px solid #d6c18a!important;border-radius:13px!important;
+ background:linear-gradient(145deg,#252b35f7,#171d27f7)!important;
+ box-shadow:0 12px 38px #000b,0 0 0 1px #ffffff14 inset!important;
+ color:#f6f2e8!important;backdrop-filter:blur(16px);
+}
+#dashboard>#tab-world .nx-player-sheet[hidden]{display:none!important}
+.nx-player-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 8px;border-bottom:1px solid #ffffff20}
+.nx-player-sheet-title{min-width:0;display:grid;gap:2px}
+.nx-player-sheet-title small{font-size:8px;letter-spacing:1.4px;color:#d5bd80;font-weight:900}
+.nx-player-sheet-title b{font-size:14px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nx-player-sheet-title span{font-size:10px;color:#aeb8c4}
+.nx-player-sheet-nav{display:flex;gap:5px;flex:0 0 auto}
+.nx-player-sheet-nav button,.nx-player-sheet-actions button,.nx-flight-trigger,.nx-flight-picker button{
+ border:1px solid #ffffff25;border-radius:8px;background:linear-gradient(#414b57,#29313b);color:#fff;
+ min-height:32px;padding:5px 10px;font-weight:750;touch-action:manipulation
+}
+.nx-player-sheet-nav button{width:32px;padding:0;font-size:19px}
+.nx-player-sheet-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:9px 0 6px}
+.nx-player-sheet-actions button{min-width:0;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nx-player-sheet-actions button:active,.nx-flight-trigger:active{filter:brightness(1.2)}
+.nx-player-sheet-note{grid-column:1/-1;font-size:10px;color:#bac4cf;overflow-wrap:anywhere}
+.nx-player-sheet-foot{font-size:9px;color:#9ca8b6;border-top:1px solid #ffffff18;padding-top:6px}
+#dashboard>#tab-world .nx-avatar-card.nx-player-selected{filter:drop-shadow(0 0 8px #f5d98a)!important}
+#dashboard>#tab-world .nx-avatar-card.nx-player-selected .nx-avatar-name{outline:1px solid #e6cb83!important;background:#34313a!important}
+#dashboard>#tab-world .nx-flight-trigger{
+ position:absolute!important;z-index:14!important;right:8px!important;top:8px!important;
+ min-height:30px!important;padding:5px 10px!important;font-size:10px!important;
+ border:1px solid #e5ca87!important;border-radius:9px!important;
+ background:linear-gradient(135deg,#4b3c31,#242b35)!important;color:#ffe7ae!important;
+ box-shadow:0 4px 14px #0006!important
+}
+.nx-flight-picker{
+ position:fixed;z-index:12060;left:50%;top:calc(env(safe-area-inset-top) + 58px);
+ transform:translateX(-50%);width:min(380px,calc(100vw - 20px));display:flex;align-items:end;gap:6px;
+ padding:10px;border:1px solid #d6c18a;border-radius:12px;background:#202630f7;box-shadow:0 12px 35px #000b
+}
+.nx-flight-picker[hidden]{display:none!important}
+.nx-flight-picker label{flex:1;min-width:0;color:#e9d59e;font-size:10px}
+.nx-flight-picker input{display:block;width:100%;min-width:0;margin-top:5px;padding:9px;border:1px solid #ffffff28;border-radius:8px;background:#101720;color:#fff;font-size:16px!important}
+.nx-flight-picker button{font-size:10px;min-height:36px}
+.nx-flight-picker [data-flight-close]{width:32px;padding:0;font-size:18px}
+#dashboard>#tab-world input,#dashboard>#tab-world textarea,#dashboard>#tab-world select,
+.nx-auth-dialog input,.nx-auth-dialog textarea,.nx-auth-dialog select,
+#auth-modal input,#auth-modal textarea,#auth-modal select,
+.modal input,.modal textarea,.modal select{
+ font-size:16px!important;max-font-size:16px;-webkit-text-size-adjust:100%;
+}
+#dashboard>#tab-world .nx-chat-panel,#dashboard>#tab-world .nx-chat-log,#dashboard>#tab-world .nx-scene{
+ transform:none!important;zoom:1!important;scroll-behavior:auto;
+}
+#dashboard>#tab-world .nx-chat-panel{touch-action:pan-y pinch-zoom!important}
+#dashboard>#tab-world .nx-chat-send input{min-height:38px;font-size:16px!important}
+.nx-module-panel,.nx-planet-modules,#nx-planet-modules-panel,[data-planet-modules]{display:none!important}
+@media(max-width:600px){
+ .nx-player-sheet{bottom:calc(58px + 190px + env(safe-area-inset-bottom) + 6px)!important;max-height:34dvh!important}
+ .nx-player-sheet-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+ .nx-player-sheet-actions button{min-height:30px;padding:4px 5px;font-size:9px}
+ .nx-flight-picker{top:calc(env(safe-area-inset-top) + 56px)}
+}
+@media(max-height:700px){
+ .nx-player-sheet{bottom:calc(54px + 174px + env(safe-area-inset-bottom) + 5px)!important;max-height:31dvh!important}
+}
