@@ -1,0 +1,39 @@
+name: Extract NEXORA demon layers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "nexora-demon-separated-layers.zip"
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Extract sprite layers
+        run: |
+          mkdir -p /tmp/nexora-demon
+          unzip -o nexora-demon-separated-layers.zip -d /tmp/nexora-demon
+          test -s /tmp/nexora-demon/nexora-demon-body.webp
+          test -s /tmp/nexora-demon/nexora-demon-aura.webp
+      - name: Copy files to MVP branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin nexora-social-mvp
+          git checkout -B nexora-social-mvp origin/nexora-social-mvp
+          mkdir -p prototypes/nexora-social-mvp/public/assets/sprites/characters
+          cp /tmp/nexora-demon/nexora-demon-body.webp prototypes/nexora-social-mvp/public/assets/sprites/characters/nexora-demon-body.webp
+          cp /tmp/nexora-demon/nexora-demon-aura.webp prototypes/nexora-social-mvp/public/assets/sprites/characters/nexora-demon-aura.webp
+          git add prototypes/nexora-social-mvp/public/assets/sprites/characters/nexora-demon-body.webp prototypes/nexora-social-mvp/public/assets/sprites/characters/nexora-demon-aura.webp
+          git commit -m "Add separated NEXORA demon body and aura sprites" || exit 0
+          git push origin HEAD:nexora-social-mvp
