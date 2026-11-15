@@ -1,0 +1,53 @@
+name: NEXORA Mishkin Room Check
+
+on:
+  push:
+    branches: [nexora-social-mvp]
+    paths:
+      - "server.js"
+      - "prototypes/nexora-social-mvp/public/**"
+      - ".github/workflows/nexora-mishkin-room.yml"
+  pull_request:
+    branches: [nexora-social-mvp]
+    paths:
+      - "server.js"
+      - "prototypes/nexora-social-mvp/public/**"
+      - ".github/workflows/nexora-mishkin-room.yml"
+
+jobs:
+  room-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check JavaScript syntax
+        run: |
+          node --check server.js
+          node --check prototypes/nexora-social-mvp/public/app.js
+          node --check prototypes/nexora-social-mvp/public/room.js
+      - name: Verify room integration
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('prototypes/nexora-social-mvp/public/index.html', 'utf8');
+          const app = fs.readFileSync('prototypes/nexora-social-mvp/public/app.js', 'utf8');
+          const room = fs.readFileSync('prototypes/nexora-social-mvp/public/room.js', 'utf8');
+          const server = fs.readFileSync('server.js', 'utf8');
+          const css = fs.readFileSync('prototypes/nexora-social-mvp/public/room.css', 'utf8');
+          const checks = [
+            ['room mounted in intro app', html.includes('id="room-screen"')],
+            ['registration opens room', app.includes('NexoraRoom.show(state.account)')],
+            ['persistent chat API', server.includes('app.post("/api/room/messages"') && server.includes('app.get("/api/room/messages"')],
+            ['chat form sends to server', room.includes('fetch("/api/room/messages"')],
+            ['emoji picker opens', room.includes('toggle-emojis')],
+            ['exit returns to intro', room.includes('function leaveRoom()')],
+            ['mobile responsive layout', css.includes('@media(max-height:620px)')],
+            ['iPhone input zoom prevention', css.includes('font-size:16px!important')],
+          ];
+          for (const [name, ok] of checks) {
+            console.log((ok ? 'PASS ' : 'FAIL ') + name);
+            if (!ok) process.exitCode = 1;
+          }
+          NODE

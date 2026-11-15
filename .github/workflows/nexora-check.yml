@@ -1,0 +1,71 @@
+name: NEXORA backend checks
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - love-galaxy-redesign
+      - nexora-galaxy-social-module
+  pull_request:
+    branches:
+      - love-galaxy-redesign
+      - nexora-stage1-game-screen
+      - nexora-galaxy-social-module
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://nexora:nexora@localhost:5432/nexora_test
+      NODE_ENV: test
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: nexora
+          POSTGRES_PASSWORD: nexora
+          POSTGRES_DB: nexora_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nexora -d nexora_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+      - name: Check server and API syntax
+        run: |
+          node --check server.js
+          for file in src/*.js scripts/*.js; do
+            node --check "$file"
+          done
+      - name: Check browser client syntax
+        run: |
+          node --check public/avatar-motion.js
+          node --check public/nexora-world.js
+          node --check public/nexora-movement.js
+          node --check public/nexora-galaxy-social.js
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          html = Path("public/index.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script>([\s\S]*?)</script>", html)
+          if not scripts:
+              raise SystemExit("No inline client script found")
+          Path("/tmp/nexora-client.js").write_text("\n".join(scripts), encoding="utf-8")
+          PY
+          node --check /tmp/nexora-client.js
+      - name: Apply PostgreSQL migrations
+        run: npm run db:migrate
+      - name: Verify database migrations are idempotent
+        run: npm run db:migrate
+      - name: Run structural and database integration tests
+        run: npm test

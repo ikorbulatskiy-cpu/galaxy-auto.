@@ -1,0 +1,111 @@
+:root{color-scheme:dark;--bg:#0b1028;--text:#f8f7ff;--muted:#b5bee4}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-height:100dvh}button,input,textarea,select{font:inherit}input,textarea,select,[contenteditable="true"]{font-size:16px!important}button{cursor:pointer}.hidden{display:none!important}
+.app-shell{min-height:100dvh;background:radial-gradient(ellipse at 50% 0,#303b79 0,transparent 48%),#0b1028}.site-header{height:62px;padding:0 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff18}.brand{color:#fff;text-decoration:none;font-weight:950;letter-spacing:2px;font-size:19px}.site-header span{font-size:11px;color:#b9c3e8}
+.intro-screen{min-height:calc(100dvh - 62px);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(290px,.85fr);align-items:center;gap:28px;width:min(1120px,calc(100% - 32px));margin:auto;padding:30px 0 18px}
+.intro-art{position:relative;min-height:450px;height:min(65vh,570px);overflow:hidden;border:1px solid #9a9ff055;border-radius:25px;background:radial-gradient(ellipse at 50% 52%,#3b4b91 0,#1b285a 40%,#111936 76%);box-shadow:0 25px 80px #03081d99}
+.orbit{position:absolute;left:50%;top:50%;border:1px solid #b8c5ff55;border-radius:50%;transform:translate(-50%,-50%) rotate(-25deg)}.orbit-one{width:75%;height:35%}.orbit-two{width:92%;height:52%;transform:translate(-50%,-50%) rotate(35deg)}.orbit i{position:absolute;top:50%;left:8%;width:12px;height:12px;border-radius:50%;background:#d9e6ff;box-shadow:0 0 22px #9eb5ff}.orbit-two i{left:auto;right:12%;width:8px;height:8px;background:#f2a7e9}
+.planet{position:absolute;border-radius:50%;box-shadow:inset -22px -18px 35px #070d2c88,0 0 55px #7d8cff33}.planet-main{width:min(38vw,220px);aspect-ratio:1;left:50%;top:50%;transform:translate(-50%,-50%);background:radial-gradient(circle at 32% 28%,#c3c8ff 0,#798de0 25%,#4754a5 60%,#242e68 100%)}.planet-small{width:54px;height:54px;right:18%;top:23%;background:radial-gradient(circle at 30% 25%,#ffd4f0,#bd75cf 55%,#573b91)}
+.art-caption{position:absolute;left:20px;top:18px;padding:8px 12px;border:1px solid #ffffff44;border-radius:20px;background:#111a45aa;color:#e3e4ff;font-size:10px;letter-spacing:2px}
+.intro-card{text-align:center;padding:32px 24px;border:1px solid #a5aaff3d;border-radius:26px;background:linear-gradient(155deg,#202b5bef,#111936f2);box-shadow:0 22px 70px #03081d99}.logo-symbol{width:54px;height:54px;margin:0 auto 15px;display:grid;place-items:center;border-radius:18px;background:linear-gradient(135deg,#7e8dff,#c17bdf);font-size:28px;box-shadow:0 10px 30px #7889ff55}.eyebrow{color:#c8caff;font-size:10px;font-weight:850;letter-spacing:2px}.intro-card h1{margin:6px 0;font-size:clamp(40px,6vw,58px);letter-spacing:5px}.intro-card p{margin:0 0 25px;color:var(--muted);font-size:14px}.main-button,.second-button{width:100%;min-height:48px;border:0;border-radius:12px;font-weight:800;color:white}.main-button{background:linear-gradient(110deg,#657cff,#aa73dc);box-shadow:0 9px 25px #7281ff40}.main-button span{margin-left:8px}.second-button{margin-top:10px;background:#ffffff0d;border:1px solid #8c94c455}.intro-card small{display:block;margin-top:19px;color:#9da8d1;font-size:10px}.intro-screen footer{grid-column:1/-1;text-align:center;color:#7f8bb9;font-size:10px;letter-spacing:2px;padding:8px}
+.modal{position:fixed;inset:0;z-index:20;display:none;place-items:center;padding:18px;background:#05091be8;backdrop-filter:blur(9px)}.modal.open{display:grid}.auth-card{position:relative;width:min(420px,100%);padding:27px 23px;border:1px solid #7784c477;border-radius:22px;background:linear-gradient(155deg,#202b5c,#111832);box-shadow:0 24px 80px #000b}.close{position:absolute;right:13px;top:8px;border:0;background:none;color:#c9cbe6;font-size:29px}.auth-card h2{margin:10px 0 18px;font-size:25px}.step-row{display:flex;align-items:center;gap:12px;margin-top:18px;color:#d2caff;font-size:12px}.progress{height:5px;flex:1;border-radius:9px;background:#414a76;overflow:hidden}.progress i{display:block;width:50%;height:100%;background:linear-gradient(90deg,#7285ff,#d17bdc);transition:width .2s}.auth-card label{display:block;margin:13px 0;color:#d7daf4;font-size:12px;font-weight:700}.auth-card input{width:100%;height:46px;margin-top:7px;padding:0 12px;border:1px solid #6572a0;border-radius:10px;background:#0d1530;color:#fff;outline:none}.auth-card input:focus{border-color:#a5aaff;box-shadow:0 0 0 3px #9d8cff25}.auth-card .main-button{margin-top:10px}.error{min-height:18px;margin:5px 0;color:#ff9ca8;font-size:12px}.code-box{margin:16px 0;padding:16px;border:1px solid #6975a7;border-radius:13px;background:#0e1734}.code-box b,.code-box small{display:block}.code-box strong{display:block;margin:12px 0;color:#e1d3ff;font-size:21px;letter-spacing:2px;overflow-wrap:anywhere}.code-box small{color:#aeb8dc;font-size:11px;line-height:1.5}
+.toast{position:fixed;z-index:30;left:50%;bottom:20px;transform:translate(-50%,15px);opacity:0;pointer-events:none;padding:11px 16px;border:1px solid #8790c8;border-radius:12px;background:#222d5a;color:#fff;font-size:12px;transition:.2s;max-width:calc(100% - 30px);text-align:center}.toast.visible{opacity:1;transform:translate(-50%,0)}
+@media(max-width:760px){.site-header{height:54px;padding:0 14px}.intro-screen{min-height:calc(100dvh - 54px);grid-template-columns:1fr;gap:14px;padding:14px 0 12px}.intro-art{height:30vh;min-height:190px;max-height:280px;order:2}.intro-card{padding:20px 18px;order:1}.intro-card h1{font-size:43px}.intro-card p{margin-bottom:17px}.intro-screen footer{order:3;font-size:8px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* NEXORA room styles are loaded from room.css. */
+
+/* Pixel-art registration character creator, matching the approved green Galaxy-style mockup. */
+#register-modal{padding:0!important;background:radial-gradient(ellipse at 50% 60%,#173b19 0%,#03120a 68%,#010704 100%)!important;backdrop-filter:none!important;overflow:auto!important}
+#register-modal .nexora-register-card{box-sizing:border-box!important;width:min(810px,calc(100vw - 28px))!important;height:min(900px,calc(100dvh - 24px))!important;max-height:calc(100dvh - 24px)!important;padding:20px 24px 18px!important;display:flex!important;flex-direction:column!important;overflow:auto!important;border:5px ridge #8ce95a!important;border-radius:0!important;background:linear-gradient(180deg,#061b0c 0%,#020d07 100%)!important;box-shadow:0 0 28px #65e83d66,inset 0 0 22px #4c9b2a22!important;color:#f4ffe9!important;font-family:Tahoma,Arial,sans-serif!important}
+#register-modal .eyebrow{color:#b8f77e!important;text-align:center!important;letter-spacing:2px!important}
+#register-modal .step-row{color:#d4ffad!important}
+#register-modal .progress{background:#1c3a1e!important}
+#register-modal .progress i{background:#9af35d!important}
+.nexora-creator-title{margin:8px 0 12px;text-align:center;color:#f2ffe6;font-size:clamp(22px,4vw,36px);font-weight:900;text-shadow:0 2px #254d1a}
+.nexora-creator-picker{margin:4px 0 0}
+.nexora-creator-picker h3{margin:7px 0 9px;text-align:center;color:#b8f77e;font-size:clamp(16px,2.7vw,22px)}
+.nexora-creator-strip{display:grid;grid-template-columns:38px minmax(0,1fr) 38px;gap:7px;align-items:center}
+.nexora-creator-strip>button{height:58px;border:2px ridge #80cf48;background:#17451d;color:#efffe3;font-size:34px;font-weight:900;line-height:1}
+.nexora-creator-options{min-width:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;padding:4px;border:3px ridge #386e2b;background:#0b2711}
+.nexora-creator-choice{min-width:0;height:92px;padding:3px;border:1px solid #315d2a;background:#0b1b0e;display:grid;place-items:center}
+.nexora-creator-choice.selected{border:2px solid #a5f46a;background:#1a4820;box-shadow:inset 0 0 12px #8dff5b55}
+.nexora-creator-choice svg{width:100%;height:100%;max-width:58px;image-rendering:pixelated}
+.nexora-creator-stage{position:relative;flex:1 1 220px;min-height:180px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse at 50% 78%,#316a28 0%,#0a2710 42%,#04120a 80%)}
+.nexora-creator-stage:after{content:"";position:absolute;bottom:8px;left:50%;width:min(360px,70%);height:38px;transform:translateX(-50%);border:4px solid #9df765;border-radius:50%;box-shadow:0 0 14px #83ff50,inset 0 0 12px #83ff5055}
+.nexora-creator-preview{position:relative;z-index:1;width:clamp(100px,19vw,150px);height:100%;max-height:260px;display:grid;place-items:center;filter:drop-shadow(0 0 13px #9eff66aa)}
+.nexora-creator-preview svg{height:95%;max-height:245px;width:100%;image-rendering:pixelated}
+.nexora-creator-spark{position:absolute;top:25%;right:24%;color:#b8ff7e;font-size:27px;text-shadow:0 0 12px #8dff55}
+.nexora-head-picker{margin-top:0}
+.nexora-head-picker .nexora-creator-choice{height:76px}
+.nexora-head-picker .nexora-creator-choice svg{max-height:68px}
+.nexora-creator-actions{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:15px auto 0;width:min(500px,100%)}
+.nexora-creator-actions button{min-height:54px;border:3px ridge #8fe85d;background:linear-gradient(#1e5524,#0d3215);color:#f4ffe8;font-size:20px;font-weight:900;text-shadow:1px 2px #102b10}
+#register-modal .main-button{border:2px ridge #8fe85d!important;border-radius:0!important;background:linear-gradient(#23632b,#104019)!important;color:#f4ffe8!important;box-shadow:0 0 12px #79e94c33!important}
+#register-modal .auth-card label{color:#d8ffba}
+#register-modal .auth-card input{border-radius:0!important;border:2px inset #6fae4b!important;background:#06160a!important}
+@media(max-width:560px){#register-modal .nexora-register-card{width:100vw!important;height:100dvh!important;max-height:100dvh!important;padding:14px 12px!important;border-width:3px!important}.nexora-creator-stage{min-height:155px;flex-basis:155px}.nexora-creator-choice{height:74px}.nexora-head-picker .nexora-creator-choice{height:62px}.nexora-creator-strip{grid-template-columns:31px minmax(0,1fr) 31px;gap:4px}.nexora-creator-strip>button{height:48px;font-size:28px}.nexora-creator-actions{gap:10px}.nexora-creator-actions button{min-height:47px;font-size:17px}}
+
+
+/* Final creator pass: sprite-atlas parts are independently selectable and layered in the preview. */
+#register-modal .nexora-register-card{width:min(810px,calc(100vw - 28px))!important}
+#register-modal .nexora-creator-options{grid-template-columns:repeat(5,minmax(0,1fr));}
+#register-modal .nexora-creator-choice svg{width:100%;height:100%;max-width:72px;max-height:100%;overflow:visible;image-rendering:pixelated}
+#register-modal .nexora-creator-stage{background:radial-gradient(ellipse at 50% 75%,#397b2c 0%,#0b2c12 42%,#031008 82%)}
+#register-modal .nexora-creator-preview svg{width:100%;height:100%;max-height:270px;overflow:visible;image-rendering:pixelated}
+#register-modal .nexora-creator-spark{right:23%;top:23%;color:#c2ff92;text-shadow:0 0 10px #9cff64}
+@media(max-width:560px){#register-modal .nexora-creator-preview{width:clamp(105px,34vw,145px)}}
+
+/* Returning player landing card and device-bound remembered session */
+.returning-player{display:grid;grid-template-columns:104px minmax(0,1fr);align-items:center;gap:12px;margin:0 0 16px;padding:13px;border:1px solid #c7dc7080;border-radius:16px;background:linear-gradient(145deg,#283653ed,#17233bed);box-shadow:0 12px 35px #03081d88}
+.returning-player.hidden{display:none}
+.returning-avatar{position:relative;width:100px;height:128px;display:grid;place-items:end center;overflow:hidden;border-radius:12px;background:radial-gradient(ellipse at 50% 78%,#c7dc7033,transparent 70%)}
+.returning-avatar img{position:absolute;object-fit:contain;image-rendering:pixelated;pointer-events:none}
+.returning-avatar #returning-body{height:94px;width:82px;bottom:0;left:9px}
+.returning-avatar #returning-head{height:60px;width:60px;bottom:66px;left:20px}
+.returning-copy{min-width:0;text-align:left}
+.returning-copy strong{display:block;margin:6px 0;color:#f2f5ff;font-size:19px;overflow-wrap:anywhere}
+.returning-copy small{display:block;color:#c7d2e8;font-size:11px;line-height:1.4}
+.returning-player .main-button{grid-column:1/-1;min-height:45px;border-radius:10px;background:linear-gradient(110deg,#82994a,#c7dc70);color:#172033;box-shadow:0 8px 22px #c7dc7033}
+.recovery-hint{display:block;margin:-7px 0 13px;color:#c0c8d6;font-size:11px;line-height:1.5}
+#login-modal .recovery-hint{color:var(--nx-muted)}
+@media(max-width:600px){.returning-player{grid-template-columns:88px minmax(0,1fr);gap:9px;padding:10px}.returning-avatar{width:84px;height:112px}.returning-avatar #returning-body{height:82px;width:72px;left:6px}.returning-avatar #returning-head{height:52px;width:52px;bottom:58px;left:16px}.returning-copy strong{font-size:17px}}
+
+
+/* Финальная компактная настройка регистрации и входа */
+#login-modal{padding:12px!important}
+#login-modal .login-card{width:min(360px,calc(100vw - 28px))!important;padding:25px 20px 19px!important;border:1px solid #8b9a65!important;border-radius:16px!important;background:linear-gradient(155deg,#303b53,#202a40)!important;box-shadow:0 18px 55px #000b,0 0 0 1px #ffffff0a!important}
+#login-modal .login-card h2{margin:9px 0 15px!important;font-size:21px!important;color:#e8f1d0!important}
+#login-modal .login-card .eyebrow{padding-right:20px;text-align:left!important;color:#d2e69a!important;letter-spacing:1.2px!important}
+#login-modal .login-card label{margin:12px 0 8px!important;color:#e1e8d5!important;font-size:12px!important}
+#login-modal .login-card input{height:44px!important;border-radius:9px!important;background:#182238!important;border-color:#71809a!important}
+#login-modal .login-card .main-button{width:auto!important;min-width:112px!important;min-height:40px!important;margin-top:9px!important;padding:0 20px!important;border-radius:9px!important;background:linear-gradient(110deg,#9db45d,#c7dc70)!important;color:#202a3c!important;box-shadow:0 5px 16px #c7dc7028!important}
+#login-modal .recovery-hint{margin:4px 0 10px!important;font-size:11px!important;line-height:1.55!important;color:#c6d0df!important}
+#register-modal .nexora-register-card{width:min(620px,calc(100vw - 24px))!important;height:auto!important;min-height:0!important;max-height:calc(100dvh - 24px)!important;padding:22px 22px 18px!important;border:1px solid #a7c66b!important;border-radius:18px!important;background:linear-gradient(155deg,#25364a 0%,#17283b 100%)!important;box-shadow:0 22px 70px #000c,0 0 35px #a7c66b18!important}
+#register-modal .nexora-register-card .eyebrow{color:#d4e9a0!important}
+#register-modal .nexora-register-card h2{margin:12px 0 15px!important;color:#edf5dd!important;font-size:24px!important}
+#register-modal .nexora-register-card .step-row{margin:14px 0 8px!important;color:#d9e8b5!important}
+#register-modal .nexora-register-card .progress{background:#40516a!important}
+#register-modal .nexora-register-card .progress i{background:linear-gradient(90deg,#9db45d,#d6ec8b)!important}
+#register-modal .nexora-register-card label{color:#e2ebd5!important}
+#register-modal .nexora-register-card input{height:44px!important;border-radius:9px!important;background:#142237!important;border:1px solid #73839a!important}
+#register-modal .nexora-register-card .main-button{width:auto!important;min-width:130px!important;min-height:42px!important;padding:0 18px!important;border-radius:9px!important;background:linear-gradient(110deg,#9db45d,#c7dc70)!important;color:#202a3c!important;font-size:13px!important;box-shadow:0 6px 18px #c7dc7028!important}
+#register-modal .nexora-creator-title{font-size:23px!important;color:#edf5dd!important}
+#register-modal .nexora-creator-stage{flex:0 1 180px!important;min-height:145px!important;border:1px solid #667c68!important;border-radius:12px!important}
+#register-modal .nexora-creator-options{border:1px solid #667c68!important;border-radius:9px!important;background:#17283b!important}
+#register-modal .nexora-creator-choice{height:68px!important;border-radius:6px!important;background:#1b2c41!important}
+#register-modal .nexora-head-picker .nexora-creator-choice{height:58px!important}
+#register-modal .nexora-creator-strip>button{height:42px!important;border:1px solid #8ba65e!important;border-radius:7px!important;background:#344a4c!important;color:#eff7df!important;font-size:25px!important}
+#register-modal .nexora-creator-actions{width:min(360px,100%)!important;gap:10px!important;margin-top:12px!important}
+#register-modal .nexora-creator-actions button{min-height:40px!important;border:1px solid #82995c!important;border-radius:9px!important;background:#344a4c!important;color:#eff7df!important;font-size:13px!important}
+#register-modal .code-box{margin:12px 0!important;padding:14px!important;border:1px solid #82995c!important;border-radius:12px!important;background:#17283b!important;text-align:center!important}
+#register-modal .code-box b{color:#dcebb7!important;font-size:13px!important}
+#register-modal .code-box strong{font-size:clamp(18px,4vw,23px)!important;color:#e8f5bd!important;letter-spacing:2px!important}
+#register-modal .code-box small{color:#d0d9e5!important;line-height:1.55!important}
+#register-modal #enter-world{min-height:40px!important;margin:6px auto 0!important;display:block!important}
+@media(max-width:560px){
+ #register-modal .nexora-register-card{width:calc(100vw - 16px)!important;max-height:calc(100dvh - 16px)!important;padding:19px 13px 14px!important;border-width:1px!important}
+ #register-modal .nexora-creator-stage{flex-basis:135px!important;min-height:125px!important}
+ #register-modal .nexora-creator-choice{height:58px!important}
+ #register-modal .nexora-head-picker .nexora-creator-choice{height:50px!important}
+ #register-modal .nexora-creator-actions button{min-height:38px!important}
+}

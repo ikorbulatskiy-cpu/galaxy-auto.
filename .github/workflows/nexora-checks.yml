@@ -1,0 +1,24 @@
+name: NEXORA checks
+
+on:
+  pull_request:
+    branches: [love-galaxy-redesign]
+  push:
+    branches: [love-galaxy-redesign]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Check server-side JavaScript syntax
+        run: npm run check
+      - name: Run tests
+        run: npm test

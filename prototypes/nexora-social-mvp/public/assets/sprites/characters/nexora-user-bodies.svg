@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1206 2622">
+<title>NEXORA screenshot body sprites</title>
+<defs><filter id="sprite-key" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 -0.299 -0.587 -0.114 0 1"/><feComponentTransfer><feFuncA type="table" tableValues="0 0 0.04 0.18 0.55 0.9 1 1 1"/></feComponentTransfer></filter></defs>
+<symbol id="body-1" viewBox="101 983 202 188" preserveAspectRatio="xMidYMid meet"><image href="IMG_4158.png" xlink:href="IMG_4158.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<symbol id="body-2" viewBox="480 856 253 304" preserveAspectRatio="xMidYMid meet"><image href="IMG_4158.png" xlink:href="IMG_4158.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<symbol id="body-3" viewBox="897 897 224 275" preserveAspectRatio="xMidYMid meet"><image href="IMG_4158.png" xlink:href="IMG_4158.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<symbol id="body-4" viewBox="101 1193 210 347" preserveAspectRatio="xMidYMid meet"><image href="IMG_4158.png" xlink:href="IMG_4158.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<symbol id="body-5" viewBox="434 1229 325 318" preserveAspectRatio="xMidYMid meet"><image href="IMG_4158.png" xlink:href="IMG_4158.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+<symbol id="body-6" viewBox="897 1236 224 311" preserveAspectRatio="xMidYMid meet"><image href="IMG_4158.png" xlink:href="IMG_4158.png" x="0" y="0" width="1206" height="2622" preserveAspectRatio="none" filter="url(#sprite-key)"/></symbol>
+</svg>
