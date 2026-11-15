@@ -18,7 +18,7 @@
   try{
    const r=await fetch("/api/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nickname})});
    const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось создать персонажа");
-   state.account=d.account;state.recoveryCode=d.recoveryCode;$("recovery-code").textContent=d.recoveryCode||"Код не получен";
+   state.account=d.account;state.recoveryCode=d.recoveryCode;$("recovery-code").textContent=d.recoveryCode||"Код не получен. Обратись в поддержку перед закрытием окна.";
    $("register-step-one").classList.add("hidden");$("register-step-customize").classList.remove("hidden");
    $("step-label").textContent="2 из 3";$("step-progress").style.width="66%";renderCreator();
   }catch(err){$("register-error").textContent=err.message;b.disabled=false;}
