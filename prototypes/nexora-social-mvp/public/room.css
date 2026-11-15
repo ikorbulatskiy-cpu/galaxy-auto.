@@ -1369,3 +1369,226 @@
   .retro-composer{min-height:52px;padding:7px 8px;gap:6px}
   .retro-composer button{min-width:82px;padding:0 10px}
 }
+
+
+/* NEXORA DESIGN SYSTEM — единый графитовый интерфейс с салатовым акцентом.
+   Новые окна и кнопки оформляются по этим общим правилам. */
+:root{
+ --nx-panel:#353d54;
+ --nx-panel-deep:#252e43;
+ --nx-panel-raised:#414a60;
+ --nx-border:#78849c;
+ --nx-lime:#c7dc70;
+ --nx-lime-bright:#d9ef8a;
+ --nx-text:#f0f2f5;
+ --nx-muted:#c0c8d6;
+ --nx-danger:#ff9ba8;
+}
+.nexora-avatar-panel,
+.nexora-character-actions,
+.nexora-emotions-panel,
+.nexora-auras-panel,
+.nexora-developer-panel{
+ background:#080d18d9!important;
+ backdrop-filter:blur(4px)!important;
+}
+.nexora-avatar-window,
+.nexora-character-actions-card,
+.nexora-emotions-window,
+.nexora-developer-window{
+ border:1px solid var(--nx-border)!important;
+ border-radius:5px!important;
+ background:var(--nx-panel)!important;
+ color:var(--nx-text)!important;
+ box-shadow:0 18px 55px #000b,inset 0 1px #ffffff12!important;
+ font-family:Arial,Tahoma,sans-serif!important;
+}
+.nexora-avatar-window{width:min(430px,100%)!important}
+.nexora-info-header,
+.nexora-emotions-window header,
+.nexora-developer-window>header{
+ min-height:42px!important;
+ padding:8px 12px!important;
+ border-bottom:1px solid var(--nx-border)!important;
+ background:repeating-linear-gradient(135deg,#b9ce68 0 6px,#a5bd58 6px 12px)!important;
+ color:#202638!important;
+ font-size:12px!important;
+ font-weight:900!important;
+ letter-spacing:.6px!important;
+ text-shadow:1px 1px #e6f0b4!important;
+}
+.nexora-info-header .nexora-avatar-close,
+.nexora-emotions-window header button,
+.nexora-developer-window>header button{
+ width:30px!important;height:30px!important;
+ border:1px solid #687b3c!important;border-radius:3px!important;
+ background:#d3e98a!important;color:#202638!important;
+}
+.nexora-classic-profile,
+.nexora-avatar-content,
+.nexora-emotions-list,
+.nexora-management-content,
+.nexora-report-form{
+ background:var(--nx-panel)!important;
+ color:var(--nx-text)!important;
+}
+.nexora-classic-profile{font-family:Arial,Tahoma,sans-serif!important}
+.nexora-classic-section,
+.nexora-classic-links,
+.nexora-classic-ask,
+.nexora-privilege-line,
+.nexora-classic-facts,
+.nexora-classic-photo,
+.nexora-classic-questionnaire label,
+.nexora-classic-profile label{
+ color:var(--nx-lime)!important;
+}
+.nexora-classic-profile input,
+.nexora-classic-profile textarea,
+.nexora-classic-profile select,
+.nexora-report-form input,
+.nexora-report-form textarea,
+.nexora-report-form select,
+.nexora-management-content input,
+.nexora-management-content select,
+.nexora-management-content textarea{
+ box-sizing:border-box!important;
+ border:1px solid #78849c!important;
+ border-radius:4px!important;
+ background:var(--nx-panel-deep)!important;
+ color:var(--nx-text)!important;
+ accent-color:var(--nx-lime)!important;
+}
+.nexora-classic-profile input::placeholder,
+.nexora-classic-profile textarea::placeholder,
+.nexora-report-form textarea::placeholder,
+.nexora-management-content input::placeholder{color:#aeb8c9!important}
+.nexora-classic-profile input:focus,
+.nexora-classic-profile textarea:focus,
+.nexora-classic-profile select:focus,
+.nexora-report-form input:focus,
+.nexora-report-form textarea:focus,
+.nexora-report-form select:focus{
+ outline:none!important;border-color:var(--nx-lime)!important;
+ box-shadow:0 0 0 2px #c7dc7033!important;
+}
+.nexora-classic-profile .nexora-classic-facts input{
+ border:0!important;border-bottom:1px solid #788b4e!important;
+ border-radius:0!important;background:transparent!important;
+}
+.nexora-profile-loading{background:var(--nx-panel)!important;color:var(--nx-muted)!important}
+.nexora-profile-loading b{color:var(--nx-lime)!important}
+.nexora-profile-loading span{color:var(--nx-muted)!important}
+.nexora-profile-loading i{border-color:#69758d!important;border-top-color:var(--nx-lime)!important}
+.nexora-profile-error{background:var(--nx-panel)!important;color:#ffd2d8!important}
+.nexora-profile-error button{
+ min-height:38px!important;padding:8px 13px!important;
+ border:1px solid #91a45a!important;border-radius:4px!important;
+ background:var(--nx-lime)!important;color:#202638!important;font-weight:800!important;
+}
+.nexora-character-actions-card{width:min(300px,calc(100vw - 30px))!important;padding:14px!important;gap:8px!important}
+.nexora-character-actions-title{color:var(--nx-lime)!important;font-size:13px!important}
+.nexora-character-actions-card button,
+.nexora-info-actions button,
+.nexora-avatar-save,
+.nexora-emotion-option,
+.nexora-aura-option,
+.nexora-management-tabs button,
+.nexora-management-content button,
+.nexora-developer-window button,
+.nexora-report-form button,
+.nexora-creator-actions button{
+ min-height:38px!important;
+ border:1px solid #91a45a!important;
+ border-radius:4px!important;
+ background:linear-gradient(180deg,#cfe47a,#a9c15b)!important;
+ color:#202638!important;
+ font:700 13px Arial,Tahoma,sans-serif!important;
+ text-shadow:none!important;
+ box-shadow:inset 0 1px #f0ffc0,0 2px 4px #0003!important;
+}
+.nexora-character-actions-card button.secondary,
+.nexora-developer-window button.secondary{
+ border-color:#78849c!important;background:#252e43!important;color:#e2e4eb!important;
+ box-shadow:inset 0 1px #ffffff12!important;
+}
+.nexora-character-actions-card button:hover,
+.nexora-info-actions button:hover,
+.nexora-avatar-save:hover,
+.nexora-emotion-option:hover,
+.nexora-aura-option:hover,
+.nexora-management-tabs button:hover,
+.nexora-management-content button:hover,
+.nexora-developer-window button:hover,
+.nexora-report-form button:hover,
+.nexora-creator-actions button:hover{filter:brightness(1.08)!important}
+.nexora-character-actions-card button:focus-visible,
+.nexora-info-actions button:focus-visible,
+.nexora-avatar-save:focus-visible,
+.nexora-emotions-window button:focus-visible,
+.nexora-developer-window button:focus-visible,
+.nexora-report-form button:focus-visible{
+ outline:2px solid var(--nx-lime-bright)!important;outline-offset:2px!important;
+}
+.nexora-emotions-window{background:var(--nx-panel)!important}
+.nexora-emotions-window header{flex:0 0 42px!important}
+.nexora-emotions-list{background:var(--nx-panel)!important;padding:7px!important}
+.nexora-emotion-option{
+ display:flex!important;justify-content:flex-start!important;gap:10px!important;
+ margin:3px 0!important;padding:6px 9px!important;
+ background:#30394f!important;color:var(--nx-text)!important;
+ border:1px solid #68748b!important;box-shadow:none!important;
+}
+.nexora-emotion-option.selected,
+.nexora-aura-option.selected{
+ border-color:var(--nx-lime)!important;background:#56633d!important;color:#f4ffd5!important;
+}
+.nexora-auras-list{background:var(--nx-panel)!important}
+.nexora-aura-option{
+ background:#30394f!important;color:var(--nx-text)!important;
+ border:1px solid #68748b!important;box-shadow:none!important;
+}
+.nexora-aura-option.selected{box-shadow:0 0 0 2px #c7dc7044!important}
+.nexora-report-form{gap:10px!important;padding:14px!important}
+.nexora-report-form label{color:var(--nx-lime)!important}
+.nexora-report-form p{color:var(--nx-lime)!important}
+.nexora-management-meta,
+.nexora-management-note{background:#30394f!important;color:var(--nx-lime)!important;border-color:var(--nx-border)!important}
+.nexora-management-tabs{background:#30394f!important;border-color:var(--nx-border)!important}
+.nexora-management-tabs button{padding:7px 8px!important}
+.nexora-management-tabs button.active{background:#56633d!important;color:#f4ffd5!important;border-color:var(--nx-lime)!important}
+.nexora-management-card,
+.nexora-management-list,
+.nexora-management-empty,
+.nexora-management-loading{background:#30394f!important;color:var(--nx-text)!important;border-color:#68748b!important}
+.nexora-management-card strong,
+.nexora-management-card h3{color:var(--nx-lime)!important}
+.nexora-developer-window{border-radius:5px!important}
+.nexora-developer-window .nexora-management-content{background:var(--nx-panel)!important;color:var(--nx-text)!important}
+#register-modal .nexora-register-card,
+#login-modal .auth-card{
+ border:2px solid var(--nx-lime)!important;border-radius:5px!important;
+ background:var(--nx-panel)!important;color:var(--nx-text)!important;
+ box-shadow:0 18px 55px #000c,inset 0 1px #ffffff12!important;
+}
+#register-modal .nexora-register-card h2,
+#login-modal .auth-card h2{color:var(--nx-lime-bright)!important}
+#register-modal .auth-card label,
+#login-modal .auth-card label{color:var(--nx-lime)!important}
+#register-modal .auth-card input,
+#login-modal .auth-card input{
+ border:1px solid var(--nx-border)!important;border-radius:4px!important;
+ background:var(--nx-panel-deep)!important;color:var(--nx-text)!important;
+}
+#register-modal .auth-card input:focus,
+#login-modal .auth-card input:focus{
+ border-color:var(--nx-lime)!important;box-shadow:0 0 0 2px #c7dc7033!important;
+}
+#register-modal .nexora-creator-stage{border:1px solid #687b4c!important}
+#register-modal .nexora-creator-actions button{min-height:42px!important}
+@media(max-width:600px){
+ .nexora-avatar-panel{inset:6px!important;width:calc(100% - 12px)!important}
+ .nexora-avatar-window{max-height:calc(100dvh - 12px)!important}
+ .nexora-character-actions-card{width:min(320px,calc(100vw - 24px))!important}
+ .nexora-developer-window{max-height:calc(100dvh - 16px)!important}
+}
