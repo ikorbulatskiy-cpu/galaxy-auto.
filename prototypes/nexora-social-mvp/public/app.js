@@ -7,6 +7,7 @@
  function resetRegister(){$("register-step-one").classList.remove("hidden");$("register-step-customize").classList.add("hidden");$("register-step-two").classList.add("hidden");$("step-label").textContent="1 из 3";$("step-progress").style.width="33%";$("register-error").textContent="";$("customize-error").textContent="";$("finish-error").textContent="";$("register-next").disabled=false;state.headId=1;state.bodyId=1;state.characterCreated=false;renderCreator();}
  $("open-register").addEventListener("click",()=>{resetRegister();modal("register",true);setTimeout(()=>$("register-nickname").focus(),60);});
  $("open-login").addEventListener("click",()=>{$("login-error").textContent="";modal("login",true);setTimeout(()=>$("login-code").focus(),60);});
+ $("return-enter").addEventListener("click",()=>{if(!state.account)return;window.NexoraRoom.show(state.account);toast("С возвращением, "+state.account.nickname+"!");});
  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>modal(b.dataset.close,false)));
  document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)modal(m.id.replace("-modal",""),false);}));
  $("register-form").addEventListener("submit",async e=>{
@@ -137,17 +138,25 @@ $("customize-back").addEventListener("click",()=>{$("register-step-customize").c
   catch{$("server-status").textContent="Нет связи с сервером";}
  }
  async function session(){
-  // Do not silently enter the room from a remembered cookie.
-  // Returning players must explicitly authenticate with their recovery code.
+  const welcome=$("returning-player");
   try{
    const r=await fetch("/api/auth/me",{cache:"no-store"});
-   if(!r.ok)throw Error("Не удалось проверить аккаунт");
+   if(!r.ok)throw Error("Не удалось проверить сохранённую сессию");
    const d=await r.json();
-   state.account=null;
-   if(d.authenticated){
-    $("open-login").textContent="Войти в свой аккаунт";
+   state.account=d.authenticated?d.account:null;
+   if(!d.authenticated){welcome.classList.add("hidden");return;}
+   $("returning-nickname").textContent=d.account.nickname||"Твой персонаж";
+   $("open-login").textContent="Войти с другим кодом восстановления";
+   const profileResponse=await fetch("/api/account/profile",{cache:"no-store"});
+   if(profileResponse.ok){
+    const profile=await profileResponse.json(),character=profile.character||{};
+    applySprite($("returning-body"),"body",Math.max(1,Math.min(6,Number(character.body_id??character.bodyId)||1)));
+    applySprite($("returning-head"),"head",Math.max(1,Math.min(6,Number(character.head_id??character.headId)||1)));
+   }else{
+    applySprite($("returning-body"),"body",1);applySprite($("returning-head"),"head",1);
    }
-  }catch(err){console.warn("Session check failed:",err.message);}
+   welcome.classList.remove("hidden");
+  }catch(err){console.warn("Saved session check failed:",err.message);welcome.classList.add("hidden");}
  }
  status();session();setInterval(status,30000);
 })();
