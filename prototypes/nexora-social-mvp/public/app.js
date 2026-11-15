@@ -39,7 +39,8 @@
    const r=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({recoveryCode:$("login-code").value.trim()})});
    const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось войти");
    state.account=d.account;$("login-code").value="";
-   await ensureCharacter();modal("login",false);
+   modal("login",false);
+   if(!window.NexoraRoom||typeof window.NexoraRoom.show!=="function")throw Error("Комната ещё загружается. Обнови страницу и попробуй войти снова.");
    window.NexoraRoom.show(state.account);
    toast("Вход выполнен. Добро пожаловать!");
   }catch(err){$("login-error").textContent=err.message;}
