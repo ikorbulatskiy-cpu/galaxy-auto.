@@ -1608,3 +1608,20 @@
  background:var(--nx-lime);color:#202638;font:700 12px Arial,Tahoma,sans-serif;
 }
 @keyframes nx-chat-popup-in{from{opacity:0;transform:translate(-50%,-46%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+
+
+/* Chat returns to the shared room history and uses the full available screen */
+#room-screen{padding:0!important}
+.retro-room{width:100vw!important;height:100dvh!important;max-width:none!important;max-height:none!important;min-height:0!important;border:0!important;grid-template-rows:22px minmax(0,44%) minmax(0,1fr)!important}
+.retro-chat{min-height:0!important}
+.chat-space{min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain}
+.retro-composer{flex:0 0 40px!important;height:40px!important}
+.nexora-character-actions{position:fixed!important;inset:0!important;z-index:110!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:12px!important}
+.nexora-character-actions.hidden{display:none!important}
+.nexora-character-actions-card{width:min(260px,calc(100vw - 32px))!important;max-height:calc(100dvh - 32px)!important;overflow:auto!important;padding:12px!important;gap:6px!important;border-radius:12px!important}
+.nexora-character-actions-card button{min-height:34px!important;padding:7px 10px!important;font-size:12px!important}
+.nexora-character-actions-title{margin-bottom:2px!important;font-size:12px!important}
+.nexora-developer-panel,.nexora-emotions-panel,.nexora-auras-panel{padding:10px!important}
+.nexora-emotions-window{width:min(340px,calc(100vw - 24px))!important;max-height:calc(100dvh - 24px)!important;border-radius:12px!important}
+.nexora-developer-window{width:min(720px,calc(100vw - 24px))!important;max-height:calc(100dvh - 24px)!important}
+@media(max-width:600px){.retro-room{grid-template-rows:20px minmax(0,44%) minmax(0,1fr)!important}.planet-header{height:20px!important;min-height:20px!important}.retro-composer{flex-basis:38px!important;height:38px!important}}
