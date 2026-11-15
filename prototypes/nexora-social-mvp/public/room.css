@@ -1592,3 +1592,19 @@
  .nexora-character-actions-card{width:min(320px,calc(100vw - 24px))!important}
  .nexora-developer-window{max-height:calc(100dvh - 16px)!important}
 }
+
+
+/* Чат: удержание открывает компактное действие очистки. */
+.retro-chat{position:relative}
+.chat-space{touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.nexora-chat-clear-popup{
+ position:absolute;z-index:20;top:48%;left:50%;transform:translate(-50%,-50%);
+ padding:5px;border:1px solid var(--nx-lime);border-radius:5px;
+ background:var(--nx-panel);box-shadow:0 8px 24px #0009;
+ animation:nx-chat-popup-in .14s ease-out;
+}
+.nexora-chat-clear-popup button{
+ min-height:32px;padding:6px 13px;border:1px solid #91a45a;border-radius:4px;
+ background:var(--nx-lime);color:#202638;font:700 12px Arial,Tahoma,sans-serif;
+}
+@keyframes nx-chat-popup-in{from{opacity:0;transform:translate(-50%,-46%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
