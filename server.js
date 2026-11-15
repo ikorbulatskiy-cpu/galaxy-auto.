@@ -63,7 +63,7 @@ app.get("/api/account/wallet",async(req,res)=>{
   res.json({diamonds:Number(result.rows[0].diamonds)||0});
  }catch(error){console.error("Wallet read failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Баланс временно недоступен."});}
 });
-app.get("/api/account/online",async(_req,res)=>{try{const r=await pool.query("SELECT COUNT(DISTINCT account_id)::int AS total FROM nexora_social_auth.sessions WHERE expires_at>NOW()");res.json({online:r.rows[0].total});}catch{res.json({online:0});}});
+app.get("/api/account/online",async(_req,res)=>{try{const r=await pool.query("SELECT COUNT(DISTINCT account_id)::int AS total FROM nexora_social_auth.sessions WHERE expires_at IS NULL OR expires_at>NOW()");res.json({online:r.rows[0].total});}catch{res.json({online:0});}});
 
 let roomChatSchemaPromise;
 function ensureRoomChatSchema(){
