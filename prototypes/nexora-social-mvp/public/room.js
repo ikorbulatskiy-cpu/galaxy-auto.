@@ -229,6 +229,7 @@
    const r=scene.getBoundingClientRect(),b=sceneBounds();
    movement.target={x:Math.max(b.minX,Math.min(b.maxX,(event.clientX-r.left)/r.width*100)),bottom:Math.max(b.minY,Math.min(b.maxY,(r.bottom-event.clientY)/r.height*100))};
    movement.keys.clear();startMovementLoop();
+  });
  }
  function openCharacterActions(playerId=null){
   ensureAvatarEditor();
