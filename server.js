@@ -75,12 +75,9 @@ app.get("/api/room/messages",async(req,res)=>{
   const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
   await ensureRoomChatSchema();
   const after=Math.max(0,Number.parseInt(req.query.after||"0",10)||0);
-  const sinceRaw=String(req.query.since||"");
-  const parsedSince=sinceRaw?new Date(sinceRaw):new Date(Date.now()-24*60*60*1000);
-  const since=Number.isNaN(parsedSince.getTime())?new Date(Date.now()-24*60*60*1000):parsedSince;
   const query=after>0
-   ? await pool.query("SELECT id,nickname,message,created_at,account_id FROM nexora_social_auth.room_messages WHERE id>$1 AND created_at >= $2 ORDER BY id ASC LIMIT 80",[after,since])
-   : await pool.query("SELECT id,nickname,message,created_at,account_id FROM (SELECT id,nickname,message,created_at,account_id FROM nexora_social_auth.room_messages WHERE created_at >= $1 ORDER BY id DESC LIMIT 60) recent ORDER BY id ASC",[since]);
+   ? await pool.query("SELECT id,nickname,message,created_at,account_id FROM nexora_social_auth.room_messages WHERE id>$1 ORDER BY id ASC LIMIT 80",[after])
+   : await pool.query("SELECT id,nickname,message,created_at,account_id FROM (SELECT id,nickname,message,created_at,account_id FROM nexora_social_auth.room_messages ORDER BY id DESC LIMIT 60) recent ORDER BY id ASC");
   res.json({messages:query.rows.map(row=>({id:row.id,nickname:row.nickname,message:row.message,createdAt:row.created_at,mine:String(row.account_id)===String(account.id)}))});
  }catch(error){console.error("Room chat read failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Чат временно недоступен."});}
 });
