@@ -1,7 +1,7 @@
 (() => {
  "use strict";
  const $=id=>document.getElementById(id);
- const state={lastMessageId:0,poll:null,clockTimer:null,presenceTimer:null,movementTimer:null,viewingOtherPlayer:false,selectedPlayerId:null,reportTargetId:null,playerIds:new Set(),position:{x:50,bottom:12},facing:1};
+ const state={lastMessageId:0,chatSessionStartedAt:0,chatHoldTimer:null,chatClearPopup:null,poll:null,clockTimer:null,presenceTimer:null,movementTimer:null,viewingOtherPlayer:false,selectedPlayerId:null,reportTargetId:null,playerIds:new Set(),position:{x:50,bottom:12},facing:1};
  function updateVisitorClock(){
   const clock=$("visitor-clock");
   if(!clock)return;
@@ -429,6 +429,7 @@
   updateVisitorClock();
   if(state.clockTimer)clearInterval(state.clockTimer);
   state.clockTimer=setInterval(updateVisitorClock,15000);
+  state.chatSessionStartedAt=Date.now();state.lastMessageId=0;const chatList=$("room-screen").querySelector(".chat-space");if(chatList)chatList.replaceChildren();
   loadMessages(true);
   if(state.poll)clearInterval(state.poll);
   state.poll=setInterval(()=>loadMessages(false),2200);
@@ -441,6 +442,7 @@
  function leaveRoom(){
   if(state.poll)clearInterval(state.poll);
   state.poll=null;
+  if(state.chatHoldTimer)clearTimeout(state.chatHoldTimer);state.chatHoldTimer=null;closeChatClearPopup();state.chatSessionStartedAt=0;state.lastMessageId=0;const chatList=$("room-screen").querySelector(".chat-space");if(chatList)chatList.replaceChildren();
   if(state.presenceTimer)clearInterval(state.presenceTimer);
   state.presenceTimer=null;movement.keys.clear();movement.joy={x:0,y:0};if(movement.sendTimer)clearTimeout(movement.sendTimer);
   state.playerIds.clear();
@@ -481,7 +483,7 @@
  }
  async function loadMessages(initial){
   try{
-   const response=await fetch("/api/room/messages?after="+(initial?0:state.lastMessageId));
+   const response=await fetch("/api/room/messages?after="+(initial?0:state.lastMessageId)+"&since="+encodeURIComponent(new Date(state.chatSessionStartedAt||Date.now()).toISOString()),{cache:"no-store"});
    if(!response.ok)throw new Error("Chat unavailable");
    const data=await response.json();
    (data.messages||[]).forEach(addMessage);
@@ -524,6 +526,29 @@
    input.focus();
   }
  }
+
+ function closeChatClearPopup(){if(state.chatClearPopup){state.chatClearPopup.remove();state.chatClearPopup=null;}}
+ function openChatClearPopup(){
+  closeChatClearPopup();
+  const chat=$("room-screen").querySelector(".retro-chat");if(!chat)return;
+  if(navigator.vibrate)try{navigator.vibrate(24);}catch{}
+  const popup=document.createElement("div");popup.className="nexora-chat-clear-popup";
+  const button=document.createElement("button");button.type="button";button.textContent="Очистить чат";
+  button.addEventListener("click",()=>{const list=$("room-screen").querySelector(".chat-space");if(list)list.replaceChildren();closeChatClearPopup();if(navigator.vibrate)try{navigator.vibrate([18,35,18]);}catch{}});
+  popup.append(button);chat.append(popup);state.chatClearPopup=popup;
+ }
+ (function installChatLongPress(){
+  const area=$("room-screen").querySelector(".chat-space");if(!area)return;
+  let held=false;
+  area.addEventListener("contextmenu",event=>event.preventDefault());
+  area.addEventListener("pointerdown",event=>{
+   if(event.target.closest("button,a,input,textarea"))return;
+   held=false;if(state.chatHoldTimer)clearTimeout(state.chatHoldTimer);
+   state.chatHoldTimer=setTimeout(()=>{held=true;openChatClearPopup();},650);
+  });
+  ["pointerup","pointercancel","pointerleave"].forEach(type=>area.addEventListener(type,()=>{if(state.chatHoldTimer)clearTimeout(state.chatHoldTimer);state.chatHoldTimer=null;}));
+  document.addEventListener("pointerdown",event=>{if(!event.target.closest(".nexora-chat-clear-popup")&&!area.contains(event.target))closeChatClearPopup();});
+ })();
  $("chat-form").addEventListener("submit",event=>{event.preventDefault();sendMessage();});
  window.NexoraRoom={show:showRoom,leave:leaveRoom};
 })();
