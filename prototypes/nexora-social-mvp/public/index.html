@@ -20,7 +20,7 @@
    <div class="logo-symbol">✦</div><div class="eyebrow">СОЦИАЛЬНЫЙ ВИРТУАЛЬНЫЙ МИР</div><h1>NEXORA</h1>
    <p>Знакомься. Общайся. Исследуй свой мир.</p>
    <button class="main-button" id="open-register">Создать персонажа <span>↗</span></button>
-   <button class="second-button" id="open-login">Уже есть персонаж?</button>
+   <section id="returning-player" class="returning-player hidden" aria-live="polite"><div class="returning-avatar"><img id="returning-body" alt=""><img id="returning-head" alt=""></div><div class="returning-copy"><span class="eyebrow">СНОВА РАДЫ ТЕБЯ ВИДЕТЬ</span><strong id="returning-nickname">Твой персонаж</strong><small>Этот телефон запомнен — код не нужен</small></div><button class="main-button" id="return-enter">Продолжить в мир →</button></section><button class="second-button" id="open-login">Уже есть персонаж?</button>
    <small>Новая 2D-комната готовится к запуску</small>
   </section>
   <footer>© 2026 NEXORA · MEET · CONNECT · DISCOVER</footer>
@@ -50,7 +50,7 @@
  <section id="login-modal" class="modal" aria-hidden="true">
   <div class="auth-card login-card"><button class="close" data-close="login" aria-label="Закрыть">×</button>
    <div class="eyebrow">ВОЗВРАЩЕНИЕ ВО ВСЕЛЕННУЮ</div><h2>Уже есть персонаж?</h2>
-   <form id="login-form"><label>Код восстановления<input id="login-code" maxlength="11" placeholder="" autocomplete="one-time-code" autocapitalize="none" spellcheck="false" required></label>
+   <form id="login-form"><label>Код восстановления<input id="login-code" maxlength="11" placeholder="Например, 11 символов" autocomplete="one-time-code" autocapitalize="none" spellcheck="false" required></label><small class="recovery-hint">Код нужен при входе с нового телефона или устройства. На этом устройстве NEXORA запомнит тебя.</small>
     <p class="error" id="login-error"></p><button class="main-button" id="login-submit" type="submit">Войти →</button>
    </form>
   </div>
