@@ -387,3 +387,34 @@ button:focus-visible,[role=button]:focus-visible{outline:2px solid #e2ff9c!impor
 #room-screen.nexora-reading-mode .retro-composer{pointer-events:none}
 #room-screen.nexora-reading-mode .planet-header{overflow:hidden}
 #room-screen .nexora-world-avatar.is-selected{filter:drop-shadow(0 0 5px #fff) drop-shadow(0 0 10px #d9f58b)!important}
+
+/* Friends and private correspondence — framed like the classic in-game windows. */
+.nexora-social-panel{position:absolute;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:12px;background:#07111dcc}
+.nexora-social-panel.hidden{display:none!important}
+.nexora-social-window{width:min(680px,96%);max-height:min(620px,92%);display:flex;flex-direction:column;gap:8px;overflow:hidden;padding:10px;border:2px solid #91b65b;background:linear-gradient(180deg,#263d2b,#152b25 24px,#102333 24px);box-shadow:inset 0 1px #ffffff45,0 8px 28px #000b;color:#e8f4d0;font:12px Tahoma,Arial,sans-serif}
+.nexora-social-window>header{display:flex;align-items:center;justify-content:space-between;min-height:26px;padding:2px 5px;border-bottom:1px solid #789d50;color:#f2ffd8;font-weight:700;letter-spacing:.4px}
+.nexora-social-window button{min-height:27px;padding:4px 9px;border:1px solid #91ad65;border-radius:2px;background:linear-gradient(#526f39,#314c2b);color:#f4ffdf;font:700 11px Tahoma,Arial,sans-serif;cursor:pointer}
+.nexora-social-window button.secondary{background:linear-gradient(#485968,#293d4c);border-color:#748b9c}
+.nexora-social-search{display:flex;gap:6px}
+.nexora-social-search input,.nexora-social-chat-form input{flex:1;min-width:0;height:30px;padding:4px 7px;border:1px solid #748fa2;border-radius:2px;background:#0b1c2a;color:#f5f8ed;font:12px Tahoma,Arial,sans-serif}
+.nexora-social-columns{display:grid;grid-template-columns:minmax(170px,.8fr) minmax(220px,1.2fr);gap:8px;min-height:180px;flex:1;overflow:hidden}
+.nexora-social-list{display:flex;flex-direction:column;gap:5px;max-height:160px;overflow:auto;padding:2px}
+.nexora-social-columns>.nexora-social-list{max-height:none}
+.nexora-social-section-title{padding:5px 3px 2px;color:#c8e39b;font-weight:700;font-size:10px;letter-spacing:.7px}
+.nexora-social-player{display:flex;align-items:center;gap:5px;padding:6px;border:1px solid #536c54;background:#102638;min-width:0}
+.nexora-social-player-info{display:flex;flex:1;flex-direction:column;gap:3px;min-width:0}
+.nexora-social-player-info b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f2ffd8}
+.nexora-social-player-info small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#b9c9b2;font-size:10px}
+.nexora-social-small{flex:0 0 auto;min-height:25px!important;padding:3px 6px!important;font-size:10px!important}
+.nexora-social-empty,.nexora-social-loading{padding:12px 7px;color:#b9c9b2;text-align:center}
+.nexora-social-conversation{display:flex;flex-direction:column;min-height:0;border:1px solid #607a62;background:#0b1b29}
+.nexora-social-conversation.hidden{display:none!important}
+.nexora-social-chat-title{padding:7px 8px;border-bottom:1px solid #526e4b;background:#1b352a;color:#efffd4;font-weight:700}
+.nexora-social-chat-messages{display:flex;flex:1;flex-direction:column;gap:6px;min-height:110px;overflow:auto;padding:8px}
+.nexora-social-bubble{display:flex;flex-direction:column;align-self:flex-start;max-width:88%;gap:3px;padding:6px 8px;border:1px solid #405e53;background:#1b3340;color:#f2f6e8;overflow-wrap:anywhere}
+.nexora-social-bubble.mine{align-self:flex-end;border-color:#6e8a4a;background:#2b452b}
+.nexora-social-bubble small{align-self:flex-end;color:#b9c9b2;font-size:9px}
+.nexora-social-chat-form{display:flex;gap:5px;padding:6px;border-top:1px solid #526e4b}
+#nexora-social-note{min-height:14px;margin:0;color:#cde5a6;font-size:11px}
+#nexora-social-note.error{color:#ffb2a6}
+@media(max-width:560px){.nexora-social-panel{padding:5px}.nexora-social-window{width:100%;max-height:96%;padding:7px}.nexora-social-columns{grid-template-columns:1fr;grid-template-rows:minmax(90px,.7fr) minmax(150px,1.3fr)}.nexora-social-columns>.nexora-social-list{max-height:150px}.nexora-social-player{flex-wrap:wrap}.nexora-social-small{min-height:23px!important}}
