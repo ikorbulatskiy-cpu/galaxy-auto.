@@ -94,6 +94,8 @@ app.post("/api/room/travel",async(req,res)=>{
   const destination=await client.query("SELECT slug,name,access_type,ticket_price FROM nexora_social_auth.planets WHERE slug=$1 AND is_active=TRUE FOR UPDATE",[slug]);
   if(!destination.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Планета не найдена."});}
   const planet=destination.rows[0];
+  const current=await client.query("SELECT planet_slug FROM nexora_social_auth.account_locations WHERE account_id=$1 FOR UPDATE",[account.id]);
+  if(current.rows[0]?.planet_slug===slug){await client.query("COMMIT");return res.json({ok:true,planet:{slug:planet.slug,name:planet.name},message:"Ты уже находишься на этой планете."});}
   if(planet.access_type!=="public"){
    if(planet.access_type==="vip"){await client.query("ROLLBACK");return res.status(403).json({error:"Эта планета доступна только VIP-участникам."});}
    await ensureWalletSchema();
