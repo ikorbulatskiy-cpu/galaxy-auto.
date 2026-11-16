@@ -4,8 +4,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101633"><meta name="description" content="NEXORA — социальный виртуальный мир">
 <title>NEXORA — Social World</title>
-<link rel="stylesheet" href="/styles.css?v=returning-player-card-v1-20261115"><link rel="stylesheet" href="/room.css?v=chat-layout-return-v2-20261115"><link rel="stylesheet" href="/reference-theme.css?v=friends-private-chat-v1">
-<script defer src="/app.js?v=remembered-device-session-v1-20261115"></script><script defer src="/room.js?v=friends-private-chat-v1"></script>
+<link rel="stylesheet" href="/styles.css?v=account-home-after-world-removal-v1">
+<script defer src="/app.js?v=account-home-after-world-removal-v1"></script>
 </head>
 <body>
 <div class="app-shell">
@@ -20,8 +20,8 @@
    <div class="logo-symbol">✦</div><div class="eyebrow">СОЦИАЛЬНЫЙ ВИРТУАЛЬНЫЙ МИР</div><h1>NEXORA</h1>
    <p>Знакомься. Общайся. Исследуй свой мир.</p>
    <button class="main-button" id="open-register">Создать персонажа <span>↗</span></button>
-   <section id="returning-player" class="returning-player hidden" aria-live="polite"><div class="returning-avatar"><img id="returning-body" alt=""><img id="returning-head" alt=""></div><div class="returning-copy"><span class="eyebrow">СНОВА РАДЫ ТЕБЯ ВИДЕТЬ</span><strong id="returning-nickname">Твой персонаж</strong><small>Этот телефон запомнен — код не нужен</small></div><button class="main-button" id="return-enter">Продолжить в мир →</button></section><button class="second-button" id="open-login">Уже есть персонаж?</button>
-   <small>Новая 2D-комната готовится к запуску</small>
+   <section id="returning-player" class="returning-player hidden" aria-live="polite"><div class="returning-avatar"><img id="returning-body" alt=""><img id="returning-head" alt=""></div><div class="returning-copy"><span class="eyebrow">СНОВА РАДЫ ТЕБЯ ВИДЕТЬ</span><strong id="returning-nickname">Твой персонаж</strong><small>Этот телефон запомнен — код не нужен</small></div><small>Аккаунт уже активен на этом устройстве</small></section><button class="second-button" id="open-login">Уже есть персонаж?</button>
+   <small>Игровой мир будет создан заново</small>
   </section>
   <footer>© 2026 NEXORA · MEET · CONNECT · DISCOVER</footer>
  </main>
@@ -55,17 +55,7 @@
    </form>
   </div>
  </section>
- <section id="room-screen" class="hidden" aria-label="Пустая 2D-комната NEXORA">
-  <div class="retro-room">
-   <header class="room-zone planet-header" aria-label="Планета и местное время"><div class="planet-heading"><span class="planet-name">Земля</span><select id="planet-selector" aria-label="Выбрать планету"><option value="earth">Земля</option></select></div><time id="visitor-clock" aria-label="Местное время">--:--</time></header>
-   <section class="room-zone retro-chat" aria-label="Окно чата">
-     <div class="chat-space" aria-live="polite"></div>
-     <form id="chat-form" class="retro-composer">
-      <input id="chatInput" maxlength="500" placeholder="Написать сообщение..." autocomplete="off">
-      <button id="send-chat" type="submit" aria-label="Отправить сообщение">Отправить</button>
-     </form>
-     <div id="chat-error" class="chat-error" role="status"></div>
-   </section>
+
    <main id="room-scene" class="room-zone retro-scene" aria-label="Средняя зона игровой комнаты">
    </main>
   </div>

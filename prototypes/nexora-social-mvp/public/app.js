@@ -7,7 +7,6 @@
  function resetRegister(){$("register-step-one").classList.remove("hidden");$("register-step-customize").classList.add("hidden");$("register-step-two").classList.add("hidden");$("step-label").textContent="1 из 3";$("step-progress").style.width="33%";$("register-error").textContent="";$("customize-error").textContent="";$("finish-error").textContent="";$("register-next").disabled=false;state.headId=1;state.bodyId=1;state.characterCreated=false;renderCreator();}
  $("open-register").addEventListener("click",()=>{resetRegister();modal("register",true);setTimeout(()=>$("register-nickname").focus(),60);});
  $("open-login").addEventListener("click",()=>{$("login-error").textContent="";modal("login",true);setTimeout(()=>$("login-code").focus(),60);});
- $("return-enter").addEventListener("click",()=>{if(!state.account)return;window.NexoraRoom.show(state.account);toast("С возвращением, "+state.account.nickname+"!");});
  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>modal(b.dataset.close,false)));
  document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)modal(m.id.replace("-modal",""),false);}));
  $("register-form").addEventListener("submit",async e=>{
@@ -28,8 +27,7 @@
   try{
    await ensureCharacter();
    modal("register",false);
-   window.NexoraRoom.show(state.account);
-   toast("Персонаж создан. Добро пожаловать в Мишкин Домик!");
+   toast("Персонаж создан. Добро пожаловать в NEXORA!");
   }catch(err){$("finish-error").textContent=err.message;}
   finally{b.disabled=false;}
  });
@@ -41,9 +39,7 @@
    const d=await r.json();if(!r.ok)throw Error(d.error||"Не удалось войти");
    state.account=d.account;$("login-code").value="";
    modal("login",false);
-   if(!window.NexoraRoom||typeof window.NexoraRoom.show!=="function")throw Error("Комната ещё загружается. Обнови страницу и попробуй войти снова.");
-   window.NexoraRoom.show(state.account);
-   toast("Вход выполнен. Добро пожаловать!");
+   toast("Вход выполнен. Добро пожаловать в NEXORA!");
   }catch(err){$("login-error").textContent=err.message;}
   finally{b.disabled=false;}
  });
