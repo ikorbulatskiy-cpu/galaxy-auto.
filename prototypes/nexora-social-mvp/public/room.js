@@ -1,7 +1,7 @@
 (() => {
  "use strict";
  const $=id=>document.getElementById(id);
- const state={lastMessageId:0,poll:null,clockTimer:null,presenceTimer:null,movementTimer:null,viewingOtherPlayer:false,selectedPlayerId:null,reportTargetId:null,playerIds:new Set(),position:{x:50,bottom:12},facing:1};
+ const state={currentPlanetSlug:"earth",lastMessageId:0,poll:null,clockTimer:null,presenceTimer:null,movementTimer:null,socialTimer:null,activeConversation:null,lastDirectMessageId:0,viewingOtherPlayer:false,selectedPlayerId:null,reportTargetId:null,playerIds:new Set(),position:{x:50,bottom:12},facing:1};
  function updateVisitorClock(){
   const clock=$("visitor-clock");
   if(!clock)return;
@@ -9,6 +9,43 @@
   catch{clock.textContent=new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
  }
  const room=$("room-screen");
+ async function loadPlanets(){
+  const selector=$("planet-selector");if(!selector)return;
+  try{
+   const response=await fetch("/api/planets",{cache:"no-store"}),data=await response.json();
+   if(!response.ok)throw Error(data.error||"Не удалось загрузить список планет.");
+   const planets=Array.isArray(data.planets)?data.planets:[];
+   selector.replaceChildren();
+   planets.forEach(planet=>{
+    const option=document.createElement("option");option.value=planet.slug;
+    const fee=planet.access_type==="ticket"?" · "+planet.ticket_price+" алм.":planet.access_type==="vip"?" · VIP":"";
+    option.textContent=planet.name+" · "+planet.online+" в сети"+fee;
+    selector.append(option);
+   });
+   state.currentPlanetSlug=data.currentPlanet||"earth";selector.value=state.currentPlanetSlug;
+   const current=planets.find(p=>p.slug===state.currentPlanetSlug);
+   const name=document.querySelector(".planet-name");if(name&&current)name.textContent=current.name;
+  }catch(error){console.warn("Planet list unavailable:",error);const node=$("chat-error");if(node)node.textContent=error.message;}
+ }
+ async function travelToPlanet(slug){
+  const selector=$("planet-selector"),previous=state.currentPlanetSlug;
+  if(!slug||slug===previous)return;
+  selector.disabled=true;
+  try{
+   const response=await fetch("/api/room/travel",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({planetSlug:slug})});
+   const data=await response.json();if(!response.ok)throw Error(data.error||"Перелёт не выполнен.");
+   state.currentPlanetSlug=data.planet.slug;state.lastMessageId=0;
+   const list=room.querySelector(".chat-space");if(list)list.replaceChildren();
+   document.querySelectorAll(".nexora-room-player").forEach(node=>node.remove());
+   const name=document.querySelector(".planet-name");if(name)name.textContent=data.planet.name;
+   await loadMessages(true);await loadRoomPresence();await loadPlanets();
+   const hint=$("chat-error");if(hint){hint.textContent=data.message||"Перелёт выполнен.";window.setTimeout(()=>{if(hint.textContent===(data.message||"Перелёт выполнен."))hint.textContent="";},2600);}
+  }catch(error){
+   selector.value=previous;
+   const hint=$("chat-error");if(hint){hint.textContent=error.message;window.setTimeout(()=>{if(hint.textContent===error.message)hint.textContent="";},3500);}
+  }finally{selector.disabled=false;}
+ }
+ $("planet-selector")?.addEventListener("change",event=>travelToPlanet(event.target.value));
 
  const rankRows=[["Новичок","0","—"],["Бывалый","1","✦"],["Уважаемый","2","✦✦"],["Мастер","3","✦✦✦"],["Профессионал","4","✦✦✦✦"],["Гуру","5–9","✦"],["Неприкасаемый","10–19","✦✦"],["Папа / Мама","20–99","✦✦"],["Ангел Галактики","100–199","✦✦✦✦"],["Бог / Богиня Галактики","200–999","✦✦✦✦✦"],["Всемогущий","1000–1999","✦✦✦✦✦✦"],["Mister / Miss Вселенная","2000–9999","✦✦✦✦✦✦"],["Легенда Галактики","10000–19999","✦✦✦✦✦✦✦"],["Премьер Галактики","20000–49999","✦✦✦✦✦✦✦"],["Император Галактики","50000+","✦✦✦✦✦✦✦"]];
  const auraNames={none:"Без ауры",star:"Звёздная",romance:"Романтика",nebula:"Туманность",comet:"Комета",supernova:"Сияние",halo:"Сверхновая"};
@@ -56,12 +93,13 @@
   const scene=$("room-scene");
   scene.insertAdjacentHTML("beforeend",'<div id="nexora-world-avatar" class="nexora-world-avatar aura-none" role="button" tabindex="0" aria-label="Открыть инфо" aria-expanded="false"><svg class="nexora-user-aura" viewBox="0 0 174 160" aria-hidden="true"><use id="nexora-world-aura" href=""></use></svg><div class="nexora-avatar-sprite" role="img" aria-label="Персонаж NEXORA"><img id="nexora-world-body" src="" alt=""><img id="nexora-world-head" src="" alt=""></div><div class="nexora-emperor-title" hidden>✦ ИМПЕРАТОР ГАЛАКТИКИ ✦</div><div id="nexora-world-rank" class="nexora-world-rank">Персонаж</div></div><section id="nexora-avatar-panel" class="nexora-avatar-panel hidden" aria-label="Инфо" aria-modal="true" role="dialog"><div class="nexora-avatar-window"><header class="nexora-info-header"><span>ИНФО</span><button id="nexora-avatar-close" class="nexora-avatar-close" type="button" aria-label="Закрыть">×</button></header><div id="nexora-profile-loading" class="nexora-profile-loading" role="status"><i></i><b>Загружаем анкету…</b><span>Скорость зависит от интернет-соединения</span></div><div id="nexora-profile-error" class="nexora-profile-error hidden" role="alert"></div><form id="nexora-info-form" class="nexora-info-form hidden"><div class="nexora-classic-profile"><div class="nexora-classic-top"><label class="nexora-classic-photo"><img id="nexora-info-photo" alt="Твоё фото" src=""><span>＋ Фото</span><input id="nexora-info-photo-file" type="file" accept="image/jpeg,image/png,image/webp"></label><div class="nexora-classic-facts"><div class="nexora-classic-planet"><strong id="nexora-info-planet">Земля</strong></div><label><input name="relationship" maxlength="80" placeholder="Отношения"></label><div class="nexora-privilege-line"><span>Привилегии</span><strong id="nexora-info-privileges">—</strong></div><label><input name="status" maxlength="100" placeholder="Статус"></label><label><input name="lookingFor" maxlength="100" placeholder="Ищет…"></label></div></div><div class="nexora-classic-links"><span>Блог (0)</span><span>Фото (0)</span></div><label class="nexora-classic-ask">Спроси меня<input name="askMe" maxlength="300" placeholder="Напиши вопрос, на который готов ответить"></label><div class="nexora-classic-section">Анкета</div><div class="nexora-classic-questionnaire"><label>Пол<select name="gender"><option value="">Не указано</option><option value="Мужской">Мужской</option><option value="Женский">Женский</option><option value="Другое">Другое</option></select></label><label>Дата рождения<input name="birthDate" type="date" max="2100-12-31"></label><label class="wide">Город<input name="city" maxlength="80" placeholder="Твой город"></label><label class="wide">Род занятий<textarea name="occupation" maxlength="120" rows="2" placeholder="Чем занимаешься"></textarea></label><label class="wide">Интересы<textarea name="interests" maxlength="220" rows="2" placeholder="Спорт, музыка, путешествия…"></textarea></label><label class="wide">О себе<textarea name="about" maxlength="600" rows="3" placeholder="Расскажи немного о себе"></textarea></label></div></div><div class="nexora-info-actions"><button id="nexora-info-save" type="submit">Сохранить</button><span id="nexora-info-note" role="status"></span></div></form></div></section>');
   scene.insertAdjacentHTML("beforeend",'<nav class="nexora-touch-dock" aria-label="Быстрые действия"><button type="button" id="nexora-dock-menu" aria-label="Открыть меню">☰<span>Меню</span></button><button type="button" id="nexora-dock-profile" aria-label="Моя анкета">◉<span>Профиль</span></button><div class="nexora-touch-pad" aria-label="Управление персонажем"><button type="button" data-move="up" aria-label="Вверх">▲</button><button type="button" data-move="left" aria-label="Влево">◀</button><button type="button" data-move="down" aria-label="Вниз">▼</button><button type="button" data-move="right" aria-label="Вправо">▶</button></div><div id="nexora-move-hint" class="nexora-move-hint hidden" role="status">Коснись места на планете, чтобы переместиться</div></nav>');
-  scene.insertAdjacentHTML("beforeend",'<section id="nexora-character-actions" class="nexora-character-actions hidden" role="dialog" aria-modal="true" aria-label="Действия"><div class="nexora-character-actions-card"><div class="nexora-character-actions-title">ДЕЙСТВИЯ</div><button id="nexora-action-say" type="button">Сказать</button><button id="nexora-action-info" type="button">Инфо</button><button id="nexora-action-emotions" type="button">Эмоции</button><button id="nexora-action-auras" type="button">Ауры</button><button id="nexora-action-move" type="button">Переместиться</button><button id="nexora-action-report" type="button" class="hidden">Пожаловаться</button><button id="nexora-action-developer" type="button" class="hidden">Управление сервером</button><button id="nexora-action-exit" type="button" class="secondary">Закрыть</button></div></section><section id="nexora-developer-panel" class="nexora-developer-panel hidden" role="dialog" aria-modal="true" aria-label="Управление сервером"><div id="nexora-developer-window" class="nexora-developer-window"><header><span id="nexora-management-title">Управление сервером</span><button id="nexora-developer-close" type="button" aria-label="Закрыть">×</button></header><div class="nexora-management-meta" id="nexora-management-meta">Проверка полномочий…</div><nav class="nexora-management-tabs" id="nexora-management-tabs"><button type="button" data-admin-tab="players" class="active">Игроки</button><button type="button" data-admin-tab="reports">Жалобы</button><button type="button" data-admin-tab="staff">Команда</button><button type="button" data-admin-tab="history">История</button><button type="button" data-admin-tab="economy">Экономика</button></nav><div id="nexora-management-note" class="nexora-management-note" role="status"></div><div id="nexora-management-content" class="nexora-management-content"><div class="nexora-management-loading">Загружаем данные сервера…</div></div></div></section><section id="nexora-report-panel" class="nexora-emotions-panel hidden" role="dialog" aria-modal="true" aria-label="Жалоба"><div class="nexora-emotions-window"><header>Жалоба<button id="nexora-report-close" type="button" aria-label="Закрыть">×</button></header><form id="nexora-report-form" class="nexora-report-form"><label>Причина<select name="reason" required><option value="">Выберите причину</option><option>Оскорбления</option><option>Спам</option><option>Неприемлемое поведение</option><option>Обман</option><option>Другое нарушение</option></select></label><label>Описание<textarea name="details" maxlength="1000" rows="4" placeholder="Опишите, что произошло" required></textarea></label><button type="submit">Отправить жалобу</button><p id="nexora-report-note" role="status"></p></form></div></section><section id="nexora-auras-panel" class="nexora-auras-panel nexora-emotions-panel hidden" role="dialog" aria-modal="true" aria-label="Ауры"><div class="nexora-emotions-window"><header>Ауры<button id="nexora-auras-close" type="button" aria-label="Закрыть">×</button></header><p class="nexora-auras-hint">Выбери свечение персонажа</p><div class="nexora-auras-list" id="nexora-auras-list"></div></div></section><section id="nexora-emotions-panel" class="nexora-emotions-panel hidden" role="dialog" aria-modal="true" aria-label="Эмоции"><div class="nexora-emotions-window"><header>Эмоции<button id="nexora-emotions-close" type="button" aria-label="Закрыть">×</button></header><div class="nexora-emotions-list" id="nexora-emotions-list"></div></div></section>');
+  scene.insertAdjacentHTML("beforeend",'<section id="nexora-character-actions" class="nexora-character-actions hidden" role="dialog" aria-modal="true" aria-label="Действия"><div class="nexora-character-actions-card"><div class="nexora-character-actions-title">ДЕЙСТВИЯ</div><button id="nexora-action-say" type="button">Сказать</button><button id="nexora-action-info" type="button">Инфо</button><button id="nexora-action-emotions" type="button">Эмоции</button><button id="nexora-action-auras" type="button">Ауры</button><button id="nexora-action-move" type="button">Переместиться</button><button id="nexora-action-friends" type="button">Друзья и почта</button><button id="nexora-action-add-friend" type="button" class="hidden">Добавить в друзья</button><button id="nexora-action-private-message" type="button" class="hidden">Личное сообщение</button><button id="nexora-action-report" type="button" class="hidden">Пожаловаться</button><button id="nexora-action-developer" type="button" class="hidden">Управление сервером</button><button id="nexora-action-exit" type="button" class="secondary">Закрыть</button></div></section><section id="nexora-developer-panel" class="nexora-developer-panel hidden" role="dialog" aria-modal="true" aria-label="Управление сервером"><div id="nexora-developer-window" class="nexora-developer-window"><header><span id="nexora-management-title">Управление сервером</span><button id="nexora-developer-close" type="button" aria-label="Закрыть">×</button></header><div class="nexora-management-meta" id="nexora-management-meta">Проверка полномочий…</div><nav class="nexora-management-tabs" id="nexora-management-tabs"><button type="button" data-admin-tab="players" class="active">Игроки</button><button type="button" data-admin-tab="reports">Жалобы</button><button type="button" data-admin-tab="staff">Команда</button><button type="button" data-admin-tab="history">История</button><button type="button" data-admin-tab="economy">Экономика</button></nav><div id="nexora-management-note" class="nexora-management-note" role="status"></div><div id="nexora-management-content" class="nexora-management-content"><div class="nexora-management-loading">Загружаем данные сервера…</div></div></div></section><section id="nexora-report-panel" class="nexora-emotions-panel hidden" role="dialog" aria-modal="true" aria-label="Жалоба"><div class="nexora-emotions-window"><header>Жалоба<button id="nexora-report-close" type="button" aria-label="Закрыть">×</button></header><form id="nexora-report-form" class="nexora-report-form"><label>Причина<select name="reason" required><option value="">Выберите причину</option><option>Оскорбления</option><option>Спам</option><option>Неприемлемое поведение</option><option>Обман</option><option>Другое нарушение</option></select></label><label>Описание<textarea name="details" maxlength="1000" rows="4" placeholder="Опишите, что произошло" required></textarea></label><button type="submit">Отправить жалобу</button><p id="nexora-report-note" role="status"></p></form></div></section><section id="nexora-auras-panel" class="nexora-auras-panel nexora-emotions-panel hidden" role="dialog" aria-modal="true" aria-label="Ауры"><div class="nexora-emotions-window"><header>Ауры<button id="nexora-auras-close" type="button" aria-label="Закрыть">×</button></header><p class="nexora-auras-hint">Выбери свечение персонажа</p><div class="nexora-auras-list" id="nexora-auras-list"></div></div></section><section id="nexora-emotions-panel" class="nexora-emotions-panel hidden" role="dialog" aria-modal="true" aria-label="Эмоции"><div class="nexora-emotions-window"><header>Эмоции<button id="nexora-emotions-close" type="button" aria-label="Закрыть">×</button></header><div class="nexora-emotions-list" id="nexora-emotions-list"></div></div></section>');
+  scene.insertAdjacentHTML("beforeend",'<section id="nexora-social-panel" class="nexora-social-panel hidden" role="dialog" aria-modal="true" aria-label="Друзья и личные сообщения"><div class="nexora-social-window"><header><span id="nexora-social-title">Друзья и почта</span><button id="nexora-social-close" type="button" aria-label="Закрыть">×</button></header><div class="nexora-social-search"><input id="nexora-social-search-input" maxlength="24" placeholder="Найти персонажа по нику"><button id="nexora-social-search-button" type="button">Найти</button></div><div id="nexora-social-search-results" class="nexora-social-list"></div><div class="nexora-social-columns"><div id="nexora-social-friends" class="nexora-social-list"></div><div id="nexora-social-conversation" class="nexora-social-conversation hidden"><div id="nexora-social-chat-title" class="nexora-social-chat-title"></div><div id="nexora-social-chat-messages" class="nexora-social-chat-messages" aria-live="polite"></div><form id="nexora-social-chat-form"><input id="nexora-social-chat-input" maxlength="1000" placeholder="Личное сообщение…" autocomplete="off"><button type="submit">➤</button></form></div></div><p id="nexora-social-note" role="status"></p></div></section>');
   const worldAvatar=$("nexora-world-avatar");setSpriteImage($("nexora-world-body"),"body",1);setSpriteImage($("nexora-world-head"),"head",1);
   worldAvatar.setAttribute("aria-label","Открыть действия персонажа");
   worldAvatar.addEventListener("pointerdown",event=>event.stopPropagation());
   scene.addEventListener("pointerdown",event=>{
-   if(event.button!==0||event.target.closest("button,input,textarea,select,a,.nexora-room-player,.nexora-avatar-panel,.nexora-character-actions,.nexora-emotions-panel,.nexora-developer-panel"))return;
+   if(event.button!==0||event.target.closest("button,input,textarea,select,a,.nexora-room-player,.nexora-avatar-panel,.nexora-character-actions,.nexora-emotions-panel,.nexora-developer-panel,.nexora-social-panel"))return;
    const rect=scene.getBoundingClientRect(),avatarRect=worldAvatar.getBoundingClientRect();
    const halfWidth=avatarRect.width/2/rect.width*100;
    const avatarHeight=avatarRect.height/rect.height*100;
@@ -83,6 +121,16 @@
    button.addEventListener("pointerdown",press);button.addEventListener("pointerup",release);
    button.addEventListener("pointercancel",release);button.addEventListener("lostpointercapture",release);
   });
+  $("nexora-action-friends").addEventListener("click",()=>{closeCharacterActions();openSocialPanel();});
+  $("nexora-action-add-friend").addEventListener("click",()=>{const id=state.selectedPlayerId;closeCharacterActions();if(id)openSocialPanel().then(()=>sendFriendRequest(id));});
+  $("nexora-action-private-message").addEventListener("click",()=>{const id=state.selectedPlayerId;closeCharacterActions();if(id)openSocialPanel(id);});
+  $("nexora-social-close").addEventListener("click",closeSocialPanel);
+  $("nexora-social-panel").addEventListener("click",event=>{if(event.target===$("nexora-social-panel"))closeSocialPanel();});
+  $("nexora-social-search-button").addEventListener("click",searchSocialPlayers);
+  $("nexora-social-search-input").addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();searchSocialPlayers();}});
+  $("nexora-social-search-results").addEventListener("click",handleSocialListClick);
+  $("nexora-social-friends").addEventListener("click",handleSocialListClick);
+  $("nexora-social-chat-form").addEventListener("submit",sendDirectMessage);
   $("nexora-action-say").addEventListener("click",()=>{closeCharacterActions();$("chatInput")?.focus();});
   $("nexora-action-move").addEventListener("click",()=>{closeCharacterActions();$("nexora-move-hint")?.classList.remove("hidden");window.setTimeout(()=>$("nexora-move-hint")?.classList.add("hidden"),3200);});
   $("nexora-action-info").addEventListener("click",()=>{const playerId=state.selectedPlayerId;closeCharacterActions();if(playerId)openOtherPlayer(playerId);else openAvatar();});
@@ -110,8 +158,17 @@
   $("nexora-info-form").addEventListener("submit",saveCharacterInfo);
   $("nexora-info-photo-file").addEventListener("change",previewCharacterPhoto);
   document.addEventListener("keydown",event=>{
-   if(event.key==="Escape"){closeAvatar();closeCharacterActions();closeEmotions();closeReport();closeDeveloperMode();return;}
+   if(event.key==="Escape"){closeAvatar();closeCharacterActions();closeEmotions();closeReport();closeDeveloperMode();closeSocialPanel();return;}
    if(room.classList.contains("hidden")||event.target.closest("input,textarea,select,[contenteditable=true]"))return;
+   if(event.key==="1"){
+    event.preventDefault();closeCharacterActions();closeAvatar();moveWorldAvatarTo(50,13);
+    const own=$("nexora-world-avatar");if(own){own.focus({preventScroll:true});own.classList.add("is-selected");window.setTimeout(()=>own.classList.remove("is-selected"),900);}
+    return;
+   }
+   if(event.key==="2"||event.key==="8"){
+    event.preventDefault();const chat=room.querySelector(".chat-space");if(chat)chat.scrollBy({top:event.key==="2"?-Math.max(100,chat.clientHeight*.72):Math.max(100,chat.clientHeight*.72),behavior:"smooth"});return;
+   }
+   if(event.key==="0"){event.preventDefault();room.classList.toggle("nexora-reading-mode");return;}
    if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a"){event.preventDefault();moveWorldAvatarBy(-5);}
    if(event.key==="ArrowRight"||event.key.toLowerCase()==="d"){event.preventDefault();moveWorldAvatarBy(5);}
    if(event.key==="ArrowUp"||event.key.toLowerCase()==="w"){event.preventDefault();moveWorldAvatarTo(state.position.x,Math.min(54,state.position.bottom+4));}
@@ -238,7 +295,7 @@
   document.addEventListener("keyup",event=>movement.keys.delete(event.key.toLowerCase()));
   window.addEventListener("blur",()=>movement.keys.clear());
   scene.addEventListener("pointerdown",event=>{
-   if(event.target.closest(".nexora-world-avatar,.nexora-character-actions,.nexora-avatar-panel,.nexora-auras-panel,.nexora-emotions-panel"))return;
+   if(event.target.closest("button,input,textarea,select,a,.nexora-touch-dock,.nexora-world-avatar,.nexora-character-actions,.nexora-avatar-panel,.nexora-auras-panel,.nexora-emotions-panel,.nexora-developer-panel,.nexora-report-panel"))return;
    const r=scene.getBoundingClientRect(),b=sceneBounds();
    movement.target={x:Math.max(b.minX,Math.min(b.maxX,(event.clientX-r.left)/r.width*100)),bottom:Math.max(b.minY,Math.min(b.maxY,(r.bottom-event.clientY)/r.height*100))};
    movement.keys.clear();startMovementLoop();
@@ -253,6 +310,9 @@
   if(a)a.setAttribute("aria-expanded","true");
   const title=menu.querySelector(".nexora-character-actions-title");if(title)title.textContent=playerId?"ИГРОК":"ДЕЙСТВИЯ";
   const reportButton=$("nexora-action-report");if(reportButton)reportButton.classList.toggle("hidden",!playerId);
+  $("nexora-action-friends").classList.toggle("hidden",Boolean(playerId));
+  $("nexora-action-add-friend").classList.toggle("hidden",!playerId);
+  $("nexora-action-private-message").classList.toggle("hidden",!playerId);
  }
  let managementData={players:[],reports:[],actions:[]},managementTab="players";
  function managementNote(message,isError=false){const node=$("nexora-management-note");if(node){node.textContent=message||"";node.classList.toggle("error",Boolean(isError));}}
@@ -315,6 +375,146 @@
  }
  function openDeveloperMode(){if(!state.isDeveloper&&!state.isModerator)return;closeCharacterActions();$("nexora-developer-panel").classList.remove("hidden");managementTab="players";loadManagement();}
  function closeDeveloperMode(){const panel=$("nexora-developer-panel");if(panel)panel.classList.add("hidden");}
+ function socialNote(message,isError=false){
+  const node=$("nexora-social-note");if(node){node.textContent=message||"";node.classList.toggle("error",Boolean(isError));}
+ }
+ function socialNode(tag,className,text){
+  const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=String(text);return node;
+ }
+ function closeSocialPanel(){
+  $("nexora-social-panel")?.classList.add("hidden");
+  state.activeConversation=null;state.lastDirectMessageId=0;
+  if(state.socialTimer)clearInterval(state.socialTimer);state.socialTimer=null;
+ }
+ async function openSocialPanel(conversationId=null){
+  closeCharacterActions();
+  const panel=$("nexora-social-panel");panel.classList.remove("hidden");
+  $("nexora-social-search-results").replaceChildren();
+  $("nexora-social-search-input").value="";
+  $("nexora-social-conversation").classList.add("hidden");
+  socialNote("");
+  await loadSocialFriends();
+  if(conversationId)await openDirectConversation(conversationId);
+ }
+ async function loadSocialFriends(){
+  const list=$("nexora-social-friends");list.replaceChildren(socialNode("div","nexora-social-loading","Загружаем друзей…"));
+  try{
+   const response=await fetch("/api/social/friends",{cache:"no-store"}),data=await response.json();
+   if(!response.ok)throw Error(data.error||"Не удалось загрузить друзей.");
+   list.replaceChildren();
+   const incoming=(data.friends||[]).filter(p=>p.status==="pending"&&p.direction==="incoming");
+   const outgoing=(data.friends||[]).filter(p=>p.status==="pending"&&p.direction==="outgoing");
+   const accepted=(data.friends||[]).filter(p=>p.status==="accepted");
+   if(incoming.length){list.append(socialNode("div","nexora-social-section-title","ВХОДЯЩИЕ ЗАЯВКИ"));incoming.forEach(p=>list.append(makeSocialPlayerRow(p,"incoming")));}
+   if(outgoing.length){list.append(socialNode("div","nexora-social-section-title","ОТПРАВЛЕННЫЕ ЗАЯВКИ"));outgoing.forEach(p=>list.append(makeSocialPlayerRow(p,"outgoing")));}
+   if(accepted.length){list.append(socialNode("div","nexora-social-section-title","ДРУЗЬЯ"));accepted.forEach(p=>list.append(makeSocialPlayerRow(p,"friend")));}
+   if(!data.friends?.length)list.append(socialNode("div","nexora-social-empty","Пока нет друзей. Найди персонажа по нику."));
+  }catch(error){list.replaceChildren(socialNode("div","nexora-social-empty",error.message));}
+ }
+ function makeSocialPlayerRow(player,kind){
+  const row=socialNode("article","nexora-social-player");row.dataset.playerId=player.id;
+  const info=socialNode("div","nexora-social-player-info");
+  info.append(socialNode("b","",player.nickname));
+  const detail=kind==="friend"?(player.unread?player.unread+" новых · ":"")+(player.lastMessage||"Открыть переписку"):kind==="incoming"?"Хочет добавить тебя в друзья":"Заявка отправлена";
+  info.append(socialNode("small","",detail));row.append(info);
+  if(kind==="incoming"){
+   const accept=socialNode("button","nexora-social-small","Принять");accept.type="button";accept.dataset.socialAction="accept";row.append(accept);
+   const decline=socialNode("button","nexora-social-small secondary","Отклонить");decline.type="button";decline.dataset.socialAction="decline";row.append(decline);
+  }else if(kind==="friend"){
+   const open=socialNode("button","nexora-social-small","Чат");open.type="button";open.dataset.socialAction="open";row.append(open);
+   const remove=socialNode("button","nexora-social-small secondary","×");remove.type="button";remove.title="Удалить из друзей";remove.dataset.socialAction="remove";row.append(remove);
+  }
+  return row;
+ }
+ async function searchSocialPlayers(){
+  const q=$("nexora-social-search-input").value.trim(),list=$("nexora-social-search-results");list.replaceChildren();
+  if(q.length<2){socialNote("Введи не менее двух символов ника.",true);return;}
+  socialNote("Ищем персонажей…");
+  try{
+   const response=await fetch("/api/social/search?q="+encodeURIComponent(q),{cache:"no-store"}),data=await response.json();
+   if(!response.ok)throw Error(data.error||"Поиск недоступен.");
+   list.replaceChildren();
+   (data.players||[]).forEach(player=>{
+    const row=socialNode("article","nexora-social-player");row.dataset.playerId=player.id;
+    const info=socialNode("div","nexora-social-player-info");info.append(socialNode("b","",player.nickname));
+    const status=player.friendshipStatus==="accepted"?"Уже в друзьях":player.friendshipStatus==="pending"?(player.requestDirection==="incoming"?"Входящая заявка":"Заявка отправлена"):"Персонаж NEXORA";
+    info.append(socialNode("small","",status));row.append(info);
+    if(player.friendshipStatus==="none"){const button=socialNode("button","nexora-social-small","Добавить");button.type="button";button.dataset.socialAction="request";row.append(button);}
+    else if(player.friendshipStatus==="pending"&&player.requestDirection==="incoming"){const button=socialNode("button","nexora-social-small","Принять");button.type="button";button.dataset.socialAction="accept";row.append(button);}
+    else if(player.friendshipStatus==="accepted"){const button=socialNode("button","nexora-social-small","Чат");button.type="button";button.dataset.socialAction="open";row.append(button);}
+    list.append(row);
+   });
+   if(!data.players?.length)list.append(socialNode("div","nexora-social-empty","Никого не найдено."));
+   socialNote("Найдено: "+(data.players||[]).length);
+  }catch(error){socialNote(error.message,true);}
+ }
+ async function handleSocialListClick(event){
+  const button=event.target.closest("[data-social-action]");if(!button)return;
+  const row=button.closest("[data-player-id]");if(!row)return;
+  const id=row.dataset.playerId,action=button.dataset.socialAction;
+  try{
+   if(action==="request"){await sendFriendRequest(id);await searchSocialPlayers();return;}
+   if(action==="accept"||action==="decline"){
+    const response=await fetch("/api/social/friends/respond",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({targetId:id,decision:action})});
+    const data=await response.json();if(!response.ok)throw Error(data.error||"Не удалось обработать заявку.");
+    socialNote(data.message);await loadSocialFriends();return;
+   }
+   if(action==="remove"){
+    const response=await fetch("/api/social/friends/"+encodeURIComponent(id),{method:"DELETE"}),data=await response.json();
+    if(!response.ok)throw Error(data.error||"Не удалось удалить друга.");
+    if(state.activeConversation===id){$("nexora-social-conversation").classList.add("hidden");state.activeConversation=null;}
+    socialNote("Персонаж удалён из друзей.");await loadSocialFriends();return;
+   }
+   if(action==="open")await openDirectConversation(id);
+  }catch(error){socialNote(error.message,true);}
+ }
+ async function sendFriendRequest(id){
+  try{
+   const response=await fetch("/api/social/friends/request",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({targetId:id})});
+   const data=await response.json();if(!response.ok)throw Error(data.error||"Не удалось отправить заявку.");
+   socialNote(data.message||"Заявка отправлена.");
+   if(!$("nexora-social-panel").classList.contains("hidden")){await loadSocialFriends();if($("nexora-social-search-input").value.trim().length>=2)await searchSocialPlayers();}
+  }catch(error){socialNote(error.message,true);if($("nexora-social-panel").classList.contains("hidden")){openSocialPanel();} }
+ }
+ async function openDirectConversation(id){
+  state.activeConversation=String(id);state.lastDirectMessageId=0;
+  $("nexora-social-conversation").classList.remove("hidden");
+  const row=Array.from(document.querySelectorAll("#nexora-social-friends [data-player-id],#nexora-social-search-results [data-player-id]")).find(n=>n.dataset.playerId===String(id));
+  const name=row?.querySelector("b")?.textContent||"Личные сообщения";
+  $("nexora-social-chat-title").textContent=name;
+  $("nexora-social-chat-messages").replaceChildren();
+  socialNote("");
+  await loadDirectMessages(true);
+  if(state.socialTimer)clearInterval(state.socialTimer);
+  state.socialTimer=setInterval(()=>{if(state.activeConversation===String(id))loadDirectMessages(false);},2500);
+  $("nexora-social-chat-input").focus();
+ }
+ async function loadDirectMessages(initial=false){
+  const id=state.activeConversation;if(!id)return;
+  try{
+   const response=await fetch("/api/social/messages/"+encodeURIComponent(id)+"?after="+(initial?0:state.lastDirectMessageId),{cache:"no-store"}),data=await response.json();
+   if(!response.ok)throw Error(data.error||"Не удалось открыть переписку.");
+   const list=$("nexora-social-chat-messages");
+   (data.messages||[]).forEach(message=>{
+    if(Number(message.id)<=state.lastDirectMessageId)return;
+    state.lastDirectMessageId=Number(message.id);
+    const bubble=socialNode("div","nexora-social-bubble"+(message.mine?" mine":""));
+    bubble.append(socialNode("span","",message.message),socialNode("small","",new Date(message.createdAt).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})));
+    list.append(bubble);
+   });
+   if(data.messages?.length)list.scrollTop=list.scrollHeight;
+  }catch(error){socialNote(error.message,true);}
+ }
+ async function sendDirectMessage(event){
+  event.preventDefault();const id=state.activeConversation,input=$("nexora-social-chat-input"),message=input.value.trim();if(!id||!message)return;
+  const button=$("nexora-social-chat-form").querySelector("button");button.disabled=true;
+  try{
+   const response=await fetch("/api/social/messages/"+encodeURIComponent(id),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message})}),data=await response.json();
+   if(!response.ok)throw Error(data.error||"Не удалось отправить сообщение.");
+   input.value="";await loadDirectMessages(false);
+  }catch(error){socialNote(error.message,true);}
+  finally{button.disabled=false;input.focus();}
+ }
  function closeCharacterActions(){
   const menu=$("nexora-character-actions");if(menu)menu.classList.add("hidden");
   document.querySelectorAll(".nexora-room-player[aria-expanded=true]").forEach(node=>node.setAttribute("aria-expanded","false"));
@@ -440,6 +640,7 @@
   $("intro-screen").classList.add("hidden");
   room.classList.remove("hidden");
   updateVisitorClock();
+  loadPlanets();
   if(state.clockTimer)clearInterval(state.clockTimer);
   state.clockTimer=setInterval(updateVisitorClock,15000);
   state.lastMessageId=0;const chatList=$("room-screen").querySelector(".chat-space");if(chatList)chatList.replaceChildren();
@@ -457,7 +658,9 @@
   state.poll=null;
   state.lastMessageId=0;const chatList=$("room-screen").querySelector(".chat-space");if(chatList)chatList.replaceChildren();
   if(state.presenceTimer)clearInterval(state.presenceTimer);
-  state.presenceTimer=null;movement.keys.clear();movement.joy={x:0,y:0};if(movement.sendTimer)clearTimeout(movement.sendTimer);
+  state.presenceTimer=null;
+  if(state.socialTimer)clearInterval(state.socialTimer);state.socialTimer=null;state.activeConversation=null;
+  movement.keys.clear();movement.joy={x:0,y:0};if(movement.sendTimer)clearTimeout(movement.sendTimer);
   state.playerIds.clear();
   document.querySelectorAll(".nexora-room-player").forEach(node=>node.remove());
   if(state.clockTimer)clearInterval(state.clockTimer);

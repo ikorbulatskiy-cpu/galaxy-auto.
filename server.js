@@ -23,6 +23,99 @@ async function getAccount(req){
  const account=r.rows[0]||null;
  return account?{...account,isDeveloper:account.role==='developer',isModerator:account.role==='moderator'||account.role==='senior_moderator',isSeniorModerator:account.role==='senior_moderator'}:null;
 }
+let socialMessagingSchemaPromise;
+function ensureSocialMessagingSchema(){
+ if(!socialMessagingSchemaPromise)socialMessagingSchemaPromise=pool.query("CREATE TABLE IF NOT EXISTS nexora_social_auth.friendships (account_low UUID NOT NULL REFERENCES nexora_social_auth.accounts(id) ON DELETE CASCADE, account_high UUID NOT NULL REFERENCES nexora_social_auth.accounts(id) ON DELETE CASCADE, requested_by UUID NOT NULL REFERENCES nexora_social_auth.accounts(id) ON DELETE CASCADE, status VARCHAR(12) NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','accepted')), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY(account_low,account_high), CHECK(account_low<account_high), CHECK(requested_by=account_low OR requested_by=account_high)); CREATE INDEX IF NOT EXISTS friendships_high_status_idx ON nexora_social_auth.friendships(account_high,status); CREATE INDEX IF NOT EXISTS friendships_low_status_idx ON nexora_social_auth.friendships(account_low,status); CREATE TABLE IF NOT EXISTS nexora_social_auth.direct_messages (id BIGSERIAL PRIMARY KEY, sender_id UUID NOT NULL REFERENCES nexora_social_auth.accounts(id) ON DELETE CASCADE, recipient_id UUID NOT NULL REFERENCES nexora_social_auth.accounts(id) ON DELETE CASCADE, message VARCHAR(1000) NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), read_at TIMESTAMPTZ, CHECK(sender_id<>recipient_id)); CREATE INDEX IF NOT EXISTS direct_messages_pair_idx ON nexora_social_auth.direct_messages(sender_id,recipient_id,id DESC); CREATE INDEX IF NOT EXISTS direct_messages_inbox_idx ON nexora_social_auth.direct_messages(recipient_id,read_at,id DESC)").catch(error=>{socialMessagingSchemaPromise=null;throw error;});
+ return socialMessagingSchemaPromise;
+}
+function validAccountId(value){return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value||""));}
+async function socialFriendship(client,one,two,lock=false){
+ const suffix=lock?" FOR UPDATE":"";
+ const r=await client.query("SELECT status,requested_by FROM nexora_social_auth.friendships WHERE account_low=LEAST($1::uuid,$2::uuid) AND account_high=GREATEST($1::uuid,$2::uuid)"+suffix,[one,two]);
+ return r.rows[0]||null;
+}
+app.get("/api/social/search",async(req,res)=>{
+ try{
+  const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
+  await ensureSocialMessagingSchema();
+  const q=clean(req.query.q).slice(0,24);
+  if(q.length<2)return res.json({players:[]});
+  const result=await pool.query("SELECT a.id,a.nickname,COALESCE(f.status,'none') AS friendship_status,CASE WHEN f.requested_by=$1 THEN 'outgoing' WHEN f.status='pending' THEN 'incoming' ELSE '' END AS request_direction FROM nexora_social_auth.accounts a LEFT JOIN nexora_social_auth.friendships f ON f.account_low=LEAST(a.id,$1::uuid) AND f.account_high=GREATEST(a.id,$1::uuid) WHERE a.id<>$1 AND a.nickname ILIKE $2 ORDER BY (a.nickname ILIKE $3) DESC,a.nickname LIMIT 12",[account.id,"%"+q+"%",q]);
+  res.json({players:result.rows.map(p=>({id:String(p.id),nickname:p.nickname,friendshipStatus:p.friendship_status,requestDirection:p.request_direction}))});
+ }catch(error){console.error("Social search failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Поиск игроков временно недоступен."});}
+});
+app.get("/api/social/friends",async(req,res)=>{
+ try{
+  const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
+  await ensureSocialMessagingSchema();
+  const result=await pool.query("SELECT a.id,a.nickname,f.status,f.requested_by,f.created_at,CASE WHEN f.requested_by=$1 THEN 'outgoing' ELSE 'incoming' END AS direction,(SELECT message FROM nexora_social_auth.direct_messages dm WHERE (dm.sender_id=a.id AND dm.recipient_id=$1) OR (dm.sender_id=$1 AND dm.recipient_id=a.id) ORDER BY dm.id DESC LIMIT 1) AS last_message,(SELECT created_at FROM nexora_social_auth.direct_messages dm WHERE (dm.sender_id=a.id AND dm.recipient_id=$1) OR (dm.sender_id=$1 AND dm.recipient_id=a.id) ORDER BY dm.id DESC LIMIT 1) AS last_message_at,(SELECT COUNT(*)::int FROM nexora_social_auth.direct_messages dm WHERE dm.sender_id=a.id AND dm.recipient_id=$1 AND dm.read_at IS NULL) AS unread FROM nexora_social_auth.friendships f JOIN nexora_social_auth.accounts a ON a.id=CASE WHEN f.account_low=$1 THEN f.account_high ELSE f.account_low END WHERE (f.account_low=$1 OR f.account_high=$1) ORDER BY CASE WHEN f.status='pending' AND f.requested_by<>$1 THEN 0 WHEN f.status='accepted' THEN 1 ELSE 2 END,COALESCE((SELECT MAX(dm.id) FROM nexora_social_auth.direct_messages dm WHERE (dm.sender_id=a.id AND dm.recipient_id=$1) OR (dm.sender_id=$1 AND dm.recipient_id=a.id)),0) DESC,a.nickname",[account.id]);
+  res.json({friends:result.rows.map(p=>({id:String(p.id),nickname:p.nickname,status:p.status,direction:p.direction,lastMessage:p.last_message||"",lastMessageAt:p.last_message_at,unread:Number(p.unread)||0}))});
+ }catch(error){console.error("Social friends failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Список друзей временно недоступен."});}
+});
+app.post("/api/social/friends/request",async(req,res)=>{
+ try{
+  const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
+  const target=String(req.body?.targetId||"");if(!validAccountId(target)||target===String(account.id))return res.status(400).json({error:"Выберите другого игрока."});
+  await ensureSocialMessagingSchema();
+  const exists=await pool.query("SELECT id FROM nexora_social_auth.accounts WHERE id=$1",[target]);if(!exists.rowCount)return res.status(404).json({error:"Игрок не найден."});
+  const low=String(account.id).toLowerCase()<target.toLowerCase()?account.id:target,high=low===account.id?target:account.id;
+  const prior=await socialFriendship(pool,account.id,target);
+  if(prior?.status==="accepted")return res.status(409).json({error:"Этот игрок уже в друзьях."});
+  if(prior?.status==="pending")return res.status(409).json({error:prior.requested_by===account.id?"Заявка уже отправлена.":"Этот игрок уже отправил тебе заявку — открой входящие."});
+  await pool.query("INSERT INTO nexora_social_auth.friendships(account_low,account_high,requested_by,status) VALUES($1,$2,$3,'pending') ON CONFLICT(account_low,account_high) DO UPDATE SET requested_by=EXCLUDED.requested_by,status='pending',created_at=NOW(),updated_at=NOW()",[low,high,account.id]);
+  res.status(201).json({ok:true,status:"pending",message:"Заявка в друзья отправлена."});
+ }catch(error){console.error("Friend request failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось отправить заявку."});}
+});
+app.post("/api/social/friends/respond",async(req,res)=>{
+ try{
+  const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
+  const target=String(req.body?.targetId||""),decision=String(req.body?.decision||"");
+  if(!validAccountId(target)||target===String(account.id)||!["accept","decline"].includes(decision))return res.status(400).json({error:"Некорректный ответ на заявку."});
+  await ensureSocialMessagingSchema();
+  const friendship=await socialFriendship(pool,account.id,target,true);
+  if(!friendship||friendship.status!=="pending"||friendship.requested_by===account.id)return res.status(404).json({error:"Входящая заявка не найдена."});
+  if(decision==="accept"){
+   await pool.query("UPDATE nexora_social_auth.friendships SET status='accepted',updated_at=NOW() WHERE account_low=LEAST($1::uuid,$2::uuid) AND account_high=GREATEST($1::uuid,$2::uuid)",[account.id,target]);
+   return res.json({ok:true,status:"accepted",message:"Теперь вы друзья."});
+  }
+  await pool.query("DELETE FROM nexora_social_auth.friendships WHERE account_low=LEAST($1::uuid,$2::uuid) AND account_high=GREATEST($1::uuid,$2::uuid)",[account.id,target]);
+  res.json({ok:true,status:"declined",message:"Заявка отклонена."});
+ }catch(error){console.error("Friend response failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось обработать заявку."});}
+});
+app.delete("/api/social/friends/:id",async(req,res)=>{
+ try{
+  const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
+  const target=String(req.params.id||"");if(!validAccountId(target)||target===String(account.id))return res.status(400).json({error:"Некорректный игрок."});
+  await ensureSocialMessagingSchema();
+  const result=await pool.query("DELETE FROM nexora_social_auth.friendships WHERE account_low=LEAST($1::uuid,$2::uuid) AND account_high=GREATEST($1::uuid,$2::uuid) AND status='accepted'",[account.id,target]);
+  if(!result.rowCount)return res.status(404).json({error:"Пользователь не найден в друзьях."});
+  res.json({ok:true});
+ }catch(error){console.error("Friend removal failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось удалить из друзей."});}
+});
+app.get("/api/social/messages/:id",async(req,res)=>{
+ try{
+  const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
+  const target=String(req.params.id||"");if(!validAccountId(target)||target===String(account.id))return res.status(400).json({error:"Некорректный собеседник."});
+  await ensureSocialMessagingSchema();
+  const friendship=await socialFriendship(pool,account.id,target);if(friendship?.status!=="accepted")return res.status(403).json({error:"Личные сообщения доступны только друзьям."});
+  const result=await pool.query("SELECT id,sender_id,recipient_id,message,created_at FROM nexora_social_auth.direct_messages WHERE ((sender_id=$1 AND recipient_id=$2) OR (sender_id=$2 AND recipient_id=$1)) AND id>$3 ORDER BY id ASC LIMIT 100",[account.id,target,Math.max(0,Number.parseInt(req.query.after||"0",10)||0)]);
+  await pool.query("UPDATE nexora_social_auth.direct_messages SET read_at=NOW() WHERE sender_id=$1 AND recipient_id=$2 AND read_at IS NULL",[target,account.id]);
+  res.json({messages:result.rows.map(m=>({id:Number(m.id),senderId:String(m.sender_id),message:m.message,createdAt:m.created_at,mine:String(m.sender_id)===String(account.id)}))});
+ }catch(error){console.error("Direct messages read failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Личная переписка временно недоступна."});}
+});
+app.post("/api/social/messages/:id",async(req,res)=>{
+ try{
+  const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
+  if(account.is_muted)return res.status(403).json({error:"Возможность писать сообщения временно ограничена."});
+  const target=String(req.params.id||""),message=clean(req.body?.message);
+  if(!validAccountId(target)||target===String(account.id))return res.status(400).json({error:"Некорректный собеседник."});
+  if(!message||message.length>1000)return res.status(400).json({error:"Сообщение должно содержать от 1 до 1000 символов."});
+  await ensureSocialMessagingSchema();
+  const friendship=await socialFriendship(pool,account.id,target);if(friendship?.status!=="accepted")return res.status(403).json({error:"Сначала добавьте игрока в друзья."});
+  const result=await pool.query("INSERT INTO nexora_social_auth.direct_messages(sender_id,recipient_id,message) VALUES($1,$2,$3) RETURNING id,sender_id,message,created_at",[account.id,target,message]);
+  const row=result.rows[0];res.status(201).json({ok:true,message:{id:Number(row.id),senderId:String(row.sender_id),message:row.message,createdAt:row.created_at,mine:true}});
+ }catch(error){console.error("Direct message send failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось отправить личное сообщение."});}
+});
 async function requireStaff(req,res,developerOnly=false){
  const account=await getAccount(req);
  if(!account){res.status(401).json({error:"Войдите в аккаунт."});return null;}
@@ -65,6 +158,50 @@ app.get("/api/account/wallet",async(req,res)=>{
 });
 app.get("/api/account/online",async(_req,res)=>{try{const r=await pool.query("SELECT COUNT(DISTINCT account_id)::int AS total FROM nexora_social_auth.sessions WHERE expires_at IS NULL OR expires_at>NOW()");res.json({online:r.rows[0].total});}catch{res.json({online:0});}});
 
+let planetWorldSchemaPromise;
+function ensurePlanetWorldSchema(){
+ if(!planetWorldSchemaPromise)planetWorldSchemaPromise=pool.query("CREATE TABLE IF NOT EXISTS nexora_social_auth.planets (slug VARCHAR(40) PRIMARY KEY, name VARCHAR(80) NOT NULL, description VARCHAR(300) NOT NULL DEFAULT '', access_type VARCHAR(12) NOT NULL DEFAULT 'public' CHECK(access_type IN ('public','ticket','vip')), ticket_price INTEGER NOT NULL DEFAULT 0 CHECK(ticket_price>=0), is_active BOOLEAN NOT NULL DEFAULT TRUE, sort_order SMALLINT NOT NULL DEFAULT 0); INSERT INTO nexora_social_auth.planets(slug,name,description,access_type,ticket_price,sort_order) VALUES ('earth','Земля','Главная планета знакомств и общения.','public',0,1),('love','Планета любви','Романтика, знакомства и новые встречи.','public',0,2),('neon','Неоновый город','Яркие огни и ночная жизнь.','ticket',25,3),('paradise','Райский остров','Место отдыха и спокойного общения.','ticket',40,4),('mystery','Таинственная планета','Мир приключений и открытий.','ticket',60,5),('vip','VIP-планета','Закрытое пространство для особых гостей.','vip',0,6) ON CONFLICT(slug) DO NOTHING; CREATE TABLE IF NOT EXISTS nexora_social_auth.account_locations (account_id UUID PRIMARY KEY REFERENCES nexora_social_auth.accounts(id) ON DELETE CASCADE, planet_slug VARCHAR(40) NOT NULL REFERENCES nexora_social_auth.planets(slug), arrived_at TIMESTAMPTZ NOT NULL DEFAULT NOW()); CREATE TABLE IF NOT EXISTS nexora_social_auth.room_messages (id BIGSERIAL PRIMARY KEY, account_id TEXT NOT NULL, nickname VARCHAR(24) NOT NULL, message VARCHAR(500) NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()); CREATE TABLE IF NOT EXISTS nexora_social_auth.room_presence (account_id TEXT PRIMARY KEY, nickname VARCHAR(24) NOT NULL, last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(), x_percent REAL NOT NULL DEFAULT 50, bottom_percent REAL NOT NULL DEFAULT 12, facing SMALLINT NOT NULL DEFAULT 1); ALTER TABLE nexora_social_auth.room_messages ADD COLUMN IF NOT EXISTS planet_slug VARCHAR(40) NOT NULL DEFAULT 'earth'; ALTER TABLE nexora_social_auth.room_presence ADD COLUMN IF NOT EXISTS planet_slug VARCHAR(40) NOT NULL DEFAULT 'earth'; CREATE INDEX IF NOT EXISTS room_messages_planet_id_idx ON nexora_social_auth.room_messages(planet_slug,id); CREATE INDEX IF NOT EXISTS room_presence_planet_seen_idx ON nexora_social_auth.room_presence(planet_slug,last_seen DESC)").catch(error=>{planetWorldSchemaPromise=null;throw error;});
+ return planetWorldSchemaPromise;
+}
+async function ensureAccountLocation(accountId){
+ await ensurePlanetWorldSchema();
+ const result=await pool.query("INSERT INTO nexora_social_auth.account_locations(account_id,planet_slug) VALUES($1,'earth') ON CONFLICT(account_id) DO UPDATE SET account_id=EXCLUDED.account_id RETURNING planet_slug",[accountId]);
+ return result.rows[0].planet_slug;
+}
+app.get("/api/planets",async(req,res)=>{
+ try{
+  const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
+  const current=await ensureAccountLocation(account.id);
+  const result=await pool.query("SELECT p.slug,p.name,p.description,p.access_type,p.ticket_price,COUNT(r.account_id)::int AS online FROM nexora_social_auth.planets p LEFT JOIN nexora_social_auth.room_presence r ON r.planet_slug=p.slug AND r.last_seen>NOW()-INTERVAL '45 seconds' WHERE p.is_active=TRUE GROUP BY p.slug ORDER BY p.sort_order,p.name");
+  res.json({currentPlanet:current,planets:result.rows.map(p=>({...p,online:Number(p.online)||0,accessible:p.access_type==='public'}))});
+ }catch(error){console.error("Planet directory failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Список планет временно недоступен."});}
+});
+app.post("/api/room/travel",async(req,res)=>{
+ let client;
+ try{
+  const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
+  const slug=clean(req.body?.planetSlug).toLowerCase();
+  if(!/^[a-z0-9-]{2,40}$/.test(slug))return res.status(400).json({error:"Выберите планету."});
+  await ensurePlanetWorldSchema();
+  client=await pool.connect();await client.query("BEGIN");
+  const destination=await client.query("SELECT slug,name,access_type,ticket_price FROM nexora_social_auth.planets WHERE slug=$1 AND is_active=TRUE FOR UPDATE",[slug]);
+  if(!destination.rowCount){await client.query("ROLLBACK");return res.status(404).json({error:"Планета не найдена."});}
+  const planet=destination.rows[0];
+  const current=await client.query("SELECT planet_slug FROM nexora_social_auth.account_locations WHERE account_id=$1 FOR UPDATE",[account.id]);
+  if(current.rows[0]?.planet_slug===slug){await client.query("COMMIT");return res.json({ok:true,planet:{slug:planet.slug,name:planet.name},message:"Ты уже находишься на этой планете."});}
+  if(planet.access_type!=="public"){
+   if(planet.access_type==="vip"){await client.query("ROLLBACK");return res.status(403).json({error:"Эта планета доступна только VIP-участникам."});}
+   await ensureWalletSchema();
+   const debit=await client.query("UPDATE nexora_social_auth.account_wallets SET diamonds=diamonds-$1,updated_at=NOW() WHERE account_id=$2 AND diamonds >= $1 RETURNING diamonds",[planet.ticket_price,account.id]);
+   if(!debit.rowCount){await client.query("ROLLBACK");return res.status(402).json({error:"Недостаточно алмазов для перелёта."});}
+  }
+  await client.query("INSERT INTO nexora_social_auth.account_locations(account_id,planet_slug,arrived_at) VALUES($1,$2,NOW()) ON CONFLICT(account_id) DO UPDATE SET planet_slug=EXCLUDED.planet_slug,arrived_at=NOW()",[account.id,slug]);
+  await client.query("DELETE FROM nexora_social_auth.room_presence WHERE account_id=$1",[String(account.id)]);
+  await client.query("COMMIT");
+  res.json({ok:true,planet:{slug:planet.slug,name:planet.name},message:"Ты прилетел(а) на планету «"+planet.name+"»."});
+ }catch(error){if(client)await client.query("ROLLBACK").catch(()=>{});console.error("Planet travel failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось выполнить перелёт."});}
+ finally{client?.release();}
+});
 let roomChatSchemaPromise;
 function ensureRoomChatSchema(){
  if(!roomChatSchemaPromise)roomChatSchemaPromise=pool.query("CREATE SCHEMA IF NOT EXISTS nexora_social_auth; CREATE TABLE IF NOT EXISTS nexora_social_auth.room_messages (id BIGSERIAL PRIMARY KEY, account_id TEXT NOT NULL, nickname VARCHAR(24) NOT NULL, message VARCHAR(500) NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()); CREATE INDEX IF NOT EXISTS room_messages_created_id_idx ON nexora_social_auth.room_messages(id)").catch(error=>{roomChatSchemaPromise=null;throw error;});
@@ -74,10 +211,11 @@ app.get("/api/room/messages",async(req,res)=>{
  try{
   const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
   await ensureRoomChatSchema();
+  const planetSlug=await ensureAccountLocation(account.id);
   const after=Math.max(0,Number.parseInt(req.query.after||"0",10)||0);
   const query=after>0
-   ? await pool.query("SELECT id,nickname,message,created_at,account_id FROM nexora_social_auth.room_messages WHERE id>$1 ORDER BY id ASC LIMIT 80",[after])
-   : await pool.query("SELECT id,nickname,message,created_at,account_id FROM (SELECT id,nickname,message,created_at,account_id FROM nexora_social_auth.room_messages ORDER BY id DESC LIMIT 60) recent ORDER BY id ASC");
+   ? await pool.query("SELECT id,nickname,message,created_at,account_id FROM nexora_social_auth.room_messages WHERE planet_slug=$2 AND id>$1 ORDER BY id ASC LIMIT 80",[after,planetSlug])
+   : await pool.query("SELECT id,nickname,message,created_at,account_id FROM (SELECT id,nickname,message,created_at,account_id FROM nexora_social_auth.room_messages WHERE planet_slug=$1 ORDER BY id DESC LIMIT 60) recent ORDER BY id ASC",[planetSlug]);
   res.json({messages:query.rows.map(row=>({id:row.id,nickname:row.nickname,message:row.message,createdAt:row.created_at,mine:String(row.account_id)===String(account.id)}))});
  }catch(error){console.error("Room chat read failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Чат временно недоступен."});}
 });
@@ -86,7 +224,8 @@ app.post("/api/room/messages",async(req,res)=>{
   const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});if(account.is_muted)return res.status(403).json({error:"Возможность писать сообщения временно ограничена."});
   const message=clean(req.body.message);if(!message||message.length>500)return res.status(400).json({error:"Сообщение должно содержать от 1 до 500 символов."});
   await ensureRoomChatSchema();
-  const saved=await pool.query("INSERT INTO nexora_social_auth.room_messages(account_id,nickname,message) VALUES($1,$2,$3) RETURNING id,nickname,message,created_at,account_id",[String(account.id),account.nickname,message]);
+  const planetSlug=await ensureAccountLocation(account.id);
+  const saved=await pool.query("INSERT INTO nexora_social_auth.room_messages(account_id,nickname,message,planet_slug) VALUES($1,$2,$3,$4) RETURNING id,nickname,message,created_at,account_id",[String(account.id),account.nickname,message,planetSlug]);
   const row=saved.rows[0];
   await pool.query("INSERT INTO nexora_social_auth.characters(account_id,head_id,body_id) VALUES($1,1,1) ON CONFLICT(account_id) DO NOTHING",[account.id]);
   if(message.length>=12){
@@ -98,17 +237,18 @@ app.post("/api/room/messages",async(req,res)=>{
 });
 let roomPresenceSchemaPromise;
 function ensureRoomPresenceSchema(){
- if(!roomPresenceSchemaPromise)roomPresenceSchemaPromise=pool.query("CREATE TABLE IF NOT EXISTS nexora_social_auth.room_presence (account_id TEXT PRIMARY KEY, nickname VARCHAR(24) NOT NULL, last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(), x_percent REAL NOT NULL DEFAULT 50, bottom_percent REAL NOT NULL DEFAULT 22, facing SMALLINT NOT NULL DEFAULT 1); ALTER TABLE nexora_social_auth.room_presence ADD COLUMN IF NOT EXISTS x_percent REAL NOT NULL DEFAULT 50, ADD COLUMN IF NOT EXISTS bottom_percent REAL NOT NULL DEFAULT 12, ADD COLUMN IF NOT EXISTS facing SMALLINT NOT NULL DEFAULT 1").catch(error=>{roomPresenceSchemaPromise=null;throw error;});
+ if(!roomPresenceSchemaPromise)roomPresenceSchemaPromise=pool.query("CREATE TABLE IF NOT EXISTS nexora_social_auth.room_presence (account_id TEXT PRIMARY KEY, nickname VARCHAR(24) NOT NULL, last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(), x_percent REAL NOT NULL DEFAULT 50, bottom_percent REAL NOT NULL DEFAULT 22, facing SMALLINT NOT NULL DEFAULT 1); ALTER TABLE nexora_social_auth.room_presence ADD COLUMN IF NOT EXISTS x_percent REAL NOT NULL DEFAULT 50, ADD COLUMN IF NOT EXISTS bottom_percent REAL NOT NULL DEFAULT 12, ADD COLUMN IF NOT EXISTS facing SMALLINT NOT NULL DEFAULT 1").then(()=>ensurePlanetWorldSchema()).catch(error=>{roomPresenceSchemaPromise=null;throw error;});
  return roomPresenceSchemaPromise;
 }
 app.post("/api/room/presence",async(req,res)=>{
  try{
   const account=await getAccount(req);if(!account)return res.status(401).json({error:"Войдите в аккаунт."});
   await ensureRoomPresenceSchema();
+  const planetSlug=await ensureAccountLocation(account.id);
   const x=Math.max(7,Math.min(93,Number.isFinite(Number(req.body?.xPercent))?Number(req.body.xPercent):50)),bottom=Math.max(5,Math.min(88,Number.isFinite(Number(req.body?.bottomPercent))?Number(req.body.bottomPercent):22)),facing=Number(req.body?.facing)===-1?-1:1;
-  await pool.query("INSERT INTO nexora_social_auth.room_presence(account_id,nickname,last_seen,x_percent,bottom_percent,facing) VALUES($1,$2,NOW(),$3,$4,$5) ON CONFLICT(account_id) DO UPDATE SET nickname=EXCLUDED.nickname,last_seen=NOW(),x_percent=EXCLUDED.x_percent,bottom_percent=EXCLUDED.bottom_percent,facing=EXCLUDED.facing",[String(account.id),account.nickname,x,bottom,facing]);
+  await pool.query("INSERT INTO nexora_social_auth.room_presence(account_id,nickname,last_seen,x_percent,bottom_percent,facing,planet_slug) VALUES($1,$2,NOW(),$3,$4,$5,$6) ON CONFLICT(account_id) DO UPDATE SET nickname=EXCLUDED.nickname,last_seen=NOW(),x_percent=EXCLUDED.x_percent,bottom_percent=EXCLUDED.bottom_percent,facing=EXCLUDED.facing,planet_slug=EXCLUDED.planet_slug",[String(account.id),account.nickname,x,bottom,facing,planetSlug]);
   await ensureAvatarEquipmentSchema();
-  const online=await pool.query("SELECT p.account_id,p.nickname,p.x_percent,p.bottom_percent,p.facing,c.head_id,c.body_id,c.outfit_id,COALESCE(ar.rank_name,'Новичок') AS authority_title,COALESCE(ar.aura,'none') AS aura,COALESCE(ar.stars,0)::int AS authority_stars FROM nexora_social_auth.room_presence p LEFT JOIN nexora_social_auth.characters c ON c.account_id::text=p.account_id::text LEFT JOIN LATERAL (SELECT * FROM nexora_social_auth.authority_ranks WHERE min_points<=COALESCE(c.authority_points,0) ORDER BY min_points DESC LIMIT 1) ar ON TRUE WHERE p.last_seen>NOW()-INTERVAL '45 seconds' ORDER BY p.account_id ASC LIMIT 24");
+  const online=await pool.query("SELECT p.account_id,p.nickname,p.x_percent,p.bottom_percent,p.facing,c.head_id,c.body_id,c.outfit_id,COALESCE(ar.rank_name,'Новичок') AS authority_title,COALESCE(ar.aura,'none') AS aura,COALESCE(ar.stars,0)::int AS authority_stars FROM nexora_social_auth.room_presence p LEFT JOIN nexora_social_auth.characters c ON c.account_id::text=p.account_id::text LEFT JOIN LATERAL (SELECT * FROM nexora_social_auth.authority_ranks WHERE min_points<=COALESCE(c.authority_points,0) ORDER BY min_points DESC LIMIT 1) ar ON TRUE WHERE p.planet_slug=$1 AND p.last_seen>NOW()-INTERVAL '45 seconds' ORDER BY p.account_id ASC LIMIT 24",[planetSlug]);
   res.json({players:online.rows.map(row=>({id:String(row.account_id),nickname:row.nickname,xPercent:Number(row.x_percent)||50,bottomPercent:Number(row.bottom_percent)||12,facing:Number(row.facing)===-1?-1:1,headId:Number(row.head_id)||1,bodyId:Number(row.body_id)||1,outfitId:Number(row.outfit_id)||0,authorityTitle:row.authority_title,aura:row.aura,authorityStars:Number(row.authority_stars)||0,mine:String(row.account_id)===String(account.id)}))});
  }catch(error){console.error("Room presence failed:",error.code||"UNKNOWN",error.message);res.status(503).json({error:"Не удалось загрузить игроков."});}
 });

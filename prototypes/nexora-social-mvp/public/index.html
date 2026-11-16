@@ -4,8 +4,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101633"><meta name="description" content="NEXORA — социальный виртуальный мир">
 <title>NEXORA — Social World</title>
-<link rel="stylesheet" href="/styles.css?v=returning-player-card-v1-20261115"><link rel="stylesheet" href="/room.css?v=chat-layout-return-v2-20261115"><link rel="stylesheet" href="/reference-theme.css?v=nexora-retro-mobile-v2">
-<script defer src="/app.js?v=remembered-device-session-v1-20261115"></script><script defer src="/room.js?v=nexora-touch-dock-v2"></script>
+<link rel="stylesheet" href="/styles.css?v=returning-player-card-v1-20261115"><link rel="stylesheet" href="/room.css?v=chat-layout-return-v2-20261115"><link rel="stylesheet" href="/reference-theme.css?v=friends-private-chat-v1">
+<script defer src="/app.js?v=remembered-device-session-v1-20261115"></script><script defer src="/room.js?v=friends-private-chat-v1"></script>
 </head>
 <body>
 <div class="app-shell">
@@ -57,7 +57,7 @@
  </section>
  <section id="room-screen" class="hidden" aria-label="Пустая 2D-комната NEXORA">
   <div class="retro-room">
-   <header class="room-zone planet-header" aria-label="Планета и местное время"><span class="planet-name">Земля</span><time id="visitor-clock" aria-label="Местное время">--:--</time></header>
+   <header class="room-zone planet-header" aria-label="Планета и местное время"><div class="planet-heading"><span class="planet-name">Земля</span><select id="planet-selector" aria-label="Выбрать планету"><option value="earth">Земля</option></select></div><time id="visitor-clock" aria-label="Местное время">--:--</time></header>
    <section class="room-zone retro-chat" aria-label="Окно чата">
      <div class="chat-space" aria-live="polite"></div>
      <form id="chat-form" class="retro-composer">
