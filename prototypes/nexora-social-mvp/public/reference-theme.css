@@ -1,0 +1,379 @@
+/* NEXORA visual pass based on the supplied retro social-world references.
+   Keeps NEXORA identity, existing account data and app interactions intact. */
+:root {
+  --nx-green: #a8e64c;
+  --nx-green-bright: #c8ff68;
+  --nx-frame: #547b2c;
+  --nx-panel: #171b20;
+  --nx-panel-soft: #24282c;
+  --nx-text: #edf3df;
+  --nx-muted: #aab49a;
+}
+#room-screen {
+  background: #080b10;
+  color: var(--nx-text);
+  font-family: Tahoma, Arial, sans-serif;
+}
+.retro-room {
+  background: #090d12;
+  border: 2px solid #46672b;
+  box-shadow: 0 0 0 1px #a8e64c22, 0 12px 42px #000d;
+}
+.planet-header {
+  background-color: #31541e;
+  background-image: repeating-linear-gradient(135deg,#ffffff18 0 3px,transparent 3px 7px),
+    linear-gradient(180deg,#557d2a,#263e1b);
+  border-bottom: 1px solid #a8e64c88;
+  box-shadow: inset 0 1px #ffffff22, inset 0 -2px #14210f;
+}
+.planet-name {
+  color: #eaffc9;
+  text-shadow: 0 1px 2px #000, 0 0 8px #a8e64c55;
+  letter-spacing: .7px;
+}
+.retro-chat {
+  background: linear-gradient(180deg,#17212b,#101820 72%,#0c1219);
+  border-bottom: 2px solid #557c30;
+  box-shadow: inset 0 0 0 1px #ffffff0b, inset 0 -8px 22px #0006;
+}
+.chat-space {
+  padding: 9px 11px;
+  gap: 5px;
+  scrollbar-color: #78a83c #111820;
+}
+.chat-line { font-size: 12px; line-height: 1.42; }
+.chat-line b { color: #c4f77a; text-shadow: 0 1px #000; }
+.chat-line.mine b { color: #ffe18a; }
+.chat-line span { color: #edf1e7; }
+.retro-composer {
+  background: #111820;
+  border-top: 1px solid #638c39;
+}
+.retro-composer input {
+  border: 1px solid #668d38;
+  border-radius: 3px;
+  background: #20272b;
+  color: #f5f8ee;
+  box-shadow: inset 0 1px 4px #0009;
+}
+.retro-composer input:focus { border-color: var(--nx-green-bright); }
+.retro-composer button {
+  border: 1px solid #c2f36b;
+  background: linear-gradient(#8bc43c,#4d7625);
+  color: #10170a;
+  text-shadow: 0 1px #ffffff55;
+}
+.retro-scene {
+  background-color: #080d13;
+  background-image:
+    radial-gradient(1px 1px at 8% 17%,#d8e9ff 99%,transparent),
+    radial-gradient(1px 1px at 22% 61%,#9dbdff 99%,transparent),
+    radial-gradient(1px 1px at 39% 28%,#fff 99%,transparent),
+    radial-gradient(1px 1px at 57% 72%,#9dbdff 99%,transparent),
+    radial-gradient(1px 1px at 73% 19%,#fff 99%,transparent),
+    radial-gradient(1px 1px at 91% 48%,#b9d5ff 99%,transparent),
+    linear-gradient(180deg,#09111b 0%,#101a24 74%,#18231d 100%);
+}
+.retro-scene::after {
+  background: repeating-linear-gradient(90deg,#1b2a20 0 2px,#253625 2px 4px);
+  border-top: 1px solid #638c39;
+}
+.nexora-character-actions-card,
+.nexora-emotions-window,
+.nexora-avatar-window {
+  border: 2px solid #83b83b !important;
+  border-radius: 5px !important;
+  background: linear-gradient(180deg,#303438,#191d20 38%,#111518) !important;
+  color: #f1f4e9 !important;
+  box-shadow: 0 8px 28px #000c, inset 0 1px #ffffff18 !important;
+}
+.nexora-character-actions-title,
+.nexora-emotions-window > header,
+.nexora-info-header {
+  background: repeating-linear-gradient(135deg,#b7ed5b 0 5px,#8dc43e 5px 10px) !important;
+  color: #15200b !important;
+  border-bottom: 1px solid #d5ff8a !important;
+  text-shadow: 0 1px #ffffff66;
+}
+.nexora-character-actions-card button,
+.nexora-emotion-option,
+.nexora-aura-option {
+  border: 1px solid #ffffff18 !important;
+  border-radius: 3px !important;
+  background: #242a2d !important;
+  color: #f0f4e8 !important;
+}
+.nexora-character-actions-card button:focus-visible,
+.nexora-character-actions-card button:hover,
+.nexora-emotion-option:focus-visible,
+.nexora-emotion-option:hover,
+.nexora-aura-option:hover {
+  outline: 1px solid var(--nx-green-bright);
+  background: #3b5428 !important;
+}
+.nexora-character-actions-card button.secondary { color: #c3cbb9 !important; }
+.nexora-avatar-panel {
+  border: 2px solid #83b83b !important;
+  border-radius: 4px !important;
+  background: #123e70 !important;
+  color: #f1f6ff !important;
+}
+.nexora-rank-head,
+.nexora-classic-top,
+.nexora-classic-links,
+.nexora-classic-section {
+  background: #174b80 !important;
+  color: #f2f7ff !important;
+}
+.nexora-classic-profile { background: #0d3765 !important; color: #eaf3ff !important; }
+.nexora-classic-profile label,
+.nexora-classic-profile span,
+.nexora-classic-profile strong { color: inherit; }
+.nexora-classic-profile input,
+.nexora-classic-profile textarea,
+.nexora-classic-profile select {
+  border: 1px solid #6792bd !important;
+  border-radius: 2px !important;
+  background: #0c2d50 !important;
+  color: #fff !important;
+}
+.nexora-info-actions button {
+  border: 1px solid #c2f36b !important;
+  border-radius: 3px !important;
+  background: linear-gradient(#8bc43c,#4d7625) !important;
+  color: #10170a !important;
+  font-weight: 700;
+}
+.nexora-profile-loading,
+.nexora-profile-error { color: #edf3df !important; }
+.nexora-avatar-close,
+.nexora-emotions-window header button {
+  color: #17200d !important;
+}
+@media (min-width: 760px) {
+  .retro-room {
+    width: min(100vw, 1120px);
+    height: min(100dvh, 940px);
+    grid-template-rows: 28px minmax(0,1.25fr) minmax(250px,1fr);
+  }
+  .planet-header { height: 28px; min-height: 28px; }
+  .planet-name { font-size: 14px; }
+  .chat-space { padding: 12px 18px; }
+  .chat-line { font-size: 14px; }
+}
+@media (max-width: 600px) {
+  .retro-room { border: 0; }
+  .chat-line { font-size: 12px; }
+  .nexora-avatar-panel { inset: 8px 8px 8px auto !important; width: min(440px,calc(100% - 16px)) !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nexora-character-actions-card *, .nexora-emotions-window *, .nexora-avatar-window * {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+
+/* NEXORA: Galaxy-era visual language with current mobile ergonomics. */
+:root {
+  --nx-lime: #a9e34b;
+  --nx-lime-hi: #d2ff78;
+  --nx-green-deep: #365d1f;
+  --nx-ink: #11171b;
+}
+#room-screen { background:#080d10; }
+.retro-room {
+  border:1px solid #769b42;
+  border-radius:10px;
+  background:#0d1418;
+  box-shadow:0 18px 60px #000c,0 0 0 1px #caff6020;
+}
+.planet-header {
+  background-color:#477526;
+  background-image:repeating-linear-gradient(135deg,#ffffff16 0 4px,transparent 4px 8px),linear-gradient(180deg,#80ad3b,#35551e);
+  border-bottom:1px solid #b7e96a;
+}
+.planet-name { color:#f3ffd9; text-shadow:0 1px 3px #14200b; }
+.retro-chat {
+  background:linear-gradient(180deg,#1b252b,#10181d 80%);
+  border-bottom:1px solid #5b8032;
+}
+.chat-space { scrollbar-color:#8dbb42 #172027; }
+.chat-line b { color:#c7f17d; }
+.chat-line.mine b { color:#ffe08a; }
+.retro-composer {
+  background:#111a1f;
+  border-top:1px solid #597d32;
+  gap:8px;
+  padding:6px 8px;
+}
+.retro-composer input {
+  border:1px solid #587a37;
+  border-radius:7px;
+  background:#202a2e;
+}
+.retro-composer input:focus { border-color:#caff70; box-shadow:0 0 0 2px #b7ed5b30; }
+.retro-composer button {
+  min-width:82px;
+  border:1px solid #d1f78b;
+  border-radius:7px;
+  background:linear-gradient(180deg,#a7d94f,#638d2c);
+  color:#17220d;
+  font-size:13px;
+}
+.retro-scene {
+  background-color:#080e13;
+  background-image:radial-gradient(1px 1px at 8% 17%,#e1edcf 99%,transparent),radial-gradient(1px 1px at 22% 61%,#9dbdff 99%,transparent),radial-gradient(1px 1px at 39% 28%,#fff 99%,transparent),radial-gradient(1px 1px at 57% 72%,#9dbdff 99%,transparent),radial-gradient(1px 1px at 73% 19%,#fff 99%,transparent),radial-gradient(1px 1px at 91% 48%,#b9d5ff 99%,transparent),linear-gradient(180deg,#09131a 0%,#15232a 74%,#1d2a20 100%);
+}
+.retro-scene::after { background:repeating-linear-gradient(90deg,#1c2a20 0 2px,#263a27 2px 4px); border-top:1px solid #668d3a; }
+.nexora-character-actions { backdrop-filter:blur(9px)!important; background:#050b08b8!important; }
+.nexora-character-actions-card {
+  width:min(340px,calc(100vw - 28px))!important;
+  max-height:min(78dvh,620px);
+  overflow:auto;
+  gap:8px!important;
+  padding:14px!important;
+  border:1px solid #9bc94f!important;
+  border-radius:12px!important;
+  background:linear-gradient(160deg,#29352b,#141c19 68%,#101614)!important;
+  box-shadow:0 18px 60px #000d,inset 0 1px #ffffff20!important;
+}
+.nexora-character-actions-title {
+  padding:7px 8px!important;
+  border-radius:5px!important;
+  background:repeating-linear-gradient(135deg,#b9ed63 0 6px,#91c83f 6px 12px)!important;
+  color:#18240d!important;
+  font-size:13px!important;
+  letter-spacing:.8px!important;
+}
+.nexora-character-actions-card button {
+  min-height:44px!important;
+  border:1px solid #6d8e45!important;
+  border-radius:7px!important;
+  background:linear-gradient(180deg,#35443a,#222e27)!important;
+  color:#f1f7e8!important;
+  text-align:left!important;
+  padding:0 13px!important;
+  font-size:14px!important;
+  touch-action:manipulation;
+}
+.nexora-character-actions-card button:hover,
+.nexora-character-actions-card button:focus-visible {
+  outline:2px solid #c6f77c!important;
+  background:linear-gradient(180deg,#526d36,#344a27)!important;
+}
+.nexora-character-actions-card button.secondary {
+  justify-content:center!important;
+  text-align:center!important;
+  background:#1c2722!important;
+}
+.nexora-emotions-window {
+  width:min(360px,calc(100vw - 24px))!important;
+  height:min(540px,calc(100dvh - 28px))!important;
+  border:1px solid #91bc4b!important;
+  border-radius:10px!important;
+  background:#171f1b!important;
+}
+.nexora-emotions-window header {
+  height:40px!important;min-height:40px!important;
+  background:repeating-linear-gradient(135deg,#b9ed63 0 6px,#91c83f 6px 12px)!important;
+  border-bottom:1px solid #d4f99a!important;
+}
+.nexora-emotion-option { min-height:42px!important; border-radius:5px!important; }
+.nexora-avatar-panel {
+  border:1px solid #88b64b!important;
+  border-radius:10px!important;
+  background:#0f3d69!important;
+}
+.nexora-info-header {
+  background:repeating-linear-gradient(135deg,#b9ed63 0 6px,#91c83f 6px 12px)!important;
+  color:#17220c!important;
+}
+.nexora-touch-dock {
+  position:absolute;
+  z-index:25;
+  inset:auto 12px 12px 12px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:10px;
+  pointer-events:none;
+}
+.nexora-touch-dock > button {
+  pointer-events:auto;
+  min-width:66px;
+  min-height:56px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  border:1px solid #b4e66b;
+  border-radius:10px;
+  background:linear-gradient(180deg,#7fae3eeb,#355b23ee);
+  color:#f5ffdf;
+  box-shadow:0 5px 18px #0009,inset 0 1px #ffffff50;
+  font-size:22px;
+  font-weight:900;
+  touch-action:manipulation;
+}
+.nexora-touch-dock > button span { font-size:10px; font-weight:800; }
+.nexora-touch-pad {
+  pointer-events:auto;
+  display:grid;
+  grid-template-columns:repeat(3,40px);
+  grid-template-rows:repeat(2,38px);
+  gap:4px;
+  padding:5px;
+  border:1px solid #9dc65b88;
+  border-radius:12px;
+  background:#101914b8;
+  box-shadow:0 5px 18px #0008;
+  touch-action:none;
+}
+.nexora-touch-pad button {
+  border:1px solid #9dc65b;
+  border-radius:7px;
+  background:linear-gradient(180deg,#435c36,#263b28);
+  color:#f4ffdc;
+  font-size:16px;
+  font-weight:900;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.nexora-touch-pad button:active { background:#80ae3d; transform:scale(.96); }
+.nexora-touch-pad [data-move="up"] { grid-column:2;grid-row:1; }
+.nexora-touch-pad [data-move="left"] { grid-column:1;grid-row:2; }
+.nexora-touch-pad [data-move="down"] { grid-column:2;grid-row:2; }
+.nexora-touch-pad [data-move="right"] { grid-column:3;grid-row:2; }
+@media(max-width:600px) {
+  .retro-room { border-radius:0; }
+  .nexora-touch-dock { inset:auto 8px max(8px,env(safe-area-inset-bottom)) 8px; }
+  .nexora-touch-dock > button { min-width:58px;min-height:52px; }
+  .nexora-touch-pad { grid-template-columns:repeat(3,36px);grid-template-rows:repeat(2,34px); }
+  .retro-composer button { min-width:72px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .nexora-world-avatar,.nexora-touch-dock * { animation:none!important;transition:none!important; }
+}
+
+.nexora-move-hint {
+  position:absolute;
+  left:50%;
+  bottom:92px;
+  transform:translateX(-50%);
+  width:max-content;
+  max-width:calc(100% - 24px);
+  padding:10px 14px;
+  border:1px solid #b6e66c;
+  border-radius:9px;
+  background:#121b14ed;
+  color:#f3ffdf;
+  box-shadow:0 6px 24px #0009;
+  font-size:12px;
+  font-weight:700;
+  text-align:center;
+  pointer-events:none;
+}
+@media(max-width:600px){.nexora-move-hint{bottom:100px;}}
