@@ -238,7 +238,7 @@
   document.addEventListener("keyup",event=>movement.keys.delete(event.key.toLowerCase()));
   window.addEventListener("blur",()=>movement.keys.clear());
   scene.addEventListener("pointerdown",event=>{
-   if(event.target.closest(".nexora-world-avatar,.nexora-character-actions,.nexora-avatar-panel,.nexora-auras-panel,.nexora-emotions-panel"))return;
+   if(event.target.closest("button,input,textarea,select,a,.nexora-touch-dock,.nexora-world-avatar,.nexora-character-actions,.nexora-avatar-panel,.nexora-auras-panel,.nexora-emotions-panel,.nexora-developer-panel,.nexora-report-panel"))return;
    const r=scene.getBoundingClientRect(),b=sceneBounds();
    movement.target={x:Math.max(b.minX,Math.min(b.maxX,(event.clientX-r.left)/r.width*100)),bottom:Math.max(b.minY,Math.min(b.maxY,(r.bottom-event.clientY)/r.height*100))};
    movement.keys.clear();startMovementLoop();
