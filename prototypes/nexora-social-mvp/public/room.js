@@ -1,7 +1,7 @@
 (() => {
  "use strict";
  const $=id=>document.getElementById(id);
- const state={lastMessageId:0,poll:null,clockTimer:null,presenceTimer:null,movementTimer:null,viewingOtherPlayer:false,selectedPlayerId:null,reportTargetId:null,playerIds:new Set(),position:{x:50,bottom:12},facing:1};
+ const state={currentPlanetSlug:"earth",lastMessageId:0,poll:null,clockTimer:null,presenceTimer:null,movementTimer:null,viewingOtherPlayer:false,selectedPlayerId:null,reportTargetId:null,playerIds:new Set(),position:{x:50,bottom:12},facing:1};
  function updateVisitorClock(){
   const clock=$("visitor-clock");
   if(!clock)return;
@@ -9,6 +9,43 @@
   catch{clock.textContent=new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
  }
  const room=$("room-screen");
+ async function loadPlanets(){
+  const selector=$("planet-selector");if(!selector)return;
+  try{
+   const response=await fetch("/api/planets",{cache:"no-store"}),data=await response.json();
+   if(!response.ok)throw Error(data.error||"Не удалось загрузить список планет.");
+   const planets=Array.isArray(data.planets)?data.planets:[];
+   selector.replaceChildren();
+   planets.forEach(planet=>{
+    const option=document.createElement("option");option.value=planet.slug;
+    const fee=planet.access_type==="ticket"?" · "+planet.ticket_price+" алм.":planet.access_type==="vip"?" · VIP":"";
+    option.textContent=planet.name+" · "+planet.online+" в сети"+fee;
+    selector.append(option);
+   });
+   state.currentPlanetSlug=data.currentPlanet||"earth";selector.value=state.currentPlanetSlug;
+   const current=planets.find(p=>p.slug===state.currentPlanetSlug);
+   const name=document.querySelector(".planet-name");if(name&&current)name.textContent=current.name;
+  }catch(error){console.warn("Planet list unavailable:",error);const node=$("chat-error");if(node)node.textContent=error.message;}
+ }
+ async function travelToPlanet(slug){
+  const selector=$("planet-selector"),previous=state.currentPlanetSlug;
+  if(!slug||slug===previous)return;
+  selector.disabled=true;
+  try{
+   const response=await fetch("/api/room/travel",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({planetSlug:slug})});
+   const data=await response.json();if(!response.ok)throw Error(data.error||"Перелёт не выполнен.");
+   state.currentPlanetSlug=data.planet.slug;state.lastMessageId=0;
+   const list=room.querySelector(".chat-space");if(list)list.replaceChildren();
+   document.querySelectorAll(".nexora-room-player").forEach(node=>node.remove());
+   const name=document.querySelector(".planet-name");if(name)name.textContent=data.planet.name;
+   await loadMessages(true);await loadRoomPresence();await loadPlanets();
+   const hint=$("chat-error");if(hint){hint.textContent=data.message||"Перелёт выполнен.";window.setTimeout(()=>{if(hint.textContent===(data.message||"Перелёт выполнен."))hint.textContent="";},2600);}
+  }catch(error){
+   selector.value=previous;
+   const hint=$("chat-error");if(hint){hint.textContent=error.message;window.setTimeout(()=>{if(hint.textContent===error.message)hint.textContent="";},3500);}
+  }finally{selector.disabled=false;}
+ }
+ $("planet-selector")?.addEventListener("change",event=>travelToPlanet(event.target.value));
 
  const rankRows=[["Новичок","0","—"],["Бывалый","1","✦"],["Уважаемый","2","✦✦"],["Мастер","3","✦✦✦"],["Профессионал","4","✦✦✦✦"],["Гуру","5–9","✦"],["Неприкасаемый","10–19","✦✦"],["Папа / Мама","20–99","✦✦"],["Ангел Галактики","100–199","✦✦✦✦"],["Бог / Богиня Галактики","200–999","✦✦✦✦✦"],["Всемогущий","1000–1999","✦✦✦✦✦✦"],["Mister / Miss Вселенная","2000–9999","✦✦✦✦✦✦"],["Легенда Галактики","10000–19999","✦✦✦✦✦✦✦"],["Премьер Галактики","20000–49999","✦✦✦✦✦✦✦"],["Император Галактики","50000+","✦✦✦✦✦✦✦"]];
  const auraNames={none:"Без ауры",star:"Звёздная",romance:"Романтика",nebula:"Туманность",comet:"Комета",supernova:"Сияние",halo:"Сверхновая"};
@@ -449,6 +486,7 @@
   $("intro-screen").classList.add("hidden");
   room.classList.remove("hidden");
   updateVisitorClock();
+  loadPlanets();
   if(state.clockTimer)clearInterval(state.clockTimer);
   state.clockTimer=setInterval(updateVisitorClock,15000);
   state.lastMessageId=0;const chatList=$("room-screen").querySelector(".chat-space");if(chatList)chatList.replaceChildren();
