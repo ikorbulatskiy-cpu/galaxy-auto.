@@ -658,7 +658,9 @@
   state.poll=null;
   state.lastMessageId=0;const chatList=$("room-screen").querySelector(".chat-space");if(chatList)chatList.replaceChildren();
   if(state.presenceTimer)clearInterval(state.presenceTimer);
-  state.presenceTimer=null;movement.keys.clear();movement.joy={x:0,y:0};if(movement.sendTimer)clearTimeout(movement.sendTimer);
+  state.presenceTimer=null;
+  if(state.socialTimer)clearInterval(state.socialTimer);state.socialTimer=null;state.activeConversation=null;
+  movement.keys.clear();movement.joy={x:0,y:0};if(movement.sendTimer)clearTimeout(movement.sendTimer);
   state.playerIds.clear();
   document.querySelectorAll(".nexora-room-player").forEach(node=>node.remove());
   if(state.clockTimer)clearInterval(state.clockTimer);
