@@ -99,7 +99,7 @@
   worldAvatar.setAttribute("aria-label","Открыть действия персонажа");
   worldAvatar.addEventListener("pointerdown",event=>event.stopPropagation());
   scene.addEventListener("pointerdown",event=>{
-   if(event.button!==0||event.target.closest("button,input,textarea,select,a,.nexora-room-player,.nexora-avatar-panel,.nexora-character-actions,.nexora-emotions-panel,.nexora-developer-panel"))return;
+   if(event.button!==0||event.target.closest("button,input,textarea,select,a,.nexora-room-player,.nexora-avatar-panel,.nexora-character-actions,.nexora-emotions-panel,.nexora-developer-panel,.nexora-social-panel"))return;
    const rect=scene.getBoundingClientRect(),avatarRect=worldAvatar.getBoundingClientRect();
    const halfWidth=avatarRect.width/2/rect.width*100;
    const avatarHeight=avatarRect.height/rect.height*100;
