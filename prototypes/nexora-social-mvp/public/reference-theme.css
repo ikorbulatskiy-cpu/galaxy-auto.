@@ -357,3 +357,23 @@
 @media(prefers-reduced-motion:reduce) {
   .nexora-world-avatar,.nexora-touch-dock * { animation:none!important;transition:none!important; }
 }
+
+.nexora-move-hint {
+  position:absolute;
+  left:50%;
+  bottom:92px;
+  transform:translateX(-50%);
+  width:max-content;
+  max-width:calc(100% - 24px);
+  padding:10px 14px;
+  border:1px solid #b6e66c;
+  border-radius:9px;
+  background:#121b14ed;
+  color:#f3ffdf;
+  box-shadow:0 6px 24px #0009;
+  font-size:12px;
+  font-weight:700;
+  text-align:center;
+  pointer-events:none;
+}
+@media(max-width:600px){.nexora-move-hint{bottom:100px;}}
