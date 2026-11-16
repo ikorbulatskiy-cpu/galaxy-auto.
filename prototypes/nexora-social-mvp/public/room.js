@@ -112,6 +112,15 @@
   document.addEventListener("keydown",event=>{
    if(event.key==="Escape"){closeAvatar();closeCharacterActions();closeEmotions();closeReport();closeDeveloperMode();return;}
    if(room.classList.contains("hidden")||event.target.closest("input,textarea,select,[contenteditable=true]"))return;
+   if(event.key==="1"){
+    event.preventDefault();closeCharacterActions();closeAvatar();moveWorldAvatarTo(50,13);
+    const own=$("nexora-world-avatar");if(own){own.focus({preventScroll:true});own.classList.add("is-selected");window.setTimeout(()=>own.classList.remove("is-selected"),900);}
+    return;
+   }
+   if(event.key==="2"||event.key==="8"){
+    event.preventDefault();const chat=room.querySelector(".chat-space");if(chat)chat.scrollBy({top:event.key==="2"?-Math.max(100,chat.clientHeight*.72):Math.max(100,chat.clientHeight*.72),behavior:"smooth"});return;
+   }
+   if(event.key==="0"){event.preventDefault();room.classList.toggle("nexora-reading-mode");return;}
    if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a"){event.preventDefault();moveWorldAvatarBy(-5);}
    if(event.key==="ArrowRight"||event.key.toLowerCase()==="d"){event.preventDefault();moveWorldAvatarBy(5);}
    if(event.key==="ArrowUp"||event.key.toLowerCase()==="w"){event.preventDefault();moveWorldAvatarTo(state.position.x,Math.min(54,state.position.bottom+4));}
