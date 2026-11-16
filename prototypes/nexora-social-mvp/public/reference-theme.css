@@ -375,3 +375,14 @@ button:focus-visible,[role=button]:focus-visible{outline:2px solid #e2ff9c!impor
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
+
+/* Classic chat-reading mode: shortcut 0 toggles scene chrome, not the conversation. */
+#room-screen.nexora-reading-mode .planet-header,
+#room-screen.nexora-reading-mode .retro-composer{opacity:.12;transition:opacity .18s ease}
+#room-screen.nexora-reading-mode .planet-header:focus-within,
+#room-screen.nexora-reading-mode .retro-composer:focus-within{opacity:1}
+#room-screen.nexora-reading-mode .retro-room{grid-template-rows:5px minmax(0,1fr) 5px!important}
+#room-screen.nexora-reading-mode .retro-chat{border:0!important}
+#room-screen.nexora-reading-mode .retro-composer{pointer-events:none}
+#room-screen.nexora-reading-mode .planet-header{overflow:hidden}
+#room-screen .nexora-world-avatar.is-selected{filter:drop-shadow(0 0 5px #fff) drop-shadow(0 0 10px #d9f58b)!important}
