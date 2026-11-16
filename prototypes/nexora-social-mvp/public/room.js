@@ -122,7 +122,7 @@
    button.addEventListener("pointercancel",release);button.addEventListener("lostpointercapture",release);
   });
   $("nexora-action-friends").addEventListener("click",()=>{closeCharacterActions();openSocialPanel();});
-  $("nexora-action-add-friend").addEventListener("click",()=>{const id=state.selectedPlayerId;closeCharacterActions();if(id)sendFriendRequest(id);});
+  $("nexora-action-add-friend").addEventListener("click",()=>{const id=state.selectedPlayerId;closeCharacterActions();if(id)openSocialPanel().then(()=>sendFriendRequest(id));});
   $("nexora-action-private-message").addEventListener("click",()=>{const id=state.selectedPlayerId;closeCharacterActions();if(id)openSocialPanel(id);});
   $("nexora-social-close").addEventListener("click",closeSocialPanel);
   $("nexora-social-panel").addEventListener("click",event=>{if(event.target===$("nexora-social-panel"))closeSocialPanel();});
@@ -473,7 +473,7 @@
    const response=await fetch("/api/social/friends/request",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({targetId:id})});
    const data=await response.json();if(!response.ok)throw Error(data.error||"Не удалось отправить заявку.");
    socialNote(data.message||"Заявка отправлена.");
-   if(!$("nexora-social-panel").classList.contains("hidden")){await loadSocialFriends();await searchSocialPlayers();}
+   if(!$("nexora-social-panel").classList.contains("hidden")){await loadSocialFriends();if($("nexora-social-search-input").value.trim().length>=2)await searchSocialPlayers();}
   }catch(error){socialNote(error.message,true);if($("nexora-social-panel").classList.contains("hidden")){openSocialPanel();} }
  }
  async function openDirectConversation(id){
